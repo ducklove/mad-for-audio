@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#121110">
     <title>FM 라디오 모음</title>
-    <meta name="description" content="KBS, MBC, SBS와 주요 FM 라디오를 한 화면에서 바로 재생하는 FM 라디오 모음">
+    <meta name="description" content="KBS, MBC, SBS와 주요 FM 라디오를 한 화면에서 바로 재생하고 녹음까지 할 수 있는 FM 라디오 모음">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%BB%3C/text%3E%3C/svg%3E">
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-S8GLTG1KYZ"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -13,6 +15,7 @@
         gtag('config', 'G-S8GLTG1KYZ');
     </script>
     <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
     <style>
         :root {
             --bg: #121110;
@@ -24,6 +27,7 @@
             --muted: #b9aea1;
             --accent: #d36a42;
             --accent-strong: #ec8255;
+            --rec: #e5484d;
             --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
             --radius-lg: 24px;
             --radius-md: 18px;
@@ -37,7 +41,7 @@
         }
 
         body {
-            font-family: "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+            font-family: "Pretendard Variable", Pretendard, "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
             background:
                 radial-gradient(circle at top, rgba(211, 106, 66, 0.14), transparent 28%),
                 linear-gradient(180deg, #201a16 0%, #131110 30%, #0d0d0d 100%);
@@ -57,8 +61,9 @@
         }
 
         button:focus-visible,
-        input:focus-visible {
-            outline: 2px solid rgba(255, 255, 255, 0.9);
+        input:focus-visible,
+        a:focus-visible {
+            outline: 2px solid var(--accent-strong);
             outline-offset: 3px;
         }
 
@@ -66,6 +71,64 @@
             width: min(1040px, calc(100% - 28px));
             margin: 0 auto;
             padding: 18px 0 40px;
+        }
+
+        .site-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 6px 4px 16px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .brand-mark {
+            width: 42px;
+            height: 42px;
+            border-radius: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.82rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            color: #fff6ee;
+            background: linear-gradient(135deg, var(--accent-strong), #9c492d);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 8px 18px rgba(211, 106, 66, 0.22);
+            flex-shrink: 0;
+        }
+
+        .brand-title {
+            font-size: 1.06rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .brand-sub {
+            margin-top: 2px;
+            color: var(--muted);
+            font-size: 0.8rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .live-clock {
+            font-size: 0.92rem;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            color: #e2d7ca;
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            background: var(--panel-soft);
+            flex-shrink: 0;
         }
 
         .hero-visual {
@@ -99,7 +162,7 @@
 
         .player-bar {
             display: grid;
-            grid-template-columns: auto minmax(0, 1fr) auto;
+            grid-template-columns: minmax(0, 1fr) auto;
             gap: 12px;
             align-items: center;
             padding: 12px 14px;
@@ -167,6 +230,68 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+
+        .player-side {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .btn-rec {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            background: var(--panel-soft);
+            color: #e2d7ca;
+            font-size: 0.76rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, opacity 0.18s ease;
+        }
+
+        .btn-rec:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.09);
+            border-color: rgba(255, 255, 255, 0.16);
+        }
+
+        .btn-rec:disabled {
+            opacity: 0.38;
+            cursor: not-allowed;
+        }
+
+        .rec-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--rec);
+            flex-shrink: 0;
+        }
+
+        .rec-time {
+            font-variant-numeric: tabular-nums;
+            min-width: 3ch;
+            text-align: left;
+        }
+
+        .btn-rec.recording {
+            background: rgba(229, 72, 77, 0.16);
+            border-color: rgba(229, 72, 77, 0.48);
+            color: #ffd9da;
+        }
+
+        .btn-rec.recording .rec-dot {
+            animation: recPulse 1.4s ease-out infinite;
+        }
+
+        @keyframes recPulse {
+            0% { box-shadow: 0 0 0 0 rgba(229, 72, 77, 0.55); }
+            100% { box-shadow: 0 0 0 9px rgba(229, 72, 77, 0); }
         }
 
         .volume-control {
@@ -237,10 +362,21 @@
         }
 
         .group-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             font-size: 1rem;
             font-weight: 700;
             letter-spacing: 0.08em;
             text-transform: uppercase;
+        }
+
+        .group-title::before {
+            content: "";
+            width: 4px;
+            height: 16px;
+            border-radius: 999px;
+            background: linear-gradient(180deg, var(--accent-strong), var(--accent));
         }
 
         .group-note {
@@ -251,6 +387,7 @@
         .station-list {
             display: grid;
             gap: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
         }
 
         .station {
@@ -259,7 +396,7 @@
             grid-template-columns: auto minmax(0, 1fr) auto;
             align-items: center;
             gap: 14px;
-            padding: 14px;
+            padding: 13px 14px;
             border-radius: var(--radius-md);
             text-align: left;
             cursor: pointer;
@@ -369,6 +506,102 @@
             to { transform: rotate(360deg); }
         }
 
+        .recording-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .recording {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 14px;
+            padding: 13px 14px;
+            border-radius: var(--radius-md);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--line);
+        }
+
+        .rec-badge {
+            width: 50px;
+            height: 50px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            color: #ffd9da;
+            background: linear-gradient(135deg, rgba(229, 72, 77, 0.34), rgba(229, 72, 77, 0.12));
+            border: 1px solid rgba(229, 72, 77, 0.3);
+        }
+
+        .rec-info {
+            min-width: 0;
+        }
+
+        .rec-name {
+            font-size: 0.98rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .rec-meta {
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 0.82rem;
+        }
+
+        .rec-info audio {
+            display: block;
+            margin-top: 10px;
+            width: min(360px, 100%);
+            height: 36px;
+        }
+
+        .rec-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .rec-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            background: var(--panel-soft);
+            color: #e2d7ca;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background 0.18s ease, border-color 0.18s ease;
+        }
+
+        .rec-btn:hover {
+            background: rgba(255, 255, 255, 0.09);
+            border-color: rgba(255, 255, 255, 0.16);
+        }
+
+        .rec-btn.danger:hover {
+            background: rgba(229, 72, 77, 0.14);
+            border-color: rgba(229, 72, 77, 0.4);
+            color: #ffd9da;
+        }
+
+        .site-footer {
+            margin-top: 22px;
+            padding: 0 4px;
+            color: var(--muted);
+            font-size: 0.78rem;
+            text-align: center;
+        }
+
         .dial-knob {
             position: absolute;
             right: 4%;
@@ -384,6 +617,18 @@
             .page-shell {
                 width: min(100% - 18px, 100%);
                 padding-top: 10px;
+            }
+
+            .site-header {
+                padding-bottom: 12px;
+            }
+
+            .brand-sub {
+                white-space: normal;
+            }
+
+            .live-clock {
+                display: none;
             }
 
             .site-banner {
@@ -412,7 +657,12 @@
                 white-space: normal;
             }
 
+            .player-side {
+                justify-content: space-between;
+            }
+
             .volume-control {
+                flex: 1;
                 justify-content: center;
             }
 
@@ -424,6 +674,10 @@
                 padding: 16px;
             }
 
+            .station-list {
+                grid-template-columns: 1fr;
+            }
+
             .station {
                 grid-template-columns: auto minmax(0, 1fr);
             }
@@ -433,11 +687,31 @@
                 justify-content: flex-start;
                 margin-top: 2px;
             }
+
+            .recording {
+                grid-template-columns: auto minmax(0, 1fr);
+            }
+
+            .rec-actions {
+                grid-column: 1 / -1;
+                flex-direction: row;
+            }
         }
     </style>
 </head>
 <body>
     <div class="page-shell">
+        <header class="site-header">
+            <div class="brand">
+                <div class="brand-mark" aria-hidden="true">FM</div>
+                <div>
+                    <div class="brand-title">FM 라디오 모음</div>
+                    <div class="brand-sub">KBS · MBC · CBS · SBS와 주요 FM을 한 화면에서</div>
+                </div>
+            </div>
+            <div class="live-clock" id="liveClock" aria-label="현재 시각">--:--:--</div>
+        </header>
+
         <section class="hero-visual" aria-label="튜너 이미지와 상태 창">
             <img class="site-banner" src="t2.png" alt="Yamaha Natural Sound FM Stereo Tuner T-2 전면 패널">
             <div class="dial-knob" onclick="playEasterEgg()" title=""></div>
@@ -455,10 +729,16 @@
                             <div class="player-subtext" id="playerSubtext">원하는 채널을 누르면 바로 연결을 시도합니다.</div>
                         </div>
                     </div>
-                    <label class="volume-control" for="volumeSlider">
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"></path></svg>
-                        <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="80" aria-label="볼륨" oninput="setVolume(this.value)">
-                    </label>
+                    <div class="player-side">
+                        <button class="btn-rec" id="btnRec" type="button" aria-label="녹음 시작" onclick="toggleRecording()" disabled>
+                            <span class="rec-dot" aria-hidden="true"></span>
+                            <span class="rec-time" id="recTime">REC</span>
+                        </button>
+                        <label class="volume-control" for="volumeSlider">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"></path></svg>
+                            <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="80" aria-label="볼륨" oninput="setVolume(this.value)">
+                        </label>
+                    </div>
                 </section>
             </div>
         </section>
@@ -503,8 +783,19 @@
                 </div>
                 <div class="station-list" id="etcList"></div>
             </section>
+
+            <section class="group" id="recordingsGroup" hidden>
+                <div class="group-header">
+                    <div class="group-title">녹음 파일</div>
+                    <div class="group-note" id="recordingsNote">페이지를 닫으면 목록이 사라집니다. 필요한 파일은 저장해 두세요.</div>
+                </div>
+                <div class="recording-list" id="recordingList"></div>
+            </section>
         </main>
 
+        <footer class="site-footer">
+            방송 스트림의 저작권은 각 방송사에 있습니다. 녹음 파일은 개인 감상 용도로만 이용해 주세요.
+        </footer>
     </div>
 
     <audio id="audioPlayer" crossorigin="anonymous"></audio>
@@ -532,15 +823,38 @@
         const playIcon = document.getElementById("playIcon");
         const nowStation = document.getElementById("nowStation");
         const playerSubtext = document.getElementById("playerSubtext");
+        const btnRec = document.getElementById("btnRec");
+        const recTimeEl = document.getElementById("recTime");
+        const liveClock = document.getElementById("liveClock");
+        const recordingsGroup = document.getElementById("recordingsGroup");
+        const recordingsNote = document.getElementById("recordingsNote");
+        const recordingList = document.getElementById("recordingList");
 
         let currentStation = null;
         let isPlaying = false;
         let hls = null;
+        let volumeLevel = 0.8;
 
-        audio.volume = 0.8;
+        // 녹음용 오디오 그래프: source → gain(청취 볼륨) → 스피커, source → recDest(원음 레벨) → MediaRecorder
+        let audioCtx = null;
+        let gainNode = null;
+        let recDest = null;
+        let recorder = null;
+        let recStartMs = 0;
+        let recTimerId = null;
+        let recordingCount = 0;
+
+        audio.volume = volumeLevel;
+
+        if (!window.MediaRecorder) {
+            btnRec.hidden = true;
+        }
 
         function stationInitial(name) {
             const lastWord = name.split(" ").pop() || name;
+            if (/^[가-힣]{4,}$/.test(lastWord)) {
+                return lastWord.substring(0, 2);
+            }
             return lastWord.substring(0, 4).toUpperCase();
         }
 
@@ -552,7 +866,7 @@
                 const groupStations = stations.filter((station) => station.group === group);
                 list.innerHTML = groupStations.map((station) => `
                     <button class="station" id="st-${station.id}" type="button" onclick="selectStation('${station.id}')">
-                        <div class="station-icon" style="background:${station.color}">${stationInitial(station.name)}</div>
+                        <div class="station-icon" style="background:linear-gradient(135deg, ${shadeColor(station.color, 16)}, ${shadeColor(station.color, -18)})">${stationInitial(station.name)}</div>
                         <div class="station-info">
                             <div class="station-name">${station.name}</div>
                             <div class="station-desc">${station.desc}</div>
@@ -608,15 +922,16 @@
         function applyStationTheme(station) {
             const accent = station ? station.color : "#d36a42";
             document.documentElement.style.setProperty("--accent", accent);
-            document.documentElement.style.setProperty("--accent-strong", lightenColor(accent, 18));
+            document.documentElement.style.setProperty("--accent-strong", shadeColor(accent, 18));
         }
 
-        function lightenColor(hex, amount) {
+        function shadeColor(hex, amount) {
             const sanitized = hex.replace("#", "");
             const num = parseInt(sanitized, 16);
-            const r = Math.min(255, (num >> 16) + amount);
-            const g = Math.min(255, ((num >> 8) & 0x00ff) + amount);
-            const b = Math.min(255, (num & 0x0000ff) + amount);
+            const clamp = (value) => Math.max(0, Math.min(255, value));
+            const r = clamp((num >> 16) + amount);
+            const g = clamp(((num >> 8) & 0x00ff) + amount);
+            const b = clamp((num & 0x0000ff) + amount);
             return `#${(r << 16 | g << 8 | b).toString(16).padStart(6, "0")}`;
         }
 
@@ -655,13 +970,15 @@
                     updatePlayButton();
                 });
             } else {
-                alert("이 브라우저는 HLS 스트리밍을 지원하지 않습니다.");
+                playerSubtext.textContent = "이 브라우저는 HLS 스트리밍을 지원하지 않습니다.";
             }
         }
 
         async function selectStation(id) {
             const station = stations.find((item) => item.id === id);
             if (!station) return;
+
+            stopRecording();
 
             document.querySelectorAll(".station").forEach((element) => {
                 element.classList.remove("active", "playing", "loading");
@@ -681,6 +998,7 @@
                 playStream(url);
                 isPlaying = true;
                 updatePlayButton();
+                updateMediaSession();
                 gtag('event', 'play_station', {
                     station_id: station.id,
                     station_name: station.name,
@@ -720,6 +1038,8 @@
         }
 
         function stopPlay() {
+            stopRecording();
+
             if (hls) {
                 hls.destroy();
                 hls = null;
@@ -738,6 +1058,7 @@
             } else {
                 playIcon.setAttribute("d", "M8 5v14l11-7z");
             }
+            updateRecButton();
         }
 
         function updateActiveStation() {
@@ -752,6 +1073,8 @@
         }
 
         function playEasterEgg() {
+            stopRecording();
+
             if (hls) {
                 hls.destroy();
                 hls = null;
@@ -770,6 +1093,7 @@
             audio.play().then(() => {
                 isPlaying = true;
                 updatePlayButton();
+                updateMediaSession();
                 gtag('event', 'play_station', {
                     station_id: 'pyongyang',
                     station_name: '평양 FM',
@@ -783,10 +1107,271 @@
         }
 
         function setVolume(value) {
-            audio.volume = value / 100;
+            volumeLevel = value / 100;
+            if (gainNode) {
+                gainNode.gain.value = volumeLevel;
+            } else {
+                audio.volume = volumeLevel;
+            }
         }
 
+        // ----- 녹음 -----
+
+        function ensureAudioGraph() {
+            if (audioCtx) return true;
+
+            const Ctx = window.AudioContext || window.webkitAudioContext;
+            if (!Ctx || !window.MediaRecorder) return false;
+
+            try {
+                audioCtx = new Ctx();
+                const source = audioCtx.createMediaElementSource(audio);
+                gainNode = audioCtx.createGain();
+                recDest = audioCtx.createMediaStreamDestination();
+                source.connect(gainNode).connect(audioCtx.destination);
+                source.connect(recDest);
+                gainNode.gain.value = volumeLevel;
+                audio.volume = 1;
+                return true;
+            } catch (error) {
+                console.error(error);
+                audioCtx = null;
+                gainNode = null;
+                recDest = null;
+                return false;
+            }
+        }
+
+        function pickRecMime() {
+            const candidates = [
+                "audio/webm;codecs=opus",
+                "audio/webm",
+                "audio/mp4;codecs=mp4a.40.2",
+                "audio/mp4",
+                "audio/ogg;codecs=opus"
+            ];
+            return candidates.find((type) => MediaRecorder.isTypeSupported(type)) || "";
+        }
+
+        function toggleRecording() {
+            if (recorder) {
+                stopRecording();
+                return;
+            }
+
+            if (!currentStation || !isPlaying) return;
+
+            if (!ensureAudioGraph()) {
+                playerSubtext.textContent = "이 브라우저에서는 녹음을 지원하지 않습니다.";
+                return;
+            }
+
+            if (audioCtx.state === "suspended") {
+                audioCtx.resume();
+            }
+
+            const mime = pickRecMime();
+            let rec;
+            try {
+                rec = new MediaRecorder(recDest.stream, mime ? { mimeType: mime, audioBitsPerSecond: 128000 } : undefined);
+            } catch (error) {
+                console.error(error);
+                playerSubtext.textContent = "녹음을 시작할 수 없습니다.";
+                return;
+            }
+
+            const chunks = [];
+            const station = currentStation;
+            const startMs = Date.now();
+            const startDate = new Date();
+
+            rec.ondataavailable = (event) => {
+                if (event.data && event.data.size > 0) chunks.push(event.data);
+            };
+            rec.onstop = () => {
+                if (!chunks.length) return;
+                const durationMs = Date.now() - startMs;
+                const type = rec.mimeType || chunks[0].type || "audio/webm";
+                addRecordingItem(new Blob(chunks, { type }), station, startDate, durationMs, type);
+                playerSubtext.textContent = `${station.name} 녹음 1건을 저장 목록에 추가했습니다.`;
+                gtag('event', 'record_save', {
+                    station_id: station.id,
+                    station_name: station.name,
+                    duration_seconds: Math.round(durationMs / 1000)
+                });
+            };
+
+            recorder = rec;
+            recStartMs = startMs;
+            rec.start(1000);
+
+            recTimerId = setInterval(updateRecTime, 500);
+            updateRecTime();
+            btnRec.classList.add("recording");
+            btnRec.setAttribute("aria-label", "녹음 정지 및 저장");
+            playerSubtext.textContent = `${station.name} 녹음 중입니다. 정지하거나 채널을 바꾸면 자동 저장됩니다.`;
+
+            gtag('event', 'record_start', {
+                station_id: station.id,
+                station_name: station.name
+            });
+        }
+
+        function stopRecording() {
+            if (!recorder) return;
+
+            const active = recorder;
+            recorder = null;
+
+            clearInterval(recTimerId);
+            recTimerId = null;
+            btnRec.classList.remove("recording");
+            btnRec.setAttribute("aria-label", "녹음 시작");
+            recTimeEl.textContent = "REC";
+            updateRecButton();
+
+            if (active.state !== "inactive") {
+                active.stop();
+            }
+        }
+
+        function recFileExtension(mimeType) {
+            if (mimeType.includes("mp4")) return "m4a";
+            if (mimeType.includes("ogg")) return "ogg";
+            return "webm";
+        }
+
+        function formatDuration(ms) {
+            const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            const pad = (value) => String(value).padStart(2, "0");
+            return hours > 0 ? `${hours}:${pad(minutes)}:${pad(seconds)}` : `${pad(minutes)}:${pad(seconds)}`;
+        }
+
+        function formatSize(bytes) {
+            if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+            return `${Math.max(1, Math.round(bytes / 1024))}KB`;
+        }
+
+        function updateRecTime() {
+            recTimeEl.textContent = formatDuration(Date.now() - recStartMs);
+        }
+
+        function updateRecButton() {
+            btnRec.disabled = !recorder && !(currentStation && isPlaying);
+        }
+
+        function addRecordingItem(blob, station, startDate, durationMs, mimeType) {
+            recordingCount += 1;
+            const url = URL.createObjectURL(blob);
+            const ext = recFileExtension(mimeType);
+            const pad = (value) => String(value).padStart(2, "0");
+            const stamp = `${startDate.getFullYear()}${pad(startDate.getMonth() + 1)}${pad(startDate.getDate())}_${pad(startDate.getHours())}${pad(startDate.getMinutes())}${pad(startDate.getSeconds())}`;
+            const safeName = station.name.replace(/[\\/:*?"<>|]/g, "").replace(/\s+/g, "-");
+            const fileName = `${safeName}_${stamp}.${ext}`;
+            const startLabel = `${pad(startDate.getHours())}:${pad(startDate.getMinutes())} 시작`;
+
+            const item = document.createElement("div");
+            item.className = "recording";
+
+            const badge = document.createElement("div");
+            badge.className = "rec-badge";
+            badge.textContent = "REC";
+
+            const info = document.createElement("div");
+            info.className = "rec-info";
+
+            const name = document.createElement("div");
+            name.className = "rec-name";
+            name.textContent = station.name;
+
+            const meta = document.createElement("div");
+            meta.className = "rec-meta";
+            meta.textContent = `${startLabel} · ${formatDuration(durationMs)} · ${formatSize(blob.size)}`;
+
+            const preview = document.createElement("audio");
+            preview.controls = true;
+            preview.preload = "metadata";
+            preview.src = url;
+
+            info.append(name, meta, preview);
+
+            const actions = document.createElement("div");
+            actions.className = "rec-actions";
+
+            const download = document.createElement("a");
+            download.className = "rec-btn";
+            download.href = url;
+            download.download = fileName;
+            download.textContent = "저장";
+
+            const remove = document.createElement("button");
+            remove.className = "rec-btn danger";
+            remove.type = "button";
+            remove.textContent = "삭제";
+            remove.addEventListener("click", () => {
+                preview.pause();
+                URL.revokeObjectURL(url);
+                item.remove();
+                recordingCount -= 1;
+                updateRecordingsNote();
+            });
+
+            actions.append(download, remove);
+            item.append(badge, info, actions);
+            recordingList.prepend(item);
+            updateRecordingsNote();
+        }
+
+        function updateRecordingsNote() {
+            recordingsGroup.hidden = recordingCount === 0;
+            recordingsNote.textContent = `${recordingCount}개 · 페이지를 닫으면 목록이 사라집니다. 필요한 파일은 저장해 두세요.`;
+        }
+
+        // ----- Media Session / 시계 -----
+
+        function updateMediaSession() {
+            if (!("mediaSession" in navigator) || !currentStation) return;
+            try {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: currentStation.name,
+                    artist: currentStation.desc || "FM 라디오",
+                    album: "FM 라디오 모음"
+                });
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        if ("mediaSession" in navigator) {
+            try {
+                navigator.mediaSession.setActionHandler("play", togglePlay);
+                navigator.mediaSession.setActionHandler("pause", togglePlay);
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        function tickClock() {
+            const now = new Date();
+            const pad = (value) => String(value).padStart(2, "0");
+            liveClock.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+        }
+
+        setInterval(tickClock, 1000);
+        tickClock();
+
+        document.addEventListener("keydown", (event) => {
+            if (event.code === "Space" && event.target === document.body) {
+                event.preventDefault();
+                togglePlay();
+            }
+        });
+
         audio.addEventListener("pause", () => {
+            stopRecording();
             isPlaying = false;
             updatePlayButton();
             updateActiveStation();
@@ -802,6 +1387,7 @@
         });
 
         renderStations();
+        updateRecButton();
     </script>
 </body>
 </html>
