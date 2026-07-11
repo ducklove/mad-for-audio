@@ -1,0 +1,63 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#241d18"/>
+      <stop offset="0.42" stop-color="#161311"/>
+      <stop offset="1" stop-color="#0c0b0a"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.28" r="0.7">
+      <stop offset="0" stop-color="#d36a42" stop-opacity="0.34"/>
+      <stop offset="0.55" stop-color="#d36a42" stop-opacity="0.05"/>
+      <stop offset="1" stop-color="#d36a42" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="needle" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffd9a8"/>
+      <stop offset="0.5" stop-color="#ec8255"/>
+      <stop offset="1" stop-color="#d36a42"/>
+    </linearGradient>
+    <linearGradient id="fm" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff6ee"/>
+      <stop offset="1" stop-color="#f0d8c4"/>
+    </linearGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="10"/>
+    </filter>
+  </defs>
+
+  <!-- full-bleed background (platform applies its own mask/rounding) -->
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <rect width="1024" height="1024" fill="url(#glow)"/>
+
+  <!-- FM wordmark -->
+  <text x="512" y="404" text-anchor="middle" fill="url(#fm)"
+        font-family="Helvetica, Arial, sans-serif" font-weight="700"
+        font-size="286" letter-spacing="-8">FM</text>
+
+  <!-- tuner scale panel -->
+  <g>
+    <!-- baseline -->
+    <rect x="212" y="612" width="600" height="6" rx="3" fill="#5b4d43"/>
+    <!-- major + minor ticks -->
+    <g fill="#8a7666">
+      <rect x="230" y="588" width="7" height="34" rx="2"/>
+      <rect x="326" y="596" width="5" height="26" rx="2"/>
+      <rect x="422" y="588" width="7" height="34" rx="2"/>
+      <rect x="518" y="596" width="5" height="26" rx="2"/>
+      <rect x="614" y="588" width="7" height="34" rx="2"/>
+      <rect x="710" y="596" width="5" height="26" rx="2"/>
+      <rect x="787" y="588" width="7" height="34" rx="2"/>
+    </g>
+
+    <!-- glowing needle -->
+    <rect x="600" y="556" width="10" height="118" rx="5" fill="#ec8255" filter="url(#soft)" opacity="0.85"/>
+    <rect x="601" y="560" width="8" height="110" rx="4" fill="url(#needle)"/>
+    <circle cx="605" cy="556" r="20" fill="#ec8255" filter="url(#soft)" opacity="0.7"/>
+    <circle cx="605" cy="556" r="13" fill="#ffd9a8"/>
+    <circle cx="605" cy="556" r="6" fill="#c85a34"/>
+  </g>
+
+  <!-- frequency band label -->
+  <text x="512" y="742" text-anchor="middle" fill="#b9aea1"
+        font-family="Helvetica, Arial, sans-serif" font-weight="600"
+        font-size="60" letter-spacing="8">88 · 108</text>
+</svg>
