@@ -1129,6 +1129,9 @@
         let tsSignal = 0;
         let tsTune = 0.85;
         let tsFreqData = null;
+        let tsTimeData = null;
+        let tsPeak = 0;          // 피크미터용 (빠른 어택·느린 릴리즈)
+        let ttLastDt = 0.016;
         let tsPanelState = "";
         let blendOn = false;
         let monoOn = false;
@@ -1158,7 +1161,8 @@
             g.innerHTML = LZ_DEFS +
                 '<rect x="0" y="0" width="' + W + '" height="' + Math.round(H * 0.32) + '" rx="8" fill="url(#lzGloss)"/>' +
                 '<rect x="0" y="0" width="' + W + '" height="' + H + '" rx="8" fill="url(#lzShade)"/>' +
-                '<rect x="0" y="0" width="' + W + '" height="' + H + '" rx="8" fill="url(#lzVign)"/>';
+                '<rect x="0" y="0" width="' + W + '" height="' + H + '" rx="8" fill="url(#lzVign)"/>' +
+                '<rect class="lzPowerDim" x="0" y="0" width="' + W + '" height="' + H + '" rx="8" fill="#000000" opacity="0.22"/>';
             svg.appendChild(g);
         }
 
@@ -1341,6 +1345,7 @@
                     <g id="tsSignalPtr">
                         <rect x="558" y="280" width="4" height="52" fill="#0a1a18"/>
                     </g>
+                    <rect class="meterDark" x="420" y="276" width="280" height="60" rx="3" fill="#0d0a06" opacity="0.5"/>
                     <text x="1350" y="266" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" letter-spacing="2" fill="#7ee08a" text-anchor="middle">TUNING</text>
                     <rect x="1210" y="276" width="280" height="60" rx="3" fill="url(#mrMeter)"/>
                     <g stroke="#134a44" stroke-width="1.4">
@@ -1349,6 +1354,7 @@
                     <g id="tsTunePtr">
                         <rect x="1348" y="280" width="4" height="52" fill="#0a1a18"/>
                     </g>
+                    <rect class="meterDark" x="1210" y="276" width="280" height="60" rx="3" fill="#0d0a06" opacity="0.5"/>
                     <!-- 브랜드 -->
                     <text x="955" y="310" font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-size="46" font-weight="700" fill="#d8b060" text-anchor="middle">McIntoch</text>
                     <text x="955" y="345" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="600" letter-spacing="7" fill="#e8e8ea" text-anchor="middle">MR 78 FM TUNER</text>
@@ -1692,20 +1698,24 @@
             let target = 0;
             if (isPlaying) {
                 if (analyser) {
-                    // 데스크톱/안드로이드(MSE): 실제 오디오 레벨로 신호 세기 구동
-                    if (!tsFreqData) tsFreqData = new Uint8Array(analyser.frequencyBinCount);
-                    analyser.getByteFrequencyData(tsFreqData);
-                    const n = Math.floor(tsFreqData.length * 0.6);
-                    let sum = 0;
-                    for (let i = 0; i < n; i++) sum += tsFreqData[i];
-                    // 바닥값 없이 실측 기반 — VU가 중간대에서 놀도록 캘리브레이션
-                    target = Math.min(1, (sum / n / 255) * 1.35 + 0.04);
+                    // 시간 영역 RMS — 실제 음량감에 대응 (스펙트럼 평균은 항상 높게 나온다)
+                    if (!tsTimeData) tsTimeData = new Uint8Array(analyser.fftSize);
+                    analyser.getByteTimeDomainData(tsTimeData);
+                    let sum2 = 0;
+                    for (let i = 0; i < tsTimeData.length; i++) {
+                        const d = (tsTimeData[i] - 128) / 128;
+                        sum2 += d * d;
+                    }
+                    const rms = Math.sqrt(sum2 / tsTimeData.length);   // 음악 RMS ≈ 0.05~0.3
+                    target = Math.min(1, rms * 2.6);
                 } else {
-                    // iOS 네이티브 HLS: 오디오 분석 불가 → '수신 양호'를 자연스럽게 시뮬레이션
-                    target = 0.52 + Math.sin(performance.now() / 300) * 0.06 + (Math.random() - 0.5) * 0.04;
+                    // iOS 네이티브 HLS: 오디오 분석 불가 → 낮은 레벨로 자연스럽게 시뮬레이션
+                    target = 0.3 + Math.sin(performance.now() / 300) * 0.05 + (Math.random() - 0.5) * 0.03;
                 }
             }
-            tsSignal += (target - tsSignal) * 0.16;
+            // VU 탄도: 300ms급 관성으로 바늘이 음악을 타고, 피크는 즉시 튀고 천천히 내려온다
+            tsSignal += (target - tsSignal) * 0.07;
+            tsPeak = Math.max(target, tsPeak - ttLastDt * 0.7);
             const sc = tunerCfg.signal;
             const sigX = sc.baseX + Math.max(0, Math.min(1, tsSignal)) * sc.travel;
             tsSignalPtr.setAttribute("transform", "translate(" + (sigX - sc.drawX).toFixed(1) + ",0)");
@@ -2059,21 +2069,25 @@
             tr: {
                 pill: "TR · CA-100",
                 desc: "솔리드스테이트 인티앰프 — 무색·투명, 높은 댐핑 (Yamaha CA-1000 오마주)",
+                vol: { cx: 1770, cy: 326, r: 160 },
                 drive: 1, k: 0, asym: 0, bass: [80, 0], mid: [1000, 0, 1], treble: [8000, 0], out: 1
             },
             el34: {
                 pill: "EL34 · 8B",
                 desc: "EL34 푸시풀 — 미드 포워드, 브리티시 웜 (Marantz 8B 오마주)",
+                vol: { cx: 690, cy: 406, r: 34 },
                 drive: 2.2, k: 1.7, asym: 0.12, bass: [120, 0.8], mid: [1800, 1.6, 0.9], treble: [8000, -0.9], out: 0.74
             },
             "300b": {
                 pill: "300B · 91E",
                 desc: "300B 싱글엔디드 — 달콤한 짝수 배음, 부드러운 고역 (WE 91E 오마주)",
+                vol: { cx: 880, cy: 420, r: 112 },
                 drive: 2.8, k: 1.15, asym: 0.38, bass: [100, 1.4], mid: [800, 0.8, 0.8], treble: [7000, -2.2], out: 0.7
             },
             kt88: {
                 pill: "KT88 · 275",
                 desc: "KT88 크롬 스테레오 파워 — 광대역, 깊고 단단한 저역 (McIntosh MC275 오마주)",
+                vol: { cx: 600, cy: 422, r: 32 },
                 drive: 1.9, k: 1.45, asym: 0.08, bass: [80, 1.8], mid: [1200, -0.5, 1], treble: [10000, 0.9], out: 0.78
             }
         };
@@ -2112,6 +2126,7 @@
                 <line id="ampVuL" data-cx="268" data-cy="352" x1="268" y1="352" x2="268" y2="212" stroke="#1a1610" stroke-width="3.5" transform="rotate(-42 268 352)"/>
                 <circle cx="268" cy="352" r="9" fill="#1a1610"/>
                 <polygon points="114,154 300,154 180,366 114,366" fill="url(#lzStreak)"/>
+                <rect class="meterDark" x="114" y="154" width="308" height="212" rx="5" fill="#0d0a06" opacity="0.55"/>
                 <text x="268" y="408" font-family="Arial" font-size="12" letter-spacing="3" fill="#5a5a64" text-anchor="middle">LEFT</text>
             </g>
             <g>
@@ -2129,6 +2144,7 @@
                 <line id="ampVuR" data-cx="640" data-cy="352" x1="640" y1="352" x2="640" y2="212" stroke="#1a1610" stroke-width="3.5" transform="rotate(-42 640 352)"/>
                 <circle cx="640" cy="352" r="9" fill="#1a1610"/>
                 <polygon points="486,154 672,154 552,366 486,366" fill="url(#lzStreak)"/>
+                <rect class="meterDark" x="486" y="154" width="308" height="212" rx="5" fill="#0d0a06" opacity="0.55"/>
                 <text x="640" y="408" font-family="Arial" font-size="12" letter-spacing="3" fill="#5a5a64" text-anchor="middle">RIGHT</text>
             </g>
             <g font-family="Arial" font-size="12" letter-spacing="1.5" fill="#5a5a64" text-anchor="middle">
@@ -2167,7 +2183,7 @@
             <circle cx="1770" cy="326" r="146" fill="url(#caKnob)" stroke="#9a9ca6" stroke-width="2"/>
             <circle cx="1770" cy="326" r="146" fill="none" stroke="#6e707a" stroke-width="12" stroke-dasharray="2.5 8" opacity="0.45"/>
             <circle cx="1770" cy="326" r="104" fill="none" stroke="#b6b8c0" stroke-width="1.2" opacity="0.7"/>
-            <circle cx="1770" cy="206" r="8" fill="#3a3a42"/>
+            <circle id="ampVolMark" cx="1770" cy="206" r="8" fill="#3a3a42"/>
             <ellipse cx="1712" cy="262" rx="54" ry="40" fill="#ffffff" opacity="0.35" pointer-events="none"/>
         </svg>`;
 
@@ -2255,12 +2271,18 @@
                 <circle cx="250" cy="446" r="6" fill="#1a1610"/>
                 <text x="250" y="470" font-family="Arial" font-size="10" letter-spacing="2" fill="#6b6252" text-anchor="middle">BIAS</text>
                 <polygon points="188,344 268,344 214,468 188,468" fill="url(#lzStreak)"/>
+                <circle class="meterDark" cx="250" cy="406" r="68" fill="#0d0a06" opacity="0.55"/>
             </g>
             <circle cx="524" cy="398" r="13" fill="#8a7a5a"/>
             <circle id="ampPwrLed" cx="524" cy="398" r="8" fill="#3a2012"/>
             <ellipse cx="586" cy="446" rx="20" ry="7" fill="url(#m8Shadow)"/>
             <rect x="570" y="368" width="30" height="74" rx="7" fill="#26241f"/><rect x="574" y="374" width="22" height="28" rx="4" fill="#b0a488"/>
             <text x="560" y="474" font-family="Arial" font-size="11" letter-spacing="2" fill="#6b6252" text-anchor="middle">POWER</text>
+            <ellipse cx="690" cy="438" rx="30" ry="9" fill="url(#m8Shadow)"/>
+            <circle cx="690" cy="408" r="27" fill="#8a8068"/>
+            <circle cx="690" cy="406" r="25" fill="url(#m8MeterFace)" stroke="#8a8068" stroke-width="1.4"/>
+            <rect id="ampVolMark" x="688" y="384" width="4" height="12" rx="2" fill="#3a3226"/>
+            <text x="690" y="474" font-family="Arial" font-size="11" letter-spacing="2" fill="#6b6252" text-anchor="middle">LEVEL</text>
             <rect x="866" y="368" width="268" height="76" rx="8" fill="#14120e"/>
             <rect x="869" y="371" width="262" height="70" rx="6" fill="none" stroke="#3a362c" stroke-width="1.4"/>
             <text x="1000" y="418" font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-size="34" font-weight="700" fill="#f0ecd8" text-anchor="middle">maranz</text>
@@ -2345,6 +2367,7 @@
             <rect x="536" y="346" width="24" height="150" rx="2" fill="#0d0b08"/>
             <line id="ampVuL" data-cx="470" data-cy="492" x1="470" y1="492" x2="470" y2="356" stroke="#e02a1a" stroke-width="5" transform="rotate(-42 470 492)"/>
             <line id="ampVuR" data-cx="548" data-cy="492" x1="548" y1="492" x2="548" y2="356" stroke="#e02a1a" stroke-width="5" transform="rotate(-42 548 492)"/>
+            <rect class="meterDark" x="428" y="330" width="184" height="184" rx="3" fill="#0d0a06" opacity="0.55"/>
             <text x="520" y="510" font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-size="12" fill="#8a2020" text-anchor="middle">Western Eletric</text>
             <ellipse cx="880" cy="530" rx="120" ry="20" fill="url(#weShadow)"/>
             <circle cx="880" cy="424" r="108" fill="#7e765f"/>
@@ -2352,7 +2375,7 @@
             <circle cx="880" cy="420" r="104" fill="none" stroke="#847c66" stroke-width="8" stroke-dasharray="2 6" opacity="0.4"/>
             <circle cx="880" cy="420" r="76" fill="none" stroke="#b8b09a" stroke-width="1.4" opacity="0.7"/>
             <circle cx="880" cy="420" r="52" fill="url(#weKnob)"/>
-            <circle cx="880" cy="330" r="7" fill="#55504a"/>
+            <circle id="ampVolMark" cx="880" cy="330" r="7" fill="#55504a"/>
             <ellipse cx="838" cy="376" rx="36" ry="28" fill="#ffffff" opacity="0.35" pointer-events="none"/>
             <text x="1120" y="366" font-family="Arial" font-size="12" letter-spacing="2" fill="#6b6252">91E &#183; 300B SINGLE-ENDED TRIODE</text>
             <circle cx="1120" cy="420" r="14" fill="#8a7a5a"/>
@@ -2455,6 +2478,11 @@
             <rect x="318" y="386" width="26" height="80" rx="7" fill="#22222a"/><rect x="321" y="390" width="20" height="34" rx="4" fill="#b8bcc6"/>
             <ellipse cx="472" cy="472" rx="20" ry="7" fill="url(#mcShadow)"/>
             <rect x="458" y="386" width="26" height="80" rx="7" fill="#22222a"/><rect x="461" y="428" width="20" height="34" rx="4" fill="#b8bcc6"/>
+            <text x="600" y="370" font-family="Arial" font-size="12" letter-spacing="1.5" fill="#3c424e" text-anchor="middle">LEVEL</text>
+            <ellipse cx="600" cy="458" rx="26" ry="8" fill="url(#mcShadow)"/>
+            <circle cx="600" cy="424" r="27" fill="#16161c"/>
+            <circle cx="600" cy="422" r="23" fill="url(#mcChromeTop)" stroke="#6e7480" stroke-width="1.4"/>
+            <rect id="ampVolMark" x="598" y="402" width="4" height="11" rx="2" fill="#22222a"/>
             <text x="800" y="436" font-family="Arial" font-size="13" letter-spacing="3" fill="#4c525e" text-anchor="middle">MC 275 &#183; 75 WATTS PER CHANNEL &#183; KT88</text>
             <g fill="#22222a">
                 <circle cx="640" cy="480" r="10"/><circle cx="680" cy="480" r="10"/><circle cx="720" cy="480" r="10"/><circle cx="760" cy="480" r="10"/><circle cx="800" cy="480" r="10"/><circle cx="840" cy="480" r="10"/><circle cx="880" cy="480" r="10"/><circle cx="920" cy="480" r="10"/>
@@ -2491,9 +2519,64 @@
             ampOut.gain.value = m.out;
         }
 
+        function setVolumeLevel(v) {
+            volumeLevel = Math.max(0, Math.min(1, v));
+            if (gainNode) {
+                gainNode.gain.value = volumeLevel * (phonoActive ? PHONO_GAIN : 1);
+            } else {
+                try { audio.volume = volumeLevel; } catch (e) {}
+            }
+            updateVolKnob();
+        }
+
+        function updateVolKnob() {
+            const vol = AMP_MODELS[ampModelId].vol;
+            const mark = document.getElementById("ampVolMark");
+            if (vol && mark) {
+                // 7시(-135°) ~ 5시(+135°) 사이를 도는 클래식 볼륨 포지션
+                const ang = -135 + volumeLevel * 270;
+                mark.setAttribute("transform", "rotate(" + ang.toFixed(1) + " " + vol.cx + " " + vol.cy + ")");
+            }
+        }
+
+        function bindAmpVolume() {
+            const vol = AMP_MODELS[ampModelId].vol;
+            const svg = document.querySelector("#ampStage svg");
+            if (!vol || !svg) return;
+            const hit = document.createElementNS(SVG_NS, "circle");
+            hit.setAttribute("cx", vol.cx);
+            hit.setAttribute("cy", vol.cy);
+            hit.setAttribute("r", vol.r);
+            hit.setAttribute("fill", "#000");
+            hit.setAttribute("fill-opacity", "0");
+            hit.setAttribute("style", "cursor:ns-resize;touch-action:none");
+            const t = document.createElementNS(SVG_NS, "title");
+            t.textContent = "볼륨 — 위아래로 드래그";
+            hit.appendChild(t);
+            svg.appendChild(hit);
+            let drag = false, startY = 0, startV = 1;
+            hit.addEventListener("pointerdown", (e) => {
+                drag = true;
+                startY = e.clientY;
+                startV = volumeLevel;
+                try { hit.setPointerCapture(e.pointerId); } catch (err) {}
+                e.preventDefault();
+            });
+            hit.addEventListener("pointermove", (e) => {
+                if (drag) setVolumeLevel(startV + (startY - e.clientY) / 180);
+            });
+            hit.addEventListener("pointerup", () => {
+                drag = false;
+                saveJson("fmRadio.volume", volumeLevel);
+            });
+            hit.addEventListener("pointercancel", () => { drag = false; });
+        }
+
         function mountAmp() {
             document.getElementById("ampStage").innerHTML = AMP_MODELS[ampModelId].svg;
             applyPanelLighting(document.querySelector("#ampStage svg"));
+            bindAmpVolume();
+            updateVolKnob();
             renderAmpPicker();
         }
 
@@ -2738,6 +2821,7 @@
         function ttFrame(now) {
             const dt = Math.min(0.05, ttLastTs ? (now - ttLastTs) / 1000 : 0.016);
             ttLastTs = now;
+            ttLastDt = dt;
 
             const rpm = ttRpm45 ? 45 : 100 / 3;
             const spinTarget = (phonoActive && isPlaying) ? 1 : 0;
@@ -2798,15 +2882,25 @@
             for (let i = 0; i < 12; i++) {
                 const el = document.getElementById("eqLvl" + i);
                 if (!el) break;
-                const on = eqState.on && isPlaying && (i / 12) < tsSignal;
+                const on = eqState.on && isPlaying && (i / 12) < tsPeak;
                 const color = i >= 10 ? "#ff5a3a" : "#ffb03a";
                 el.style.fill = on ? color : "#1e1610";
                 el.style.filter = on ? "drop-shadow(0 0 5px " + color + ") drop-shadow(0 0 12px " + color + "66)" : "none";
             }
 
-            // 다이얼 백라이트 (재생 시에만 은은하게 점등 — 꺼지면 어둡게)
+            // 다이얼 백라이트 (웜업과 함께 서서히 점등/소등)
             document.querySelectorAll(".lampGlow").forEach((el) => {
-                el.style.opacity = isPlaying ? 0.75 : 0.06;
+                el.style.opacity = (0.06 + tubeWarm * 0.69).toFixed(3);
+            });
+
+            // 전원 연동 조명: 꺼지면 유닛 전체가 어둡고, 켜지면 서서히 살아난다 (웜업 램프 공유)
+            const dimLevel = 1 - tubeWarm;
+            document.querySelectorAll(".lzPowerDim").forEach((el) => {
+                el.style.opacity = (0.22 * dimLevel).toFixed(3);
+            });
+            // 미터 백라이트: 꺼진 미터 면은 어둡다
+            document.querySelectorAll(".meterDark").forEach((el) => {
+                el.style.opacity = (0.55 * dimLevel).toFixed(3);
             });
         }
 
@@ -2837,7 +2931,8 @@
         let isPlaying = false;
         let hls = null;
         let streamLoaded = false;
-        let volumeLevel = 1.0;
+        let volumeLevel = loadJson("fmRadio.volume", 1.0);
+        if (typeof volumeLevel !== "number" || !(volumeLevel >= 0 && volumeLevel <= 1)) volumeLevel = 1.0;
         let accentColor = "#d36a42";
         let favorites = loadJson("fmRadio.favorites", []);
 
