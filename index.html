@@ -725,6 +725,19 @@
             background: rgba(211, 106, 66, 0.16);
         }
 
+        .rack-unit {
+            margin-top: 10px;
+            line-height: 0;
+        }
+
+        .rack-unit svg {
+            display: block;
+            width: 100%;
+            height: auto;
+            border-radius: 7px;
+            box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45), 0 1px 0 rgba(255, 255, 255, 0.06);
+        }
+
         .list-toggle-wrap {
             display: flex;
             justify-content: center;
@@ -871,6 +884,10 @@
         <section class="hero-visual" aria-label="튜너 이미지와 상태 창">
             <div class="tuner-stage" id="tunerStage"></div>
             <div class="skin-picker" id="skinPicker" role="group" aria-label="튜너 스킨 선택"></div>
+            <div class="rack-unit" id="eqStage" aria-label="그래픽 이퀄라이저"></div>
+            <div class="rack-unit" id="ampStage" aria-label="앰프"></div>
+            <div class="skin-picker" id="ampPicker" role="group" aria-label="앰프 모델 선택"></div>
+            <div class="rack-unit" id="ttStage" aria-label="턴테이블"></div>
             <canvas class="vu-canvas" id="vuCanvas" aria-hidden="true"></canvas>
             <div class="hero-player-wrap">
                 <section class="player-bar" aria-label="현재 재생 플레이어">
@@ -1486,8 +1503,9 @@
             playerSubtext.textContent = near.name + " · " + near.freq.toFixed(1) + "MHz — 손을 떼면 선택됩니다.";
         }
 
-        function tunerLoop() {
+        function tunerLoop(now) {
             tsRaf = requestAnimationFrame(tunerLoop);
+            ttFrame(now || performance.now());
             if (!tunerCfg) return;
             let target = 0;
             if (isPlaying) {
@@ -1535,7 +1553,7 @@
             const recOn = !!recorder;
             const timerOn = sleepIndex > 0;
             const listOpen = !document.getElementById("stationMain").classList.contains("collapsed");
-            const state = [isPlaying, recOn, blendOn, monoOn, audio.muted, timerOn, listOpen].join(",");
+            const state = [isPlaying, !!currentStation, recOn, blendOn, monoOn, audio.muted, timerOn, listOpen].join(",");
             if (state === tsPanelState) return;
             tsPanelState = state;
 
@@ -1565,8 +1583,9 @@
                     ? (el.getAttribute("data-on") || tunerCfg.led.on)
                     : (el.getAttribute("data-off") || tunerCfg.led.off);
             };
-            setLed("tsLedStereo", isPlaying && !monoOn);
-            setLed("tsLedLock", isPlaying);
+            const tunerLive = isPlaying && !!currentStation;   // 포노 재생 중엔 튜너 LED 소등
+            setLed("tsLedStereo", tunerLive && !monoOn);
+            setLed("tsLedLock", tunerLive);
             setLed("tsLedBlend", blendOn);
         }
 
@@ -1723,6 +1742,496 @@
             });
         }
 
+        // ===================================================================
+        // 하이파이 랙: 이퀄라이저 · 앰프 · 턴테이블
+        // ===================================================================
+
+        // ----- 그래픽 이퀄라이저 (YAHAMA GE-5) -----
+        const EQ_FREQS = [60, 250, 1000, 4000, 12000];
+        const EQ_LABELS = ["60", "250", "1K", "4K", "12K"];
+        const EQ_X = [860, 1040, 1220, 1400, 1580];
+        const EQ_TOP = 56;
+        const EQ_BOT = 156;
+        let eqState = loadJson("fmRadio.eq", { on: true, gains: [0, 0, 0, 0, 0] });
+        if (!Array.isArray(eqState.gains) || eqState.gains.length !== 5) eqState = { on: true, gains: [0, 0, 0, 0, 0] };
+
+        function applyEq() {
+            if (!eqNodes) return;
+            eqNodes.forEach((b, i) => { b.gain.value = eqState.on ? eqState.gains[i] : 0; });
+        }
+
+        function eqGainToY(g) {
+            return EQ_TOP + (12 - g) / 24 * (EQ_BOT - EQ_TOP);
+        }
+
+        function mountEq() {
+            const sliders = EQ_FREQS.map((f, i) => {
+                const x = EQ_X[i];
+                return '<rect x="' + (x - 3) + '" y="' + EQ_TOP + '" width="6" height="' + (EQ_BOT - EQ_TOP) + '" rx="3" fill="#0c0b0a" stroke="#2e2b26"/>' +
+                    '<rect x="' + (x - 12) + '" y="' + (eqGainToY(0) - 1) + '" width="24" height="2" fill="#4a443c"/>' +
+                    '<g id="eqH' + i + '"><rect x="' + (x - 27) + '" y="-9" width="54" height="18" rx="3" fill="#3d3a34" stroke="#57534a"/><rect x="' + (x - 27) + '" y="-1.2" width="54" height="2.4" fill="#ec8255"/></g>' +
+                    '<text id="eqV' + i + '" x="' + x + '" y="42" font-family="Arial" font-size="12" font-weight="700" fill="#b9aea1" text-anchor="middle">0</text>' +
+                    '<text x="' + x + '" y="182" font-family="Arial" font-size="13" font-weight="700" letter-spacing="1" fill="#8a7d70" text-anchor="middle">' + EQ_LABELS[i] + '</text>' +
+                    '<rect id="eqHit' + i + '" x="' + (x - 45) + '" y="30" width="90" height="160" fill="#000" fill-opacity="0" style="cursor:ns-resize;touch-action:none"><title>' + EQ_LABELS[i] + 'Hz ±12dB</title></rect>';
+            }).join("");
+            document.getElementById("eqStage").innerHTML =
+                '<svg class="eq-svg" viewBox="0 0 2000 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="YAHAMA GE-5 그래픽 이퀄라이저">' +
+                '<defs><linearGradient id="eqPanel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#34312b"/><stop offset="0.5" stop-color="#28251f"/><stop offset="1" stop-color="#1c1a16"/></linearGradient></defs>' +
+                '<rect width="2000" height="200" rx="6" fill="url(#eqPanel)"/>' +
+                '<rect y="0" width="2000" height="8" rx="4" fill="#57534a" opacity="0.5"/>' +
+                '<text x="120" y="86" font-family="Arial" font-size="26" font-weight="700" letter-spacing="1.5" fill="#e6e5e8">YAHAMA</text>' +
+                '<text x="120" y="116" font-family="Arial" font-size="15" font-weight="600" letter-spacing="2" fill="#b9aea1">GE-5 GRAPHIC EQUALIZER</text>' +
+                '<text x="120" y="140" font-family="Arial" font-size="12" letter-spacing="1" fill="#8a7d70">5 BAND &#177;12dB</text>' +
+                '<text x="770" y="' + (EQ_TOP + 6) + '" font-family="Arial" font-size="10" fill="#8a7d70" text-anchor="end">+12</text>' +
+                '<text x="770" y="' + (eqGainToY(0) + 3) + '" font-family="Arial" font-size="10" fill="#8a7d70" text-anchor="end">0</text>' +
+                '<text x="770" y="' + EQ_BOT + '" font-family="Arial" font-size="10" fill="#8a7d70" text-anchor="end">-12</text>' +
+                sliders +
+                '<circle id="eqLed" cx="1760" cy="92" r="7" fill="#3a2012"/>' +
+                '<text x="1760" y="122" font-family="Arial" font-size="11" font-weight="700" letter-spacing="1" fill="#b9aea1" text-anchor="middle">EQ ON</text>' +
+                '<rect id="eqDefeatBtn" x="1712" y="132" width="96" height="30" rx="6" fill="#3d3a34" stroke="#57534a" style="cursor:pointer"><title>EQ 켜기/끄기 (DEFEAT)</title></rect>' +
+                '<text x="1760" y="152" font-family="Arial" font-size="12" font-weight="700" letter-spacing="1" fill="#d9cfc0" text-anchor="middle" pointer-events="none">DEFEAT</text>' +
+                '</svg>';
+
+            const svg = document.querySelector("#eqStage svg");
+            EQ_FREQS.forEach((f, i) => {
+                const hit = document.getElementById("eqHit" + i);
+                let drag = false;
+                const setFromY = (clientY) => {
+                    const r = svg.getBoundingClientRect();
+                    const y = (clientY - r.top) / r.height * 200;
+                    let g = 12 - (y - EQ_TOP) / (EQ_BOT - EQ_TOP) * 24;
+                    g = Math.max(-12, Math.min(12, g));
+                    if (Math.abs(g) < 0.7) g = 0;      // 센터 디텐트
+                    eqState.gains[i] = Math.round(g * 2) / 2;
+                    applyEq();
+                    updateEqVisuals();
+                };
+                hit.addEventListener("pointerdown", (e) => { drag = true; try { hit.setPointerCapture(e.pointerId); } catch (err) {} setFromY(e.clientY); e.preventDefault(); });
+                hit.addEventListener("pointermove", (e) => { if (drag) setFromY(e.clientY); });
+                hit.addEventListener("pointerup", () => { drag = false; saveJson("fmRadio.eq", eqState); });
+                hit.addEventListener("pointercancel", () => { drag = false; });
+            });
+            document.getElementById("eqDefeatBtn").addEventListener("click", () => {
+                eqState.on = !eqState.on;
+                applyEq();
+                updateEqVisuals();
+                saveJson("fmRadio.eq", eqState);
+                playerSubtext.textContent = eqState.on ? "이퀄라이저 ON" : "이퀄라이저 DEFEAT (바이패스)";
+            });
+            updateEqVisuals();
+        }
+
+        function updateEqVisuals() {
+            EQ_FREQS.forEach((f, i) => {
+                const h = document.getElementById("eqH" + i);
+                const v = document.getElementById("eqV" + i);
+                if (!h) return;
+                h.setAttribute("transform", "translate(0," + eqGainToY(eqState.gains[i]).toFixed(1) + ")");
+                h.style.opacity = eqState.on ? 1 : 0.4;
+                v.textContent = (eqState.gains[i] > 0 ? "+" : "") + eqState.gains[i];
+            });
+            const led = document.getElementById("eqLed");
+            if (led) led.style.fill = eqState.on ? "#ff7a3a" : "#3a2012";
+        }
+
+        // ----- 앰프 (TR 1종 + 진공관 3종, 모델별 고유 음색) -----
+        const AMP_MODELS = {
+            tr: {
+                pill: "TR ST-100", name: "ST-100", sub: "SOLID STATE STEREO AMPLIFIER",
+                desc: "솔리드스테이트 — 무색·투명, 높은 댐핑",
+                face: ["#1e1e22", "#131317"], accentText: "#e8e8ec", tubes: [], fins: true,
+                drive: 1, k: 0, asym: 0, bass: [80, 0], mid: [1000, 0, 1], treble: [8000, 0], out: 1
+            },
+            el34: {
+                pill: "EL34", name: "A-34", sub: "EL34 PUSH-PULL TUBE AMPLIFIER",
+                desc: "EL34 푸시풀 — 미드 포워드, 브리티시 웜",
+                face: ["#2a3134", "#171c1e"], accentText: "#d8b060",
+                tubes: [{ x: 950, w: 46, h: 104 }, { x: 1030, w: 46, h: 104 }, { x: 1130, w: 46, h: 104 }, { x: 1210, w: 46, h: 104 }],
+                drive: 2.2, k: 1.7, asym: 0.12, bass: [120, 0.8], mid: [1800, 1.6, 0.9], treble: [8000, -0.9], out: 0.74
+            },
+            "300b": {
+                pill: "300B", name: "A-300", sub: "300B SINGLE-ENDED TRIODE",
+                desc: "300B 싱글엔디드 — 달콤한 짝수 배음, 부드러운 고역",
+                face: ["#3c3a38", "#232120"], accentText: "#e8ddc0",
+                tubes: [{ x: 940, w: 66, h: 120 }, { x: 1080, w: 66, h: 120 }, { x: 1190, w: 36, h: 86 }, { x: 1250, w: 36, h: 86 }],
+                drive: 2.8, k: 1.15, asym: 0.38, bass: [100, 1.4], mid: [800, 0.8, 0.8], treble: [7000, -2.2], out: 0.7
+            },
+            kt88: {
+                pill: "KT88", name: "A-88", sub: "KT88 ULTRA-LINEAR TUBE AMPLIFIER",
+                desc: "KT88 — 광대역 파워, 깊고 단단한 저역",
+                face: ["#26262c", "#141418"], accentText: "#c8c6cd",
+                tubes: [{ x: 940, w: 56, h: 112 }, { x: 1030, w: 56, h: 112 }, { x: 1130, w: 56, h: 112 }, { x: 1220, w: 56, h: 112 }],
+                drive: 1.9, k: 1.45, asym: 0.08, bass: [80, 1.8], mid: [1200, -0.5, 1], treble: [10000, 0.9], out: 0.78
+            }
+        };
+        const AMP_ORDER = ["tr", "el34", "300b", "kt88"];
+        let ampModelId = loadJson("fmRadio.amp", "tr");
+        if (!AMP_MODELS[ampModelId]) ampModelId = "tr";
+
+        function tubeCurve(k, asym) {
+            const n = 1024;
+            const c = new Float32Array(n);
+            const norm = Math.tanh(k);
+            for (let i = 0; i < n; i++) {
+                const x = i / (n - 1) * 2 - 1;
+                const shifted = x + asym * (1 - x * x);   // 비대칭 → 짝수 배음
+                c[i] = Math.tanh(k * shifted) / norm;
+            }
+            return c;
+        }
+
+        function applyAmp() {
+            if (!ampDrive) return;
+            const m = AMP_MODELS[ampModelId];
+            ampDrive.gain.value = m.drive;
+            ampShaper.curve = m.k > 0 ? tubeCurve(m.k, m.asym) : null;
+            ampBass.frequency.value = m.bass[0];
+            ampBass.gain.value = m.bass[1];
+            ampMid.frequency.value = m.mid[0];
+            ampMid.gain.value = m.mid[1];
+            ampMid.Q.value = m.mid[2];
+            ampTreble.frequency.value = m.treble[0];
+            ampTreble.gain.value = m.treble[1];
+            ampOut.gain.value = m.out;
+        }
+
+        function ampVuSvg(cx) {
+            return '<g>' +
+                '<rect x="' + (cx - 95) + '" y="60" width="190" height="110" rx="6" fill="#e8d9b0" stroke="#1c1a16" stroke-width="3"/>' +
+                '<path d="M ' + (cx - 70) + ' 150 A 80 80 0 0 1 ' + (cx + 70) + ' 150" fill="none" stroke="#3a2b1e" stroke-width="1.5"/>' +
+                '<path d="M ' + (cx + 38) + ' 92 A 80 80 0 0 1 ' + (cx + 70) + ' 150" fill="none" stroke="#c0392b" stroke-width="3"/>' +
+                '<text x="' + cx + '" y="160" font-family="Arial" font-size="12" font-weight="700" fill="#3a2b1e" text-anchor="middle">VU</text>' +
+                '<line id="__VU__" data-cx="' + cx + '" data-cy="150" x1="' + cx + '" y1="150" x2="' + cx + '" y2="76" stroke="#1c1a16" stroke-width="2.5" transform="rotate(-42 ' + cx + ' 150)"/>' +
+                '<circle cx="' + cx + '" cy="150" r="6" fill="#1c1a16"/>' +
+                '</g>';
+        }
+
+        function mountAmp() {
+            const m = AMP_MODELS[ampModelId];
+            let inner = "";
+            if (m.fins) {
+                for (let i = 0; i < 14; i++) {
+                    inner += '<rect x="' + (930 + i * 26) + '" y="52" width="12" height="140" rx="2" fill="#0d0d10" stroke="#2a2a30" stroke-width="1"/>';
+                }
+                inner += '<text x="1110" y="220" font-family="Arial" font-size="11" letter-spacing="2" fill="#55555c" text-anchor="middle">HIGH DAMPING · DC AMP</text>';
+            } else {
+                inner += '<rect x="880" y="180" width="440" height="34" rx="4" fill="#111114" stroke="#000"/>';
+                m.tubes.forEach((t) => {
+                    const gy = 176 - t.h;
+                    inner += '<g>' +
+                        '<rect x="' + (t.x - t.w / 2 - 6) + '" y="' + (176 - 10) + '" width="' + (t.w + 12) + '" height="14" rx="4" fill="#222226"/>' +
+                        '<ellipse class="ampGlow" cx="' + t.x + '" cy="' + (gy + t.h * 0.55) + '" rx="' + (t.w * 0.8) + '" ry="' + (t.h * 0.5) + '" fill="#ff7a2a" opacity="0.08" filter="url(#ampGlowF)"/>' +
+                        '<rect x="' + (t.x - t.w / 2) + '" y="' + gy + '" width="' + t.w + '" height="' + t.h + '" rx="' + (t.w / 2) + '" fill="url(#ampGlass)" stroke="#55555c" stroke-width="1.2"/>' +
+                        '<rect class="ampGlow" x="' + (t.x - 2.5) + '" y="' + (gy + 16) + '" width="5" height="' + (t.h - 40) + '" rx="2.5" fill="#ffb03a" opacity="0.08"/>' +
+                        '</g>';
+                });
+                inner += '<rect x="1340" y="60" width="150" height="130" rx="6" fill="#141416" stroke="#2e2e34" stroke-width="2"/>' +
+                    '<rect x="1355" y="74" width="120" height="8" rx="2" fill="#26262c"/><rect x="1355" y="90" width="120" height="8" rx="2" fill="#26262c"/>' +
+                    '<text x="1415" y="170" font-family="Arial" font-size="10" letter-spacing="1" fill="#55555c" text-anchor="middle">OUTPUT TRANS</text>';
+            }
+            const svg = '<svg class="amp-svg" viewBox="0 0 2000 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="YAHAMA ' + m.name + ' 앰프">' +
+                '<defs>' +
+                '<linearGradient id="ampFace" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + m.face[0] + '"/><stop offset="1" stop-color="' + m.face[1] + '"/></linearGradient>' +
+                '<linearGradient id="ampGlass" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1a1a20" stop-opacity="0.85"/><stop offset="0.35" stop-color="#3a3a44" stop-opacity="0.5"/><stop offset="1" stop-color="#101014" stop-opacity="0.9"/></linearGradient>' +
+                '<filter id="ampGlowF" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="8"/></filter>' +
+                '</defs>' +
+                '<rect width="2000" height="250" rx="6" fill="url(#ampFace)"/>' +
+                '<rect y="0" width="2000" height="6" rx="3" fill="#ffffff" opacity="0.08"/>' +
+                '<text x="120" y="90" font-family="Arial" font-size="26" font-weight="700" letter-spacing="1.5" fill="#e6e5e8">YAHAMA <tspan fill="' + m.accentText + '">' + m.name + '</tspan></text>' +
+                '<text x="120" y="120" font-family="Arial" font-size="13" letter-spacing="2" fill="#8a8a92">' + m.sub + '</text>' +
+                '<circle id="ampPwrLed" cx="128" cy="170" r="7" fill="#3a2012"/>' +
+                '<text x="148" y="175" font-family="Arial" font-size="11" letter-spacing="1" fill="#8a8a92">POWER</text>' +
+                inner +
+                ampVuSvg(1640).replace("__VU__", "ampVuL") +
+                ampVuSvg(1850).replace("__VU__", "ampVuR") +
+                '</svg>';
+            document.getElementById("ampStage").innerHTML = svg;
+            renderAmpPicker();
+        }
+
+        function renderAmpPicker() {
+            const el = document.getElementById("ampPicker");
+            el.innerHTML = "";
+            AMP_ORDER.forEach((id) => {
+                const b = document.createElement("button");
+                b.type = "button";
+                b.className = "skin-btn" + (id === ampModelId ? " active" : "");
+                b.textContent = AMP_MODELS[id].pill;
+                b.title = AMP_MODELS[id].desc;
+                b.addEventListener("click", () => {
+                    if (id === ampModelId) return;
+                    ampModelId = id;
+                    applyAmp();
+                    mountAmp();
+                    saveJson("fmRadio.amp", id);
+                    playerSubtext.textContent = "앰프: " + AMP_MODELS[id].pill + " — " + AMP_MODELS[id].desc;
+                });
+                el.appendChild(b);
+            });
+        }
+
+        // ----- 턴테이블 (YAHAMA PL-12) — 아날로그 감성 재현 -----
+        const PHONO_BASE = "https://upload.wikimedia.org/wikipedia/commons/";
+        const RECORD = {
+            title: "무반주 첼로 모음곡 제1번 G장조",
+            bwv: "BWV 1007",
+            composer: "J. S. BACH",
+            performer: "John Michel, violoncello",
+            credit: "음원: John Michel · CC BY-SA 3.0 · Wikimedia Commons",
+            tracks: [
+                { t: "I. Prélude", f: "4/43/JOHN_MICHEL_CELLO-J_S_BACH_CELLO_SUITE_1_in_G_Prelude.ogg" },
+                { t: "II. Allemande", f: "6/6c/JOHN_MICHEL_CELLO-J_S_BACH_CELLO_SUITE_1_in_G_Allemande.ogg" },
+                { t: "III. Courante", f: "0/08/JOHN_MICHEL_CELLO-J_S_BACH_CELLO_SUITE_1_in_G_Courante.ogg" },
+                { t: "IV. Sarabande", f: "3/30/JOHN_MICHEL_CELLO-J_S_BACH_CELLO_SUITE_1_in_G_Sarabande.ogg" },
+                { t: "V. Menuet I & II", f: "6/67/JOHN_MICHEL_CELLO-J_S_BACH_CELLO_SUITE_1_in_G_Minuets.ogg" },
+                { t: "VI. Gigue", f: "e/e6/JOHN_MICHEL_CELLO-J_S_BACH_CELLO_SUITE_1_in_G_Gigue.ogg" }
+            ]
+        };
+        let phonoActive = false;
+        let phonoTrack = -1;
+        let ttSpin = 0;
+        let ttAngle = 0;
+        let ttArmAng = -26;
+        let ttRpm45 = false;
+        let ttLastTs = 0;
+
+        function mountTurntable() {
+            let grooves = "";
+            for (let r = 108; r <= 246; r += 7) {
+                grooves += '<circle cx="560" cy="330" r="' + r + '" fill="none" stroke="#000" stroke-width="0.8" opacity="0.5"/>';
+            }
+            for (let i = 0; i < 6; i++) {
+                grooves += '<circle cx="560" cy="330" r="' + (116 + i * 22) + '" fill="none" stroke="#2e2e33" stroke-width="4" opacity="0.5"/>';
+            }
+            const rows = RECORD.tracks.map((tr, i) => {
+                const y = 128 + i * 50;
+                return '<rect id="ttTrackBg' + i + '" x="1600" y="' + (y - 30) + '" width="360" height="44" rx="6" fill="#d36a42" opacity="0"/>' +
+                    '<text x="1622" y="' + y + '" font-family="Arial" font-size="16" font-weight="700" fill="#8a7d70">' + (i + 1) + '</text>' +
+                    '<text x="1652" y="' + y + '" font-family="Georgia, serif" font-size="17" fill="#d9cfc0">' + tr.t + '</text>' +
+                    '<rect id="ttTrackHit' + i + '" x="1600" y="' + (y - 30) + '" width="360" height="46" fill="#000" fill-opacity="0" style="cursor:pointer"><title>' + tr.t + ' 재생</title></rect>';
+            }).join("");
+            document.getElementById("ttStage").innerHTML =
+                '<svg class="tt-svg" viewBox="0 0 2000 640" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="YAHAMA PL-12 턴테이블">' +
+                '<defs>' +
+                '<linearGradient id="ttWood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5d4430"/><stop offset="0.5" stop-color="#4a3524"/><stop offset="1" stop-color="#33241a"/></linearGradient>' +
+                '<radialGradient id="ttVinyl" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#1c1c1f"/><stop offset="0.35" stop-color="#141416"/><stop offset="0.85" stop-color="#0d0d0f"/><stop offset="1" stop-color="#131316"/></radialGradient>' +
+                '<linearGradient id="ttSheen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity="0.14"/><stop offset="0.5" stop-color="#ffffff" stop-opacity="0"/></linearGradient>' +
+                '<radialGradient id="ttMetal" cx="0.4" cy="0.35" r="0.9"><stop offset="0" stop-color="#d8d8dc"/><stop offset="0.6" stop-color="#9a9aa2"/><stop offset="1" stop-color="#5c5c64"/></radialGradient>' +
+                '</defs>' +
+                '<rect width="2000" height="640" rx="10" fill="url(#ttWood)"/>' +
+                '<rect x="24" y="24" width="1952" height="592" rx="8" fill="#17161a" stroke="#0a0a0c" stroke-width="2"/>' +
+                '<text x="60" y="72" font-family="Arial" font-size="26" font-weight="700" letter-spacing="1.5" fill="#e6e5e8">YAHAMA PL-12</text>' +
+                '<text x="60" y="98" font-family="Arial" font-size="12" letter-spacing="2.5" fill="#8a7d70">BELT-DRIVE TURNTABLE</text>' +
+                // 플래터
+                '<ellipse cx="566" cy="342" rx="282" ry="280" fill="#000" opacity="0.5"/>' +
+                '<circle cx="560" cy="330" r="278" fill="#26262b"/>' +
+                '<circle cx="560" cy="330" r="272" fill="#0c0c0e" stroke="#3a3a40" stroke-width="2"/>' +
+                '<g id="ttSpinG">' +
+                '<circle cx="560" cy="330" r="264" fill="none" stroke="#3c3c44" stroke-width="4" stroke-dasharray="3 9"/>' +
+                '<circle cx="560" cy="330" r="252" fill="url(#ttVinyl)"/>' +
+                grooves +
+                '<path d="M 560 330 L 560 78 A 252 252 0 0 1 738 156 Z" fill="url(#ttSheen)"/>' +
+                '<path d="M 560 330 L 560 582 A 252 252 0 0 1 382 504 Z" fill="url(#ttSheen)" opacity="0.6"/>' +
+                '<circle cx="560" cy="330" r="86" fill="#ddd2b4"/>' +
+                '<circle cx="560" cy="330" r="86" fill="none" stroke="#8a2020" stroke-width="3"/>' +
+                '<text x="560" y="290" font-family="Georgia, serif" font-size="26" font-weight="700" fill="#6b1f1f" text-anchor="middle">BACH</text>' +
+                '<text x="560" y="314" font-family="Arial" font-size="11" fill="#3a2b1e" text-anchor="middle">무반주 첼로 모음곡 1번</text>' +
+                '<text x="560" y="332" font-family="Arial" font-size="10" fill="#3a2b1e" text-anchor="middle">' + RECORD.bwv + ' · SIDE A</text>' +
+                '<text x="560" y="360" font-family="Arial" font-size="9" fill="#6b5d4a" text-anchor="middle">JOHN MICHEL, CELLO</text>' +
+                '<text x="560" y="380" font-family="Arial" font-size="9" letter-spacing="1" fill="#8a2020" text-anchor="middle">YAHAMA RECORDS · 33&#8531;</text>' +
+                '<circle cx="560" cy="330" r="7" fill="#c9c2ae" stroke="#55504a"/><circle cx="560" cy="330" r="2.5" fill="#111"/>' +
+                '</g>' +
+                // 톤암
+                '<circle cx="1065" cy="120" r="46" fill="#1f1f24" stroke="#0a0a0c" stroke-width="2"/>' +
+                '<circle cx="1065" cy="120" r="34" fill="url(#ttMetal)"/>' +
+                '<rect x="920" y="486" width="10" height="34" rx="3" fill="#26262b"/>' +
+                '<rect x="912" y="480" width="26" height="10" rx="4" fill="#3a3a40"/>' +
+                '<g id="ttArmG">' +
+                '<circle cx="1132" cy="78" r="24" fill="#26262b" stroke="#4a4a52" stroke-width="2"/>' +
+                '<line x1="1122" y1="88" x2="1065" y2="120" stroke="#55555c" stroke-width="12" stroke-linecap="round"/>' +
+                '<line x1="1065" y1="120" x2="768" y2="428" stroke="#3c3c44" stroke-width="11" stroke-linecap="round"/>' +
+                '<line x1="1065" y1="120" x2="768" y2="428" stroke="#b8b8c0" stroke-width="7" stroke-linecap="round"/>' +
+                '<g transform="rotate(-46 762 434)"><rect x="734" y="420" width="58" height="26" rx="5" fill="#1c1c22" stroke="#4a4a52"/><rect x="742" y="444" width="14" height="8" rx="2" fill="#8a2020"/></g>' +
+                '</g>' +
+                '<circle cx="1065" cy="120" r="8" fill="#0d0d10"/>' +
+                // 앨범 재킷
+                '<rect x="1180" y="60" width="380" height="380" rx="4" fill="#ddd2b4" stroke="#b3a988" stroke-width="2"/>' +
+                '<rect x="1196" y="76" width="348" height="348" fill="none" stroke="#8a7d5a" stroke-width="1" opacity="0.6"/>' +
+                '<text x="1370" y="170" font-family="Georgia, serif" font-size="64" font-weight="700" fill="#3a2b1e" text-anchor="middle">BACH</text>' +
+                '<text x="1370" y="212" font-family="Arial" font-size="20" fill="#5d4430" text-anchor="middle">무반주 첼로 모음곡</text>' +
+                '<text x="1370" y="240" font-family="Arial" font-size="15" fill="#5d4430" text-anchor="middle">제1번 G장조 · ' + RECORD.bwv + '</text>' +
+                '<line x1="1260" y1="266" x2="1480" y2="266" stroke="#8a7d5a" stroke-width="1"/>' +
+                '<text x="1370" y="296" font-family="Georgia, serif" font-style="italic" font-size="16" fill="#3a2b1e" text-anchor="middle">' + RECORD.performer + '</text>' +
+                '<rect x="1196" y="380" width="348" height="44" fill="#8a2020"/>' +
+                '<text x="1370" y="408" font-family="Arial" font-size="13" letter-spacing="2" fill="#f0e8d0" text-anchor="middle">YAHAMA RECORDS &#183; STEREO</text>' +
+                // 트랙 리스트
+                '<text x="1600" y="86" font-family="Arial" font-size="14" font-weight="700" letter-spacing="2" fill="#8a7d70">SIDE A</text>' +
+                rows +
+                // 컨트롤
+                '<rect id="ttStartBtn" x="1180" y="480" width="240" height="76" rx="8" fill="#26262b" stroke="#4a4a52" stroke-width="2" style="cursor:pointer"><title>START/STOP</title></rect>' +
+                '<text id="ttStartLabel" x="1300" y="527" font-family="Arial" font-size="20" font-weight="700" letter-spacing="3" fill="#e6e5e8" text-anchor="middle" pointer-events="none">START</text>' +
+                '<rect id="tt33" x="1450" y="492" width="100" height="52" rx="8" fill="#26262b" stroke="#4a4a52" style="cursor:pointer"><title>33 1/3 RPM</title></rect>' +
+                '<text x="1500" y="524" font-family="Arial" font-size="16" font-weight="700" fill="#e6e5e8" text-anchor="middle" pointer-events="none">33&#8531;</text>' +
+                '<rect id="tt45" x="1570" y="492" width="100" height="52" rx="8" fill="#26262b" stroke="#4a4a52" style="cursor:pointer"><title>45 RPM (빠른 재생)</title></rect>' +
+                '<text x="1620" y="524" font-family="Arial" font-size="16" font-weight="700" fill="#e6e5e8" text-anchor="middle" pointer-events="none">45</text>' +
+                '<text x="1180" y="600" font-family="Arial" font-size="12" fill="#8a7d70">' + RECORD.credit + '</text>' +
+                '</svg>';
+
+            RECORD.tracks.forEach((tr, i) => {
+                document.getElementById("ttTrackHit" + i).addEventListener("click", () => playPhonoTrack(i));
+            });
+            document.getElementById("ttStartBtn").addEventListener("click", () => {
+                if (phonoActive) togglePlay();
+                else playPhonoTrack(0);
+            });
+            document.getElementById("tt33").addEventListener("click", () => { ttRpm45 = false; updatePhonoVisuals(); });
+            document.getElementById("tt45").addEventListener("click", () => { ttRpm45 = true; updatePhonoVisuals(); });
+            updatePhonoVisuals();
+        }
+
+        function playPhonoTrack(i) {
+            stopRecording();
+            if (hls) { hls.destroy(); hls = null; }
+            // 그래프는 MSE 지원 브라우저에서만 (iOS 네이티브 HLS 충돌 회피 — 라디오와 동일한 기준)
+            if (typeof Hls !== "undefined" && Hls.isSupported()) ensureAudioGraph();
+            phonoActive = true;
+            phonoTrack = i;
+            currentStation = null;
+            tunerSetStation(null);
+            document.querySelectorAll(".station").forEach((el) => el.classList.remove("active", "playing", "loading"));
+            streamLoaded = true;
+            try { audio.preservesPitch = false; audio.webkitPreservesPitch = false; } catch (e) {}
+            audio.src = PHONO_BASE + RECORD.tracks[i].f;
+            audio.play().catch(() => { isPlaying = false; updatePlayButton(); });
+            isPlaying = true;
+            needleThump();
+            nowStation.textContent = RECORD.tracks[i].t + " — " + RECORD.composer;
+            playerSubtext.textContent = "PHONO · " + RECORD.title + " (" + RECORD.performer + ")";
+            updatePlayButton();
+            updateMediaSession();
+            updatePhonoVisuals();
+            gtag('event', 'play_phono', { track: RECORD.tracks[i].t });
+        }
+
+        function stopPhono() {
+            if (!phonoActive) return;
+            phonoActive = false;
+            phonoTrack = -1;
+            try { audio.preservesPitch = true; audio.webkitPreservesPitch = true; } catch (e) {}
+            try { audio.playbackRate = 1; } catch (e) {}
+            if (crackleGain) crackleGain.gain.value = 0;
+            updatePhonoVisuals();
+        }
+
+        function updatePhonoVisuals() {
+            RECORD.tracks.forEach((tr, i) => {
+                const bg = document.getElementById("ttTrackBg" + i);
+                if (bg) bg.setAttribute("opacity", i === phonoTrack ? "0.22" : "0");
+            });
+            const lbl = document.getElementById("ttStartLabel");
+            if (lbl) lbl.textContent = (phonoActive && isPlaying) ? "STOP" : "START";
+            const p33 = document.getElementById("tt33");
+            const p45 = document.getElementById("tt45");
+            if (p33) p33.setAttribute("fill", ttRpm45 ? "#26262b" : "#6b3a22");
+            if (p45) p45.setAttribute("fill", ttRpm45 ? "#6b3a22" : "#26262b");
+        }
+
+        function needleThump() {
+            if (!audioCtx) return;
+            try {
+                const dur = 0.22;
+                const sr = audioCtx.sampleRate;
+                const buf = audioCtx.createBuffer(1, Math.floor(sr * dur), sr);
+                const d = buf.getChannelData(0);
+                for (let i = 0; i < d.length; i++) {
+                    const t = i / sr;
+                    d[i] = (Math.random() * 2 - 1) * Math.exp(-t * 28) * 0.6 + Math.sin(2 * Math.PI * 38 * t) * Math.exp(-t * 18) * 0.5;
+                }
+                const s = audioCtx.createBufferSource();
+                s.buffer = buf;
+                const g = audioCtx.createGain();
+                g.gain.value = 0.22;
+                s.connect(g);
+                g.connect(eqNodes ? eqNodes[0] : audioCtx.destination);
+                s.start();
+            } catch (e) {}
+        }
+
+        function ensureCrackle() {
+            if (!audioCtx || !crackleGain || crackleSrc) return;
+            try {
+                const dur = 3;
+                const sr = audioCtx.sampleRate;
+                const buf = audioCtx.createBuffer(1, sr * dur, sr);
+                const d = buf.getChannelData(0);
+                let dust = 0;
+                for (let i = 0; i < d.length; i++) {
+                    let v = (Math.random() * 2 - 1) * 0.012;      // 표면 노이즈
+                    if (Math.random() < 0.00012) dust = 0.25 + Math.random() * 0.75;  // 먼지 팝
+                    if (dust > 0.001) { v += (Math.random() * 2 - 1) * dust; dust *= 0.72; }
+                    d[i] = v;
+                }
+                crackleSrc = audioCtx.createBufferSource();
+                crackleSrc.buffer = buf;
+                crackleSrc.loop = true;
+                crackleSrc.connect(crackleGain);
+                crackleSrc.start();
+            } catch (e) { crackleSrc = null; }
+        }
+
+        // ----- 랙 프레임 루프 (플래터 회전·톤암·와우플러터·크랙클·진공관 글로우·VU) -----
+        function ttFrame(now) {
+            const dt = Math.min(0.05, ttLastTs ? (now - ttLastTs) / 1000 : 0.016);
+            ttLastTs = now;
+
+            const rpm = ttRpm45 ? 45 : 100 / 3;
+            const spinTarget = (phonoActive && isPlaying) ? 1 : 0;
+            const step = spinTarget > ttSpin ? dt / 1.4 : dt / 2.6;   // 스핀업은 빠르게, 런다운은 관성으로
+            ttSpin = Math.max(0, Math.min(1, ttSpin + (spinTarget > ttSpin ? 1 : -1) * step));
+            if (ttSpin > 0.002) {
+                ttAngle = (ttAngle + rpm / 60 * 360 * ttSpin * dt) % 360;
+                const g = document.getElementById("ttSpinG");
+                if (g) g.setAttribute("transform", "rotate(" + ttAngle.toFixed(2) + " 560 330)");
+            }
+
+            // 톤암: 정지 시 암레스트, 재생 시 트랙 진행에 따라 안쪽으로
+            let armTarget = -26;
+            if (phonoActive && phonoTrack >= 0) {
+                const p = (audio.duration > 0 && isFinite(audio.duration)) ? Math.min(1, audio.currentTime / audio.duration) : 0;
+                const seg = 21 / RECORD.tracks.length;
+                armTarget = -2 + seg * (phonoTrack + p);
+            }
+            ttArmAng += (armTarget - ttArmAng) * Math.min(1, dt * 3.5);
+            const arm = document.getElementById("ttArmG");
+            if (arm) arm.setAttribute("transform", "rotate(" + ttArmAng.toFixed(2) + " 1065 120)");
+
+            // 와우·플러터 + 스핀업 피치 + 45회전
+            if (phonoActive && isPlaying) {
+                const t = now / 1000;
+                const wow = 1 + 0.0022 * Math.sin(t * 2 * Math.PI * 0.43) + 0.0007 * Math.sin(t * 2 * Math.PI * 3.1);
+                const spinPitch = ttSpin < 0.999 ? (0.5 + 0.5 * ttSpin) : 1;
+                const mult = ttRpm45 ? 1.35 : 1;
+                try { audio.playbackRate = wow * spinPitch * mult; } catch (e) {}
+            }
+            if (phonoActive && crackleGain) {
+                ensureCrackle();
+                const target = (isPlaying && !audio.muted) ? 0.013 : 0;
+                crackleGain.gain.value += (target - crackleGain.gain.value) * 0.08;
+            }
+
+            // 앰프: 진공관 글로우·VU 바늘·전원 LED
+            document.querySelectorAll(".ampGlow").forEach((el) => {
+                el.style.opacity = isPlaying ? (0.3 + tsSignal * 0.55) : 0.06;
+            });
+            const vuAng = -42 + Math.max(0, Math.min(1, tsSignal)) * 84;
+            ["ampVuL", "ampVuR"].forEach((id, idx) => {
+                const n = document.getElementById(id);
+                if (n) n.setAttribute("transform", "rotate(" + (vuAng * (idx ? 0.96 : 1)).toFixed(1) + " " + n.getAttribute("data-cx") + " " + n.getAttribute("data-cy") + ")");
+            });
+            const pled = document.getElementById("ampPwrLed");
+            if (pled) pled.style.fill = isPlaying ? "#ff7a3a" : "#3a2012";
+        }
+
         // 채널 목록 접기/펼치기 (기본 접힘 — 튜너 중심)
         function toggleStationList() {
             const main = document.getElementById("stationMain");
@@ -1746,6 +2255,16 @@
         let analyser = null;
         let blendFilter = null;
         let monoGain = null;
+        // 하이파이 랙 체인: EQ(5밴드) → 앰프(드라이브→쉐이퍼→톤→출력), 크랙클(포노 전용)
+        let eqNodes = null;
+        let ampDrive = null;
+        let ampShaper = null;
+        let ampBass = null;
+        let ampMid = null;
+        let ampTreble = null;
+        let ampOut = null;
+        let crackleGain = null;
+        let crackleSrc = null;
         let vuRaf = null;
         let vuData = null;
         let recorder = null;
@@ -1929,6 +2448,7 @@
             if (!station) return;
 
             stopRecording();
+            stopPhono();
 
             document.querySelectorAll(".station").forEach((element) => {
                 element.classList.remove("active", "playing", "loading");
@@ -1966,12 +2486,13 @@
         }
 
         function togglePlay() {
-            if (!currentStation) return;
+            if (!currentStation && !phonoActive) return;
+            const sourceName = currentStation ? currentStation.name : "레코드";
 
             if (isPlaying) {
                 audio.pause();
                 isPlaying = false;
-                playerSubtext.textContent = `${currentStation.name} 재생을 일시정지했습니다.`;
+                playerSubtext.textContent = `${sourceName} 재생을 일시정지했습니다.`;
             } else {
                 if (!streamLoaded) {
                     selectStation(currentStation.id);
@@ -1979,7 +2500,7 @@
                 }
                 audio.play().then(() => {
                     isPlaying = true;
-                    playerSubtext.textContent = `${currentStation.name} 재생 중입니다.`;
+                    playerSubtext.textContent = `${sourceName} 재생 중입니다.`;
                     updatePlayButton();
                     updateActiveStation();
                 }).catch(() => {
@@ -1996,6 +2517,7 @@
 
         function stopPlay() {
             stopRecording();
+            stopPhono();
 
             if (hls) {
                 hls.destroy();
@@ -2031,6 +2553,7 @@
 
         function playEasterEgg() {
             stopRecording();
+            stopPhono();
 
             if (hls) {
                 hls.destroy();
@@ -2093,11 +2616,38 @@
                 blendFilter = audioCtx.createBiquadFilter();
                 blendFilter.type = "lowpass";
                 monoGain = audioCtx.createGain();
-                source.connect(gainNode).connect(blendFilter).connect(monoGain).connect(audioCtx.destination);
+                // 그래픽 EQ 5밴드 (peaking)
+                eqNodes = EQ_FREQS.map((f) => {
+                    const b = audioCtx.createBiquadFilter();
+                    b.type = "peaking";
+                    b.frequency.value = f;
+                    b.Q.value = 1.0;
+                    return b;
+                });
+                // 앰프 스테이지: drive → 진공관 쉐이퍼 → 톤(저/중/고) → 출력
+                ampDrive = audioCtx.createGain();
+                ampShaper = audioCtx.createWaveShaper();
+                ampShaper.oversample = "4x";
+                ampBass = audioCtx.createBiquadFilter();
+                ampBass.type = "lowshelf";
+                ampMid = audioCtx.createBiquadFilter();
+                ampMid.type = "peaking";
+                ampTreble = audioCtx.createBiquadFilter();
+                ampTreble.type = "highshelf";
+                ampOut = audioCtx.createGain();
+                let head = source.connect(gainNode).connect(blendFilter).connect(monoGain);
+                eqNodes.forEach((b) => { head = head.connect(b); });
+                head.connect(ampDrive).connect(ampShaper).connect(ampBass).connect(ampMid).connect(ampTreble).connect(ampOut).connect(audioCtx.destination);
+                // 바이닐 크랙클 (포노 재생 시에만 게인이 올라간다) — EQ 앞에 섞어 앰프 음색까지 입힌다
+                crackleGain = audioCtx.createGain();
+                crackleGain.gain.value = 0;
+                crackleGain.connect(eqNodes[0]);
                 source.connect(recDest);
                 source.connect(analyser);
                 applyBlend();
                 applyMono();
+                applyEq();
+                applyAmp();
                 gainNode.gain.value = volumeLevel;
                 audio.volume = 1;
                 if (audioCtx.state === "suspended") {
@@ -2113,6 +2663,14 @@
                 analyser = null;
                 blendFilter = null;
                 monoGain = null;
+                eqNodes = null;
+                ampDrive = null;
+                ampShaper = null;
+                ampBass = null;
+                ampMid = null;
+                ampTreble = null;
+                ampOut = null;
+                crackleGain = null;
                 return false;
             }
         }
@@ -2134,7 +2692,7 @@
                 return;
             }
 
-            if (!currentStation || !isPlaying) return;
+            if (!isPlaying) return;
 
             if (!ensureAudioGraph()) {
                 playerSubtext.textContent = "이 브라우저에서는 녹음을 지원하지 않습니다.";
@@ -2156,7 +2714,10 @@
             }
 
             const chunks = [];
-            const station = currentStation;
+            const station = currentStation || {
+                id: "phono",
+                name: (phonoActive && phonoTrack >= 0) ? RECORD.tracks[phonoTrack].t : "레코드"
+            };
             const startMs = Date.now();
             const startDate = new Date();
 
@@ -2244,7 +2805,7 @@
         }
 
         function updateRecButton() {
-            btnRec.disabled = !recorder && !(currentStation && isPlaying);
+            btnRec.disabled = !recorder && !isPlaying;
         }
 
         function addRecordingItem(record) {
@@ -2473,16 +3034,27 @@
         // ----- Media Session / 시계 -----
 
         function updateMediaSession() {
-            if (!("mediaSession" in navigator) || !currentStation) return;
+            if (!("mediaSession" in navigator)) return;
+            const artwork = [
+                { src: "icons/icon-192.png", sizes: "192x192", type: "image/png" },
+                { src: "icons/icon-512.png", sizes: "512x512", type: "image/png" }
+            ];
             try {
+                if (phonoActive && phonoTrack >= 0) {
+                    navigator.mediaSession.metadata = new MediaMetadata({
+                        title: RECORD.tracks[phonoTrack].t,
+                        artist: RECORD.composer + " · " + RECORD.performer,
+                        album: RECORD.title + " (" + RECORD.bwv + ")",
+                        artwork
+                    });
+                    return;
+                }
+                if (!currentStation) return;
                 navigator.mediaSession.metadata = new MediaMetadata({
                     title: currentStation.name,
                     artist: currentStation.desc || "FM 라디오",
                     album: "FM 라디오 모음",
-                    artwork: [
-                        { src: "icons/icon-192.png", sizes: "192x192", type: "image/png" },
-                        { src: "icons/icon-512.png", sizes: "512x512", type: "image/png" }
-                    ]
+                    artwork
                 });
             } catch (error) {
                 console.error(error);
@@ -2538,6 +3110,20 @@
             tunerSetLeds(false);
         });
 
+        audio.addEventListener("ended", () => {
+            // 포노: 트랙이 끝나면 다음 트랙으로 (음반 한 면을 이어 재생)
+            if (phonoActive && phonoTrack >= 0 && phonoTrack < RECORD.tracks.length - 1) {
+                playPhonoTrack(phonoTrack + 1);
+            } else if (phonoActive) {
+                const done = phonoTrack;
+                stopPhono();
+                isPlaying = false;
+                updatePlayButton();
+                playerSubtext.textContent = "음반 한 면이 끝났습니다. 톤암이 복귀합니다.";
+                gtag('event', 'phono_side_end', { last_track: done });
+            }
+        });
+
         audio.addEventListener("playing", () => {
             isPlaying = true;
             updatePlayButton();
@@ -2581,6 +3167,9 @@
         updateRecButton();
         openRecordingDb();
         initTunerSkin(loadJson("fmRadio.skin", "t2"));
+        mountEq();
+        mountAmp();
+        mountTurntable();
         tunerLoop();
     </script>
     <script>
