@@ -2538,6 +2538,7 @@
             ]
         };
         let phonoActive = false;
+        let radioStandby = null;   // 턴테이블 재생 중 튜닝해 둔 대기 방송국 (음반이 끝나면 연결)
         let phonoTrack = -1;
         let ttSpin = 0;
         let ttAngle = 0;
@@ -3039,8 +3040,17 @@
             const station = stations.find((item) => item.id === id);
             if (!station) return;
 
+            // 턴테이블 우선: 음반이 도는 동안 튜너는 소스를 빼앗지 않고 대기 선국만 한다
+            if (phonoActive && isPlaying) {
+                radioStandby = station;
+                tunerSetStation(station);
+                playerSubtext.textContent = station.name + " 대기 중 — 턴테이블 재생이 우선입니다. 음반이 끝나면 연결합니다.";
+                return;
+            }
+
             stopRecording();
             stopPhono();
+            radioStandby = null;
 
             document.querySelectorAll(".station").forEach((element) => {
                 element.classList.remove("active", "playing", "loading");
@@ -3711,8 +3721,16 @@
                 stopPhono();
                 isPlaying = false;
                 updatePlayButton();
-                playerSubtext.textContent = "음반 한 면이 끝났습니다. 톤암이 복귀합니다.";
                 gtag('event', 'phono_side_end', { last_track: done });
+                // 대기 중이던 방송국이 있으면 자동 연결 (입력 셀렉터가 튜너로 돌아가듯)
+                if (radioStandby) {
+                    const next = radioStandby;
+                    radioStandby = null;
+                    playerSubtext.textContent = "음반이 끝나 " + next.name + "에 연결합니다.";
+                    selectStation(next.id);
+                } else {
+                    playerSubtext.textContent = "음반 한 면이 끝났습니다. 톤암이 복귀합니다.";
+                }
             }
         });
 
