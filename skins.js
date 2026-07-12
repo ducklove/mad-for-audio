@@ -999,10 +999,16 @@ AMP_MODELS["300b"].svg = `<svg class="amp-svg" viewBox="0 0 2000 560" xmlns="htt
     <rect class="ampLamp" x="428" y="330" width="184" height="184" rx="4" fill="url(#lzWarmFace)" opacity="0.02"/>
     <ellipse class="ampLamp" cx="520" cy="348" rx="80" ry="44" fill="url(#lzLampPool)" opacity="0.02"/>
     <rect x="428" y="330" width="184" height="22" fill="url(#lzInset)" opacity="0.4"/>
-    <rect x="458" y="346" width="24" height="150" rx="2" fill="#0d0b08"/>
-    <rect x="536" y="346" width="24" height="150" rx="2" fill="#0d0b08"/>
-    <line id="ampVuL" data-cx="470" data-cy="492" x1="470" y1="492" x2="470" y2="356" stroke="#e02a1a" stroke-width="5" transform="rotate(-42 470 492)"/>
-    <line id="ampVuR" data-cx="548" data-cy="492" x1="548" y1="492" x2="548" y2="356" stroke="#e02a1a" stroke-width="5" transform="rotate(-42 548 492)"/>
+    <path d="M 434.4 404.9 A 128 128 0 0 1 605.6 404.9" fill="none" stroke="#4a3a28" stroke-width="1.6"/>
+    <path d="M 574.1 384 A 128 128 0 0 1 605.6 404.9" fill="none" stroke="#c0392b" stroke-width="4"/>
+    <g stroke="#4a3a28" stroke-width="1.4">
+        <line x1="434.4" y1="404.9" x2="442.4" y2="413.8"/><line x1="459.9" y1="387" x2="465.6" y2="397.6"/><line x1="489" y1="375.8" x2="491.9" y2="387.4"/><line x1="520" y1="372" x2="520" y2="384"/><line x1="551" y1="375.8" x2="548.1" y2="387.4"/><line x1="580.1" y1="387" x2="574.4" y2="397.6"/><line x1="605.6" y1="404.9" x2="597.6" y2="413.8"/>
+    </g>
+    <text x="520" y="360" font-family="Arial" font-size="11" font-weight="700" letter-spacing="2" fill="#4a3a28" text-anchor="middle" opacity="0.85">VU</text>
+    <text x="443" y="426" font-family="Arial" font-size="9" fill="#4a3a28" opacity="0.8">-20</text>
+    <text x="588" y="426" font-family="Arial" font-size="9" fill="#8a2020" opacity="0.85">+3</text>
+    <line id="ampVuL" data-cx="520" data-cy="500" x1="520" y1="500" x2="520" y2="378" stroke="#2a2018" stroke-width="2.6" transform="rotate(-42 520 500)"/>
+    <circle cx="520" cy="500" r="7" fill="#241c12"/>
     <rect x="428" y="330" width="184" height="34" fill="url(#lzInset)" opacity="0.62"/>
     <rect x="428" y="330" width="9.2" height="184" fill="url(#lzInL)" opacity="0.5"/>
     <rect x="602.8" y="330" width="9.2" height="184" fill="url(#lzInR)" opacity="0.5"/>
