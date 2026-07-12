@@ -1,0 +1,188 @@
+<svg viewBox="0 0 2000 269" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Yamaha Natural Sound FM Stereo Tuner T-2 front panel">
+  <defs>
+    <linearGradient id="panel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5d5951"/>
+      <stop offset="0.05" stop-color="#514e46"/>
+      <stop offset="0.5" stop-color="#4a4740"/>
+      <stop offset="1" stop-color="#393630"/>
+    </linearGradient>
+    <linearGradient id="bevel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#b2afa7"/>
+      <stop offset="0.5" stop-color="#918e86"/>
+      <stop offset="1" stop-color="#63605a"/>
+    </linearGradient>
+    <linearGradient id="dialWin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0a0c07"/>
+      <stop offset="0.5" stop-color="#12140c"/>
+      <stop offset="1" stop-color="#181a10"/>
+    </linearGradient>
+    <linearGradient id="meterWin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0c0e0a"/>
+      <stop offset="1" stop-color="#17170f"/>
+    </linearGradient>
+    <radialGradient id="knobFace" cx="0.38" cy="0.34" r="0.85">
+      <stop offset="0" stop-color="#56545c"/>
+      <stop offset="0.45" stop-color="#403e45"/>
+      <stop offset="1" stop-color="#262429"/>
+    </radialGradient>
+    <linearGradient id="knobRim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5b5960"/>
+      <stop offset="1" stop-color="#201f24"/>
+    </linearGradient>
+    <linearGradient id="switch" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a2830"/>
+      <stop offset="1" stop-color="#3f3d45"/>
+    </linearGradient>
+    <filter id="ledGlow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="2.4"/>
+    </filter>
+    <pattern id="ticksMinor" width="13" height="30" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="1.4" height="14" fill="#8f8a4a"/>
+    </pattern>
+    <pattern id="ticksMajor" width="65" height="30" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="2.2" height="24" fill="#c8c07a"/>
+    </pattern>
+    <pattern id="brushed" width="3" height="3" patternUnits="userSpaceOnUse">
+      <rect width="3" height="3" fill="none"/>
+      <rect x="0" y="0" width="3" height="1" fill="#ffffff" opacity="0.015"/>
+    </pattern>
+  </defs>
+
+  <!-- panel body -->
+  <rect x="0" y="0" width="2000" height="269" rx="6" fill="url(#panel)"/>
+  <rect x="0" y="0" width="2000" height="269" rx="6" fill="url(#brushed)"/>
+  <!-- top bevel highlight -->
+  <rect x="0" y="0" width="2000" height="13" rx="6" fill="url(#bevel)"/>
+  <rect x="0" y="12" width="2000" height="2" fill="#26242a" opacity="0.7"/>
+  <!-- soft bottom shade -->
+  <rect x="0" y="255" width="2000" height="14" fill="#000000" opacity="0.18"/>
+
+  <!-- ===== brand ===== -->
+  <g>
+    <!-- tuning-fork badge -->
+    <rect x="120" y="23" width="30" height="30" rx="15" fill="none" stroke="#d9d7dc" stroke-width="1.6"/>
+    <g stroke="#d9d7dc" stroke-width="1.7" fill="none" stroke-linecap="round">
+      <path d="M129 30 L129 42"/>
+      <path d="M135 27 L135 42"/>
+      <path d="M141 30 L141 42"/>
+      <path d="M129 42 Q135 47 141 42"/>
+      <path d="M135 42 L135 47"/>
+    </g>
+    <text x="160" y="43" font-family="Arial, Helvetica, sans-serif" font-size="27" font-weight="700" letter-spacing="1.5" fill="#e6e5e8">YAMAHA</text>
+    <text x="298" y="41" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="600" letter-spacing="2" fill="#b3b1b8">NATURAL SOUND<tspan dx="18">FM STEREO TUNER</tspan><tspan dx="18" font-weight="700" fill="#c8c6cd">T-2</tspan></text>
+  </g>
+
+  <!-- ===== dial window ===== -->
+  <g>
+    <rect x="128" y="58" width="1272" height="64" rx="4" fill="url(#dialWin)" stroke="#0a0b06" stroke-width="2"/>
+    <rect x="128" y="58" width="1272" height="3" fill="#000000" opacity="0.55"/>
+    <!-- frequency numbers -->
+    <g font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" fill="#cfc78a" text-anchor="middle">
+      <text x="150" y="76" fill="#d8d0a0">FM</text>
+      <text x="300" y="76">88</text>
+      <text x="480" y="76">92</text>
+      <text x="660" y="76">96</text>
+      <text x="855" y="76">100</text>
+      <text x="1050" y="76">104</text>
+      <text x="1240" y="76">108</text>
+      <text x="1360" y="76" fill="#a49c6a">MHz</text>
+    </g>
+    <!-- tick scale -->
+    <rect x="150" y="86" width="1210" height="14" fill="url(#ticksMinor)"/>
+    <rect x="150" y="86" width="1210" height="24" fill="url(#ticksMajor)"/>
+    <!-- red tuning pointer -->
+    <rect x="862" y="102" width="20" height="16" rx="2" fill="#ff5a24" filter="url(#ledGlow)"/>
+    <rect x="866" y="86" width="8" height="34" fill="#e23c14"/>
+    <rect x="868" y="86" width="4" height="34" fill="#ff8a5a"/>
+  </g>
+
+  <!-- right indicator LEDs -->
+  <g font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="600" letter-spacing="0.5" fill="#a7a5ac" text-anchor="middle">
+    <text x="1452" y="74">STEREO</text>
+    <text x="1524" y="74">LOCK</text>
+    <text x="1596" y="74">HI-BLEND</text>
+    <rect x="1432" y="96" width="40" height="11" rx="2" fill="#ff3a1e" filter="url(#ledGlow)"/>
+    <rect x="1434" y="97" width="36" height="9" rx="1.5" fill="#ff4a26"/>
+    <rect x="1504" y="96" width="40" height="11" rx="2" fill="#6a1a10"/>
+    <rect x="1576" y="96" width="40" height="11" rx="2" fill="#ff3a1e" filter="url(#ledGlow)"/>
+    <rect x="1578" y="97" width="36" height="9" rx="1.5" fill="#ff4a26"/>
+  </g>
+
+  <!-- ===== switch row ===== -->
+  <g font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="600" letter-spacing="0.8" fill="#c3c1c8" text-anchor="middle">
+    <text x="152" y="152">POWER</text>
+    <text x="272" y="152">REC CAL</text>
+    <text x="366" y="152">BLEND</text>
+    <text x="456" y="152">MODE</text>
+    <text x="548" y="152">MUTE/STE</text>
+    <text x="636" y="152">IF MODE</text>
+    <text x="722" y="152">RF MODE</text>
+  </g>
+  <g>
+    <!-- power (larger) -->
+    <rect x="132" y="164" width="40" height="48" rx="4" fill="url(#switch)" stroke="#25232a" stroke-width="1"/>
+    <rect x="140" y="172" width="24" height="15" rx="2" fill="#1c1a20"/>
+    <rect x="140" y="190" width="24" height="15" rx="2" fill="#54525a"/>
+    <!-- toggles -->
+    <g>
+      <rect x="252" y="168" width="40" height="42" rx="4" fill="url(#switch)" stroke="#25232a"/>
+      <rect x="262" y="185" width="20" height="18" rx="3" fill="#57555d"/>
+      <rect x="346" y="168" width="40" height="42" rx="4" fill="url(#switch)" stroke="#25232a"/>
+      <rect x="356" y="185" width="20" height="18" rx="3" fill="#57555d"/>
+      <rect x="436" y="168" width="40" height="42" rx="4" fill="url(#switch)" stroke="#25232a"/>
+      <rect x="446" y="185" width="20" height="18" rx="3" fill="#57555d"/>
+      <rect x="528" y="168" width="40" height="42" rx="4" fill="url(#switch)" stroke="#25232a"/>
+      <rect x="538" y="185" width="20" height="18" rx="3" fill="#57555d"/>
+      <rect x="616" y="168" width="40" height="42" rx="4" fill="url(#switch)" stroke="#25232a"/>
+      <rect x="626" y="185" width="20" height="18" rx="3" fill="#57555d"/>
+      <rect x="702" y="168" width="40" height="42" rx="4" fill="url(#switch)" stroke="#25232a"/>
+      <rect x="712" y="185" width="20" height="18" rx="3" fill="#57555d"/>
+    </g>
+  </g>
+
+  <!-- ===== meters ===== -->
+  <g font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="600" letter-spacing="1.5" fill="#c3c1c8" text-anchor="middle">
+    <text x="1030" y="150">SIGNAL QUALITY</text>
+    <text x="1290" y="150">TUNING</text>
+    <text x="1520" y="150">STATION</text>
+  </g>
+  <!-- signal meter -->
+  <g>
+    <rect x="925" y="162" width="212" height="50" rx="4" fill="url(#meterWin)" stroke="#0a0b06" stroke-width="1.5"/>
+    <g stroke="#8f8a4a" stroke-width="1.3">
+      <line x1="948" y1="182" x2="948" y2="196"/><line x1="972" y1="184" x2="972" y2="196"/>
+      <line x1="996" y1="182" x2="996" y2="196"/><line x1="1020" y1="184" x2="1020" y2="196"/>
+      <line x1="1044" y1="182" x2="1044" y2="196"/><line x1="1068" y1="184" x2="1068" y2="196"/>
+      <line x1="1092" y1="182" x2="1092" y2="196"/><line x1="1114" y1="184" x2="1114" y2="196"/>
+    </g>
+    <rect x="1029" y="172" width="3" height="32" fill="#ff3a1e" filter="url(#ledGlow)"/>
+    <rect x="1030" y="172" width="1.5" height="32" fill="#ff7a55"/>
+  </g>
+  <!-- tuning meter -->
+  <g>
+    <rect x="1182" y="162" width="212" height="50" rx="4" fill="url(#meterWin)" stroke="#0a0b06" stroke-width="1.5"/>
+    <g stroke="#8f8a4a" stroke-width="1.3">
+      <line x1="1210" y1="184" x2="1210" y2="196"/><line x1="1234" y1="184" x2="1234" y2="196"/>
+      <line x1="1258" y1="184" x2="1258" y2="196"/><line x1="1330" y1="184" x2="1330" y2="196"/>
+      <line x1="1354" y1="184" x2="1354" y2="196"/><line x1="1378" y1="184" x2="1378" y2="196"/>
+    </g>
+    <rect x="1287" y="172" width="3" height="32" fill="#ff3a1e" filter="url(#ledGlow)"/>
+    <rect x="1288" y="172" width="1.5" height="32" fill="#ff7a55"/>
+  </g>
+  <!-- station display -->
+  <g>
+    <rect x="1424" y="162" width="196" height="50" rx="4" fill="#050505" stroke="#000000" stroke-width="1.5"/>
+    <text x="1440" y="182" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" fill="#c23018">FM</text>
+    <text x="1440" y="200" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="600" fill="#7a2416">MHz</text>
+    <text x="1600" y="200" font-family="'Courier New', monospace" font-size="38" font-weight="700" fill="#ff3a1e" text-anchor="end" filter="url(#ledGlow)">100.8</text>
+    <text x="1600" y="200" font-family="'Courier New', monospace" font-size="38" font-weight="700" fill="#ff5230" text-anchor="end">100.8</text>
+  </g>
+
+  <!-- ===== tuning knob ===== -->
+  <g>
+    <ellipse cx="1852" cy="140" rx="112" ry="110" fill="#1c1b20"/>
+    <ellipse cx="1852" cy="138" rx="110" ry="108" fill="url(#knobRim)"/>
+    <ellipse cx="1852" cy="138" rx="98" ry="97" fill="url(#knobFace)"/>
+    <ellipse cx="1820" cy="112" rx="42" ry="34" fill="#ffffff" opacity="0.05"/>
+  </g>
+</svg>
