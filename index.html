@@ -855,7 +855,7 @@
 
         <section class="hero-visual" aria-label="튜너 이미지와 상태 창">
             <div class="tuner-stage">
-                <svg class="tuner-svg" viewBox="0 0 2000 269" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Yamaha Natural Sound FM Stereo Tuner T-2">
+                <svg class="tuner-svg" viewBox="0 0 2000 269" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Yahama Natural Sound FM Stereo Tuner T-2">
                     <defs>
                         <linearGradient id="tnPanel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5d5951"/><stop offset="0.05" stop-color="#514e46"/><stop offset="0.5" stop-color="#4a4740"/><stop offset="1" stop-color="#393630"/></linearGradient>
                         <linearGradient id="tnBevel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b2afa7"/><stop offset="0.5" stop-color="#918e86"/><stop offset="1" stop-color="#63605a"/></linearGradient>
@@ -879,7 +879,7 @@
                     <g stroke="#d9d7dc" stroke-width="1.7" fill="none" stroke-linecap="round">
                         <path d="M129 30 L129 42"/><path d="M135 27 L135 42"/><path d="M141 30 L141 42"/><path d="M129 42 Q135 47 141 42"/><path d="M135 42 L135 47"/>
                     </g>
-                    <text x="160" y="43" font-family="Arial, Helvetica, sans-serif" font-size="27" font-weight="700" letter-spacing="1.5" fill="#e6e5e8">YAMAHA</text>
+                    <text x="160" y="43" font-family="Arial, Helvetica, sans-serif" font-size="27" font-weight="700" letter-spacing="1.5" fill="#e6e5e8">YAHAMA</text>
                     <text x="298" y="41" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="600" letter-spacing="2" fill="#b3b1b8">NATURAL SOUND<tspan dx="18">FM STEREO TUNER</tspan><tspan dx="18" font-weight="700" fill="#c8c6cd">T-2</tspan></text>
                     <!-- dial window -->
                     <rect x="128" y="58" width="1272" height="64" rx="4" fill="url(#tnDialWin)" stroke="#0a0b06" stroke-width="2"/>
@@ -901,21 +901,21 @@
                     </g>
                     <rect id="tsLedStereo" x="1432" y="96" width="40" height="11" rx="2" fill="#4a1410" filter="url(#tnGlow)"/>
                     <rect id="tsLedLock" x="1504" y="96" width="40" height="11" rx="2" fill="#4a1410" filter="url(#tnGlow)"/>
-                    <rect id="tsLedBlend" x="1576" y="96" width="40" height="11" rx="2" fill="#4a1410"/>
+                    <rect id="tsLedBlend" x="1576" y="96" width="40" height="11" rx="2" fill="#4a1410" filter="url(#tnGlow)"/>
                     <!-- switch row -->
                     <g font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="600" letter-spacing="0.8" fill="#c3c1c8" text-anchor="middle">
                         <text x="152" y="152">POWER</text><text x="272" y="152">REC CAL</text><text x="366" y="152">BLEND</text><text x="456" y="152">MODE</text><text x="548" y="152">MUTE/STE</text><text x="636" y="152">IF MODE</text><text x="722" y="152">RF MODE</text>
                     </g>
                     <rect x="132" y="164" width="40" height="48" rx="4" fill="url(#tnSwitch)" stroke="#25232a" stroke-width="1"/>
-                    <rect x="140" y="172" width="24" height="15" rx="2" fill="#1c1a20"/>
-                    <rect x="140" y="190" width="24" height="15" rx="2" fill="#54525a"/>
+                    <rect id="tsPwrTop" x="140" y="172" width="24" height="15" rx="2" fill="#1c1a20"/>
+                    <rect id="tsPwrBot" x="140" y="190" width="24" height="15" rx="2" fill="#54525a"/>
                     <g>
-                        <rect x="252" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect x="262" y="185" width="20" height="18" rx="3" fill="#57555d"/>
-                        <rect x="346" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect x="356" y="185" width="20" height="18" rx="3" fill="#57555d"/>
-                        <rect x="436" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect x="446" y="185" width="20" height="18" rx="3" fill="#57555d"/>
-                        <rect x="528" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect x="538" y="185" width="20" height="18" rx="3" fill="#57555d"/>
-                        <rect x="616" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect x="626" y="185" width="20" height="18" rx="3" fill="#57555d"/>
-                        <rect x="702" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect x="712" y="185" width="20" height="18" rx="3" fill="#57555d"/>
+                        <rect x="252" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwRec" x="262" y="171" width="20" height="18" rx="3" fill="#57555d"/>
+                        <rect x="346" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwBlend" x="356" y="171" width="20" height="18" rx="3" fill="#57555d"/>
+                        <rect x="436" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwMode" x="446" y="171" width="20" height="18" rx="3" fill="#57555d"/>
+                        <rect x="528" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwMute" x="538" y="171" width="20" height="18" rx="3" fill="#57555d"/>
+                        <rect x="616" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwIf" x="626" y="171" width="20" height="18" rx="3" fill="#57555d"/>
+                        <rect x="702" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwRf" x="712" y="171" width="20" height="18" rx="3" fill="#57555d"/>
                     </g>
                     <!-- meters -->
                     <g font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="600" letter-spacing="1.5" fill="#c3c1c8" text-anchor="middle">
@@ -951,8 +951,14 @@
                     </g>
                     <ellipse cx="1820" cy="112" rx="42" ry="34" fill="#ffffff" opacity="0.05" pointer-events="none"/>
                     <!-- 조작 히트 영역 (투명) -->
-                    <rect id="tsPowerHit" x="128" y="160" width="52" height="56" fill="#000000" fill-opacity="0" style="cursor:pointer; touch-action:none"/>
-                    <rect id="tsDialHit" x="150" y="60" width="1220" height="60" fill="#000000" fill-opacity="0" style="cursor:ew-resize; touch-action:none"/>
+                    <rect id="tsPowerHit" x="128" y="160" width="52" height="56" fill="#000000" fill-opacity="0" style="cursor:pointer; touch-action:none"><title>전원 — 재생/정지</title></rect>
+                    <rect id="tsDialHit" x="150" y="60" width="1220" height="60" fill="#000000" fill-opacity="0" style="cursor:ew-resize; touch-action:none"><title>드래그하여 주파수를 맞추세요</title></rect>
+                    <rect id="tsRecHit" x="244" y="138" width="56" height="80" fill="#000000" fill-opacity="0" style="cursor:pointer"><title>REC CAL — 녹음 시작/정지</title></rect>
+                    <rect id="tsBlendHit" x="338" y="138" width="56" height="80" fill="#000000" fill-opacity="0" style="cursor:pointer"><title>BLEND — 하이블렌드 (고음 노이즈 감쇠)</title></rect>
+                    <rect id="tsModeHit" x="428" y="138" width="56" height="80" fill="#000000" fill-opacity="0" style="cursor:pointer"><title>MODE — 스테레오/모노 전환</title></rect>
+                    <rect id="tsMuteHit" x="520" y="138" width="56" height="80" fill="#000000" fill-opacity="0" style="cursor:pointer"><title>MUTE/STE — 음소거</title></rect>
+                    <rect id="tsIfHit" x="608" y="138" width="56" height="80" fill="#000000" fill-opacity="0" style="cursor:pointer"><title>IF MODE — 취침 타이머</title></rect>
+                    <rect id="tsRfHit" x="694" y="138" width="56" height="80" fill="#000000" fill-opacity="0" style="cursor:pointer"><title>RF MODE — 채널 목록 열기/닫기</title></rect>
                 </svg>
                 <div class="dial-knob" title="드래그하여 주파수를 맞추세요"></div>
             </div>
@@ -1119,9 +1125,9 @@
             }
         }
 
-        function tunerSetLeds(on) {
-            tsLedStereo.style.fill = on ? TS_LED_ON : TS_LED_OFF;
-            tsLedLock.style.fill = on ? TS_LED_ON : TS_LED_OFF;
+        function tunerSetLeds() {
+            tsPanelState = "";   // 다음 동기화 때 강제 갱신
+            tsSyncPanel();
         }
 
         function tunerLoop() {
@@ -1150,6 +1156,52 @@
             tsTune += (tuneTarget - tsTune) * 0.1 + jitter;
             tsTune = Math.max(-1, Math.min(1, tsTune));
             tsTunePtr.setAttribute("transform", "translate(" + (tsTune * 46).toFixed(1) + ",0)");
+            tsSyncPanel();
+        }
+
+        // ----- 스위치·LED 상태 동기화 (상태가 바뀐 프레임에만 DOM 갱신) -----
+        const TS_SW_UP = 171;
+        const TS_SW_DOWN = 191;
+        let tsPanelState = "";
+        let blendOn = false;
+        let monoOn = false;
+
+        function applyBlend() {
+            // 하이블렌드: 고음을 깎아 약전계 잡음을 줄이는 효과 (MSE 경로에서만 실제 적용)
+            if (blendFilter) blendFilter.frequency.value = blendOn ? 5000 : 20000;
+        }
+
+        function applyMono() {
+            // 모노: 게인 노드 입력을 1채널로 강제해 다운믹스
+            if (monoGain) {
+                monoGain.channelCount = 1;
+                monoGain.channelCountMode = monoOn ? "explicit" : "max";
+            }
+        }
+
+        function tsSyncPanel() {
+            const recOn = !!recorder;
+            const timerOn = sleepIndex > 0;
+            const listOpen = !document.getElementById("stationMain").classList.contains("collapsed");
+            const state = [isPlaying, recOn, blendOn, monoOn, audio.muted, timerOn, listOpen].join(",");
+            if (state === tsPanelState) return;
+            tsPanelState = state;
+
+            // POWER 로커: 재생 중이면 위쪽이 눌린 모습
+            document.getElementById("tsPwrTop").setAttribute("fill", isPlaying ? "#54525a" : "#1c1a20");
+            document.getElementById("tsPwrBot").setAttribute("fill", isPlaying ? "#1c1a20" : "#54525a");
+
+            const setSw = (id, down) => document.getElementById(id).setAttribute("y", down ? TS_SW_DOWN : TS_SW_UP);
+            setSw("tsSwRec", recOn);
+            setSw("tsSwBlend", blendOn);
+            setSw("tsSwMode", monoOn);
+            setSw("tsSwMute", audio.muted);
+            setSw("tsSwIf", timerOn);
+            setSw("tsSwRf", listOpen);
+
+            tsLedStereo.style.fill = (isPlaying && !monoOn) ? TS_LED_ON : TS_LED_OFF;
+            tsLedLock.style.fill = isPlaying ? TS_LED_ON : TS_LED_OFF;
+            document.getElementById("tsLedBlend").style.fill = blendOn ? TS_LED_ON : TS_LED_OFF;
         }
 
         // ----- 튜너 직접 조작 (다이얼/노브 튜닝, POWER 재생) -----
@@ -1263,6 +1315,41 @@
             if (currentStation) togglePlay();
         });
 
+        // REC CAL: 녹음 시작/정지
+        document.getElementById("tsRecHit").addEventListener("click", () => {
+            if (recorder || (currentStation && isPlaying)) {
+                toggleRecording();
+            } else {
+                playerSubtext.textContent = "녹음은 재생 중에만 시작할 수 있습니다.";
+            }
+        });
+
+        // BLEND: 하이블렌드 (HI-BLEND LED + 고음 감쇠)
+        document.getElementById("tsBlendHit").addEventListener("click", () => {
+            blendOn = !blendOn;
+            applyBlend();
+            playerSubtext.textContent = blendOn ? "하이블렌드 ON — 고음 잡음을 줄입니다." : "하이블렌드 OFF";
+        });
+
+        // MODE: 스테레오/모노 (모노 시 STEREO LED 소등)
+        document.getElementById("tsModeHit").addEventListener("click", () => {
+            monoOn = !monoOn;
+            applyMono();
+            playerSubtext.textContent = monoOn ? "모노 수신 모드" : "스테레오 수신 모드";
+        });
+
+        // MUTE/STE: 음소거
+        document.getElementById("tsMuteHit").addEventListener("click", () => {
+            audio.muted = !audio.muted;
+            playerSubtext.textContent = audio.muted ? "음소거되었습니다." : "음소거를 해제했습니다.";
+        });
+
+        // IF MODE: 취침 타이머 순환 (0→15→30→60→90분)
+        document.getElementById("tsIfHit").addEventListener("click", () => cycleSleepTimer());
+
+        // RF MODE: 채널 목록 열기/닫기
+        document.getElementById("tsRfHit").addEventListener("click", () => toggleStationList());
+
         // 채널 목록 접기/펼치기 (기본 접힘 — 튜너 중심)
         function toggleStationList() {
             const main = document.getElementById("stationMain");
@@ -1284,6 +1371,8 @@
         let gainNode = null;
         let recDest = null;
         let analyser = null;
+        let blendFilter = null;
+        let monoGain = null;
         let vuRaf = null;
         let vuData = null;
         let recorder = null;
@@ -1627,9 +1716,15 @@
                 analyser = audioCtx.createAnalyser();
                 analyser.fftSize = 128;
                 analyser.smoothingTimeConstant = 0.8;
-                source.connect(gainNode).connect(audioCtx.destination);
+                // BLEND(고음 감쇠)·MODE(모노 다운믹스) 스위치용 노드를 청취 경로에 삽입
+                blendFilter = audioCtx.createBiquadFilter();
+                blendFilter.type = "lowpass";
+                monoGain = audioCtx.createGain();
+                source.connect(gainNode).connect(blendFilter).connect(monoGain).connect(audioCtx.destination);
                 source.connect(recDest);
                 source.connect(analyser);
+                applyBlend();
+                applyMono();
                 gainNode.gain.value = volumeLevel;
                 audio.volume = 1;
                 if (audioCtx.state === "suspended") {
@@ -1643,6 +1738,8 @@
                 gainNode = null;
                 recDest = null;
                 analyser = null;
+                blendFilter = null;
+                monoGain = null;
                 return false;
             }
         }

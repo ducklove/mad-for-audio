@@ -1,4 +1,4 @@
-<svg viewBox="0 0 2000 269" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Yamaha Natural Sound FM Stereo Tuner T-2 front panel">
+<svg viewBox="0 0 2000 269" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Yahama Natural Sound FM Stereo Tuner T-2 front panel">
   <defs>
     <linearGradient id="panel" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#5d5951"/>
@@ -68,7 +68,7 @@
       <path d="M129 42 Q135 47 141 42"/>
       <path d="M135 42 L135 47"/>
     </g>
-    <text x="160" y="43" font-family="Arial, Helvetica, sans-serif" font-size="27" font-weight="700" letter-spacing="1.5" fill="#e6e5e8">YAMAHA</text>
+    <text x="160" y="43" font-family="Arial, Helvetica, sans-serif" font-size="27" font-weight="700" letter-spacing="1.5" fill="#e6e5e8">YAHAMA</text>
     <text x="298" y="41" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="600" letter-spacing="2" fill="#b3b1b8">NATURAL SOUND<tspan dx="18">FM STEREO TUNER</tspan><tspan dx="18" font-weight="700" fill="#c8c6cd">T-2</tspan></text>
   </g>
 
