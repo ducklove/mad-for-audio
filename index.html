@@ -694,20 +694,35 @@
             margin-left: 8px;
         }
 
-        .dial-knob {
-            position: absolute;
-            right: 3%;
-            top: 16%;
-            width: 10%;
-            height: 68%;
-            cursor: grab;
-            z-index: 2;
-            border-radius: 50%;
-            touch-action: none;
+        .skin-picker {
+            display: flex;
+            gap: 6px;
+            justify-content: flex-end;
+            padding: 2px 2px 0;
+            flex-wrap: wrap;
         }
 
-        .dial-knob:active {
-            cursor: grabbing;
+        .skin-btn {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            color: var(--muted);
+            background: rgba(255, 248, 240, 0.05);
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            padding: 4px 12px;
+            cursor: pointer;
+        }
+
+        .skin-btn:hover {
+            color: var(--text);
+            background: rgba(255, 248, 240, 0.1);
+        }
+
+        .skin-btn.active {
+            color: #ffd9a8;
+            border-color: rgba(236, 130, 85, 0.5);
+            background: rgba(211, 106, 66, 0.16);
         }
 
         .list-toggle-wrap {
@@ -854,114 +869,8 @@
         </header>
 
         <section class="hero-visual" aria-label="튜너 이미지와 상태 창">
-            <div class="tuner-stage">
-                <svg class="tuner-svg" viewBox="0 0 2000 269" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Yahama Natural Sound FM Stereo Tuner T-2">
-                    <defs>
-                        <linearGradient id="tnPanel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5d5951"/><stop offset="0.05" stop-color="#514e46"/><stop offset="0.5" stop-color="#4a4740"/><stop offset="1" stop-color="#393630"/></linearGradient>
-                        <linearGradient id="tnBevel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b2afa7"/><stop offset="0.5" stop-color="#918e86"/><stop offset="1" stop-color="#63605a"/></linearGradient>
-                        <linearGradient id="tnDialWin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a0c07"/><stop offset="0.5" stop-color="#12140c"/><stop offset="1" stop-color="#181a10"/></linearGradient>
-                        <linearGradient id="tnMeterWin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0c0e0a"/><stop offset="1" stop-color="#17170f"/></linearGradient>
-                        <radialGradient id="tnKnobFace" cx="0.38" cy="0.34" r="0.85"><stop offset="0" stop-color="#56545c"/><stop offset="0.45" stop-color="#403e45"/><stop offset="1" stop-color="#262429"/></radialGradient>
-                        <linearGradient id="tnKnobRim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5b5960"/><stop offset="1" stop-color="#201f24"/></linearGradient>
-                        <linearGradient id="tnSwitch" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2830"/><stop offset="1" stop-color="#3f3d45"/></linearGradient>
-                        <filter id="tnGlow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.4"/></filter>
-                        <pattern id="tnTicksMinor" width="13" height="30" patternUnits="userSpaceOnUse"><rect x="0" y="0" width="1.4" height="14" fill="#8f8a4a"/></pattern>
-                        <pattern id="tnTicksMajor" width="65" height="30" patternUnits="userSpaceOnUse"><rect x="0" y="0" width="2.2" height="24" fill="#c8c07a"/></pattern>
-                        <pattern id="tnBrushed" width="3" height="3" patternUnits="userSpaceOnUse"><rect width="3" height="3" fill="none"/><rect x="0" y="0" width="3" height="1" fill="#ffffff" opacity="0.015"/></pattern>
-                    </defs>
-                    <rect x="0" y="0" width="2000" height="269" rx="6" fill="url(#tnPanel)"/>
-                    <rect x="0" y="0" width="2000" height="269" rx="6" fill="url(#tnBrushed)"/>
-                    <rect x="0" y="0" width="2000" height="13" rx="6" fill="url(#tnBevel)"/>
-                    <rect x="0" y="12" width="2000" height="2" fill="#26242a" opacity="0.7"/>
-                    <rect x="0" y="255" width="2000" height="14" fill="#000000" opacity="0.18"/>
-                    <!-- brand -->
-                    <rect x="120" y="23" width="30" height="30" rx="15" fill="none" stroke="#d9d7dc" stroke-width="1.6"/>
-                    <g stroke="#d9d7dc" stroke-width="1.7" fill="none" stroke-linecap="round">
-                        <path d="M129 30 L129 42"/><path d="M135 27 L135 42"/><path d="M141 30 L141 42"/><path d="M129 42 Q135 47 141 42"/><path d="M135 42 L135 47"/>
-                    </g>
-                    <text x="160" y="43" font-family="Arial, Helvetica, sans-serif" font-size="27" font-weight="700" letter-spacing="1.5" fill="#e6e5e8">YAHAMA</text>
-                    <text x="298" y="41" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="600" letter-spacing="2" fill="#b3b1b8">NATURAL SOUND<tspan dx="18">FM STEREO TUNER</tspan><tspan dx="18" font-weight="700" fill="#c8c6cd">T-2</tspan></text>
-                    <!-- dial window -->
-                    <rect x="128" y="58" width="1272" height="64" rx="4" fill="url(#tnDialWin)" stroke="#0a0b06" stroke-width="2"/>
-                    <rect x="128" y="58" width="1272" height="3" fill="#000000" opacity="0.55"/>
-                    <g font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" fill="#cfc78a" text-anchor="middle">
-                        <text x="150" y="76" fill="#d8d0a0">FM</text><text x="300" y="76">88</text><text x="488" y="76">92</text><text x="676" y="76">96</text><text x="864" y="76">100</text><text x="1052" y="76">104</text><text x="1240" y="76">108</text><text x="1360" y="76" fill="#a49c6a">MHz</text>
-                    </g>
-                    <rect x="150" y="86" width="1210" height="14" fill="url(#tnTicksMinor)"/>
-                    <rect x="150" y="86" width="1210" height="24" fill="url(#tnTicksMajor)"/>
-                    <g id="tsStationMarks"></g>
-                    <g id="tsDialPtr">
-                        <rect x="862" y="102" width="20" height="16" rx="2" fill="#ff5a24" filter="url(#tnGlow)"/>
-                        <rect x="866" y="86" width="8" height="34" fill="#e23c14"/>
-                        <rect x="868" y="86" width="4" height="34" fill="#ff8a5a"/>
-                    </g>
-                    <!-- right indicator LEDs -->
-                    <g font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="600" letter-spacing="0.5" fill="#a7a5ac" text-anchor="middle">
-                        <text x="1452" y="74">STEREO</text><text x="1524" y="74">LOCK</text><text x="1596" y="74">HI-BLEND</text>
-                    </g>
-                    <rect id="tsLedStereo" x="1432" y="96" width="40" height="11" rx="2" fill="#4a1410" filter="url(#tnGlow)"/>
-                    <rect id="tsLedLock" x="1504" y="96" width="40" height="11" rx="2" fill="#4a1410" filter="url(#tnGlow)"/>
-                    <rect id="tsLedBlend" x="1576" y="96" width="40" height="11" rx="2" fill="#4a1410" filter="url(#tnGlow)"/>
-                    <!-- switch row -->
-                    <g font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="600" letter-spacing="0.8" fill="#c3c1c8" text-anchor="middle">
-                        <text x="152" y="152">POWER</text><text x="272" y="152">REC CAL</text><text x="366" y="152">BLEND</text><text x="456" y="152">MODE</text><text x="548" y="152">MUTE/STE</text><text x="636" y="152">IF MODE</text><text x="722" y="152">RF MODE</text>
-                    </g>
-                    <rect x="132" y="164" width="40" height="48" rx="4" fill="url(#tnSwitch)" stroke="#25232a" stroke-width="1"/>
-                    <rect id="tsPwrTop" x="140" y="172" width="24" height="15" rx="2" fill="#1c1a20"/>
-                    <rect id="tsPwrBot" x="140" y="190" width="24" height="15" rx="2" fill="#54525a"/>
-                    <g>
-                        <rect x="252" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwRec" x="262" y="171" width="20" height="18" rx="3" fill="#57555d"/>
-                        <rect x="346" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwBlend" x="356" y="171" width="20" height="18" rx="3" fill="#57555d"/>
-                        <rect x="436" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwMode" x="446" y="171" width="20" height="18" rx="3" fill="#57555d"/>
-                        <rect x="528" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwMute" x="538" y="171" width="20" height="18" rx="3" fill="#57555d"/>
-                        <rect x="616" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwIf" x="626" y="171" width="20" height="18" rx="3" fill="#57555d"/>
-                        <rect x="702" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwRf" x="712" y="171" width="20" height="18" rx="3" fill="#57555d"/>
-                    </g>
-                    <!-- meters -->
-                    <g font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="600" letter-spacing="1.5" fill="#c3c1c8" text-anchor="middle">
-                        <text x="1030" y="150">SIGNAL QUALITY</text><text x="1290" y="150">TUNING</text><text x="1520" y="150">STATION</text>
-                    </g>
-                    <rect x="925" y="162" width="212" height="50" rx="4" fill="url(#tnMeterWin)" stroke="#0a0b06" stroke-width="1.5"/>
-                    <g stroke="#8f8a4a" stroke-width="1.3">
-                        <line x1="948" y1="182" x2="948" y2="196"/><line x1="972" y1="184" x2="972" y2="196"/><line x1="996" y1="182" x2="996" y2="196"/><line x1="1020" y1="184" x2="1020" y2="196"/><line x1="1044" y1="182" x2="1044" y2="196"/><line x1="1068" y1="184" x2="1068" y2="196"/><line x1="1092" y1="182" x2="1092" y2="196"/><line x1="1114" y1="184" x2="1114" y2="196"/>
-                    </g>
-                    <g id="tsSignalPtr">
-                        <rect x="1029" y="172" width="3" height="32" fill="#ff3a1e" filter="url(#tnGlow)"/>
-                        <rect x="1030" y="172" width="1.5" height="32" fill="#ff7a55"/>
-                    </g>
-                    <rect x="1182" y="162" width="212" height="50" rx="4" fill="url(#tnMeterWin)" stroke="#0a0b06" stroke-width="1.5"/>
-                    <g stroke="#8f8a4a" stroke-width="1.3">
-                        <line x1="1210" y1="184" x2="1210" y2="196"/><line x1="1234" y1="184" x2="1234" y2="196"/><line x1="1258" y1="184" x2="1258" y2="196"/><line x1="1330" y1="184" x2="1330" y2="196"/><line x1="1354" y1="184" x2="1354" y2="196"/><line x1="1378" y1="184" x2="1378" y2="196"/>
-                    </g>
-                    <g id="tsTunePtr">
-                        <rect x="1287" y="172" width="3" height="32" fill="#ff3a1e" filter="url(#tnGlow)"/>
-                        <rect x="1288" y="172" width="1.5" height="32" fill="#ff7a55"/>
-                    </g>
-                    <rect x="1424" y="162" width="196" height="50" rx="4" fill="#050505" stroke="#000000" stroke-width="1.5"/>
-                    <text x="1440" y="182" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" fill="#c23018">FM</text>
-                    <text x="1440" y="200" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="600" fill="#7a2416">MHz</text>
-                    <text id="tsFreqGlow" x="1600" y="200" font-family="'Courier New', monospace" font-size="38" font-weight="700" fill="#3a1208" text-anchor="end" filter="url(#tnGlow)">--.-</text>
-                    <text id="tsFreq" x="1600" y="200" font-family="'Courier New', monospace" font-size="38" font-weight="700" fill="#5a1e12" text-anchor="end">--.-</text>
-                    <!-- knob -->
-                    <ellipse cx="1852" cy="140" rx="112" ry="110" fill="#1c1b20"/>
-                    <g id="tsKnob">
-                        <ellipse cx="1852" cy="138" rx="110" ry="108" fill="url(#tnKnobRim)"/>
-                        <ellipse cx="1852" cy="138" rx="98" ry="97" fill="url(#tnKnobFace)"/>
-                        <circle cx="1852" cy="62" r="7" fill="#191820"/>
-                    </g>
-                    <ellipse cx="1820" cy="112" rx="42" ry="34" fill="#ffffff" opacity="0.05" pointer-events="none"/>
-                    <!-- 조작 히트 영역 (투명) -->
-                    <rect id="tsPowerHit" x="128" y="160" width="52" height="56" fill="#000000" fill-opacity="0" style="cursor:pointer; touch-action:none"><title>전원 — 재생/정지</title></rect>
-                    <rect id="tsDialHit" x="150" y="60" width="1220" height="60" fill="#000000" fill-opacity="0" style="cursor:ew-resize; touch-action:none"><title>드래그하여 주파수를 맞추세요</title></rect>
-                    <rect id="tsRecHit" x="244" y="138" width="56" height="80" fill="#000000" fill-opacity="0" style="cursor:pointer"><title>REC CAL — 녹음 시작/정지</title></rect>
-                    <rect id="tsBlendHit" x="338" y="138" width="56" height="80" fill="#000000" fill-opacity="0" style="cursor:pointer"><title>BLEND — 하이블렌드 (고음 노이즈 감쇠)</title></rect>
-                    <rect id="tsModeHit" x="428" y="138" width="56" height="80" fill="#000000" fill-opacity="0" style="cursor:pointer"><title>MODE — 스테레오/모노 전환</title></rect>
-                    <rect id="tsMuteHit" x="520" y="138" width="56" height="80" fill="#000000" fill-opacity="0" style="cursor:pointer"><title>MUTE/STE — 음소거</title></rect>
-                    <rect id="tsIfHit" x="608" y="138" width="56" height="80" fill="#000000" fill-opacity="0" style="cursor:pointer"><title>IF MODE — 취침 타이머</title></rect>
-                    <rect id="tsRfHit" x="694" y="138" width="56" height="80" fill="#000000" fill-opacity="0" style="cursor:pointer"><title>RF MODE — 채널 목록 열기/닫기</title></rect>
-                </svg>
-                <div class="dial-knob" title="드래그하여 주파수를 맞추세요"></div>
-            </div>
+            <div class="tuner-stage" id="tunerStage"></div>
+            <div class="skin-picker" id="skinPicker" role="group" aria-label="튜너 스킨 선택"></div>
             <canvas class="vu-canvas" id="vuCanvas" aria-hidden="true"></canvas>
             <div class="hero-player-wrap">
                 <section class="player-bar" aria-label="현재 재생 플레이어">
@@ -1086,40 +995,445 @@
         const favNote = document.getElementById("favNote");
         const favList = document.getElementById("favList");
 
-        // ----- 라이브 SVG 튜너 계기 구동 -----
-        const tsFreq = document.getElementById("tsFreq");
-        const tsFreqGlow = document.getElementById("tsFreqGlow");
-        const tsDialPtr = document.getElementById("tsDialPtr");
-        const tsSignalPtr = document.getElementById("tsSignalPtr");
-        const tsTunePtr = document.getElementById("tsTunePtr");
-        const tsLedStereo = document.getElementById("tsLedStereo");
-        const tsLedLock = document.getElementById("tsLedLock");
-
-        const TS_LED_ON = "#ff4a26";
-        const TS_LED_OFF = "#4a1410";
-        // 88MHz→x300, 108MHz→x1240 (선형, 47px/MHz). 다이얼 바늘 기준 x=864(=100MHz).
-        const tsFreqToX = (f) => 300 + (Math.max(88, Math.min(108, f)) - 88) * 47;
+        // ----- 튜너 스킨 시스템 -----
+        // 각 스킨은 { label, cfg, svg }로 정의된다. 기능 요소는 모든 스킨에서 같은 id를 쓰고
+        // (tsFreq/tsDialPtr/tsSignalPtr/tsTunePtr/tsLed*/tsSw*/tsKnob), 좌표·색만 cfg로 달라진다.
+        // 히트 영역과 방송국 마커는 cfg 좌표를 바탕으로 마운트 시 생성한다.
+        const SVG_NS = "http://www.w3.org/2000/svg";
+        let tunerSkinId = "t2";
+        let tunerCfg = null;
+        let tunerSvgEl = null;
+        let tsFreq = null, tsFreqGlow = null, tsDialPtr = null, tsSignalPtr = null, tsTunePtr = null, tsKnob = null, tsStationMarks = null;
         let tsRaf = null;
         let tsSignal = 0;
         let tsTune = 0.85;
         let tsFreqData = null;
+        let tsPanelState = "";
+        let blendOn = false;
+        let monoOn = false;
+
+        const TS_HIT_META = {
+            power: { title: "전원 — 재생/정지", cursor: "pointer" },
+            dial: { title: "드래그하여 주파수를 맞추세요", cursor: "ew-resize" },
+            rec: { title: "녹음 시작/정지", cursor: "pointer" },
+            blend: { title: "하이블렌드 — 고음 잡음 감쇠", cursor: "pointer" },
+            mode: { title: "스테레오/모노 전환", cursor: "pointer" },
+            mute: { title: "음소거", cursor: "pointer" },
+            if: { title: "취침 타이머", cursor: "pointer" },
+            rf: { title: "채널 목록 열기/닫기", cursor: "pointer" }
+        };
+
+        const TUNER_SKINS = {
+            t2: {
+                label: "YAHAMA T-2",
+                cfg: {
+                    freq: { x88: 300, px: 47, drawX: 864 },
+                    mark: { y: 82, h: 7, hOn: 12, color: "#e8c85a", colorOn: "#ff8a3a" },
+                    signal: { drawX: 1030, baseX: 955, travel: 155 },
+                    tune: { travel: 46 },
+                    knob: { cx: 1852, cy: 138 },
+                    swTravel: 20,
+                    led: { on: "#ff4a26", off: "#4a1410" },
+                    digit: { lit: "#ff5230", glow: "#ff3a1e", dim: "#5a1e12", dimGlow: "#3a1208" },
+                    hits: { power: [128, 160, 52, 56], dial: [150, 56, 1220, 64], rec: [244, 138, 56, 80], blend: [338, 138, 56, 80], mode: [428, 138, 56, 80], mute: [520, 138, 56, 80], if: [608, 138, 56, 80], rf: [694, 138, 56, 80], knob: [1852, 140, 112] }
+                },
+                svg: `<svg class="tuner-svg" viewBox="0 0 2000 269" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Yahama Natural Sound FM Stereo Tuner T-2">
+                    <defs>
+                        <linearGradient id="tnPanel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5d5951"/><stop offset="0.05" stop-color="#514e46"/><stop offset="0.5" stop-color="#4a4740"/><stop offset="1" stop-color="#393630"/></linearGradient>
+                        <linearGradient id="tnBevel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b2afa7"/><stop offset="0.5" stop-color="#918e86"/><stop offset="1" stop-color="#63605a"/></linearGradient>
+                        <linearGradient id="tnDialWin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a0c07"/><stop offset="0.5" stop-color="#12140c"/><stop offset="1" stop-color="#181a10"/></linearGradient>
+                        <linearGradient id="tnMeterWin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0c0e0a"/><stop offset="1" stop-color="#17170f"/></linearGradient>
+                        <radialGradient id="tnKnobFace" cx="0.38" cy="0.34" r="0.85"><stop offset="0" stop-color="#56545c"/><stop offset="0.45" stop-color="#403e45"/><stop offset="1" stop-color="#262429"/></radialGradient>
+                        <linearGradient id="tnKnobRim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5b5960"/><stop offset="1" stop-color="#201f24"/></linearGradient>
+                        <linearGradient id="tnSwitch" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2830"/><stop offset="1" stop-color="#3f3d45"/></linearGradient>
+                        <filter id="tnGlow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.4"/></filter>
+                        <pattern id="tnTicksMinor" width="13" height="30" patternUnits="userSpaceOnUse"><rect x="0" y="0" width="1.4" height="14" fill="#8f8a4a"/></pattern>
+                        <pattern id="tnTicksMajor" width="65" height="30" patternUnits="userSpaceOnUse"><rect x="0" y="0" width="2.2" height="24" fill="#c8c07a"/></pattern>
+                    </defs>
+                    <rect x="0" y="0" width="2000" height="269" rx="6" fill="url(#tnPanel)"/>
+                    <rect x="0" y="0" width="2000" height="13" rx="6" fill="url(#tnBevel)"/>
+                    <rect x="0" y="12" width="2000" height="2" fill="#26242a" opacity="0.7"/>
+                    <rect x="0" y="255" width="2000" height="14" fill="#000000" opacity="0.18"/>
+                    <rect x="120" y="23" width="30" height="30" rx="15" fill="none" stroke="#d9d7dc" stroke-width="1.6"/>
+                    <g stroke="#d9d7dc" stroke-width="1.7" fill="none" stroke-linecap="round">
+                        <path d="M129 30 L129 42"/><path d="M135 27 L135 42"/><path d="M141 30 L141 42"/><path d="M129 42 Q135 47 141 42"/><path d="M135 42 L135 47"/>
+                    </g>
+                    <text x="160" y="43" font-family="Arial, Helvetica, sans-serif" font-size="27" font-weight="700" letter-spacing="1.5" fill="#e6e5e8">YAHAMA</text>
+                    <text x="298" y="41" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="600" letter-spacing="2" fill="#b3b1b8">NATURAL SOUND<tspan dx="18">FM STEREO TUNER</tspan><tspan dx="18" font-weight="700" fill="#c8c6cd">T-2</tspan></text>
+                    <rect x="128" y="58" width="1272" height="64" rx="4" fill="url(#tnDialWin)" stroke="#0a0b06" stroke-width="2"/>
+                    <g font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" fill="#cfc78a" text-anchor="middle">
+                        <text x="150" y="76" fill="#d8d0a0">FM</text><text x="300" y="76">88</text><text x="488" y="76">92</text><text x="676" y="76">96</text><text x="864" y="76">100</text><text x="1052" y="76">104</text><text x="1240" y="76">108</text><text x="1360" y="76" fill="#a49c6a">MHz</text>
+                    </g>
+                    <rect x="150" y="86" width="1210" height="14" fill="url(#tnTicksMinor)"/>
+                    <rect x="150" y="86" width="1210" height="24" fill="url(#tnTicksMajor)"/>
+                    <g id="tsStationMarks"></g>
+                    <g id="tsDialPtr">
+                        <rect x="862" y="102" width="20" height="16" rx="2" fill="#ff5a24" filter="url(#tnGlow)"/>
+                        <rect x="866" y="86" width="8" height="34" fill="#e23c14"/>
+                        <rect x="868" y="86" width="4" height="34" fill="#ff8a5a"/>
+                    </g>
+                    <g font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="600" letter-spacing="0.5" fill="#a7a5ac" text-anchor="middle">
+                        <text x="1452" y="74">STEREO</text><text x="1524" y="74">LOCK</text><text x="1596" y="74">HI-BLEND</text>
+                    </g>
+                    <rect id="tsLedStereo" x="1432" y="96" width="40" height="11" rx="2" fill="#4a1410" filter="url(#tnGlow)"/>
+                    <rect id="tsLedLock" x="1504" y="96" width="40" height="11" rx="2" fill="#4a1410" filter="url(#tnGlow)"/>
+                    <rect id="tsLedBlend" x="1576" y="96" width="40" height="11" rx="2" fill="#4a1410" filter="url(#tnGlow)"/>
+                    <g font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="600" letter-spacing="0.8" fill="#c3c1c8" text-anchor="middle">
+                        <text x="152" y="152">POWER</text><text x="272" y="152">REC CAL</text><text x="366" y="152">BLEND</text><text x="456" y="152">MODE</text><text x="548" y="152">MUTE/STE</text><text x="636" y="152">IF MODE</text><text x="722" y="152">RF MODE</text>
+                    </g>
+                    <rect x="132" y="164" width="40" height="48" rx="4" fill="url(#tnSwitch)" stroke="#25232a" stroke-width="1"/>
+                    <rect id="tsPwrTop" x="140" y="172" width="24" height="15" rx="2" fill="#1c1a20"/>
+                    <rect id="tsPwrBot" x="140" y="190" width="24" height="15" rx="2" fill="#54525a"/>
+                    <g>
+                        <rect x="252" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwRec" x="262" y="171" width="20" height="18" rx="3" fill="#57555d"/>
+                        <rect x="346" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwBlend" x="356" y="171" width="20" height="18" rx="3" fill="#57555d"/>
+                        <rect x="436" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwMode" x="446" y="171" width="20" height="18" rx="3" fill="#57555d"/>
+                        <rect x="528" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwMute" x="538" y="171" width="20" height="18" rx="3" fill="#57555d"/>
+                        <rect x="616" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwIf" x="626" y="171" width="20" height="18" rx="3" fill="#57555d"/>
+                        <rect x="702" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwRf" x="712" y="171" width="20" height="18" rx="3" fill="#57555d"/>
+                    </g>
+                    <g font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="600" letter-spacing="1.5" fill="#c3c1c8" text-anchor="middle">
+                        <text x="1030" y="150">SIGNAL QUALITY</text><text x="1290" y="150">TUNING</text><text x="1520" y="150">STATION</text>
+                    </g>
+                    <rect x="925" y="162" width="212" height="50" rx="4" fill="url(#tnMeterWin)" stroke="#0a0b06" stroke-width="1.5"/>
+                    <g stroke="#8f8a4a" stroke-width="1.3">
+                        <line x1="948" y1="182" x2="948" y2="196"/><line x1="972" y1="184" x2="972" y2="196"/><line x1="996" y1="182" x2="996" y2="196"/><line x1="1020" y1="184" x2="1020" y2="196"/><line x1="1044" y1="182" x2="1044" y2="196"/><line x1="1068" y1="184" x2="1068" y2="196"/><line x1="1092" y1="182" x2="1092" y2="196"/><line x1="1114" y1="184" x2="1114" y2="196"/>
+                    </g>
+                    <g id="tsSignalPtr">
+                        <rect x="1029" y="172" width="3" height="32" fill="#ff3a1e" filter="url(#tnGlow)"/>
+                        <rect x="1030" y="172" width="1.5" height="32" fill="#ff7a55"/>
+                    </g>
+                    <rect x="1182" y="162" width="212" height="50" rx="4" fill="url(#tnMeterWin)" stroke="#0a0b06" stroke-width="1.5"/>
+                    <g stroke="#8f8a4a" stroke-width="1.3">
+                        <line x1="1210" y1="184" x2="1210" y2="196"/><line x1="1234" y1="184" x2="1234" y2="196"/><line x1="1258" y1="184" x2="1258" y2="196"/><line x1="1330" y1="184" x2="1330" y2="196"/><line x1="1354" y1="184" x2="1354" y2="196"/><line x1="1378" y1="184" x2="1378" y2="196"/>
+                    </g>
+                    <g id="tsTunePtr">
+                        <rect x="1287" y="172" width="3" height="32" fill="#ff3a1e" filter="url(#tnGlow)"/>
+                        <rect x="1288" y="172" width="1.5" height="32" fill="#ff7a55"/>
+                    </g>
+                    <rect x="1424" y="162" width="196" height="50" rx="4" fill="#050505" stroke="#000000" stroke-width="1.5"/>
+                    <text x="1440" y="182" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" fill="#c23018">FM</text>
+                    <text x="1440" y="200" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="600" fill="#7a2416">MHz</text>
+                    <text id="tsFreqGlow" x="1600" y="200" font-family="'Courier New', monospace" font-size="38" font-weight="700" fill="#3a1208" text-anchor="end" filter="url(#tnGlow)">--.-</text>
+                    <text id="tsFreq" x="1600" y="200" font-family="'Courier New', monospace" font-size="38" font-weight="700" fill="#5a1e12" text-anchor="end">--.-</text>
+                    <ellipse cx="1852" cy="140" rx="112" ry="110" fill="#1c1b20"/>
+                    <g id="tsKnob">
+                        <ellipse cx="1852" cy="138" rx="110" ry="108" fill="url(#tnKnobRim)"/>
+                        <ellipse cx="1852" cy="138" rx="98" ry="97" fill="url(#tnKnobFace)"/>
+                        <circle cx="1852" cy="62" r="7" fill="#191820"/>
+                    </g>
+                    <ellipse cx="1820" cy="112" rx="42" ry="34" fill="#ffffff" opacity="0.05" pointer-events="none"/>
+                </svg>`
+            },
+            mr78: {
+                label: "McIntoch MR-78",
+                cfg: {
+                    freq: { x88: 380, px: 54.5, drawX: 925 },
+                    mark: { y: 122, h: 8, hOn: 14, color: "#7fd8cf", colorOn: "#ff5a3a" },
+                    signal: { drawX: 555, baseX: 445, travel: 220 },
+                    tune: { travel: 115 },
+                    knob: { cx: 1770, cy: 126 },
+                    swTravel: 5,
+                    led: { on: "#ff4a3a", off: "#3a1512" },
+                    digit: { lit: "#57b0ff", glow: "#2a6fd0", dim: "#16324d", dimGlow: "#0d1f30" },
+                    hits: { power: [58, 218, 70, 48], dial: [370, 56, 1120, 100], rec: [300, 212, 80, 54], if: [520, 212, 80, 54], blend: [740, 212, 80, 54], mute: [960, 212, 80, 54], mode: [1180, 212, 80, 54], rf: [1400, 212, 80, 54], knob: [1770, 126, 96] }
+                },
+                svg: `<svg class="tuner-svg" viewBox="0 0 2000 269" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="McIntoch MR-78 FM Tuner">
+                    <defs>
+                        <linearGradient id="mrPanel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#17171a"/><stop offset="0.5" stop-color="#0d0d10"/><stop offset="1" stop-color="#08080a"/></linearGradient>
+                        <linearGradient id="mrRail" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d8d8dc"/><stop offset="0.5" stop-color="#8a8a92"/><stop offset="1" stop-color="#55555c"/></linearGradient>
+                        <linearGradient id="mrMeter" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#95e4da"/><stop offset="1" stop-color="#5cb6ad"/></linearGradient>
+                        <radialGradient id="mrKnob" cx="0.38" cy="0.32" r="0.9"><stop offset="0" stop-color="#3a3a40"/><stop offset="0.6" stop-color="#1c1c22"/><stop offset="1" stop-color="#0c0c10"/></radialGradient>
+                        <filter id="mrGlow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.4"/></filter>
+                        <pattern id="mrTickMinor" width="10.9" height="22" patternUnits="userSpaceOnUse"><rect width="1.1" height="10" fill="#e8e8ea" opacity="0.75"/></pattern>
+                        <pattern id="mrTickMajor" width="54.5" height="22" patternUnits="userSpaceOnUse"><rect width="1.8" height="18" fill="#ffffff"/></pattern>
+                    </defs>
+                    <rect x="0" y="0" width="2000" height="269" rx="6" fill="url(#mrPanel)"/>
+                    <rect x="0" y="0" width="26" height="269" rx="6" fill="url(#mrRail)"/>
+                    <rect x="1974" y="0" width="26" height="269" rx="6" fill="url(#mrRail)"/>
+                    <!-- FUNCTION 표시창 -->
+                    <rect x="60" y="36" width="190" height="84" rx="3" fill="#050506" stroke="#6b6648" stroke-width="1.4"/>
+                    <text x="155" y="52" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" letter-spacing="2" fill="#7ee08a" text-anchor="middle">FUNCTION</text>
+                    <text id="tsLedStereo" data-on="#ff4a3a" data-off="#3a1512" x="155" y="76" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" letter-spacing="2.5" fill="#3a1512" text-anchor="middle">STEREO</text>
+                    <text id="tsLedLock" data-on="#ffd24a" data-off="#3a3012" x="155" y="95" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" letter-spacing="2.5" fill="#3a3012" text-anchor="middle">LOCKED</text>
+                    <text id="tsLedBlend" data-on="#ff9a3a" data-off="#3a2312" x="155" y="114" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" letter-spacing="2.5" fill="#3a2312" text-anchor="middle">FILTER</text>
+                    <!-- STATION 표시창 -->
+                    <rect x="60" y="132" width="190" height="84" rx="3" fill="#050506" stroke="#6b6648" stroke-width="1.4"/>
+                    <text x="155" y="148" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" letter-spacing="2" fill="#7ee08a" text-anchor="middle">STATION</text>
+                    <text id="tsFreqGlow" x="155" y="196" font-family="'Courier New', monospace" font-size="40" font-weight="700" fill="#0d1f30" text-anchor="middle" filter="url(#mrGlow)">--.-</text>
+                    <text id="tsFreq" x="155" y="196" font-family="'Courier New', monospace" font-size="40" font-weight="700" fill="#16324d" text-anchor="middle">--.-</text>
+                    <!-- 다이얼 창 (블랙글라스) -->
+                    <rect x="290" y="36" width="1270" height="180" rx="3" fill="#060607" stroke="#6b6648" stroke-width="1.4"/>
+                    <g font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" fill="#f2f2f2" text-anchor="middle">
+                        <text x="380" y="88">88</text><text x="489" y="88">90</text><text x="598" y="88">92</text><text x="707" y="88">94</text><text x="816" y="88">96</text><text x="925" y="88">98</text><text x="1034" y="88">100</text><text x="1143" y="88">102</text><text x="1252" y="88">104</text><text x="1361" y="88">106</text><text x="1470" y="88">108</text>
+                    </g>
+                    <rect x="380" y="100" width="1090" height="10" fill="url(#mrTickMinor)"/>
+                    <rect x="380" y="100" width="1090" height="18" fill="url(#mrTickMajor)"/>
+                    <g font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#cfcfcf" text-anchor="middle">
+                        <text x="380" y="148">0</text><text x="489" y="148">10</text><text x="598" y="148">20</text><text x="707" y="148">30</text><text x="816" y="148">40</text><text x="925" y="148">50</text><text x="1034" y="148">60</text><text x="1143" y="148">70</text><text x="1252" y="148">80</text><text x="1361" y="148">90</text><text x="1470" y="148">100</text>
+                    </g>
+                    <g id="tsStationMarks"></g>
+                    <g id="tsDialPtr">
+                        <rect x="923" y="96" width="4" height="58" fill="#ff2a1a" filter="url(#mrGlow)"/>
+                        <rect x="924" y="96" width="2" height="58" fill="#ff6a4a"/>
+                    </g>
+                    <!-- 틸 미터 (SIGNAL / TUNING) -->
+                    <text x="555" y="158" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" letter-spacing="1.5" fill="#7ee08a" text-anchor="middle">SIGNAL STRENGTH</text>
+                    <rect x="430" y="164" width="250" height="42" rx="2" fill="url(#mrMeter)"/>
+                    <g stroke="#134a44" stroke-width="1.2">
+                        <line x1="455" y1="170" x2="455" y2="182"/><line x1="490" y1="172" x2="490" y2="182"/><line x1="525" y1="170" x2="525" y2="182"/><line x1="560" y1="172" x2="560" y2="182"/><line x1="595" y1="170" x2="595" y2="182"/><line x1="630" y1="172" x2="630" y2="182"/><line x1="660" y1="170" x2="660" y2="182"/>
+                    </g>
+                    <g id="tsSignalPtr">
+                        <rect x="553.5" y="167" width="3" height="36" fill="#0a1a18"/>
+                    </g>
+                    <text x="1295" y="158" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" letter-spacing="1.5" fill="#7ee08a" text-anchor="middle">TUNING</text>
+                    <rect x="1170" y="164" width="250" height="42" rx="2" fill="url(#mrMeter)"/>
+                    <g stroke="#134a44" stroke-width="1.2">
+                        <line x1="1195" y1="170" x2="1195" y2="182"/><line x1="1245" y1="172" x2="1245" y2="182"/><line x1="1295" y1="168" x2="1295" y2="184"/><line x1="1345" y1="172" x2="1345" y2="182"/><line x1="1395" y1="170" x2="1395" y2="182"/>
+                    </g>
+                    <g id="tsTunePtr">
+                        <rect x="1293.5" y="167" width="3" height="36" fill="#0a1a18"/>
+                    </g>
+                    <!-- 브랜드 -->
+                    <text x="925" y="184" font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-size="38" font-weight="700" fill="#d8b060" text-anchor="middle">McIntoch</text>
+                    <text x="925" y="207" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="600" letter-spacing="6" fill="#e8e8ea" text-anchor="middle">MR 78 FM TUNER</text>
+                    <!-- 하단 노브 행 -->
+                    <g font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" letter-spacing="1.5" fill="#7ee08a" text-anchor="middle">
+                        <text x="93" y="232">POWER</text><text x="340" y="228">REC CAL</text><text x="560" y="228">TIMER</text><text x="780" y="228">FILTER</text><text x="1000" y="228">MUTING</text><text x="1220" y="228">MODE</text><text x="1440" y="228">LIST</text>
+                    </g>
+                    <circle cx="93" cy="248" r="13" fill="#1c1c22" stroke="#8a8a92" stroke-width="1.4"/>
+                    <circle id="tsSwPwr" cx="93" cy="245" r="6" fill="#55555c"/>
+                    <g>
+                        <circle cx="340" cy="247" r="16" fill="url(#mrKnob)" stroke="#8a8a92" stroke-width="1.2"/><rect id="tsSwRec" x="338.5" y="233" width="3" height="11" rx="1.5" fill="#d8d8dc"/>
+                        <circle cx="560" cy="247" r="16" fill="url(#mrKnob)" stroke="#8a8a92" stroke-width="1.2"/><rect id="tsSwIf" x="558.5" y="233" width="3" height="11" rx="1.5" fill="#d8d8dc"/>
+                        <circle cx="780" cy="247" r="16" fill="url(#mrKnob)" stroke="#8a8a92" stroke-width="1.2"/><rect id="tsSwBlend" x="778.5" y="233" width="3" height="11" rx="1.5" fill="#d8d8dc"/>
+                        <circle cx="1000" cy="247" r="16" fill="url(#mrKnob)" stroke="#8a8a92" stroke-width="1.2"/><rect id="tsSwMute" x="998.5" y="233" width="3" height="11" rx="1.5" fill="#d8d8dc"/>
+                        <circle cx="1220" cy="247" r="16" fill="url(#mrKnob)" stroke="#8a8a92" stroke-width="1.2"/><rect id="tsSwMode" x="1218.5" y="233" width="3" height="11" rx="1.5" fill="#d8d8dc"/>
+                        <circle cx="1440" cy="247" r="16" fill="url(#mrKnob)" stroke="#8a8a92" stroke-width="1.2"/><rect id="tsSwRf" x="1438.5" y="233" width="3" height="11" rx="1.5" fill="#d8d8dc"/>
+                    </g>
+                    <!-- 튜닝 노브 -->
+                    <circle cx="1770" cy="128" r="98" fill="#050507"/>
+                    <g id="tsKnob">
+                        <circle cx="1770" cy="126" r="95" fill="url(#mrKnob)" stroke="#9a9aa2" stroke-width="2"/>
+                        <circle cx="1770" cy="60" r="6" fill="#3a3a42"/>
+                    </g>
+                    <ellipse cx="1740" cy="100" rx="36" ry="28" fill="#ffffff" opacity="0.05" pointer-events="none"/>
+                </svg>`
+            },
+            m10b: {
+                label: "Maranz 10B",
+                cfg: {
+                    freq: { x88: 340, px: 67, drawX: 1010 },
+                    mark: { y: 112, h: 6, hOn: 11, color: "#4ac8c8", colorOn: "#ff7a2a" },
+                    signal: { drawX: 1590, baseX: 1460, travel: 260 },
+                    tune: { travel: 130 },
+                    knob: { cx: 1000, cy: 208 },
+                    swTravel: 5,
+                    led: { on: "#ff3a2a", off: "#2a0d0a" },
+                    digit: { lit: "#ff4a2a", glow: "#d02a12", dim: "#4a170e", dimGlow: "#2a0d08" },
+                    hits: { power: [1795, 168, 90, 80], dial: [340, 108, 1360, 44], rec: [295, 168, 90, 80], blend: [475, 168, 90, 80], mode: [655, 168, 90, 80], mute: [1255, 168, 90, 80], if: [1435, 168, 90, 80], rf: [1615, 168, 90, 80], knob: [1000, 208, 54] }
+                },
+                svg: `<svg class="tuner-svg" viewBox="0 0 2000 269" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Maranz Model 10B Stereo FM Tuner">
+                    <defs>
+                        <linearGradient id="mzPanel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9cfb3"/><stop offset="0.5" stop-color="#c9bfa1"/><stop offset="1" stop-color="#b3a988"/></linearGradient>
+                        <radialGradient id="mzKnob" cx="0.4" cy="0.32" r="0.9"><stop offset="0" stop-color="#f2eee2"/><stop offset="0.55" stop-color="#c9c2ae"/><stop offset="1" stop-color="#8f8a76"/></radialGradient>
+                        <linearGradient id="mzScope" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#03150a"/><stop offset="1" stop-color="#020a05"/></linearGradient>
+                        <filter id="mzGlow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.6"/></filter>
+                        <pattern id="mzBrush" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="1" fill="#ffffff" opacity="0.035"/></pattern>
+                        <pattern id="mzTick" width="6.7" height="10" patternUnits="userSpaceOnUse"><circle cx="1.6" cy="5" r="1.5" fill="#4ac8c8"/></pattern>
+                    </defs>
+                    <rect x="0" y="0" width="2000" height="269" rx="6" fill="url(#mzPanel)"/>
+                    <rect x="0" y="0" width="2000" height="269" rx="6" fill="url(#mzBrush)"/>
+                    <circle cx="34" cy="30" r="7" fill="#8f8a76"/><circle cx="1966" cy="30" r="7" fill="#8f8a76"/><circle cx="34" cy="240" r="7" fill="#8f8a76"/><circle cx="1966" cy="240" r="7" fill="#8f8a76"/>
+                    <!-- 블랙 윈도우 -->
+                    <rect x="250" y="30" width="1500" height="126" rx="8" fill="#070707" stroke="#1c1a16" stroke-width="2"/>
+                    <!-- 오실로스코프 -->
+                    <rect x="280" y="38" width="320" height="74" rx="4" fill="url(#mzScope)" stroke="#0d2a16" stroke-width="1.5"/>
+                    <text x="440" y="52" font-family="Arial, Helvetica, sans-serif" font-size="10" letter-spacing="2" fill="#3fd06a" text-anchor="middle" opacity="0.9">TUNE TO CENTER</text>
+                    <line x1="300" y1="86" x2="580" y2="86" stroke="#1f7a3c" stroke-width="1"/>
+                    <g stroke="#1f7a3c" stroke-width="1">
+                        <line x1="370" y1="80" x2="370" y2="92"/><line x1="405" y1="82" x2="405" y2="90"/><line x1="440" y1="76" x2="440" y2="96"/><line x1="475" y1="82" x2="475" y2="90"/><line x1="510" y1="80" x2="510" y2="92"/>
+                    </g>
+                    <g id="tsTunePtr">
+                        <rect x="438" y="58" width="4" height="48" fill="#3fd06a" filter="url(#mzGlow)"/>
+                        <rect x="439" y="58" width="2" height="48" fill="#8af0a8"/>
+                    </g>
+                    <!-- 브랜드 -->
+                    <text x="1000" y="78" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700" letter-spacing="1" fill="#e8e2cf" text-anchor="middle">maranz<tspan font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-weight="400" dx="10">Stereo</tspan><tspan dx="10" font-size="20">fm tuner</tspan></text>
+                    <text x="1000" y="100" font-family="Arial, Helvetica, sans-serif" font-size="12" letter-spacing="4" fill="#a8a28c" text-anchor="middle">MODEL 10 B</text>
+                    <!-- STEREO 램프 + 신호 미터 -->
+                    <rect id="tsLedStereo" data-on="#ff3a2a" data-off="#2a0d0a" x="1545" y="60" width="90" height="24" rx="3" fill="#2a0d0a"/>
+                    <text x="1590" y="77" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" letter-spacing="2" fill="#12060a" text-anchor="middle" pointer-events="none">STEREO</text>
+                    <circle id="tsLedLock" data-on="#62e07a" data-off="#12300f" cx="1668" cy="72" r="7" fill="#12300f"/>
+                    <circle id="tsLedBlend" data-on="#ffb03a" data-off="#3a2a10" cx="1706" cy="72" r="7" fill="#3a2a10"/>
+                    <rect x="1450" y="34" width="280" height="18" rx="2" fill="#0d0d0d" stroke="#1e1c18"/>
+                    <g id="tsSignalPtr">
+                        <rect x="1588.5" y="36" width="3" height="14" fill="#e8e2cf"/>
+                    </g>
+                    <!-- 주파수 스케일 -->
+                    <g font-family="Georgia, 'Times New Roman', serif" font-size="21" fill="#e6dfc6" text-anchor="middle">
+                        <text x="340" y="130">88</text><text x="474" y="130">90</text><text x="608" y="130">92</text><text x="742" y="130">94</text><text x="876" y="130">96</text><text x="1010" y="130">98</text><text x="1144" y="130">100</text><text x="1278" y="130">102</text><text x="1412" y="130">104</text><text x="1546" y="130">106</text><text x="1680" y="130">108</text>
+                    </g>
+                    <rect x="340" y="136" width="1340" height="10" fill="url(#mzTick)"/>
+                    <g id="tsStationMarks"></g>
+                    <g id="tsDialPtr">
+                        <rect x="1008" y="112" width="4" height="40" fill="#ff7a2a" filter="url(#mzGlow)"/>
+                        <rect x="1009" y="112" width="2" height="40" fill="#ffb07a"/>
+                    </g>
+                    <!-- STATION 디지트 -->
+                    <rect x="1770" y="44" width="186" height="64" rx="4" fill="#070707" stroke="#8f8a76" stroke-width="1.4"/>
+                    <text x="1786" y="68" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" fill="#c23018">FM</text>
+                    <text x="1786" y="86" font-family="Arial, Helvetica, sans-serif" font-size="10" fill="#7a2416">MHz</text>
+                    <text id="tsFreqGlow" x="1940" y="92" font-family="'Courier New', monospace" font-size="36" font-weight="700" fill="#2a0d08" text-anchor="end" filter="url(#mzGlow)">--.-</text>
+                    <text id="tsFreq" x="1940" y="92" font-family="'Courier New', monospace" font-size="36" font-weight="700" fill="#4a170e" text-anchor="end">--.-</text>
+                    <!-- 컨트롤 노브 -->
+                    <g font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-size="15" fill="#4a4436" text-anchor="middle">
+                        <text x="340" y="258">record</text><text x="520" y="258">blend</text><text x="700" y="258">mode</text><text x="1000" y="266">tuning</text><text x="1300" y="258">muting</text><text x="1480" y="258">timer</text><text x="1660" y="258">list</text><text x="1840" y="258">power</text>
+                    </g>
+                    <g>
+                        <circle cx="340" cy="208" r="22" fill="url(#mzKnob)" stroke="#8f8a76" stroke-width="1.2"/><rect id="tsSwRec" x="338.5" y="188" width="3" height="13" rx="1.5" fill="#4a4436"/>
+                        <circle cx="520" cy="208" r="22" fill="url(#mzKnob)" stroke="#8f8a76" stroke-width="1.2"/><rect id="tsSwBlend" x="518.5" y="188" width="3" height="13" rx="1.5" fill="#4a4436"/>
+                        <circle cx="700" cy="208" r="22" fill="url(#mzKnob)" stroke="#8f8a76" stroke-width="1.2"/><rect id="tsSwMode" x="698.5" y="188" width="3" height="13" rx="1.5" fill="#4a4436"/>
+                        <circle cx="1300" cy="208" r="22" fill="url(#mzKnob)" stroke="#8f8a76" stroke-width="1.2"/><rect id="tsSwMute" x="1298.5" y="188" width="3" height="13" rx="1.5" fill="#4a4436"/>
+                        <circle cx="1480" cy="208" r="22" fill="url(#mzKnob)" stroke="#8f8a76" stroke-width="1.2"/><rect id="tsSwIf" x="1478.5" y="188" width="3" height="13" rx="1.5" fill="#4a4436"/>
+                        <circle cx="1660" cy="208" r="22" fill="url(#mzKnob)" stroke="#8f8a76" stroke-width="1.2"/><rect id="tsSwRf" x="1658.5" y="188" width="3" height="13" rx="1.5" fill="#4a4436"/>
+                        <circle cx="1840" cy="208" r="22" fill="url(#mzKnob)" stroke="#8f8a76" stroke-width="1.2"/><rect id="tsSwPwr" x="1838.5" y="188" width="3" height="13" rx="1.5" fill="#4a4436"/>
+                    </g>
+                    <circle cx="1000" cy="210" r="54" fill="#8f8a76"/>
+                    <g id="tsKnob">
+                        <circle cx="1000" cy="208" r="52" fill="url(#mzKnob)" stroke="#8f8a76" stroke-width="1.6"/>
+                        <circle cx="1000" cy="170" r="4.5" fill="#4a4436"/>
+                    </g>
+                </svg>`
+            },
+            tu9900: {
+                label: "Sansul TU-9900",
+                cfg: {
+                    freq: { x88: 420, px: 52, drawX: 940 },
+                    mark: { y: 114, h: 7, hOn: 12, color: "#9fd8ff", colorOn: "#ff5a3a" },
+                    signal: { drawX: 450, baseX: 355, travel: 190 },
+                    tune: { travel: 90 },
+                    knob: { cx: 1810, cy: 125 },
+                    swTravel: 8,
+                    led: { on: "#ff3a2a", off: "#3a1210" },
+                    digit: { lit: "#ff3a26", glow: "#c8200f", dim: "#441410", dimGlow: "#280c08" },
+                    hits: { power: [40, 228, 220, 36], dial: [420, 50, 1160, 68], rec: [40, 46, 230, 28], blend: [40, 76, 230, 28], mode: [40, 106, 230, 28], mute: [40, 136, 230, 28], if: [40, 166, 230, 28], rf: [40, 196, 230, 28], knob: [1810, 125, 102] }
+                },
+                svg: `<svg class="tuner-svg" viewBox="0 0 2000 269" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sansul TU-9900 AM/FM Stereo Tuner">
+                    <defs>
+                        <linearGradient id="suPanel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b1b1f"/><stop offset="0.5" stop-color="#121215"/><stop offset="1" stop-color="#0b0b0d"/></linearGradient>
+                        <linearGradient id="suDial" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#122132"/><stop offset="0.35" stop-color="#0a1220"/><stop offset="1" stop-color="#05070c"/></linearGradient>
+                        <radialGradient id="suKnob" cx="0.38" cy="0.32" r="0.9"><stop offset="0" stop-color="#f0f0f4"/><stop offset="0.5" stop-color="#b8b8c0"/><stop offset="1" stop-color="#6a6a72"/></radialGradient>
+                        <linearGradient id="suMeter" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#16202e"/><stop offset="1" stop-color="#0a0f16"/></linearGradient>
+                        <filter id="suGlow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.6"/></filter>
+                        <pattern id="suTickMinor" width="10.4" height="16" patternUnits="userSpaceOnUse"><rect width="1.1" height="8" fill="#cfe4f5" opacity="0.7"/></pattern>
+                        <pattern id="suTickMajor" width="52" height="16" patternUnits="userSpaceOnUse"><rect width="1.8" height="14" fill="#ffffff"/></pattern>
+                    </defs>
+                    <rect x="0" y="0" width="2000" height="269" rx="6" fill="url(#suPanel)"/>
+                    <rect x="0" y="30" width="2000" height="1.5" fill="#3a3a42" opacity="0.8"/>
+                    <!-- 상단 브랜드 스트립 -->
+                    <text x="300" y="22" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" letter-spacing="1" fill="#e8e8ec">TU-9900</text>
+                    <text x="430" y="23" font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-size="20" font-weight="700" fill="#f0f0f2">Sansul</text>
+                    <text x="1540" y="22" font-family="Arial, Helvetica, sans-serif" font-size="14" letter-spacing="1.5" fill="#c8c8d0">AM/FM Stereo Tuner</text>
+                    <!-- 좌측 레버 컬럼 -->
+                    <g font-family="Arial, Helvetica, sans-serif" font-size="10" letter-spacing="0.8" fill="#c8c8d0">
+                        <text x="100" y="64">CAL LEVEL</text><text x="100" y="94">BAND WIDTH</text><text x="100" y="124">FM MODE</text><text x="100" y="154">MUTING</text><text x="100" y="184">SLEEP</text><text x="100" y="214">MET SELECT</text>
+                    </g>
+                    <g>
+                        <rect x="56" y="50" width="30" height="20" rx="3" fill="#26262c" stroke="#3a3a42"/><rect id="tsSwRec" x="61" y="53" width="20" height="7" rx="2" fill="#8a8a94"/>
+                        <rect x="56" y="80" width="30" height="20" rx="3" fill="#26262c" stroke="#3a3a42"/><rect id="tsSwBlend" x="61" y="83" width="20" height="7" rx="2" fill="#8a8a94"/>
+                        <rect x="56" y="110" width="30" height="20" rx="3" fill="#26262c" stroke="#3a3a42"/><rect id="tsSwMode" x="61" y="113" width="20" height="7" rx="2" fill="#8a8a94"/>
+                        <rect x="56" y="140" width="30" height="20" rx="3" fill="#26262c" stroke="#3a3a42"/><rect id="tsSwMute" x="61" y="143" width="20" height="7" rx="2" fill="#8a8a94"/>
+                        <rect x="56" y="170" width="30" height="20" rx="3" fill="#26262c" stroke="#3a3a42"/><rect id="tsSwIf" x="61" y="173" width="20" height="7" rx="2" fill="#8a8a94"/>
+                        <rect x="56" y="200" width="30" height="20" rx="3" fill="#26262c" stroke="#3a3a42"/><rect id="tsSwRf" x="61" y="203" width="20" height="7" rx="2" fill="#8a8a94"/>
+                    </g>
+                    <rect x="52" y="232" width="38" height="28" rx="3" fill="#26262c" stroke="#3a3a42"/>
+                    <rect id="tsSwPwr" x="58" y="236" width="26" height="9" rx="2" fill="#8a8a94"/>
+                    <text x="100" y="252" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" letter-spacing="1" fill="#e8e8ec">POWER</text>
+                    <!-- 다이얼 창 -->
+                    <rect x="300" y="40" width="1340" height="170" rx="4" fill="url(#suDial)" stroke="#26262c" stroke-width="2"/>
+                    <rect x="300" y="40" width="1340" height="36" fill="#bfe8ff" opacity="0.08"/>
+                    <text x="330" y="86" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" fill="#cfeaff">FM</text>
+                    <g font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="600" fill="#f2f6fa" text-anchor="middle">
+                        <text x="420" y="88">88</text><text x="524" y="88">90</text><text x="628" y="88">92</text><text x="732" y="88">94</text><text x="836" y="88">96</text><text x="940" y="88">98</text><text x="1044" y="88">100</text><text x="1148" y="88">102</text><text x="1252" y="88">104</text><text x="1356" y="88">106</text><text x="1460" y="88">108</text>
+                    </g>
+                    <text x="1560" y="88" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#9fc8e0">MHz</text>
+                    <rect x="420" y="96" width="1040" height="8" fill="url(#suTickMinor)"/>
+                    <rect x="420" y="96" width="1040" height="14" fill="url(#suTickMajor)"/>
+                    <g font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#5a7a90" text-anchor="middle">
+                        <text x="330" y="136">AM</text><text x="520" y="136">600</text><text x="720" y="136">800</text><text x="920" y="136">1000</text><text x="1120" y="136">1200</text><text x="1320" y="136">1400</text><text x="1460" y="136">1600</text>
+                    </g>
+                    <g id="tsStationMarks"></g>
+                    <g id="tsDialPtr">
+                        <rect x="938" y="52" width="4" height="100" fill="#bfe8ff" filter="url(#suGlow)" opacity="0.9"/>
+                        <rect x="939" y="52" width="2" height="100" fill="#ffffff"/>
+                    </g>
+                    <!-- 트윈 미터 -->
+                    <text x="450" y="160" font-family="Arial, Helvetica, sans-serif" font-size="10" letter-spacing="2" fill="#9fc8e0" text-anchor="middle">SIGNAL</text>
+                    <rect x="340" y="164" width="220" height="38" rx="3" fill="url(#suMeter)" stroke="#2a3a4a"/>
+                    <g stroke="#5a7a90" stroke-width="1">
+                        <line x1="365" y1="172" x2="365" y2="182"/><line x1="400" y1="174" x2="400" y2="182"/><line x1="435" y1="172" x2="435" y2="182"/><line x1="470" y1="174" x2="470" y2="182"/><line x1="505" y1="172" x2="505" y2="182"/><line x1="540" y1="174" x2="540" y2="182"/>
+                    </g>
+                    <g id="tsSignalPtr">
+                        <rect x="448.5" y="168" width="3" height="30" fill="#dff2ff" filter="url(#suGlow)"/>
+                    </g>
+                    <text x="690" y="160" font-family="Arial, Helvetica, sans-serif" font-size="10" letter-spacing="2" fill="#9fc8e0" text-anchor="middle">TUNE</text>
+                    <rect x="580" y="164" width="220" height="38" rx="3" fill="url(#suMeter)" stroke="#2a3a4a"/>
+                    <g stroke="#5a7a90" stroke-width="1">
+                        <line x1="620" y1="174" x2="620" y2="182"/><line x1="655" y1="174" x2="655" y2="182"/><line x1="690" y1="170" x2="690" y2="184"/><line x1="725" y1="174" x2="725" y2="182"/><line x1="760" y1="174" x2="760" y2="182"/>
+                    </g>
+                    <g id="tsTunePtr">
+                        <rect x="688.5" y="168" width="3" height="30" fill="#dff2ff" filter="url(#suGlow)"/>
+                    </g>
+                    <!-- 램프 -->
+                    <circle id="tsLedStereo" data-on="#ff3a2a" data-off="#3a1210" cx="1020" cy="172" r="7" fill="#3a1210" filter="url(#suGlow)"/>
+                    <text x="1036" y="177" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#c8d8e8">FM STEREO</text>
+                    <circle id="tsLedLock" data-on="#62e07a" data-off="#12300f" cx="1170" cy="172" r="7" fill="#12300f" filter="url(#suGlow)"/>
+                    <text x="1186" y="177" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#c8d8e8">FM AUTO</text>
+                    <circle id="tsLedBlend" data-on="#ffb03a" data-off="#3a2a10" cx="1310" cy="172" r="7" fill="#3a2a10" filter="url(#suGlow)"/>
+                    <text x="1326" y="177" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#c8d8e8">HI-BLEND</text>
+                    <!-- STATION 디지트 -->
+                    <rect x="1450" y="148" width="150" height="50" rx="4" fill="#050505" stroke="#26303a" stroke-width="1.4"/>
+                    <text id="tsFreqGlow" x="1588" y="184" font-family="'Courier New', monospace" font-size="30" font-weight="700" fill="#280c08" text-anchor="end" filter="url(#suGlow)">--.-</text>
+                    <text id="tsFreq" x="1588" y="184" font-family="'Courier New', monospace" font-size="30" font-weight="700" fill="#441410" text-anchor="end">--.-</text>
+                    <!-- 플라이휠 노브 -->
+                    <circle cx="1810" cy="128" r="104" fill="#050507"/>
+                    <g id="tsKnob">
+                        <circle cx="1810" cy="125" r="100" fill="url(#suKnob)" stroke="#4a4a52" stroke-width="2"/>
+                        <circle cx="1810" cy="125" r="70" fill="none" stroke="#8a8a94" stroke-width="1" opacity="0.5"/>
+                        <circle cx="1810" cy="55" r="6" fill="#3a3a40"/>
+                    </g>
+                    <ellipse cx="1778" cy="98" rx="38" ry="30" fill="#ffffff" opacity="0.07" pointer-events="none"/>
+                    <text x="1810" y="250" font-family="Arial, Helvetica, sans-serif" font-size="11" letter-spacing="3" fill="#9a9aa2" text-anchor="middle">TUNING</text>
+                </svg>`
+            }
+        };
+
+        const SKIN_ORDER = ["t2", "mr78", "m10b", "tu9900"];
+
+        function tsFreqToX(f) {
+            const c = tunerCfg.freq;
+            return c.x88 + (Math.max(88, Math.min(108, f)) - 88) * c.px;
+        }
 
         function tunerSetStation(station) {
+            if (!tsFreq) return;
+            const d = tunerCfg.digit;
             if (station) {
                 const txt = station.freq.toFixed(1);
                 tsFreq.textContent = txt;
                 tsFreqGlow.textContent = txt;
-                tsFreq.style.fill = "#ff5230";
-                tsFreqGlow.style.fill = "#ff3a1e";
-                tsDialPtr.setAttribute("transform", "translate(" + (tsFreqToX(station.freq) - 864).toFixed(1) + ",0)");
+                tsFreq.style.fill = d.lit;
+                tsFreqGlow.style.fill = d.glow;
+                tsDialPtr.setAttribute("transform", "translate(" + (tsFreqToX(station.freq) - tunerCfg.freq.drawX).toFixed(1) + ",0)");
                 tunerKnobAngle(station.freq);
                 highlightStationMark(station.id);
             } else {
                 tsFreq.textContent = "--.-";
                 tsFreqGlow.textContent = "--.-";
-                tsFreq.style.fill = "#5a1e12";
-                tsFreqGlow.style.fill = "#3a1208";
-                tsDialPtr.setAttribute("transform", "translate(" + (tsFreqToX(88) - 864).toFixed(1) + ",0)");
+                tsFreq.style.fill = d.dim;
+                tsFreqGlow.style.fill = d.dimGlow;
+                tsDialPtr.setAttribute("transform", "translate(" + (tsFreqToX(88) - tunerCfg.freq.drawX).toFixed(1) + ",0)");
                 tunerKnobAngle(98);
                 highlightStationMark(null);
             }
@@ -1130,8 +1444,51 @@
             tsSyncPanel();
         }
 
+        function tunerKnobAngle(freq) {
+            if (!tsKnob) return;
+            const ang = (Math.max(88, Math.min(108, freq)) - 88) / 20 * 300 - 150;
+            tsKnob.setAttribute("transform", "rotate(" + ang.toFixed(1) + " " + tunerCfg.knob.cx + " " + tunerCfg.knob.cy + ")");
+        }
+
+        function highlightStationMark(id) {
+            if (!tsStationMarks) return;
+            const m = tunerCfg.mark;
+            tsStationMarks.querySelectorAll("rect").forEach((el) => {
+                const on = el.getAttribute("data-station") === id;
+                el.setAttribute("fill", on ? m.colorOn : m.color);
+                el.setAttribute("height", on ? m.hOn : m.h);
+            });
+        }
+
+        function nearestStation(freq) {
+            return stations.reduce((a, b) => Math.abs(b.freq - freq) < Math.abs(a.freq - freq) ? b : a);
+        }
+
+        function clientXToFreq(clientX) {
+            const r = tunerSvgEl.getBoundingClientRect();
+            const svgX = (clientX - r.left) / r.width * 2000;
+            return 88 + (svgX - tunerCfg.freq.x88) / tunerCfg.freq.px;
+        }
+
+        // 드래그 중 미리보기 — 바늘·표시·노브를 임의 주파수로 (선택은 손 뗄 때)
+        function tunerPreview(freq) {
+            freq = Math.max(88, Math.min(108, freq));
+            const d = tunerCfg.digit;
+            tsDialPtr.setAttribute("transform", "translate(" + (tsFreqToX(freq) - tunerCfg.freq.drawX).toFixed(1) + ",0)");
+            const txt = freq.toFixed(1);
+            tsFreq.textContent = txt;
+            tsFreqGlow.textContent = txt;
+            tsFreq.style.fill = d.lit;
+            tsFreqGlow.style.fill = d.glow;
+            tunerKnobAngle(freq);
+            const near = nearestStation(freq);
+            nowStation.textContent = near.name;
+            playerSubtext.textContent = near.name + " · " + near.freq.toFixed(1) + "MHz — 손을 떼면 선택됩니다.";
+        }
+
         function tunerLoop() {
             tsRaf = requestAnimationFrame(tunerLoop);
+            if (!tunerCfg) return;
             let target = 0;
             if (isPlaying) {
                 if (analyser) {
@@ -1148,23 +1505,17 @@
                 }
             }
             tsSignal += (target - tsSignal) * 0.16;
-            const sigX = 955 + Math.max(0, Math.min(1, tsSignal)) * 155;
-            tsSignalPtr.setAttribute("transform", "translate(" + (sigX - 1030).toFixed(1) + ",0)");
+            const sc = tunerCfg.signal;
+            const sigX = sc.baseX + Math.max(0, Math.min(1, tsSignal)) * sc.travel;
+            tsSignalPtr.setAttribute("transform", "translate(" + (sigX - sc.drawX).toFixed(1) + ",0)");
 
             const tuneTarget = isPlaying ? 0 : 0.85;
             const jitter = isPlaying ? (Math.random() - 0.5) * 0.05 : 0;
             tsTune += (tuneTarget - tsTune) * 0.1 + jitter;
             tsTune = Math.max(-1, Math.min(1, tsTune));
-            tsTunePtr.setAttribute("transform", "translate(" + (tsTune * 46).toFixed(1) + ",0)");
+            tsTunePtr.setAttribute("transform", "translate(" + (tsTune * tunerCfg.tune.travel).toFixed(1) + ",0)");
             tsSyncPanel();
         }
-
-        // ----- 스위치·LED 상태 동기화 (상태가 바뀐 프레임에만 DOM 갱신) -----
-        const TS_SW_UP = 171;
-        const TS_SW_DOWN = 191;
-        let tsPanelState = "";
-        let blendOn = false;
-        let monoOn = false;
 
         function applyBlend() {
             // 하이블렌드: 고음을 깎아 약전계 잡음을 줄이는 효과 (MSE 경로에서만 실제 적용)
@@ -1180,6 +1531,7 @@
         }
 
         function tsSyncPanel() {
+            if (!tunerCfg || !tsFreq) return;
             const recOn = !!recorder;
             const timerOn = sleepIndex > 0;
             const listOpen = !document.getElementById("stationMain").classList.contains("collapsed");
@@ -1187,11 +1539,18 @@
             if (state === tsPanelState) return;
             tsPanelState = state;
 
-            // POWER 로커: 재생 중이면 위쪽이 눌린 모습
-            document.getElementById("tsPwrTop").setAttribute("fill", isPlaying ? "#54525a" : "#1c1a20");
-            document.getElementById("tsPwrBot").setAttribute("fill", isPlaying ? "#1c1a20" : "#54525a");
-
-            const setSw = (id, down) => document.getElementById(id).setAttribute("y", down ? TS_SW_DOWN : TS_SW_UP);
+            // POWER: T-2 로커는 상/하 색 반전, 그 외 스킨은 액추에이터 이동
+            const pwrTop = document.getElementById("tsPwrTop");
+            const pwrBot = document.getElementById("tsPwrBot");
+            if (pwrTop && pwrBot) {
+                pwrTop.setAttribute("fill", isPlaying ? "#54525a" : "#1c1a20");
+                pwrBot.setAttribute("fill", isPlaying ? "#1c1a20" : "#54525a");
+            }
+            const setSw = (id, down) => {
+                const el = document.getElementById(id);
+                if (el) el.setAttribute("transform", down ? "translate(0," + tunerCfg.swTravel + ")" : "translate(0,0)");
+            };
+            setSw("tsSwPwr", isPlaying);
             setSw("tsSwRec", recOn);
             setSw("tsSwBlend", blendOn);
             setSw("tsSwMode", monoOn);
@@ -1199,156 +1558,170 @@
             setSw("tsSwIf", timerOn);
             setSw("tsSwRf", listOpen);
 
-            tsLedStereo.style.fill = (isPlaying && !monoOn) ? TS_LED_ON : TS_LED_OFF;
-            tsLedLock.style.fill = isPlaying ? TS_LED_ON : TS_LED_OFF;
-            document.getElementById("tsLedBlend").style.fill = blendOn ? TS_LED_ON : TS_LED_OFF;
+            const setLed = (id, on) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.style.fill = on
+                    ? (el.getAttribute("data-on") || tunerCfg.led.on)
+                    : (el.getAttribute("data-off") || tunerCfg.led.off);
+            };
+            setLed("tsLedStereo", isPlaying && !monoOn);
+            setLed("tsLedLock", isPlaying);
+            setLed("tsLedBlend", blendOn);
         }
 
-        // ----- 튜너 직접 조작 (다이얼/노브 튜닝, POWER 재생) -----
-        const tunerSvgEl = document.querySelector(".tuner-svg");
-        const tsKnob = document.getElementById("tsKnob");
-        const tsStationMarks = document.getElementById("tsStationMarks");
-        const SVG_NS = "http://www.w3.org/2000/svg";
-
-        // 다이얼에 방송국 마커 생성
-        stations.forEach((st) => {
-            const mark = document.createElementNS(SVG_NS, "rect");
-            mark.setAttribute("x", (tsFreqToX(st.freq) - 1.5).toFixed(1));
-            mark.setAttribute("y", "82");
-            mark.setAttribute("width", "3");
-            mark.setAttribute("height", "7");
-            mark.setAttribute("rx", "1");
-            mark.setAttribute("fill", "#e8c85a");
-            mark.setAttribute("data-station", st.id);
-            tsStationMarks.appendChild(mark);
-        });
-
-        function highlightStationMark(id) {
-            tsStationMarks.querySelectorAll("rect").forEach((m) => {
-                const on = m.getAttribute("data-station") === id;
-                m.setAttribute("fill", on ? "#ff8a3a" : "#e8c85a");
-                m.setAttribute("height", on ? "12" : "7");
-            });
-        }
-
-        function tunerKnobAngle(freq) {
-            const ang = (Math.max(88, Math.min(108, freq)) - 88) / 20 * 300 - 150;
-            tsKnob.setAttribute("transform", "rotate(" + ang.toFixed(1) + " 1852 138)");
-        }
-
-        function nearestStation(freq) {
-            return stations.reduce((a, b) => Math.abs(b.freq - freq) < Math.abs(a.freq - freq) ? b : a);
-        }
-
-        function clientXToFreq(clientX) {
-            const r = tunerSvgEl.getBoundingClientRect();
-            const svgX = (clientX - r.left) / r.width * 2000;
-            return 88 + (svgX - 300) / 47;
-        }
-
-        // 드래그 중 미리보기 — 바늘·LED·노브를 임의 주파수로 (선택은 손 뗄 때)
-        function tunerPreview(freq) {
-            freq = Math.max(88, Math.min(108, freq));
-            tsDialPtr.setAttribute("transform", "translate(" + (tsFreqToX(freq) - 864).toFixed(1) + ",0)");
-            const txt = freq.toFixed(1);
-            tsFreq.textContent = txt;
-            tsFreqGlow.textContent = txt;
-            tsFreq.style.fill = "#ff5230";
-            tsFreqGlow.style.fill = "#ff3a1e";
-            tunerKnobAngle(freq);
-            const near = nearestStation(freq);
-            nowStation.textContent = near.name;
-            playerSubtext.textContent = near.name + " · " + near.freq.toFixed(1) + "MHz — 손을 떼면 선택됩니다.";
-        }
-
-        // 다이얼: 클릭/드래그 위치로 절대 튜닝
-        (function () {
-            const hit = document.getElementById("tsDialHit");
-            let dragging = false;
-            hit.addEventListener("pointerdown", (e) => {
-                dragging = true;
-                try { hit.setPointerCapture(e.pointerId); } catch (err) {}
+        // ----- 조작 바인딩 (스킨 마운트마다 다시 연결) -----
+        function bindTunerControls() {
+            const dial = document.getElementById("tsDialHit");
+            let dialDrag = false;
+            dial.addEventListener("pointerdown", (e) => {
+                dialDrag = true;
+                try { dial.setPointerCapture(e.pointerId); } catch (err) {}
                 tunerPreview(clientXToFreq(e.clientX));
                 e.preventDefault();
             });
-            hit.addEventListener("pointermove", (e) => { if (dragging) tunerPreview(clientXToFreq(e.clientX)); });
-            hit.addEventListener("pointerup", (e) => {
-                if (!dragging) return;
-                dragging = false;
+            dial.addEventListener("pointermove", (e) => { if (dialDrag) tunerPreview(clientXToFreq(e.clientX)); });
+            dial.addEventListener("pointerup", (e) => {
+                if (!dialDrag) return;
+                dialDrag = false;
                 selectStation(nearestStation(clientXToFreq(e.clientX)).id);
             });
-            hit.addEventListener("pointercancel", () => { dragging = false; });
-        })();
+            dial.addEventListener("pointercancel", () => { dialDrag = false; });
 
-        // 노브: 좌우 드래그로 튜닝, 탭하면 이스터에그
-        (function () {
-            const knob = document.querySelector(".dial-knob");
-            let dragging = false, moved = false, startX = 0, startFreq = 98;
+            const knob = document.getElementById("tsKnobHit");
+            let knobDrag = false, knobMoved = false, knobStartX = 0, knobStartFreq = 98;
             knob.addEventListener("pointerdown", (e) => {
-                dragging = true;
-                moved = false;
-                startX = e.clientX;
-                startFreq = currentStation ? currentStation.freq : 98;
+                knobDrag = true;
+                knobMoved = false;
+                knobStartX = e.clientX;
+                knobStartFreq = currentStation ? currentStation.freq : 98;
                 try { knob.setPointerCapture(e.pointerId); } catch (err) {}
                 e.preventDefault();
             });
             knob.addEventListener("pointermove", (e) => {
-                if (!dragging) return;
-                const dx = e.clientX - startX;
-                if (Math.abs(dx) > 3) moved = true;
-                tunerPreview(startFreq + dx / 14);
+                if (!knobDrag) return;
+                const dx = e.clientX - knobStartX;
+                if (Math.abs(dx) > 3) knobMoved = true;
+                tunerPreview(knobStartFreq + dx / 14);
             });
             knob.addEventListener("pointerup", (e) => {
-                if (!dragging) return;
-                dragging = false;
-                if (moved) {
-                    selectStation(nearestStation(Math.max(88, Math.min(108, startFreq + (e.clientX - startX) / 14))).id);
+                if (!knobDrag) return;
+                knobDrag = false;
+                if (knobMoved) {
+                    selectStation(nearestStation(Math.max(88, Math.min(108, knobStartFreq + (e.clientX - knobStartX) / 14))).id);
                 } else {
                     playEasterEgg();
                 }
             });
-            knob.addEventListener("pointercancel", () => { dragging = false; });
-        })();
+            knob.addEventListener("pointercancel", () => { knobDrag = false; });
 
-        // POWER 스위치: 재생/정지 토글
-        document.getElementById("tsPowerHit").addEventListener("click", () => {
-            if (currentStation) togglePlay();
-        });
+            const on = (id, fn) => document.getElementById(id).addEventListener("click", fn);
+            on("tsPowerHit", () => { if (currentStation) togglePlay(); });
+            on("tsRecHit", () => {
+                if (recorder || (currentStation && isPlaying)) {
+                    toggleRecording();
+                } else {
+                    playerSubtext.textContent = "녹음은 재생 중에만 시작할 수 있습니다.";
+                }
+            });
+            on("tsBlendHit", () => {
+                blendOn = !blendOn;
+                applyBlend();
+                playerSubtext.textContent = blendOn ? "하이블렌드 ON — 고음 잡음을 줄입니다." : "하이블렌드 OFF";
+            });
+            on("tsModeHit", () => {
+                monoOn = !monoOn;
+                applyMono();
+                playerSubtext.textContent = monoOn ? "모노 수신 모드" : "스테레오 수신 모드";
+            });
+            on("tsMuteHit", () => {
+                audio.muted = !audio.muted;
+                playerSubtext.textContent = audio.muted ? "음소거되었습니다." : "음소거를 해제했습니다.";
+            });
+            on("tsIfHit", () => cycleSleepTimer());
+            on("tsRfHit", () => toggleStationList());
+        }
 
-        // REC CAL: 녹음 시작/정지
-        document.getElementById("tsRecHit").addEventListener("click", () => {
-            if (recorder || (currentStation && isPlaying)) {
-                toggleRecording();
-            } else {
-                playerSubtext.textContent = "녹음은 재생 중에만 시작할 수 있습니다.";
-            }
-        });
+        function initTunerSkin(id) {
+            if (!TUNER_SKINS[id]) id = "t2";
+            tunerSkinId = id;
+            const skin = TUNER_SKINS[id];
+            tunerCfg = skin.cfg;
 
-        // BLEND: 하이블렌드 (HI-BLEND LED + 고음 감쇠)
-        document.getElementById("tsBlendHit").addEventListener("click", () => {
-            blendOn = !blendOn;
-            applyBlend();
-            playerSubtext.textContent = blendOn ? "하이블렌드 ON — 고음 잡음을 줄입니다." : "하이블렌드 OFF";
-        });
+            const stage = document.getElementById("tunerStage");
+            stage.innerHTML = skin.svg;
+            tunerSvgEl = stage.querySelector("svg");
+            tsFreq = document.getElementById("tsFreq");
+            tsFreqGlow = document.getElementById("tsFreqGlow");
+            tsDialPtr = document.getElementById("tsDialPtr");
+            tsSignalPtr = document.getElementById("tsSignalPtr");
+            tsTunePtr = document.getElementById("tsTunePtr");
+            tsKnob = document.getElementById("tsKnob");
+            tsStationMarks = document.getElementById("tsStationMarks");
 
-        // MODE: 스테레오/모노 (모노 시 STEREO LED 소등)
-        document.getElementById("tsModeHit").addEventListener("click", () => {
-            monoOn = !monoOn;
-            applyMono();
-            playerSubtext.textContent = monoOn ? "모노 수신 모드" : "스테레오 수신 모드";
-        });
+            // 히트 영역 생성 (cfg 좌표 기반, 투명)
+            Object.keys(TS_HIT_META).forEach((key) => {
+                const box = tunerCfg.hits[key];
+                if (!box) return;
+                const meta = TS_HIT_META[key];
+                const r = document.createElementNS(SVG_NS, "rect");
+                r.setAttribute("id", "ts" + key.charAt(0).toUpperCase() + key.slice(1) + "Hit");
+                r.setAttribute("x", box[0]); r.setAttribute("y", box[1]);
+                r.setAttribute("width", box[2]); r.setAttribute("height", box[3]);
+                r.setAttribute("fill", "#000"); r.setAttribute("fill-opacity", "0");
+                r.setAttribute("style", "cursor:" + meta.cursor + ";touch-action:none");
+                const t = document.createElementNS(SVG_NS, "title");
+                t.textContent = meta.title;
+                r.appendChild(t);
+                tunerSvgEl.appendChild(r);
+            });
+            const kb = tunerCfg.hits.knob;
+            const kc = document.createElementNS(SVG_NS, "circle");
+            kc.setAttribute("id", "tsKnobHit");
+            kc.setAttribute("cx", kb[0]); kc.setAttribute("cy", kb[1]); kc.setAttribute("r", kb[2]);
+            kc.setAttribute("fill", "#000"); kc.setAttribute("fill-opacity", "0");
+            kc.setAttribute("style", "cursor:grab;touch-action:none");
+            const kt = document.createElementNS(SVG_NS, "title");
+            kt.textContent = "노브를 좌우로 드래그해 튜닝하세요";
+            kc.appendChild(kt);
+            tunerSvgEl.appendChild(kc);
 
-        // MUTE/STE: 음소거
-        document.getElementById("tsMuteHit").addEventListener("click", () => {
-            audio.muted = !audio.muted;
-            playerSubtext.textContent = audio.muted ? "음소거되었습니다." : "음소거를 해제했습니다.";
-        });
+            // 방송국 마커 생성
+            const m = tunerCfg.mark;
+            stations.forEach((st) => {
+                const mark = document.createElementNS(SVG_NS, "rect");
+                mark.setAttribute("x", (tsFreqToX(st.freq) - 1.5).toFixed(1));
+                mark.setAttribute("y", m.y);
+                mark.setAttribute("width", "3");
+                mark.setAttribute("height", m.h);
+                mark.setAttribute("rx", "1");
+                mark.setAttribute("fill", m.color);
+                mark.setAttribute("data-station", st.id);
+                tsStationMarks.appendChild(mark);
+            });
 
-        // IF MODE: 취침 타이머 순환 (0→15→30→60→90분)
-        document.getElementById("tsIfHit").addEventListener("click", () => cycleSleepTimer());
+            bindTunerControls();
+            tsPanelState = "";
+            tsSignal = 0;
+            tsTune = 0.85;
+            tunerSetStation(currentStation);
+            tsSyncPanel();
+            saveJson("fmRadio.skin", id);
+            renderSkinPicker();
+        }
 
-        // RF MODE: 채널 목록 열기/닫기
-        document.getElementById("tsRfHit").addEventListener("click", () => toggleStationList());
+        function renderSkinPicker() {
+            const el = document.getElementById("skinPicker");
+            el.innerHTML = "";
+            SKIN_ORDER.forEach((id) => {
+                const b = document.createElement("button");
+                b.type = "button";
+                b.className = "skin-btn" + (id === tunerSkinId ? " active" : "");
+                b.textContent = TUNER_SKINS[id].label;
+                b.addEventListener("click", () => { if (id !== tunerSkinId) initTunerSkin(id); });
+                el.appendChild(b);
+            });
+        }
 
         // 채널 목록 접기/펼치기 (기본 접힘 — 튜너 중심)
         function toggleStationList() {
@@ -2207,8 +2580,7 @@
         restoreLastStation();
         updateRecButton();
         openRecordingDb();
-        tunerSetStation(currentStation);
-        tunerSetLeds(false);
+        initTunerSkin(loadJson("fmRadio.skin", "t2"));
         tunerLoop();
     </script>
     <script>
