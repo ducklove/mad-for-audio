@@ -25,7 +25,13 @@
             return station.streamUrl;
         }
 
-        const response = await fetch(station.apiUrl);
+        // 방송사 API가 응답을 물고 있으면 '연결 중'에 영원히 머문다 — 타임아웃을 건다.
+        const response = await fetch(station.apiUrl, {
+            signal: typeof AbortSignal !== "undefined" && AbortSignal.timeout ? AbortSignal.timeout(12000) : undefined
+        });
+        if (!response.ok) {
+            throw new Error("스트림 API 응답 오류: " + response.status);
+        }
 
         if (station.type === "kbs-api") {
             const data = await response.json();

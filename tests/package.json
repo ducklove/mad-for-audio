@@ -1,0 +1,16 @@
+{
+  "name": "fm-radio-tests",
+  "private": true,
+  "description": "FM 라디오 스모크 테스트 — 렌더링·선국·재생(모의 HLS)·모바일 뷰포트 검증",
+  "scripts": {
+    "pretest": "node gen-stream.js",
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@playwright/test": "1.56.1",
+    "axe-core": "^4.10.0",
+    "hls.js": "1.5.17",
+    "pretendard": "1.3.9"
+  }
+}

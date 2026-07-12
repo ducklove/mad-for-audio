@@ -6,6 +6,14 @@
     <meta name="theme-color" content="#121110">
     <title>FM 라디오 모음</title>
     <meta name="description" content="KBS, MBC, SBS와 주요 FM 라디오를 한 화면에서 바로 재생하고 녹음, 즐겨찾기, 취침 타이머까지 지원하는 FM 라디오 모음">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="FM 라디오 모음 — 하이파이 랙으로 듣는 한국 FM">
+    <meta property="og:description" content="실물 튜너·앰프·카세트 데크를 재현한 하이파이 랙에서 KBS·MBC·SBS·CBS FM을 선국하고 테이프에 녹음하세요.">
+    <meta property="og:image" content="icons/icon-512.png">
+    <meta property="og:locale" content="ko_KR">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="FM 라디오 모음 — 하이파이 랙으로 듣는 한국 FM">
+    <meta name="twitter:description" content="실물 튜너·앰프·카세트 데크를 재현한 하이파이 랙에서 한국 FM을 선국하고 테이프에 녹음하세요.">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%BB%3C/text%3E%3C/svg%3E">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -114,6 +122,7 @@
             font-size: 1.06rem;
             font-weight: 800;
             letter-spacing: -0.02em;
+            word-break: keep-all;
         }
 
         .brand-sub {
@@ -729,12 +738,19 @@
             background: rgba(211, 106, 66, 0.16);
         }
 
-        /* 랙 온리 모드: 플레이어바·VU바·목록 토글은 숨기고 기기 이미지로만 구성 */
-        .hero-player-wrap,
+        /* 랙 온리 모드: 데스크톱(넓은 화면 + 정밀 포인터)에서는 플레이어바·목록 토글을
+           숨기고 기기 이미지로만 조작한다. 터치 기기·좁은 화면에서는 SVG 히트 영역이
+           손가락으로 조작하기에 너무 작으므로 플레이어바와 목록 토글을 노출한다. */
         .vu-canvas,
-        .list-toggle-wrap,
         .skin-picker {
             display: none !important;
+        }
+
+        @media (min-width: 721px) and (pointer: fine) {
+            .hero-player-wrap,
+            .list-toggle-wrap {
+                display: none !important;
+            }
         }
 
         .settings-panel .skin-picker {
@@ -862,6 +878,17 @@
             .page-shell {
                 width: min(100% - 18px, 100%);
                 padding-top: 10px;
+                /* 하단 고정 플레이어 바에 내용이 가리지 않도록 여백 확보 */
+                padding-bottom: calc(120px + env(safe-area-inset-bottom));
+            }
+
+            /* 컨트롤을 엄지 영역에 상시 노출 — 랙을 스크롤해도 재생/녹음/타이머가 손에 닿는다 */
+            .hero-player-wrap {
+                position: fixed;
+                left: 10px;
+                right: 10px;
+                bottom: calc(10px + env(safe-area-inset-bottom));
+                z-index: 40;
             }
 
             .site-header {
@@ -907,6 +934,19 @@
                 justify-content: center;
             }
 
+            /* 터치 타깃 44px 확보 */
+            .btn-rec,
+            .btn-timer,
+            .list-toggle,
+            .mini-open {
+                min-height: 44px;
+            }
+
+            .footer-link {
+                display: inline-block;
+                padding: 12px 6px;
+            }
+
             .volume-control {
                 flex: 1 1 100%;
                 justify-content: center;
@@ -947,6 +987,78 @@
                 flex-direction: row;
             }
         }
+
+        @media (max-width: 420px) {
+            .site-header {
+                flex-wrap: wrap;
+                row-gap: 10px;
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+        }
+
+        /* 첫 방문 안내 — 튜너 위 코치마크 */
+        .coach-layer {
+            position: absolute;
+            inset: 0;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .coach-chip {
+            position: absolute;
+            transform: translate(-50%, 0);
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: rgba(24, 20, 17, 0.92);
+            border: 1px solid rgba(236, 130, 85, 0.55);
+            color: #ffd9a8;
+            font-size: 0.78rem;
+            font-weight: 600;
+            white-space: nowrap;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+        }
+
+        .coach-chip::after {
+            content: "";
+            position: absolute;
+            top: -5px;
+            left: 50%;
+            transform: translateX(-50%) rotate(45deg);
+            width: 8px;
+            height: 8px;
+            background: inherit;
+            border-left: 1px solid rgba(236, 130, 85, 0.55);
+            border-top: 1px solid rgba(236, 130, 85, 0.55);
+        }
+
+        .coach-dismiss {
+            position: absolute;
+            right: 12px;
+            top: 12px;
+            pointer-events: auto;
+            padding: 8px 16px;
+            border-radius: 999px;
+            background: rgba(211, 106, 66, 0.9);
+            color: #fff6ee;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -955,7 +1067,7 @@
             <div class="brand">
                 <div class="brand-mark" aria-hidden="true">FM</div>
                 <div>
-                    <div class="brand-title">FM 라디오 모음</div>
+                    <h1 class="brand-title">FM 라디오 모음</h1>
                     <div class="brand-sub">KBS · MBC · CBS · SBS와 주요 FM을 한 화면에서</div>
                 </div>
             </div>
@@ -1016,45 +1128,8 @@
                 <div class="station-list" id="favList"></div>
             </section>
 
-            <section class="group">
-                <div class="group-header">
-                    <div class="group-title">KBS</div>
-                    <div class="group-note">5개 채널</div>
-                </div>
-                <div class="station-list" id="kbsList"></div>
-            </section>
-
-            <section class="group">
-                <div class="group-header">
-                    <div class="group-title">MBC</div>
-                    <div class="group-note">2개 채널</div>
-                </div>
-                <div class="station-list" id="mbcList"></div>
-            </section>
-
-            <section class="group">
-                <div class="group-header">
-                    <div class="group-title">CBS</div>
-                    <div class="group-note">2개 채널</div>
-                </div>
-                <div class="station-list" id="cbsList"></div>
-            </section>
-
-            <section class="group">
-                <div class="group-header">
-                    <div class="group-title">SBS</div>
-                    <div class="group-note">2개 채널</div>
-                </div>
-                <div class="station-list" id="sbsList"></div>
-            </section>
-
-            <section class="group">
-                <div class="group-header">
-                    <div class="group-title">기타</div>
-                    <div class="group-note">4개 채널</div>
-                </div>
-                <div class="station-list" id="etcList"></div>
-            </section>
+            <!-- 방송사 그룹 섹션은 stations.js 기준으로 renderStations()가 생성한다 -->
+            <div id="groupsMount"></div>
 
             <section class="group" id="recordingsGroup" hidden>
                 <div class="group-header">
@@ -1876,14 +1951,16 @@
             if (tsStationMarks) tsStationMarks.setAttribute("class", "dialScale");
 
             // 히트 영역 생성 (cfg 좌표 기반, 투명)
+            // 터치 기기는 손가락 크기만큼 히트 영역을 넓힌다 (겹치지 않는 한도 내에서)
+            const hitPad = window.matchMedia && window.matchMedia("(pointer: coarse)").matches ? 18 : 0;
             Object.keys(TS_HIT_META).forEach((key) => {
                 const box = tunerCfg.hits[key];
                 if (!box) return;
                 const meta = TS_HIT_META[key];
                 const r = document.createElementNS(SVG_NS, "rect");
                 r.setAttribute("id", "ts" + key.charAt(0).toUpperCase() + key.slice(1) + "Hit");
-                r.setAttribute("x", box[0]); r.setAttribute("y", box[1]);
-                r.setAttribute("width", box[2]); r.setAttribute("height", box[3]);
+                r.setAttribute("x", box[0] - hitPad); r.setAttribute("y", box[1] - hitPad);
+                r.setAttribute("width", box[2] + hitPad * 2); r.setAttribute("height", box[3] + hitPad * 2);
                 r.setAttribute("fill", "#000"); r.setAttribute("fill-opacity", "0");
                 r.setAttribute("style", "cursor:" + meta.cursor + ";touch-action:none");
                 const t = document.createElementNS(SVG_NS, "title");
@@ -3347,6 +3424,12 @@
             if (e.target === e.currentTarget) toggleSettings(false);
         });
 
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape" && !document.getElementById("settingsOverlay").hidden) {
+                toggleSettings(false);
+            }
+        });
+
         let currentStation = null;
         let isPlaying = false;
         let hls = null;
@@ -3445,13 +3528,19 @@
         }
 
         function renderStations() {
-            const groups = { kbs: "kbsList", mbc: "mbcList", cbs: "cbsList", sbs: "sbsList", etc: "etcList" };
-
-            for (const [group, listId] of Object.entries(groups)) {
-                const list = document.getElementById(listId);
+            // 그룹 섹션은 stations.js의 groupLabels 순서대로 생성한다 — 채널 추가는 stations.js만 고치면 된다.
+            const mount = document.getElementById("groupsMount");
+            mount.innerHTML = Object.entries(FMRadio.groupLabels).map(([group, label]) => {
                 const groupStations = stations.filter((station) => station.group === group);
-                list.innerHTML = groupStations.map((station) => stationCard(station)).join("");
-            }
+                if (!groupStations.length) return "";
+                return `<section class="group">
+                    <div class="group-header">
+                        <div class="group-title">${label}</div>
+                        <div class="group-note">${groupStations.length}개 채널</div>
+                    </div>
+                    <div class="station-list" id="${group}List">${groupStations.map((station) => stationCard(station)).join("")}</div>
+                </section>`;
+            }).join("");
 
             const favStations = favorites
                 .map((id) => stations.find((station) => station.id === id))
@@ -3522,21 +3611,35 @@
                     enableWorker: true,
                     lowLatencyMode: true
                 });
-                hls.loadSource(url);
-                hls.attachMedia(audio);
-                hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                const thisHls = hls;
+                let netRetries = 0;
+                let mediaRecovered = false;
+                thisHls.loadSource(url);
+                thisHls.attachMedia(audio);
+                thisHls.on(Hls.Events.MANIFEST_PARSED, () => {
                     audio.play().catch(() => {
                         isPlaying = false;
                         updatePlayButton();
                     });
                 });
-                hls.on(Hls.Events.ERROR, (event, data) => {
-                    if (data.fatal) {
-                        if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-                            hls.startLoad();
-                        } else {
-                            stopPlay();
-                        }
+                thisHls.on(Hls.Events.ERROR, (event, data) => {
+                    // 이미 파괴/교체된 인스턴스의 늦은 이벤트는 무시한다
+                    if (hls !== thisHls || !data.fatal) return;
+
+                    if (data.type === Hls.ErrorTypes.NETWORK_ERROR && netRetries < 3) {
+                        // 무한 재시도 대신 백오프를 두고 상한을 건다
+                        netRetries += 1;
+                        playerSubtext.textContent = `연결이 불안정합니다. 다시 시도 중… (${netRetries}/3)`;
+                        setTimeout(() => {
+                            if (hls === thisHls) thisHls.startLoad();
+                        }, 1000 * netRetries);
+                    } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR && !mediaRecovered) {
+                        // 일시적 버퍼/디코딩 문제는 한 번 복구를 시도한다
+                        mediaRecovered = true;
+                        thisHls.recoverMediaError();
+                    } else {
+                        stopPlay();
+                        playerSubtext.textContent = "스트림이 중단되었습니다. 채널을 다시 선택해 주세요.";
                     }
                 });
             } else if (audio.canPlayType("application/vnd.apple.mpegurl")) {
@@ -3551,6 +3654,8 @@
             }
         }
 
+        let selectSeq = 0;
+
         async function selectStation(id) {
             const station = stations.find((item) => item.id === id);
             if (!station) return;
@@ -3564,10 +3669,21 @@
                 return;
             }
 
+            const mySeq = ++selectSeq;
+
             stopRecording();
             stopPhono();
             stopDeck();
             radioStandby = null;
+
+            // 이전 스트림을 먼저 내린다 — 연결 실패 시
+            // '이전 채널 소리 + 새 채널 실패 표시'가 엇갈리지 않도록
+            if (hls) {
+                hls.destroy();
+                hls = null;
+            }
+            audio.pause();
+            streamLoaded = false;
 
             document.querySelectorAll(".station").forEach((element) => {
                 element.classList.remove("active", "playing", "loading");
@@ -3582,6 +3698,7 @@
 
             try {
                 const url = await getStreamUrl(station);
+                if (mySeq !== selectSeq) return; // 그 사이 다른 선국이 시작됨 — 늦은 응답은 버린다
                 cardsOf(id).forEach((element) => {
                     element.classList.remove("loading");
                     element.classList.add("playing");
@@ -3597,9 +3714,10 @@
                     station_group: station.group
                 });
             } catch (error) {
+                if (mySeq !== selectSeq) return;
                 cardsOf(id).forEach((element) => element.classList.remove("loading"));
                 nowStation.textContent = `${station.name} 연결 실패`;
-                playerSubtext.textContent = "스트림 응답이 없거나 브라우저 정책 때문에 재생이 차단되었습니다.";
+                playerSubtext.textContent = "스트림 응답이 없거나 브라우저 정책 때문에 재생이 차단되었습니다. 채널을 다시 눌러 재시도할 수 있습니다.";
                 console.error(error);
             }
         }
@@ -3645,7 +3763,9 @@
             }
 
             audio.pause();
-            audio.src = "";
+            // src=""는 페이지 URL을 소스로 지정해 MEDIA_ERR_SRC_NOT_SUPPORTED를 유발한다
+            audio.removeAttribute("src");
+            audio.load();
             streamLoaded = false;
             isPlaying = false;
             updatePlayButton();
@@ -4336,6 +4456,48 @@
             });
         }
 
+        // ----- 첫 방문 코치마크 -----
+        // 랙 전용(데스크톱) 모드에서만 보여준다 — 모바일은 플레이어 바가 이미 보인다.
+        function mountCoach() {
+            if (loadJson("fmRadio.coachDone", false)) return;
+            if (!window.matchMedia("(min-width: 721px) and (pointer: fine)").matches) return;
+            const stage = document.getElementById("tunerStage");
+            const svg = stage.querySelector("svg");
+            if (!svg || !tunerCfg) return;
+
+            const vb = (svg.getAttribute("viewBox") || "0 0 2000 269").split(/\s+/).map(Number);
+            const layer = document.createElement("div");
+            layer.className = "coach-layer";
+            [
+                { key: "power", label: "전원 — 재생/정지" },
+                { key: "dial", label: "다이얼을 드래그해 선국" },
+                { key: "rf", label: "채널 목록 열기" }
+            ].forEach(({ key, label }) => {
+                const box = tunerCfg.hits[key];
+                if (!box) return;
+                const chip = document.createElement("div");
+                chip.className = "coach-chip";
+                chip.textContent = label;
+                chip.style.left = ((box[0] + box[2] / 2) / vb[2] * 100).toFixed(1) + "%";
+                chip.style.top = (((box[1] + box[3]) / vb[3] * 100) + 4).toFixed(1) + "%";
+                layer.appendChild(chip);
+            });
+            const done = document.createElement("button");
+            done.type = "button";
+            done.className = "coach-dismiss";
+            done.textContent = "알겠어요";
+            done.addEventListener("click", dismissCoach);
+            layer.appendChild(done);
+            stage.appendChild(layer);
+            svg.addEventListener("pointerdown", dismissCoach, { once: true });
+        }
+
+        function dismissCoach() {
+            const layer = document.querySelector(".coach-layer");
+            if (layer) layer.remove();
+            saveJson("fmRadio.coachDone", true);
+        }
+
         function restoreLastStation() {
             const lastId = loadJson("fmRadio.lastStation", null);
             const station = stations.find((item) => item.id === lastId);
@@ -4358,6 +4520,7 @@
         mountDeck();
         mountTurntable();
         tunerLoop();
+        mountCoach();
     </script>
     <script>
         // PWA 서비스워커 등록 — 앱 셸 캐싱으로 오프라인 실행/즉시 시작 지원.
