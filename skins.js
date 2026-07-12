@@ -44,6 +44,8 @@ const LZ_DEFS = '<defs>' +
     '<linearGradient id="lzInR" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000000" stop-opacity="0"/><stop offset="1" stop-color="#000000" stop-opacity="0.5"/></linearGradient>' +
     '<linearGradient id="lzInBot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000000" stop-opacity="0"/><stop offset="1" stop-color="#000000" stop-opacity="0.34"/></linearGradient>' +
     '<radialGradient id="lzInCirc" cx="0.5" cy="0.46" r="0.54"><stop offset="0.66" stop-color="#000000" stop-opacity="0"/><stop offset="0.88" stop-color="#000000" stop-opacity="0.3"/><stop offset="1" stop-color="#000000" stop-opacity="0.55"/></radialGradient>' +
+    '<linearGradient id="lzWarmFace" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff1cf"/><stop offset="0.16" stop-color="#f8e4b4"/><stop offset="0.55" stop-color="#efd9a2"/><stop offset="1" stop-color="#dcbe7e"/></linearGradient>' +
+    '<radialGradient id="lzLampPool" cx="0.5" cy="0" r="1"><stop offset="0" stop-color="#fff8e2" stop-opacity="0.8"/><stop offset="0.4" stop-color="#ffedbb" stop-opacity="0.3"/><stop offset="1" stop-color="#ffedbb" stop-opacity="0"/></radialGradient>' +
     '</defs>';
 
 function applyPanelLighting(svg) {
@@ -145,7 +147,9 @@ const TUNER_SKINS = {
                 <text x="1030" y="150">SIGNAL QUALITY</text><text x="1290" y="150">TUNING</text><text x="1520" y="150">STATION</text>
             </g>
             <rect x="925" y="162" width="212" height="50" rx="4" fill="url(#tnMeterWin)" stroke="#0a0b06" stroke-width="1.5"/>
-            <g stroke="#8f8a4a" stroke-width="1.3">
+            <rect class="ampLamp" x="925" y="162" width="212" height="50" rx="4" fill="url(#lzWarmFace)" opacity="0.02"/>
+            <ellipse class="ampLamp" cx="1031" cy="167" rx="93" ry="12" fill="url(#lzLampPool)" opacity="0.02"/>
+            <g stroke="#5a5240" stroke-width="1.3">
                 <line x1="948" y1="182" x2="948" y2="196"/><line x1="972" y1="184" x2="972" y2="196"/><line x1="996" y1="182" x2="996" y2="196"/><line x1="1020" y1="184" x2="1020" y2="196"/><line x1="1044" y1="182" x2="1044" y2="196"/><line x1="1068" y1="184" x2="1068" y2="196"/><line x1="1092" y1="182" x2="1092" y2="196"/><line x1="1114" y1="184" x2="1114" y2="196"/>
             </g>
             <g id="tsSignalPtr">
@@ -159,7 +163,9 @@ const TUNER_SKINS = {
             <rect x="923" y="159" width="216" height="3" fill="#04050a" opacity="0.55"/>
             <rect x="923" y="213" width="216" height="2.5" fill="#ffffff" opacity="0.09"/>
             <rect x="1182" y="162" width="212" height="50" rx="4" fill="url(#tnMeterWin)" stroke="#0a0b06" stroke-width="1.5"/>
-            <g stroke="#8f8a4a" stroke-width="1.3">
+            <rect class="ampLamp" x="1182" y="162" width="212" height="50" rx="4" fill="url(#lzWarmFace)" opacity="0.02"/>
+            <ellipse class="ampLamp" cx="1288" cy="167" rx="93" ry="12" fill="url(#lzLampPool)" opacity="0.02"/>
+            <g stroke="#5a5240" stroke-width="1.3">
                 <line x1="1210" y1="184" x2="1210" y2="196"/><line x1="1234" y1="184" x2="1234" y2="196"/><line x1="1258" y1="184" x2="1258" y2="196"/><line x1="1330" y1="184" x2="1330" y2="196"/><line x1="1354" y1="184" x2="1354" y2="196"/><line x1="1378" y1="184" x2="1378" y2="196"/>
             </g>
             <g id="tsTunePtr">
@@ -660,7 +666,9 @@ AMP_MODELS.tr.svg = `<svg class="amp-svg" viewBox="0 0 2000 560" xmlns="http://w
         <ellipse cx="268" cy="392" rx="180" ry="22" fill="url(#caShadow)"/>
         <rect x="100" y="140" width="336" height="240" rx="10" fill="#15151a"/>
         <rect x="103" y="143" width="330" height="234" rx="8" fill="none" stroke="#3c3e46" stroke-width="1.5"/>
-        <rect x="114" y="154" width="308" height="212" rx="5" fill="url(#caMeterFace)"/>
+        <rect x="114" y="154" width="308" height="212" rx="5" fill="#16110b"/>
+        <rect class="ampLamp" x="114" y="154" width="308" height="212" rx="5" fill="url(#lzWarmFace)" opacity="0.02"/>
+        <ellipse class="ampLamp" cx="268" cy="175" rx="135" ry="50" fill="url(#lzLampPool)" opacity="0.02"/>
         <rect x="114" y="154" width="308" height="26" fill="url(#lzInset)" opacity="0.55"/>
         <path d="M 168 342 A 122 122 0 0 1 368 342" fill="none" stroke="#4a3a28" stroke-width="1.6"/>
         <path d="M 330 262 A 122 122 0 0 1 368 342" fill="none" stroke="#c0392b" stroke-width="4.5"/>
@@ -668,7 +676,7 @@ AMP_MODELS.tr.svg = `<svg class="amp-svg" viewBox="0 0 2000 560" xmlns="http://w
             <line x1="172" y1="336" x2="182" y2="345"/><line x1="204" y1="300" x2="212" y2="311"/><line x1="268" y1="282" x2="268" y2="295"/><line x1="332" y1="300" x2="324" y2="311"/><line x1="364" y1="336" x2="354" y2="345"/>
         </g>
         <text x="268" y="232" font-family="Arial" font-size="14" font-weight="700" letter-spacing="3" fill="#5a4a34" text-anchor="middle">PEAK</text>
-        <line id="ampVuL" data-cx="268" data-cy="352" x1="268" y1="352" x2="268" y2="212" stroke="#1a1610" stroke-width="3.5" transform="rotate(-42 268 352)"/>
+        <line id="ampVuL" data-cx="268" data-cy="352" x1="268" y1="352" x2="268" y2="212" stroke="#d4501e" stroke-width="3.5" transform="rotate(-42 268 352)"/>
         <circle cx="268" cy="352" r="9" fill="#1a1610"/>
         <polygon points="114,154 300,154 180,366 114,366" fill="url(#lzStreak)"/>
         <rect x="114" y="154" width="308" height="34" fill="url(#lzInset)" opacity="0.62"/>
@@ -684,7 +692,9 @@ AMP_MODELS.tr.svg = `<svg class="amp-svg" viewBox="0 0 2000 560" xmlns="http://w
         <ellipse cx="640" cy="392" rx="180" ry="22" fill="url(#caShadow)"/>
         <rect x="472" y="140" width="336" height="240" rx="10" fill="#15151a"/>
         <rect x="475" y="143" width="330" height="234" rx="8" fill="none" stroke="#3c3e46" stroke-width="1.5"/>
-        <rect x="486" y="154" width="308" height="212" rx="5" fill="url(#caMeterFace)"/>
+        <rect x="486" y="154" width="308" height="212" rx="5" fill="#16110b"/>
+        <rect class="ampLamp" x="486" y="154" width="308" height="212" rx="5" fill="url(#lzWarmFace)" opacity="0.02"/>
+        <ellipse class="ampLamp" cx="640" cy="175" rx="135" ry="50" fill="url(#lzLampPool)" opacity="0.02"/>
         <rect x="486" y="154" width="308" height="26" fill="url(#lzInset)" opacity="0.55"/>
         <path d="M 540 342 A 122 122 0 0 1 740 342" fill="none" stroke="#4a3a28" stroke-width="1.6"/>
         <path d="M 702 262 A 122 122 0 0 1 740 342" fill="none" stroke="#c0392b" stroke-width="4.5"/>
@@ -692,7 +702,7 @@ AMP_MODELS.tr.svg = `<svg class="amp-svg" viewBox="0 0 2000 560" xmlns="http://w
             <line x1="544" y1="336" x2="554" y2="345"/><line x1="576" y1="300" x2="584" y2="311"/><line x1="640" y1="282" x2="640" y2="295"/><line x1="704" y1="300" x2="696" y2="311"/><line x1="736" y1="336" x2="726" y2="345"/>
         </g>
         <text x="640" y="232" font-family="Arial" font-size="14" font-weight="700" letter-spacing="3" fill="#5a4a34" text-anchor="middle">PEAK</text>
-        <line id="ampVuR" data-cx="640" data-cy="352" x1="640" y1="352" x2="640" y2="212" stroke="#1a1610" stroke-width="3.5" transform="rotate(-42 640 352)"/>
+        <line id="ampVuR" data-cx="640" data-cy="352" x1="640" y1="352" x2="640" y2="212" stroke="#d4501e" stroke-width="3.5" transform="rotate(-42 640 352)"/>
         <circle cx="640" cy="352" r="9" fill="#1a1610"/>
         <polygon points="486,154 672,154 552,366 486,366" fill="url(#lzStreak)"/>
         <rect x="486" y="154" width="308" height="34" fill="url(#lzInset)" opacity="0.62"/>
@@ -885,12 +895,14 @@ AMP_MODELS.el34.svg = `<svg class="amp-svg" viewBox="0 0 2000 540" xmlns="http:/
         <ellipse cx="252" cy="486" rx="100" ry="16" fill="url(#m8Shadow)"/>
         <circle cx="250" cy="408" r="82" fill="#15151a"/>
         <circle cx="250" cy="406" r="78" fill="none" stroke="#3c3e46" stroke-width="1.5"/>
-        <circle cx="250" cy="406" r="68" fill="url(#m8MeterFace)"/>
+        <circle cx="250" cy="406" r="68" fill="#16110b"/>
+        <circle class="ampLamp" cx="250" cy="406" r="68" fill="url(#lzWarmFace)" opacity="0.02"/>
+        <ellipse class="ampLamp" cx="250" cy="352" rx="56" ry="24" fill="url(#lzLampPool)" opacity="0.02"/>
         <path d="M 206 434 A 62 62 0 0 1 294 434" fill="none" stroke="#4a3a28" stroke-width="1.4" transform="rotate(180 250 420)"/>
         <g stroke="#4a3a28" stroke-width="1.3">
             <line x1="212" y1="430" x2="220" y2="437"/><line x1="230" y1="410" x2="236" y2="419"/><line x1="250" y1="402" x2="250" y2="413"/><line x1="270" y1="410" x2="264" y2="419"/><line x1="288" y1="430" x2="280" y2="437"/>
         </g>
-        <line id="ampVuL" data-cx="250" data-cy="446" x1="250" y1="446" x2="250" y2="360" stroke="#1a1610" stroke-width="2.8" transform="rotate(-42 250 446)"/>
+        <line id="ampVuL" data-cx="250" data-cy="446" x1="250" y1="446" x2="250" y2="360" stroke="#d4501e" stroke-width="2.8" transform="rotate(-42 250 446)"/>
         <circle cx="250" cy="446" r="6" fill="#1a1610"/>
         <text x="250" y="470" font-family="Arial" font-size="10" letter-spacing="2" fill="#6b6252" text-anchor="middle">BIAS</text>
         <polygon points="188,344 268,344 214,468 188,468" fill="url(#lzStreak)"/>
@@ -967,7 +979,9 @@ AMP_MODELS["300b"].svg = `<svg class="amp-svg" viewBox="0 0 2000 560" xmlns="htt
     </g>
     <ellipse cx="520" cy="530" rx="110" ry="14" fill="url(#weShadow)"/>
     <rect x="420" y="322" width="200" height="200" rx="8" fill="#15130f"/>
-    <rect x="428" y="330" width="184" height="184" rx="4" fill="#f4f1e8"/>
+    <rect x="428" y="330" width="184" height="184" rx="4" fill="#1a150e"/>
+    <rect class="ampLamp" x="428" y="330" width="184" height="184" rx="4" fill="url(#lzWarmFace)" opacity="0.02"/>
+    <ellipse class="ampLamp" cx="520" cy="348" rx="80" ry="44" fill="url(#lzLampPool)" opacity="0.02"/>
     <rect x="428" y="330" width="184" height="22" fill="url(#lzInset)" opacity="0.4"/>
     <rect x="458" y="346" width="24" height="150" rx="2" fill="#0d0b08"/>
     <rect x="536" y="346" width="24" height="150" rx="2" fill="#0d0b08"/>

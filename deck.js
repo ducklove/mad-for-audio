@@ -140,11 +140,13 @@ function mountDeck() {
         <g>
             <ellipse cx="1262" cy="292" rx="150" ry="18" fill="url(#dkShadow)"/>
             <rect x="1120" y="110" width="284" height="172" rx="9" fill="#15151a"/>
-            <rect x="1130" y="120" width="264" height="152" rx="5" fill="url(#dkMeterFace)"/>
+            <rect x="1130" y="120" width="264" height="152" rx="5" fill="#16110b"/>
+            <rect class="ampLamp" x="1130" y="120" width="264" height="152" rx="5" fill="url(#lzWarmFace)" opacity="0.02"/>
+            <ellipse class="ampLamp" cx="1262" cy="135" rx="116" ry="36" fill="url(#lzLampPool)" opacity="0.02"/>
             <rect x="1130" y="120" width="264" height="20" fill="url(#lzInset)" opacity="0.5"/>
             <path d="M 1176 250 A 100 100 0 0 1 1348 250" fill="none" stroke="#4a3a28" stroke-width="1.5"/>
             <path d="M 1316 186 A 100 100 0 0 1 1348 250" fill="none" stroke="#c0392b" stroke-width="4"/>
-            <line id="deckVuL" data-cx="1262" data-cy="258" x1="1262" y1="258" x2="1262" y2="146" stroke="#1a1610" stroke-width="3" transform="rotate(-42 1262 258)"/>
+            <line id="deckVuL" data-cx="1262" data-cy="258" x1="1262" y1="258" x2="1262" y2="146" stroke="#d4501e" stroke-width="3" transform="rotate(-42 1262 258)"/>
             <circle cx="1262" cy="258" r="7" fill="#1a1610"/>
             <polygon points="1130,120 1290,120 1180,272 1130,272" fill="url(#lzStreak)"/>
             <rect x="1130" y="120" width="264" height="33.4" fill="url(#lzInset)" opacity="0.62"/>
@@ -159,11 +161,13 @@ function mountDeck() {
         <g>
             <ellipse cx="1572" cy="292" rx="150" ry="18" fill="url(#dkShadow)"/>
             <rect x="1430" y="110" width="284" height="172" rx="9" fill="#15151a"/>
-            <rect x="1440" y="120" width="264" height="152" rx="5" fill="url(#dkMeterFace)"/>
+            <rect x="1440" y="120" width="264" height="152" rx="5" fill="#16110b"/>
+            <rect class="ampLamp" x="1440" y="120" width="264" height="152" rx="5" fill="url(#lzWarmFace)" opacity="0.02"/>
+            <ellipse class="ampLamp" cx="1572" cy="135" rx="116" ry="36" fill="url(#lzLampPool)" opacity="0.02"/>
             <rect x="1440" y="120" width="264" height="20" fill="url(#lzInset)" opacity="0.5"/>
             <path d="M 1486 250 A 100 100 0 0 1 1658 250" fill="none" stroke="#4a3a28" stroke-width="1.5"/>
             <path d="M 1626 186 A 100 100 0 0 1 1658 250" fill="none" stroke="#c0392b" stroke-width="4"/>
-            <line id="deckVuR" data-cx="1572" data-cy="258" x1="1572" y1="258" x2="1572" y2="146" stroke="#1a1610" stroke-width="3" transform="rotate(-42 1572 258)"/>
+            <line id="deckVuR" data-cx="1572" data-cy="258" x1="1572" y1="258" x2="1572" y2="146" stroke="#d4501e" stroke-width="3" transform="rotate(-42 1572 258)"/>
             <circle cx="1572" cy="258" r="7" fill="#1a1610"/>
             <polygon points="1440,120 1600,120 1490,272 1440,272" fill="url(#lzStreak)"/>
             <rect x="1440" y="120" width="264" height="33.4" fill="url(#lzInset)" opacity="0.62"/>
