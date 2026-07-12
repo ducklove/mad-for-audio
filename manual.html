@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#121110">
+    <title>사용설명서 — FM 라디오 하이파이 랙</title>
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+    <style>
+        :root {
+            --bg: #121110;
+            --panel: #1c1917;
+            --line: rgba(255, 244, 232, 0.12);
+            --text: #f7f0e7;
+            --muted: #b9aea1;
+            --dim: #8a7f72;
+            --accent: #d36a42;
+            --gold: #d8b060;
+            --mc-green: #3fe373;
+            --mc-blue: #4ec6ff;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Pretendard Variable", Pretendard, "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+            background: linear-gradient(180deg, #201a16 0%, #131110 26%, #0d0d0d 100%);
+            color: var(--text);
+            line-height: 1.75;
+            word-break: keep-all;
+        }
+        .shell { width: min(880px, calc(100% - 36px)); margin: 0 auto; padding: 40px 0 90px; }
+
+        /* ---- 표지 ---- */
+        .cover { border-bottom: 1px solid var(--line); padding-bottom: 34px; margin-bottom: 12px; }
+        .cover .brand { font-size: 0.8rem; letter-spacing: 0.34em; color: var(--gold); font-weight: 700; }
+        .cover h1 { font-size: clamp(1.7rem, 4.6vw, 2.6rem); font-weight: 800; letter-spacing: -0.03em; margin: 10px 0 6px; }
+        .cover .sub { color: var(--muted); font-size: 0.98rem; }
+        .cover .edition { margin-top: 18px; font-size: 0.78rem; color: var(--dim); letter-spacing: 0.12em; }
+        .back-link {
+            display: inline-block; margin-top: 20px; padding: 9px 18px; border-radius: 999px;
+            border: 1px solid var(--line); color: #e2d7ca; text-decoration: none; font-size: 0.86rem;
+            background: rgba(255, 248, 240, 0.05);
+        }
+        .back-link:hover { background: rgba(255, 248, 240, 0.1); }
+
+        /* ---- 목차 ---- */
+        nav.toc {
+            position: sticky; top: 0; z-index: 10; margin: 0 -8px 40px; padding: 12px 8px;
+            background: rgba(18, 17, 16, 0.92); backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--line);
+            display: flex; flex-wrap: wrap; gap: 6px 4px; font-size: 0.8rem;
+        }
+        nav.toc a { color: var(--muted); text-decoration: none; padding: 4px 11px; border-radius: 999px; border: 1px solid transparent; }
+        nav.toc a:hover { color: var(--text); border-color: var(--line); }
+
+        /* ---- 섹션 공통 ---- */
+        section { margin-bottom: 74px; scroll-margin-top: 70px; }
+        h2 {
+            font-size: 1.32rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 6px;
+            padding-top: 16px;
+        }
+        h2 .no { color: var(--accent); font-family: Georgia, serif; font-style: italic; margin-right: 10px; }
+        .lede { color: var(--muted); font-size: 0.94rem; margin-bottom: 26px; }
+        p { margin-bottom: 14px; }
+        em { color: var(--gold); font-style: normal; }
+        code {
+            font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.85em;
+            background: rgba(255, 248, 240, 0.08); border-radius: 5px; padding: 1px 7px; color: #ecd9b8;
+        }
+
+        /* ---- 기기 리뷰 카드 ---- */
+        article.unit {
+            background: linear-gradient(180deg, rgba(36, 32, 25, 0.6), rgba(22, 19, 15, 0.62));
+            border: 1px solid var(--line); border-radius: 18px;
+            padding: 30px 30px 24px; margin-bottom: 26px;
+            box-shadow: 0 18px 44px rgba(0, 0, 0, 0.34);
+        }
+        .unit .maker { font-size: 0.72rem; letter-spacing: 0.3em; color: var(--dim); font-weight: 700; }
+        .unit h3 {
+            font-family: Georgia, "Times New Roman", serif; font-weight: 700;
+            font-size: 1.42rem; letter-spacing: 0.01em; margin: 4px 0 2px;
+        }
+        .unit h3 .type { font-family: inherit; font-style: italic; font-size: 0.92rem; color: var(--gold); margin-left: 10px; }
+        .unit .verdict {
+            font-family: Georgia, serif; font-style: italic; color: var(--muted);
+            border-left: 3px solid var(--accent); padding-left: 14px; margin: 16px 0 18px; font-size: 0.98rem;
+        }
+        .review p { color: #e6dccd; font-size: 0.95rem; }
+        .review p::first-letter { }
+        .specs {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px;
+            background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden;
+            margin: 18px 0; font-size: 0.82rem;
+        }
+        .specs div { background: rgba(16, 14, 12, 0.82); padding: 9px 13px; }
+        .specs b { display: block; color: var(--dim); font-size: 0.7rem; letter-spacing: 0.1em; font-weight: 700; }
+        .howto { border-top: 1px dashed var(--line); margin-top: 18px; padding-top: 14px; }
+        .howto h4 { font-size: 0.78rem; letter-spacing: 0.18em; color: var(--accent); margin-bottom: 10px; }
+        .howto ul { list-style: none; }
+        .howto li { padding: 3px 0 3px 20px; position: relative; font-size: 0.9rem; color: #ded3c2; }
+        .howto li::before { content: "›"; position: absolute; left: 4px; color: var(--accent); }
+        .howto li b { color: var(--text); font-weight: 700; }
+
+        /* ---- 표 ---- */
+        table { width: 100%; border-collapse: collapse; margin: 16px 0 22px; font-size: 0.88rem; }
+        th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+        th { color: var(--dim); font-size: 0.72rem; letter-spacing: 0.12em; font-weight: 700; }
+        td b { color: var(--gold); }
+        .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 7px; vertical-align: 1px; }
+
+        /* ---- 신호 경로 ---- */
+        .path {
+            font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 0.78rem; line-height: 1.9;
+            background: rgba(10, 9, 8, 0.7); border: 1px solid var(--line); border-radius: 12px;
+            padding: 18px 22px; overflow-x: auto; white-space: pre; color: #cfc4b2; margin: 14px 0 20px;
+        }
+        .path i { color: var(--accent); font-style: normal; }
+
+        .tip {
+            background: rgba(211, 106, 66, 0.09); border: 1px solid rgba(211, 106, 66, 0.3);
+            border-radius: 12px; padding: 14px 18px; font-size: 0.88rem; margin: 14px 0; color: #ecdccb;
+        }
+        .tip b { color: var(--accent); }
+
+        footer { border-top: 1px solid var(--line); padding-top: 24px; color: var(--dim); font-size: 0.8rem; }
+        footer p { margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+<div class="shell">
+
+    <div class="cover">
+        <div class="brand">YAHAMA HI-FI SYSTEM</div>
+        <h1>하이파이 랙 사용설명서</h1>
+        <div class="sub">FM 튜너 · 그래픽 이퀄라이저 · 앰프 5기 · 카세트 데크 · 턴테이블 — 기기별 리뷰와 조작 안내</div>
+        <div class="edition">OWNER'S MANUAL · 제1판 · 브라우저에서 작동하는 아날로그 오디오 시스템</div>
+        <br>
+        <a class="back-link" href="./">← 랙으로 돌아가기</a>
+    </div>
+
+    <nav class="toc">
+        <a href="#quick">빠른 시작</a>
+        <a href="#path">신호 경로</a>
+        <a href="#tuner">튜너</a>
+        <a href="#eq">이퀄라이저</a>
+        <a href="#amps">앰프</a>
+        <a href="#deck">카세트 데크</a>
+        <a href="#tt">턴테이블</a>
+        <a href="#daily">일상 조작</a>
+        <a href="#trouble">문제 해결</a>
+        <a href="#credit">크레딧</a>
+    </nav>
+
+    <section id="quick">
+        <h2><span class="no">01</span>빠른 시작</h2>
+        <p class="lede">전원 스위치는 따로 없습니다 — 소리를 고르는 순간 랙이 깨어납니다.</p>
+        <p><em>① 선국</em> — 튜너의 다이얼을 좌우로 드래그하거나, 헤더의 채널 목록(튜너의 RF MODE 스위치로도 열림)에서 방송국을 누르세요. 히터가 달아오르듯 2초에 걸쳐 랙 전체의 조명이 켜집니다.</p>
+        <p><em>② 음반</em> — 턴테이블의 START 버튼 또는 트랙 리스트를 누르면 모터가 감기고 톤암이 내려앉습니다. 라디오가 나오는 중이어도 <em>턴테이블이 우선</em>입니다.</p>
+        <p><em>③ 녹음</em> — 좋아하는 방송이 나오면 데크의 ● REC. 지금 위치의 테이프 위에 덮어쓰며 녹음됩니다.</p>
+        <div class="tip"><b>모바일이라면</b> — 기본으로 간편 플레이어 모드가 열립니다. 헤더의 <code>랙 보기</code> 버튼으로 기기 화면(감상 모드)과 오갈 수 있습니다.</div>
+    </section>
+
+    <section id="path">
+        <h2><span class="no">02</span>시스템 신호 경로</h2>
+        <p class="lede">세 소스가 하나의 아날로그 체인을 지나 스피커로 나갑니다. 이 순서 그대로 소리가 물듭니다.</p>
+        <div class="path">TUNER ─┐
+PHONO ─┼─▶ <i>GE 이퀄라이저</i> ─▶ <i>앰프 (드라이브 → 출력관 → 톤스택)</i> ─▶ 스피커
+TAPE ──┘                                  │
+        ◀───────── ● REC (데크로 녹음) ◀──┘  + 포노 크랙클·테이프 히스는 EQ 앞단 주입</div>
+        <p>이퀄라이저를 끄든(DEFEAT) 켜든, 앰프를 바꾸든, <em>재생 중에 실시간으로</em> 체인이 재구성됩니다. 소리는 끊기지 않습니다.</p>
+        <div class="tip"><b>iOS 참고</b> — 아이폰의 네이티브 재생 경로에서는 브라우저 제약으로 EQ·앰프 음색이 소리에 적용되지 않고 계기 표시만 동작합니다. 데스크톱·안드로이드 크롬에서는 전부 실제로 걸립니다.</div>
+    </section>
+
+    <section id="tuner">
+        <h2><span class="no">03</span>FM 튜너 — 4기</h2>
+        <p class="lede">⚙ 설정에서 튜너를 교체할 수 있습니다. 네 대 모두 같은 손맛 — 다이얼을 드래그해 바늘을 옮기고, 손을 떼면 가장 가까운 방송국에 얹힙니다.</p>
+
+        <article class="unit">
+            <div class="maker">YAHAMA · NATURAL SOUND</div>
+            <h3>T-2 <span class="type">FM Stereo Tuner</span></h3>
+            <div class="verdict">"바늘이 지나가는 초록 불빛의 궤적만으로도, 이 튜너는 제값을 한다."</div>
+            <div class="review">
+                <p>슬림한 섀시에 수평으로 길게 누운 다이얼 글라스. 야마하 특유의 녹턴 그린 조명이 눈금을 아래에서 받쳐 들고, 좌우의 SIGNAL QUALITY · TUNING 미터는 램프에 데워진 아이보리 문자판 위에서 주홍 바늘을 세운다. 선국이 잠기면 LOCKED가 붉게 점등하고, STATION 창의 주파수 디지트가 또렷해진다. 필자가 가장 아끼는 것은 소거의 미학이다 — 전원이 꺼지면 디지트는 사라지고 눈금은 어둠 속에 희미한 흔적만 남긴다.</p>
+            </div>
+            <div class="specs">
+                <div><b>형식</b>AM/FM 스테레오 튜너</div>
+                <div><b>조명</b>녹턴 그린 · 웜 미터</div>
+                <div><b>미터</b>SIGNAL / TUNING</div>
+                <div><b>스위치</b>7련 (전 기능 동작)</div>
+            </div>
+            <div class="howto">
+                <h4>조작</h4>
+                <ul>
+                    <li><b>다이얼 드래그</b> — 바늘·노브·디지트가 실시간 미리보기, 손을 떼면 선국</li>
+                    <li><b>POWER</b> — 재생/정지 · <b>RF MODE</b> — 채널 목록 열기</li>
+                    <li><b>MUTE/STE</b> — 음소거 · <b>MODE</b> — 모노/스테레오 · <b>BLEND</b> — 고음 잡음 저감</li>
+                    <li>REC CAL 스위치는 데크가 녹음 중일 때 표시등으로 점등</li>
+                </ul>
+            </div>
+        </article>
+
+        <article class="unit">
+            <div class="maker">McINTOCH · BLACK GLASS</div>
+            <h3>MR-78 <span class="type">FM Tuner</span></h3>
+            <div class="verdict">"어두운 방, 이 다이얼의 블루 글라스보다 근사한 조명 기구를 나는 알지 못한다."</div>
+            <div class="review">
+                <p>블랙글라스에 균일하게 차오르는 매킨토시 블루. 다이얼 창 전체가 하나의 라이트박스처럼 발광하고, 그 위로 88부터 108까지의 숫자가 백색으로 뜬다. 좌측 STATION 창의 대형 디지트도 같은 블루로 젖는다. RF 계측기 명가의 얼굴다운 틸 미터 한 쌍, 묵직한 여섯 개의 노브 — 손에 닿는 모든 것이 정밀 기기의 밀도를 낸다.</p>
+            </div>
+            <div class="specs">
+                <div><b>형식</b>FM 전용 튜너</div>
+                <div><b>조명</b>매킨토시 블루 (균일 발광)</div>
+                <div><b>미터</b>틸 트윈 미터</div>
+                <div><b>특징</b>PANLOC 마운트</div>
+            </div>
+        </article>
+
+        <article class="unit">
+            <div class="maker">MARANZ · LABORATORY STANDARD</div>
+            <h3>Model 10B <span class="type">FM Stereo Tuner</span></h3>
+            <div class="verdict">"튜너의 왕좌는 반세기 전에 이미 정해졌다는 설이 있다. 이 파넬 앞에 서면 수긍하게 된다."</div>
+            <div class="review">
+                <p>샴페인 골드 파넬, 정중앙의 광활한 다이얼, 그리고 세리프 서체의 기품. 오리지널의 오실로스코프 자리는 계보를 존중해 시그널 슬롯으로 요약했지만, Vert. / Hor. 소형 노브까지 재현해 그 흔적을 남겼다. 스테이션 마커가 다이얼 위에 점점이 떠 있어, 어디에 무엇이 사는지 지도처럼 읽힌다.</p>
+            </div>
+            <div class="specs">
+                <div><b>형식</b>FM 스테레오 튜너</div>
+                <div><b>조명</b>웜 화이트</div>
+                <div><b>서체</b>세리프 이탤릭</div>
+                <div><b>특징</b>스코프 계보의 시그널 슬롯</div>
+            </div>
+        </article>
+
+        <article class="unit">
+            <div class="maker">SANSUL · SOLID STATE</div>
+            <h3>TU-9900 <span class="type">AM/FM Stereo Tuner</span></h3>
+            <div class="verdict">"아이스블루 다이얼은 겨울 새벽의 색이다. 심야 청취자를 위한 튜너."</div>
+            <div class="review">
+                <p>흑색 알루마이트 파넬에 폭 넓은 다이얼 글라스가 통째로 얼음빛으로 발광한다. FM과 AM 두 줄 눈금, 대형 트윈 미터(SIGNAL / TUNE), FM STEREO · FM AUTO · HI-BLEND 램프 컬럼까지 — 이 클래스 특유의 계기판 물량이 즐겁다. 미터 문자판도 다이얼과 같은 아이스블루로 배광되어 통일감이 있다.</p>
+            </div>
+            <div class="specs">
+                <div><b>형식</b>AM/FM 스테레오 튜너</div>
+                <div><b>조명</b>아이스 블루</div>
+                <div><b>미터</b>SIGNAL / TUNE 트윈</div>
+                <div><b>램프</b>3련 상태 컬럼</div>
+            </div>
+        </article>
+    </section>
+
+    <section id="eq">
+        <h2><span class="no">04</span>그래픽 이퀄라이저</h2>
+        <p class="lede">⚙ 설정에서 GE-5(5밴드)와 GE-10(옥타브 10밴드)을 고를 수 있습니다. 재생 중 교체해도 소리가 끊기지 않습니다.</p>
+        <article class="unit">
+            <div class="maker">YAHAMA · STEREO GRAPHIC EQUALIZER</div>
+            <h3>GE-5 / GE-10 <span class="type">Graphic Equalizer</span></h3>
+            <div class="verdict">"슬라이더를 내려 놓은 뒤 DEFEAT를 눌러 비교해 보라. 손끝의 취향이 곧 하이파이다."</div>
+            <div class="review">
+                <p>블랙 랙 유닛에 좌측 앰버 레벨 미터 컬럼, 우측 슬라이더 뱅크. GE-5는 60Hz부터 12kHz까지 다섯 손가락으로 큰 붓질을 하고, GE-10은 31.5Hz—16kHz 옥타브 간격의 좁은 캡으로 세필을 든다. 각 밴드 ±12dB. 슬라이더 캡의 백색 인디케이터 라인이 어둠 속에서 설정 곡선을 한눈에 그려 보인다.</p>
+            </div>
+            <div class="specs">
+                <div><b>GE-5</b>60 · 250 · 1k · 4k · 12k Hz</div>
+                <div><b>GE-10</b>31.5Hz–16kHz 옥타브</div>
+                <div><b>가변폭</b>±12dB</div>
+                <div><b>미터</b>앰버 LED 컬럼</div>
+            </div>
+            <div class="howto">
+                <h4>조작</h4>
+                <ul>
+                    <li><b>슬라이더 드래그</b> — 상하로 게인 조정 (키보드: 슬라이더에 포커스 후 ↑↓)</li>
+                    <li><b>DEFEAT</b> — EQ 바이패스 (설정은 유지, 모델별로 따로 기억)</li>
+                    <li>모델 전환은 ⚙ 설정 → 이퀄라이저 — 재생 중에도 무음 끊김 없음</li>
+                </ul>
+            </div>
+        </article>
+    </section>
+
+    <section id="amps">
+        <h2><span class="no">05</span>앰프 — 5기 청음기</h2>
+        <p class="lede">⚙ 설정에서 교체합니다. 다섯 대 모두 실제로 다른 회로 계수(드라이브·비대칭·톤스택)로 소리를 물들입니다. 중앙 대형 노브를 상하로 드래그하면 볼륨입니다.</p>
+
+        <article class="unit">
+            <div class="maker">YAHAMA · NATURAL SOUND</div>
+            <h3>CA-100 <span class="type">Solid State Integrated</span></h3>
+            <div class="verdict">"물처럼 무색. 소스가 좋으면 좋은 대로, 나쁘면 나쁜 대로 — 그것이 이 앰프의 윤리다."</div>
+            <div class="review">
+                <p>실버 파넬에 램프로 데운 트윈 VU, 그 아래 토글 스위치 열. 소리는 철저히 손대지 않는 쪽이다. 착색 없음, 배음 부풀림 없음, 높은 댐핑으로 저역을 단단히 쥔다. 튜너의 생방송처럼 이미 완성된 소스를 들을 때 가장 미덥고, EQ의 손맛을 그대로 통과시키는 기준기 역할로도 제격이다.</p>
+            </div>
+            <div class="specs">
+                <div><b>증폭</b>솔리드스테이트</div>
+                <div><b>성향</b>무색 · 투명 · 하이 댐핑</div>
+                <div><b>착색</b>없음 (드라이브 1.0)</div>
+                <div><b>미터</b>웜 트윈 VU</div>
+            </div>
+        </article>
+
+        <article class="unit">
+            <div class="maker">McINTOCH · SOLID STATE</div>
+            <h3>MC 2105 <span class="type">Stereo Power Amplifier</span></h3>
+            <div class="verdict">"블루 아이즈가 차오르는 순간을 위해 하루의 청음을 시작해도 좋다."</div>
+            <div class="review">
+                <p>블랙글라스에 시안-블루로 발광하는 105W 와트미터 한 쌍, 그린 백라이트의 레전드. 소리는 매킨토시 유파의 전통대로 여유가 있다 — 오토포머를 거친 듯 최저역에 살짝 무게를 싣고(+0.5dB@60Hz) 최고역 끝을 미미하게 편다. 대편성의 총주에서도 소란해지지 않는, 대륙적인 스케일의 클린이다.</p>
+            </div>
+            <div class="specs">
+                <div><b>증폭</b>솔리드스테이트</div>
+                <div><b>성향</b>클린 + 오토포머의 여유</div>
+                <div><b>톤</b>저역 +0.5dB · 고역 +0.3dB</div>
+                <div><b>미터</b>블루 와트미터 (POWER OUTPUT)</div>
+            </div>
+        </article>
+
+        <article class="unit">
+            <div class="maker">MARANZ · TUBE HERITAGE</div>
+            <h3>Model 8B <span class="type">EL34 Push-Pull</span></h3>
+            <div class="verdict">"보컬이 반 걸음 앞으로 나온다. 브리티시 웜의 교과서."</div>
+            <div class="review">
+                <p>샴페인 골드 섀시 위로 EL34 여덟 발이 도열하고, 좌측의 작은 원형 바이어스 미터가 웜 라이트로 잠에서 깬다. 소리의 중심은 명백히 미드레인지다 — 1.8kHz 부근을 +1.6dB 들어올리고 고역을 살짝 눕혀(-0.9dB), 성악과 현의 몸통에 온기를 입힌다. 푸시풀 특유의 추진력이 있어 재즈 콤보의 리듬도 무르지 않다.</p>
+            </div>
+            <div class="specs">
+                <div><b>출력관</b>EL34 × 8 (푸시풀)</div>
+                <div><b>성향</b>미드 포워드 · 브리티시 웜</div>
+                <div><b>드라이브</b>2.2 · 비대칭 0.12</div>
+                <div><b>미터</b>원형 BIAS 미터</div>
+            </div>
+        </article>
+
+        <article class="unit">
+            <div class="maker">WESTERN ELETRIC · THEATRE SOUND</div>
+            <h3>91E <span class="type">300B Single-Ended Triode</span></h3>
+            <div class="verdict">"짝수 배음은 거짓말처럼 달다. 그리고 이 앰프는 그 거짓말을 가장 우아하게 한다."</div>
+            <div class="review">
+                <p>극장 앰프의 혈통. 벌룬형 300B 두 발이 유리 안에서 필라멘트를 백열로 태우고, 파넬의 각형 VU가 낮은 조도로 음량을 센다. 회로는 싱글엔디드 — 이 랙에서 가장 큰 비대칭 계수(0.38)로 짝수 배음을 가장 짙게 만든다. 고역은 일부러 이르게 눕혔다(-2.2dB@7k). 무반주 첼로, 여성 보컬, 실내악. 음수(音數)가 적은 음악에서 이 감미로움은 대체 불가다.</p>
+            </div>
+            <div class="specs">
+                <div><b>출력관</b>300B × 2 (싱글엔디드)</div>
+                <div><b>성향</b>짝수 배음 · 감미로운 고역 롤오프</div>
+                <div><b>드라이브</b>2.8 · 비대칭 0.38 (최대)</div>
+                <div><b>미터</b>각형 빈티지 VU</div>
+            </div>
+        </article>
+
+        <article class="unit">
+            <div class="maker">McINTOCH · CHROME CHASSIS</div>
+            <h3>275 <span class="type">KT88 Stereo Power</span></h3>
+            <div class="verdict">"진공관으로 이 저역이 나온다는 것을 믿게 만드는 물건."</div>
+            <div class="review">
+                <p>크롬 섀시, 검은 트랜스 커버 사이로 KT88 네 발이 작열한다. 성향은 튜브 앰프의 낭만과 하이파이의 체급을 겸장한 광대역 — 80Hz를 +1.8dB 들어 저역의 위장을 두텁게 하되 미드를 오히려 반 클릭 눕혀(-0.5dB) 부밍을 피하고, 10kHz에서 +0.9dB로 공기감을 연다. 대편성 교향곡과 록. 스케일이 필요한 음악의 종착역이다.</p>
+            </div>
+            <div class="specs">
+                <div><b>출력관</b>KT88 × 4 + 소신호 2</div>
+                <div><b>성향</b>광대역 · 깊고 단단한 저역</div>
+                <div><b>드라이브</b>1.9 · 저역 +1.8dB@80Hz</div>
+                <div><b>외장</b>크롬 · 트랜스 3기</div>
+            </div>
+        </article>
+
+        <div class="howto" style="border-top:none; padding: 0 6px;">
+            <h4>공통 조작</h4>
+            <ul>
+                <li><b>볼륨 노브 상하 드래그</b> — 위로 크게, 아래로 작게 (설정은 저장, iOS는 기기 볼륨 버튼 사용)</li>
+                <li>턴테이블 재생 시 클래식 음원의 낮은 레벨을 보정하는 <b>포노 게인(+6dB)</b>이 자동 적용</li>
+                <li>전원 투입 후 <b>약 2초의 히터 웜업</b> — 진공관 필라멘트·미터 백라이트가 서서히 차오르고, 끄면 3.5초에 걸쳐 식습니다</li>
+            </ul>
+        </div>
+    </section>
+
+    <section id="deck">
+        <h2><span class="no">06</span>카세트 데크 — 진짜 테이프처럼</h2>
+        <article class="unit">
+            <div class="maker">NAKAMICHY · 3 HEAD</div>
+            <h3>DRAGON <span class="type">Discrete Head Cassette Deck</span></h3>
+            <div class="verdict">"에어체크의 밤이 돌아왔다. C-30 한 면에 담을 30분을 고르는 일의 설렘."</div>
+            <div class="review">
+                <p>이 데크의 테이프는 파일 목록이 아니라 <em>30분짜리 연속 자기 매체</em>다. 카운터가 곧 테이프 위치이고, 녹음은 지금 위치 위에 덮어쓰며, 빈 구간을 재생하면 히스만 감긴다. 웜 라이트의 트윈 VU와 릴 허브의 회전, 감김량에 따라 굵어지는 테이프 팩까지 — 트랜스포트의 물리학을 통째로 옮겼다.</p>
+            </div>
+            <div class="specs">
+                <div><b>테이프</b>C-30 (한 면 30:00 고정)</div>
+                <div><b>녹음</b>현 위치 덮어쓰기</div>
+                <div><b>와인딩</b>16배속 (누르는 동안)</div>
+                <div><b>보존</b>테이프별 위치 기억 · 브라우저 보관</div>
+            </div>
+            <div class="howto">
+                <h4>트랜스포트</h4>
+                <ul>
+                    <li><b>● REC</b> — 지금 나오는 소스를 현 위치에 녹음 (기존 내용은 실제 테이프처럼 지워짐). 30:00에서 자동 정지</li>
+                    <li><b>▶ PLAY</b> — 현 위치부터 재생. 빈 구간은 히스와 함께 그대로 감김 — 정지는 테이프 끝에서만</li>
+                    <li><b>◀◀ / ▶▶</b> — 누르고 있는 동안 고속 와인딩 · <b>■</b> — 정지</li>
+                    <li><b>EJECT</b> — 테이프를 선반에 걸고 새 공테이프 장착. 선반의 테이프를 누르면 재장착 (위치 그대로)</li>
+                    <li>녹음물은 브라우저(IndexedDB)에 저장되어 재방문 시 테이프가 복원됩니다</li>
+                </ul>
+            </div>
+        </article>
+    </section>
+
+    <section id="tt">
+        <h2><span class="no">07</span>턴테이블 &amp; 레코드 라이브러리</h2>
+        <article class="unit">
+            <div class="maker">YAHAMA · BELT DRIVE</div>
+            <h3>PL-12 <span class="type">Belt-Drive Turntable</span></h3>
+            <div class="verdict">"바늘이 리드인 그루브에 앉는 순간의 '툭' — 그 소리를 들으려고 판을 건다."</div>
+            <div class="review">
+                <p>모터가 규정 회전수까지 감아 올라가는 스핀업, 트랙 진행을 따라 안쪽으로 기우는 톤암, 33⅓의 미세한 와우 &amp; 플러터, 그리고 EQ 앞단에 주입되어 앰프의 착색까지 입는 바이닐 크랙클. 정지하면 플래터는 관성으로 천천히 멈춘다. 45 RPM 스위치를 누르면 — 물론 빠르고 높게 돈다. LP를 45로 트는 것은 예나 지금이나 사용자의 자유다.</p>
+            </div>
+            <div class="howto">
+                <h4>조작</h4>
+                <ul>
+                    <li><b>START/STOP</b> — 재생·정지 · <b>트랙 리스트</b> — 곡 바로 선택</li>
+                    <li><b>재킷 옆 ‹ ›</b> — 음반 교체 (돌던 판은 내려가고, 라벨·재킷·트랙리스트가 다시 인쇄됨)</li>
+                    <li><b>33⅓ / 45</b> — 회전수 선택</li>
+                    <li>재생 중 튜너를 조작하면 방송국은 <b>대기 선국</b>으로 걸리고, 판이 끝나면 자동 연결</li>
+                </ul>
+            </div>
+            <table>
+                <tr><th>음반</th><th>연주</th><th>수록</th><th>라이선스</th></tr>
+                <tr><td><b>바흐 무반주 첼로 모음곡 1번</b> G장조 BWV 1007</td><td>John Michel, cello</td><td>전 6악장</td><td>CC BY-SA 3.0</td></tr>
+                <tr><td><b>바흐 무반주 첼로 모음곡 3번</b> C장조 BWV 1009</td><td>John Michel, cello</td><td>전 6악장</td><td>CC BY-SA 3.0</td></tr>
+                <tr><td><b>골드베르크 변주곡</b> BWV 988 — A면</td><td>Kimiko Ishizaka, piano</td><td>Aria &amp; Var. 1–7</td><td>CC0 (Open Goldberg)</td></tr>
+            </table>
+            <p style="font-size:0.82rem; color:var(--dim);">모든 음원은 Wikimedia Commons에서 스트리밍됩니다. 수집 중인 음반은 계속 추가될 예정입니다.</p>
+        </article>
+    </section>
+
+    <section id="daily">
+        <h2><span class="no">08</span>일상 조작</h2>
+
+        <h3 style="font-size:1rem; margin-bottom:8px;">보기 모드</h3>
+        <p>헤더의 <code>랙 보기 / 간편 플레이어</code> 버튼으로 전환합니다. <em>간편 플레이어</em>는 채널 목록과 재생 컨트롤만 남긴 모바일 친화 화면, <em>랙 모드</em>는 기기 이미지로만 조작하는 감상 화면입니다. 선택은 기억됩니다.</p>
+
+        <h3 style="font-size:1rem; margin:22px 0 8px;">재생 상태 표시</h3>
+        <p>플레이어바의 상태 칩과 튜너의 LOCKED LED가 항상 같은 상태를 가리킵니다. 연결/버퍼링 중에는 LOCKED가 깜박입니다.</p>
+        <table>
+            <tr><th>칩</th><th>의미</th></tr>
+            <tr><td><span class="dot" style="background:#e8b04a"></span><b>연결 중</b></td><td>방송국 주소를 확인하고 스트림을 여는 중</td></tr>
+            <tr><td><span class="dot" style="background:#e8b04a"></span><b>버퍼링</b></td><td>데이터 대기 — 연결이 불안정하면 재시도 횟수 표시</td></tr>
+            <tr><td><span class="dot" style="background:#4ade80"></span><b>재생 중</b></td><td>정상 수신 — 소스 이름 병기</td></tr>
+            <tr><td><span class="dot" style="background:#e8b04a"></span><b>차단됨</b></td><td>브라우저 자동재생 정책 — 재생 버튼을 한 번 눌러주세요</td></tr>
+            <tr><td><span class="dot" style="background:#e05a4a"></span><b>오류</b></td><td>연결 실패 — 채널을 다시 선택</td></tr>
+        </table>
+
+        <h3 style="font-size:1rem; margin:22px 0 8px;">채널 목록 · 검색 · 즐겨찾기</h3>
+        <p>목록 상단 검색창에서 이름·주파수·설명으로 거를 수 있고, 카드의 ★로 즐겨찾기에 고정합니다. 마지막 채널은 기억되어 다음 방문 때 재생 버튼 한 번으로 이어 듣습니다.</p>
+
+        <h3 style="font-size:1rem; margin:22px 0 8px;">키보드</h3>
+        <table>
+            <tr><th>키</th><th>동작</th></tr>
+            <tr><td><code>Space</code></td><td>재생 / 일시정지</td></tr>
+            <tr><td><code>↑</code> / <code>↓</code></td><td>이전 / 다음 채널</td></tr>
+            <tr><td><code>Tab</code> + <code>Enter</code></td><td>기기 위 모든 스위치·버튼 조작 (포커스 링 표시)</td></tr>
+            <tr><td>EQ 슬라이더 포커스 + <code>↑↓</code></td><td>밴드 게인 조정</td></tr>
+        </table>
+
+        <h3 style="font-size:1rem; margin:22px 0 8px;">그 밖에</h3>
+        <ul style="list-style:none;">
+            <li style="padding:3px 0;">🌙 <b>취침 타이머</b> — 15 / 30 / 60 / 90분 순환. 시간이 되면 부드럽게 정지</li>
+            <li style="padding:3px 0;">↗ <b>미니 플레이어</b> — 작은 위젯 창으로 띄워 두고 다른 일 하기</li>
+            <li style="padding:3px 0;">📲 <b>홈 화면 설치(PWA)</b> — iOS Safari: 공유 → "홈 화면에 추가". 전체화면 앱으로 실행됩니다</li>
+        </ul>
+    </section>
+
+    <section id="trouble">
+        <h2><span class="no">09</span>문제 해결</h2>
+        <table>
+            <tr><th>증상</th><th>처방</th></tr>
+            <tr><td>채널을 눌러도 소리가 안 남 (칩: 차단됨)</td><td>브라우저 자동재생 정책입니다. 재생 버튼(▶)을 한 번 눌러 주세요.</td></tr>
+            <tr><td>칩이 "오류"</td><td>방송사 스트림 사정일 수 있습니다. 채널을 다시 누르면 재시도합니다.</td></tr>
+            <tr><td>버퍼링이 잦음</td><td>네트워크가 불안정하면 자동으로 백오프 재시도(최대 3회) 후 복구합니다.</td></tr>
+            <tr><td>iPhone에서 EQ·앰프 음색 변화가 없음</td><td>iOS 네이티브 재생 경로의 제약 — 계기 표시만 동작합니다. (턴테이블·데크 음원 일부는 적용됨)</td></tr>
+            <tr><td>업데이트가 안 보임</td><td>오프라인 캐시(PWA) 특성상 한 번 더 새로고침하면 새 버전이 적용됩니다.</td></tr>
+            <tr><td>녹음이 안 됨</td><td>테이프 재생 중에는 녹음 불가 — 라디오나 턴테이블을 소스로 하세요. 테이프 끝(30:00)이면 되감기.</td></tr>
+        </table>
+    </section>
+
+    <section id="credit">
+        <h2><span class="no">10</span>크레딧 &amp; 고지</h2>
+        <footer>
+            <p>YAHAMA · McIntoch · Maranz · Sansul · Nakamichy · Western Eletric는 실존 브랜드에 대한 애정을 담은 <b>패러디 명칭</b>이며, 실제 제조사와 무관합니다. 각 기기는 해당 시대 명기들에 대한 오마주로 제작되었습니다.</p>
+            <p>음원 — John Michel 연주 바흐 무반주 첼로 모음곡 (CC BY-SA 3.0, Wikimedia Commons) · Kimiko Ishizaka 연주 Open Goldberg Variations (CC0). 라이브 방송 스트림의 권리는 각 방송사에 있으며, 본 앱은 공개 스트림을 개인 청취 용도로 연결만 합니다.</p>
+            <p>이 설명서의 "리뷰"는 앱에 구현된 실제 음향 계수와 동작을 바탕으로 쓴 것입니다 — 과장은 오디오 잡지의 전통을 따랐습니다.</p>
+            <p style="margin-top:18px;"><a class="back-link" href="./">← 랙으로 돌아가기</a></p>
+        </footer>
+    </section>
+
+</div>
+</body>
+</html>
