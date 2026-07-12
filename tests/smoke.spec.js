@@ -202,6 +202,45 @@ test.describe("모바일 컨트롤 바", () => {
     });
 });
 
+test.describe("채널 검색", () => {
+    test.use({ viewport: { width: 1440, height: 1600 } });
+
+    test("검색어로 카드·그룹 필터링", async ({ context, page }) => {
+        await mockExternal(context);
+        await page.goto("/");
+        await page.waitForFunction(() => typeof window.Hls !== "undefined");
+        await page.click("#tsRfHit");
+
+        // offsetParent 기준 = 실제 렌더링 가시성 (hidden 속성이 CSS에 지는 회귀를 잡는다)
+        await page.fill("#stationSearch", "클래식");
+        const visible = await page.evaluate(() =>
+            [...document.querySelectorAll("#groupsMount .station")].filter((el) => el.offsetParent !== null).length);
+        expect(visible).toBe(1);
+        const visibleGroups = await page.evaluate(() =>
+            [...document.querySelectorAll("#groupsMount .group")].filter((el) => el.offsetParent !== null).length);
+        expect(visibleGroups).toBe(1);
+
+        await page.fill("#stationSearch", "");
+        const restored = await page.evaluate(() =>
+            [...document.querySelectorAll("#groupsMount .station")].filter((el) => el.offsetParent !== null).length);
+        const total = await page.evaluate(() => window.FMRadio.stations.length);
+        expect(restored).toBe(total);
+    });
+});
+
+test.describe("미니 플레이어 (widget.html)", () => {
+    test("PlayerCore로 선국·재생", async ({ context, page }) => {
+        await mockExternal(context);
+        await page.goto("/widget.html?station=kbs1fm");
+        await page.waitForFunction(() => typeof window.Hls !== "undefined" && typeof window.PlayerCore !== "undefined");
+        await page.click("#btnPlay");
+        await page.waitForFunction(() => {
+            const a = document.getElementById("audioPlayer");
+            return !a.paused && a.currentTime > 0.5;
+        }, null, { timeout: 15000 });
+    });
+});
+
 test.describe("접근성", () => {
     test("axe-core: 심각/치명 위반 없음", async ({ context, page }) => {
         await mockExternal(context);

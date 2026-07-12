@@ -905,6 +905,35 @@
             display: none;
         }
 
+        /* hidden 속성이 .station의 display:grid에 지지 않도록 강제 */
+        .station[hidden],
+        .group[hidden] {
+            display: none !important;
+        }
+
+        .list-search {
+            margin: 0 0 14px;
+        }
+
+        .list-search input {
+            width: 100%;
+            padding: 12px 18px;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            background: var(--panel-soft);
+            color: var(--text);
+            font-size: 0.92rem;
+        }
+
+        .list-search input::placeholder {
+            color: var(--muted);
+        }
+
+        .list-search input:focus {
+            outline: 2px solid var(--accent-strong);
+            outline-offset: 2px;
+        }
+
         @media (max-width: 720px) {
             .page-shell {
                 width: min(100% - 18px, 100%);
@@ -1157,6 +1186,10 @@
             </button>
         </div>
         <main id="stationMain" class="collapsed">
+            <div class="list-search">
+                <input id="stationSearch" type="search" placeholder="채널 검색 — 이름·주파수·설명" aria-label="채널 검색" autocomplete="off">
+            </div>
+
             <section class="group" id="favGroup" hidden>
                 <div class="group-header">
                     <div class="group-title">즐겨찾기</div>
@@ -1207,6 +1240,7 @@
     <audio id="audioPlayer" crossorigin="anonymous"></audio>
 
     <script src="stations.js"></script>
+    <script src="player-core.js"></script>
     <script>
         const stations = FMRadio.stations;
         const getStreamUrl = FMRadio.getStreamUrl;
@@ -2102,6 +2136,23 @@
         // 하이파이 랙: 이퀄라이저 · 앰프 · 턴테이블
         // ===================================================================
 
+        // SVG 컨트롤을 키보드로도 조작 가능하게 — <title> 텍스트를 라벨로 쓰고
+        // Enter/Space를 클릭으로 매핑한다.
+        function svgButtonize(id, label) {
+            const el = typeof id === "string" ? document.getElementById(id) : id;
+            if (!el) return;
+            el.setAttribute("tabindex", "0");
+            el.setAttribute("role", "button");
+            const t = el.querySelector("title");
+            el.setAttribute("aria-label", label || (t ? t.textContent : ""));
+            el.addEventListener("keydown", (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    el.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+                }
+            });
+        }
+
         // ----- 그래픽 이퀄라이저 (YAHAMA GE-5) -----
         const EQ_FREQS = [60, 250, 1000, 4000, 12000];
         const EQ_LABELS = ["60", "250", "1k", "4k", "12k"];
@@ -2844,7 +2895,7 @@
                     '<rect id="ttTrackHit' + i + '" x="1600" y="' + (y - 30) + '" width="360" height="46" fill="#000" fill-opacity="0" style="cursor:pointer"><title>' + tr.t + ' 재생</title></rect>';
             }).join("");
             document.getElementById("ttStage").innerHTML =
-                '<svg class="tt-svg" viewBox="0 0 2000 640" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="YAHAMA PL-12 턴테이블">' +
+                '<svg class="tt-svg" viewBox="0 0 2000 640" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="YAHAMA PL-12 턴테이블">' +
                 '<defs>' +
                 '<linearGradient id="ttWood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5d4430"/><stop offset="0.5" stop-color="#4a3524"/><stop offset="1" stop-color="#33241a"/></linearGradient>' +
                 '<radialGradient id="ttVinyl" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#1c1c1f"/><stop offset="0.35" stop-color="#141416"/><stop offset="0.85" stop-color="#0d0d0f"/><stop offset="1" stop-color="#131316"/></radialGradient>' +
@@ -2920,13 +2971,17 @@
             });
             document.getElementById("tt33").addEventListener("click", () => { ttRpm45 = false; updatePhonoVisuals(); });
             document.getElementById("tt45").addEventListener("click", () => { ttRpm45 = true; updatePhonoVisuals(); });
+            svgButtonize("ttStartBtn", "턴테이블 START/STOP");
+            svgButtonize("tt33", "33⅓ RPM");
+            svgButtonize("tt45", "45 RPM");
+            RECORD.tracks.forEach((tr, i) => svgButtonize("ttTrackHit" + i, tr.t + " 재생"));
             updatePhonoVisuals();
         }
 
         function playPhonoTrack(i) {
             stopRecording();
             stopDeck();
-            if (hls) { hls.destroy(); hls = null; }
+            if (player) { player.destroy(); player = null; }
             // 그래프는 MSE 지원 브라우저에서만 (iOS 네이티브 HLS 충돌 회피 — 라디오와 동일한 기준)
             if (typeof Hls !== "undefined" && Hls.isSupported()) ensureAudioGraph();
             phonoActive = true;
@@ -3071,7 +3126,7 @@
 
         function mountDeck() {
             document.getElementById("deckStage").innerHTML =
-                `<svg class="deck-svg" viewBox="0 0 2000 540" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Nakamichy DRAGON 카세트 데크">
+                `<svg class="deck-svg" viewBox="0 0 2000 540" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="Nakamichy DRAGON 카세트 데크">
                 <defs>
                     <linearGradient id="dkFace" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d1d21"/><stop offset="0.5" stop-color="#131316"/><stop offset="1" stop-color="#0b0b0d"/></linearGradient>
                     <linearGradient id="dkShell" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2e2e34"/><stop offset="1" stop-color="#1a1a1f"/></linearGradient>
@@ -3170,20 +3225,38 @@
             document.getElementById("deckBtnEject").addEventListener("click", deckEject);
             const bindWind = (id, dir) => {
                 const b = document.getElementById(id);
-                b.addEventListener("pointerdown", (e) => {
+                const start = () => {
                     if (recorder || deckMode === "rec") return;
                     if (deckMode === "play") { audio.pause(); deckSegPlaying = null; deckPlaying = false; }
                     deckMode = "wind";
                     windDir = dir;
+                };
+                const stop = () => { if (deckMode === "wind") { deckMode = "stop"; windDir = 0; deckSyncTape(); } };
+                b.addEventListener("pointerdown", (e) => {
+                    start();
                     try { b.setPointerCapture(e.pointerId); } catch (err) {}
                     e.preventDefault();
                 });
-                const stop = () => { if (deckMode === "wind") { deckMode = "stop"; windDir = 0; deckSyncTape(); } };
                 b.addEventListener("pointerup", stop);
                 b.addEventListener("pointercancel", stop);
+                // 키보드: 누르는 동안 감기 (keydown 반복은 무시, keyup에 정지)
+                b.setAttribute("tabindex", "0");
+                b.setAttribute("role", "button");
+                const t = b.querySelector("title");
+                b.setAttribute("aria-label", t ? t.textContent : "");
+                b.addEventListener("keydown", (e) => {
+                    if ((e.key === "Enter" || e.key === " ") && !e.repeat) {
+                        e.preventDefault();
+                        start();
+                    }
+                });
+                b.addEventListener("keyup", (e) => {
+                    if (e.key === "Enter" || e.key === " ") stop();
+                });
             };
             bindWind("deckBtnRew", -1);
             bindWind("deckBtnFf", 1);
+            ["deckBtnPlay", "deckBtnStop", "deckBtnRec", "deckBtnEject"].forEach((id) => svgButtonize(id));
             if (!deckTape) deckTape = newBlankTape();
             deckRefreshShelf();
         }
@@ -3248,7 +3321,7 @@
             if (deckMode === "wind") { deckMode = "stop"; windDir = 0; }
             if (!deckTape) deckTape = newBlankTape();
             stopPhono();
-            if (hls) { hls.destroy(); hls = null; }
+            if (player) { player.destroy(); player = null; }
             if (typeof Hls !== "undefined" && Hls.isSupported()) ensureAudioGraph();
             if (gainNode) gainNode.gain.value = volumeLevel;
             ensureHiss();
@@ -3555,7 +3628,7 @@
 
         let currentStation = null;
         let isPlaying = false;
-        let hls = null;
+        let player = null; // PlayerCore 핸들 (hls 인스턴스 포함)
         let streamLoaded = false;
         let volumeLevel = loadJson("fmRadio.volume", 1.0);
         if (typeof volumeLevel !== "number" || !(volumeLevel >= 0 && volumeLevel <= 1)) volumeLevel = 1.0;
@@ -3687,6 +3760,20 @@
             });
         }
 
+        // 채널 검색 — 이름·설명·주파수로 카드를 거르고, 빈 그룹은 숨긴다
+        document.getElementById("stationSearch").addEventListener("input", (e) => {
+            const q = e.target.value.trim().toLowerCase();
+            document.querySelectorAll("#groupsMount .station").forEach((el) => {
+                const st = stations.find((s) => s.id === el.dataset.station);
+                if (!st) return;
+                const hay = (st.name + " " + (st.desc || "") + " " + st.freq).toLowerCase();
+                el.hidden = q !== "" && !hay.includes(q);
+            });
+            document.querySelectorAll("#groupsMount .group").forEach((sec) => {
+                sec.hidden = ![...sec.querySelectorAll(".station")].some((el) => !el.hidden);
+            });
+        });
+
         function toggleFavorite(id) {
             const index = favorites.indexOf(id);
             if (index >= 0) {
@@ -3707,6 +3794,9 @@
             accentColor = accent;
             document.documentElement.style.setProperty("--accent", accent);
             document.documentElement.style.setProperty("--accent-strong", shadeColor(accent, 18));
+            // 모바일 주소창·PWA 프레임 색을 채널 색으로 어둡게 물들인다
+            const themeMeta = document.querySelector('meta[name="theme-color"]');
+            if (themeMeta) themeMeta.setAttribute("content", station ? shadeColor(accent, -70) : "#121110");
         }
 
         function shadeColor(hex, amount) {
@@ -3720,61 +3810,40 @@
         }
 
         function playStream(url) {
-            if (hls) {
-                hls.destroy();
-                hls = null;
+            if (player) {
+                player.destroy();
+                player = null;
             }
 
-            if (typeof Hls !== "undefined" && Hls.isSupported()) {
+            if (typeof Hls !== "undefined" && Hls.isSupported() && url.indexOf(".m3u8") !== -1) {
                 // MSE 경로에서는 미리 그래프를 만들어 VU 미터를 켠다.
                 // (Safari 네이티브 HLS는 MediaElementSource와 충돌할 수 있어 제외)
                 ensureAudioGraph();
-                streamLoaded = true;
-                hls = new Hls({
-                    enableWorker: true,
-                    lowLatencyMode: true
-                });
-                const thisHls = hls;
-                let netRetries = 0;
-                let mediaRecovered = false;
-                thisHls.loadSource(url);
-                thisHls.attachMedia(audio);
-                thisHls.on(Hls.Events.MANIFEST_PARSED, () => {
-                    audio.play().catch(() => {
-                        isPlaying = false;
-                        updatePlayButton();
-                    });
-                });
-                thisHls.on(Hls.Events.ERROR, (event, data) => {
-                    // 이미 파괴/교체된 인스턴스의 늦은 이벤트는 무시한다
-                    if (hls !== thisHls || !data.fatal) return;
+            }
 
-                    if (data.type === Hls.ErrorTypes.NETWORK_ERROR && netRetries < 3) {
-                        // 무한 재시도 대신 백오프를 두고 상한을 건다
-                        netRetries += 1;
-                        playerSubtext.textContent = `연결이 불안정합니다. 다시 시도 중… (${netRetries}/3)`;
-                        setTimeout(() => {
-                            if (hls === thisHls) thisHls.startLoad();
-                        }, 1000 * netRetries);
-                    } else if (data.type === Hls.ErrorTypes.MEDIA_ERROR && !mediaRecovered) {
-                        // 일시적 버퍼/디코딩 문제는 한 번 복구를 시도한다
-                        mediaRecovered = true;
-                        thisHls.recoverMediaError();
-                    } else {
-                        stopPlay();
-                        playerSubtext.textContent = "스트림이 중단되었습니다. 채널을 다시 선택해 주세요.";
-                    }
-                });
-            } else if (audio.canPlayType("application/vnd.apple.mpegurl")) {
-                streamLoaded = true;
-                audio.src = url;
-                audio.play().catch(() => {
+            streamLoaded = true;
+            player = PlayerCore.attach(audio, url, {
+                onBlocked: () => {
                     isPlaying = false;
                     updatePlayButton();
-                });
-            } else {
-                playerSubtext.textContent = "이 브라우저는 HLS 스트리밍을 지원하지 않습니다.";
-            }
+                },
+                onRetry: (n, max) => {
+                    playerSubtext.textContent = `연결이 불안정합니다. 다시 시도 중… (${n}/${max})`;
+                },
+                onFatal: (data) => {
+                    stopPlay();
+                    playerSubtext.textContent = "스트림이 중단되었습니다. 채널을 다시 선택해 주세요.";
+                    gtag('event', 'stream_error', {
+                        station_id: currentStation ? currentStation.id : null,
+                        stage: 'playback',
+                        message: data && data.details ? String(data.details).slice(0, 100) : 'fatal'
+                    });
+                },
+                onUnsupported: () => {
+                    streamLoaded = false;
+                    playerSubtext.textContent = "이 브라우저는 HLS 스트리밍을 지원하지 않습니다.";
+                }
+            });
         }
 
         let selectSeq = 0;
@@ -3801,9 +3870,9 @@
 
             // 이전 스트림을 먼저 내린다 — 연결 실패 시
             // '이전 채널 소리 + 새 채널 실패 표시'가 엇갈리지 않도록
-            if (hls) {
-                hls.destroy();
-                hls = null;
+            if (player) {
+                player.destroy();
+                player = null;
             }
             audio.pause();
             streamLoaded = false;
@@ -3842,6 +3911,11 @@
                 nowStation.textContent = `${station.name} 연결 실패`;
                 playerSubtext.textContent = "스트림 응답이 없거나 브라우저 정책 때문에 재생이 차단되었습니다. 채널을 다시 눌러 재시도할 수 있습니다.";
                 console.error(error);
+                gtag('event', 'stream_error', {
+                    station_id: station.id,
+                    stage: 'resolve',
+                    message: String(error && error.message || error).slice(0, 100)
+                });
             }
         }
 
@@ -3880,9 +3954,9 @@
             stopPhono();
             stopDeck();
 
-            if (hls) {
-                hls.destroy();
-                hls = null;
+            if (player) {
+                player.destroy();
+                player = null;
             }
 
             audio.pause();
@@ -3919,9 +3993,9 @@
             stopPhono();
             stopDeck();
 
-            if (hls) {
-                hls.destroy();
-                hls = null;
+            if (player) {
+                player.destroy();
+                player = null;
             }
 
             document.querySelectorAll(".station").forEach((element) => {

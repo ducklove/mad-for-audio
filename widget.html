@@ -845,6 +845,7 @@
     <audio id="audioPlayer"></audio>
 
     <script src="stations.js"></script>
+    <script src="player-core.js"></script>
     <script>
         const params = new URLSearchParams(location.search);
         const stations = FMRadio.stations;
@@ -879,7 +880,7 @@
         let isPlaying = false;
         let isLoading = false;
         let loadedId = null;
-        let hls = null;
+        let player = null; // PlayerCore 핸들
         let media = null; // MP3 모드: { url, title } — null이면 라디오 모드
         let dialSeeking = false;
 
@@ -1018,9 +1019,9 @@
         }
 
         function stopStream() {
-            if (hls) {
-                hls.destroy();
-                hls = null;
+            if (player) {
+                player.destroy();
+                player = null;
             }
             audio.pause();
             audio.removeAttribute("src");
@@ -1038,29 +1039,22 @@
         }
 
         function startStream(url) {
-            if (url.includes(".m3u8") && typeof Hls !== "undefined" && Hls.isSupported()) {
-                hls = new Hls({ enableWorker: true, lowLatencyMode: true });
-                hls.loadSource(url);
-                hls.attachMedia(audio);
-                hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                    audio.play().catch(playBlocked);
-                });
-                hls.on(Hls.Events.ERROR, (event, data) => {
-                    if (data.fatal) {
-                        if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
-                            hls.startLoad();
-                        } else {
-                            stopStream();
-                            isLoading = false;
-                            setStatus("스트림 오류 — 다시 시도해 주세요.");
-                            updateUi();
-                        }
-                    }
-                });
-            } else {
-                audio.src = url;
-                audio.play().catch(playBlocked);
-            }
+            // 재생 경로(HLS/네이티브/파일)와 오류 복구는 본체와 공유하는 PlayerCore가 처리한다
+            player = PlayerCore.attach(audio, url, {
+                onBlocked: playBlocked,
+                onRetry: (n, max) => setStatus(`연결이 불안정합니다. 다시 시도 중… (${n}/${max})`),
+                onFatal: () => {
+                    stopStream();
+                    isLoading = false;
+                    setStatus("스트림 오류 — 다시 시도해 주세요.");
+                    updateUi();
+                },
+                onUnsupported: () => {
+                    isLoading = false;
+                    setStatus("이 브라우저는 HLS 스트리밍을 지원하지 않습니다.");
+                    updateUi();
+                }
+            });
             loadedId = current.id;
         }
 
