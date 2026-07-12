@@ -1234,6 +1234,16 @@ if (typeof recordIdx !== "number" || !RECORDS[recordIdx]) recordIdx = 0;
 let RECORD = RECORDS[recordIdx];
 
 // 음반 교체 — 실제로 판을 갈아 끼우듯, 돌고 있던 판은 내려놓는다
+// 재킷 배경 밝기에 따라 잉크(글자·테두리) 색을 정한다 — 어두운 재킷에서도 인쇄가 읽히도록.
+function jacketInk(bg) {
+    const h = String(bg || "#cccccc").replace("#", "");
+    const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+    const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+    return lum < 135
+        ? { title: "#f0e8d0", sub: "#cdbfa6", perf: "#e6dcc4", line: "#7a6d50", frame: "#6a5d45", inner: "#6a5d45" }
+        : { title: "#3a2b1e", sub: "#5d4430", perf: "#3a2b1e", line: "#8a7d5a", frame: "#b3a988", inner: "#8a7d5a" };
+}
+
 function setRecord(i) {
     recordIdx = ((i % RECORDS.length) + RECORDS.length) % RECORDS.length;
     RECORD = RECORDS[recordIdx];
@@ -1265,6 +1275,7 @@ function mountTurntable() {
     }
     // 트랙 수에 따라 행 간격을 조인다 (최대 13트랙 — 슈만 어린이 정경까지 수용)
     const nTracks = RECORD.tracks.length;
+    const jc = jacketInk(RECORD.jacketBg);
     const rowStep = nTracks > 12 ? 34 : nTracks > 8 ? 38 : nTracks > 6 ? 42 : 50;
     const rowFont = nTracks > 12 ? 13 : nTracks > 8 ? 14 : nTracks > 6 ? 15 : 17;
     const rows = RECORD.tracks.map((tr, i) => {
@@ -1320,20 +1331,22 @@ function mountTurntable() {
         '<circle cx="1065" cy="120" r="8" fill="#0d0d10"/>' +
         // 앨범 재킷 — 좌우 화살표로 라이브러리의 다른 음반으로 교체한다
         '<rect x="1188" y="70" width="380" height="380" rx="4" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/>' +
-        '<rect x="1180" y="60" width="380" height="380" rx="4" fill="' + RECORD.jacketBg + '" stroke="#b3a988" stroke-width="2"/>' +
-        '<rect x="1196" y="76" width="348" height="348" fill="none" stroke="#8a7d5a" stroke-width="1" opacity="0.6"/>' +
-        '<text x="1370" y="170" font-family="Georgia, serif" font-size="' + (RECORD.jTitle.length > 16 ? 24 : RECORD.jTitle.length > 11 ? 30 : RECORD.jTitle.length > 6 ? 44 : 64) + '" font-weight="700" fill="#3a2b1e" text-anchor="middle">' + RECORD.jTitle + '</text>' +
-        '<text x="1370" y="212" font-family="Arial" font-size="20" fill="#5d4430" text-anchor="middle">' + RECORD.jSub1 + '</text>' +
-        '<text x="1370" y="240" font-family="Arial" font-size="15" fill="#5d4430" text-anchor="middle">' + RECORD.jSub2 + '</text>' +
-        '<line x1="1260" y1="266" x2="1480" y2="266" stroke="#8a7d5a" stroke-width="1"/>' +
-        '<text x="1370" y="296" font-family="Georgia, serif" font-style="italic" font-size="16" fill="#3a2b1e" text-anchor="middle">' + RECORD.performer + '</text>' +
+        '<rect x="1180" y="60" width="380" height="380" rx="4" fill="' + RECORD.jacketBg + '" stroke="' + jc.frame + '" stroke-width="2"/>' +
+        '<rect x="1196" y="76" width="348" height="348" fill="none" stroke="' + jc.inner + '" stroke-width="1" opacity="0.6"/>' +
+        '<text x="1370" y="170" font-family="Georgia, serif" font-size="' + (RECORD.jTitle.length > 16 ? 24 : RECORD.jTitle.length > 11 ? 30 : RECORD.jTitle.length > 6 ? 44 : 64) + '" font-weight="700" fill="' + jc.title + '" text-anchor="middle">' + RECORD.jTitle + '</text>' +
+        '<text x="1370" y="212" font-family="Arial" font-size="20" fill="' + jc.sub + '" text-anchor="middle">' + RECORD.jSub1 + '</text>' +
+        '<text x="1370" y="240" font-family="Arial" font-size="15" fill="' + jc.sub + '" text-anchor="middle">' + RECORD.jSub2 + '</text>' +
+        '<line x1="1260" y1="266" x2="1480" y2="266" stroke="' + jc.line + '" stroke-width="1"/>' +
+        '<text x="1370" y="296" font-family="Georgia, serif" font-style="italic" font-size="16" fill="' + jc.perf + '" text-anchor="middle">' + RECORD.performer + '</text>' +
         '<rect x="1196" y="380" width="348" height="44" fill="' + RECORD.accent + '"/>' +
         '<text x="1370" y="408" font-family="Arial" font-size="13" letter-spacing="2" fill="#f0e8d0" text-anchor="middle">YAHAMA RECORDS &#183; STEREO</text>' +
         '<circle id="ttPrevRec" cx="1150" cy="250" r="24" fill="#26262b" stroke="#4a4a52" stroke-width="2" style="cursor:pointer"><title>이전 음반</title></circle>' +
         '<text x="1150" y="259" font-family="Georgia, serif" font-size="26" fill="#d9cfc0" text-anchor="middle" pointer-events="none">&#8249;</text>' +
         '<circle id="ttNextRec" cx="1590" cy="250" r="24" fill="#26262b" stroke="#4a4a52" stroke-width="2" style="cursor:pointer"><title>다음 음반</title></circle>' +
         '<text x="1590" y="259" font-family="Georgia, serif" font-size="26" fill="#d9cfc0" text-anchor="middle" pointer-events="none">&#8250;</text>' +
-        '<text x="1370" y="462" font-family="Arial" font-size="11" fill="#8a7d70" text-anchor="middle">음반 ' + (recordIdx + 1) + ' / ' + RECORDS.length + '</text>' +
+        '<g id="ttCrateBtn" style="cursor:pointer"><title>음반 수납장 열기</title>' +
+        '<rect x="1226" y="444" width="288" height="27" rx="7" fill="#26262b" stroke="#4a4a52" stroke-width="1.5"/>' +
+        '<text x="1370" y="462" font-family="Arial" font-size="12" fill="#d9cfc0" text-anchor="middle" pointer-events="none">▤ 음반 수납장 · ' + (recordIdx + 1) + ' / ' + RECORDS.length + '</text></g>' +
         // 트랙 리스트
         '<text x="1600" y="86" font-family="Arial" font-size="14" font-weight="700" letter-spacing="2" fill="#8a7d70">SIDE ' + (RECORD.side || 'A') + '</text>' +
         rows +
@@ -1359,11 +1372,13 @@ function mountTurntable() {
     document.getElementById("tt45").addEventListener("click", () => { ttRpm45 = true; updatePhonoVisuals(); });
     document.getElementById("ttPrevRec").addEventListener("click", () => setRecord(recordIdx - 1));
     document.getElementById("ttNextRec").addEventListener("click", () => setRecord(recordIdx + 1));
+    document.getElementById("ttCrateBtn").addEventListener("click", openCrate);
     svgButtonize("ttStartBtn", "턴테이블 START/STOP");
     svgButtonize("tt33", "33⅓ RPM");
     svgButtonize("tt45", "45 RPM");
     svgButtonize("ttPrevRec", "이전 음반");
     svgButtonize("ttNextRec", "다음 음반");
+    svgButtonize("ttCrateBtn", "음반 수납장 열기");
     RECORD.tracks.forEach((tr, i) => svgButtonize("ttTrackHit" + i, tr.t + " 재생"));
     updatePhonoVisuals();
 }
@@ -1645,6 +1660,87 @@ document.addEventListener("keydown", (e) => {
 });
 document.addEventListener("pointerdown", () => {
     document.body.classList.remove("kbd-nav");
+});
+
+// ===== 음반 수납장 (레코드 크레이트) =====
+// 34장을 재킷 그리드로 펼쳐 검색·선택한다. 재킷 인쇄색은 배경 밝기로 자동 결정.
+function jacketCard(rec, idx) {
+    const jc = jacketInk(rec.jacketBg);
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "crate-jacket" + (idx === recordIdx ? " is-current" : "");
+    btn.style.background = rec.jacketBg;
+    btn.setAttribute("role", "listitem");
+    btn.setAttribute("aria-label", rec.title + " · " + rec.performer);
+    const parts = [
+        ["cj-num", jc.sub, String(idx + 1)],
+        ["cj-side", jc.sub, "SIDE " + (rec.side || "A")],
+        ["cj-title", jc.title, rec.jTitle],
+        ["cj-sub", jc.sub, rec.jSub1],
+        ["cj-perf", jc.perf, rec.performer]
+    ];
+    for (const [cls, color, text] of parts) {
+        const el = document.createElement("span");
+        el.className = cls;
+        el.style.color = color;
+        el.textContent = text;
+        btn.appendChild(el);
+    }
+    const bar = document.createElement("span");
+    bar.className = "cj-bar";
+    bar.style.background = rec.accent;
+    bar.textContent = rec.composer;
+    btn.appendChild(bar);
+    btn.addEventListener("click", () => pickRecord(idx));
+    return btn;
+}
+
+function renderCrate(q) {
+    const grid = document.getElementById("crateGrid");
+    const empty = document.getElementById("crateEmpty");
+    grid.innerHTML = "";
+    const needle = (q || "").trim().toLowerCase();
+    let shown = 0;
+    RECORDS.forEach((rec, idx) => {
+        if (needle) {
+            const hay = [rec.title, rec.composer, rec.performer, rec.jTitle,
+                rec.jSub1, rec.jSub2, rec.bwv, rec.labelTitle].join(" ").toLowerCase();
+            if (!hay.includes(needle)) return;
+        }
+        grid.appendChild(jacketCard(rec, idx));
+        shown++;
+    });
+    empty.hidden = shown > 0;
+    document.getElementById("crateCount").textContent =
+        needle ? (shown + " / " + RECORDS.length + "장") : (RECORDS.length + "장");
+}
+
+function openCrate() {
+    document.getElementById("crateOverlay").hidden = false;
+    const search = document.getElementById("crateSearch");
+    search.value = "";
+    renderCrate("");
+    const cur = document.querySelector(".crate-jacket.is-current");
+    if (cur) cur.scrollIntoView({ block: "nearest" });
+    search.focus();
+    gtag('event', 'open_crate', {});
+}
+
+function closeCrate() {
+    document.getElementById("crateOverlay").hidden = true;
+}
+
+function pickRecord(i) {
+    setRecord(i);
+    closeCrate();
+}
+
+document.getElementById("crateSearch").addEventListener("input", (e) => renderCrate(e.target.value));
+document.getElementById("crateOverlay").addEventListener("click", (e) => {
+    if (e.target === e.currentTarget) closeCrate();
+});
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !document.getElementById("crateOverlay").hidden) closeCrate();
 });
 
 let currentStation = null;

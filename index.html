@@ -157,6 +157,18 @@
         </div>
     </div>
 
+    <div class="crate-overlay" id="crateOverlay" hidden>
+        <div class="crate-panel" role="dialog" aria-modal="true" aria-label="음반 수납장">
+            <div class="crate-head">
+                <div class="crate-title">음반 수납장 <span class="crate-count" id="crateCount"></span></div>
+                <input class="crate-search" id="crateSearch" type="search" placeholder="작곡가·제목·작품 검색" aria-label="음반 검색" autocomplete="off">
+                <button class="crate-close" type="button" aria-label="수납장 닫기" onclick="closeCrate()">✕</button>
+            </div>
+            <div class="crate-grid" id="crateGrid" role="list"></div>
+            <div class="crate-empty" id="crateEmpty" hidden>검색 결과가 없습니다.</div>
+        </div>
+    </div>
+
     <audio id="audioPlayer" crossorigin="anonymous"></audio>
 
     <script src="stations.js"></script>
