@@ -1364,6 +1364,20 @@ a.mini-open {
     color: #f0e8d0;
 }
 
+/* 커버 이미지가 있는 재킷 — 제목을 하단 밴드로 내리고, 상단 배지는 배경띠로 가독성 확보 */
+.crate-jacket.has-cover .cj-title {
+    margin-top: auto;
+    font-size: 0.92rem;
+}
+
+.crate-jacket.has-cover .cj-num,
+.crate-jacket.has-cover .cj-side {
+    background: rgba(10, 8, 7, 0.5);
+    padding: 1px 6px;
+    border-radius: 7px;
+    opacity: 1;
+}
+
 .crate-empty {
     text-align: center;
     color: var(--muted);

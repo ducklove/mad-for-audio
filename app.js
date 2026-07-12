@@ -768,7 +768,7 @@ const RECORDS = [
         credit: "음원: John Michel · CC BY-SA 3.0 · Wikimedia Commons",
         labelBig: "BACH", labelTitle: "무반주 첼로 모음곡 1번", labelArtist: "JOHN MICHEL, CELLO",
         jTitle: "BACH", jSub1: "무반주 첼로 모음곡", jSub2: "제1번 G장조 · BWV 1007",
-        labelBg: "#ddd2b4", jacketBg: "#ddd2b4", accent: "#8a2020",
+        labelBg: "#ddd2b4", jacketBg: "#ddd2b4", accent: "#8a2020", cover: "thumb/4/4b/Violoncello_MET_DT7705.jpg/960px-Violoncello_MET_DT7705.jpg",
         tracks: [
             { t: "I. Prélude", f: "4/43/JOHN_MICHEL_CELLO-J_S_BACH_CELLO_SUITE_1_in_G_Prelude.ogg" },
             { t: "II. Allemande", f: "6/6c/JOHN_MICHEL_CELLO-J_S_BACH_CELLO_SUITE_1_in_G_Allemande.ogg" },
@@ -784,7 +784,7 @@ const RECORDS = [
         credit: "음원: John Michel · CC BY-SA 3.0 · Wikimedia Commons",
         labelBig: "BACH", labelTitle: "무반주 첼로 모음곡 3번", labelArtist: "JOHN MICHEL, CELLO",
         jTitle: "BACH", jSub1: "무반주 첼로 모음곡", jSub2: "제3번 C장조 · BWV 1009",
-        labelBg: "#d6dde6", jacketBg: "#cfd8e2", accent: "#1f4e79",
+        labelBg: "#d6dde6", jacketBg: "#cfd8e2", accent: "#1f4e79", cover: "thumb/4/4b/Violoncello_MET_DT7705.jpg/960px-Violoncello_MET_DT7705.jpg",
         tracks: [
             { t: "I. Prélude", f: "5/56/JOHN_MICHEL_CELLO-J_S_BACH_CELLO_SUITE_3_in_C_Prelude.ogg" },
             { t: "II. Allemande", f: "4/49/JOHN_MICHEL_CELLO-J_S_BACH_CELLO_SUITE_3_in_C_Allemande.ogg" },
@@ -800,7 +800,7 @@ const RECORDS = [
         credit: "음원: Open Goldberg Variations · Kimiko Ishizaka · CC0 · Wikimedia Commons",
         labelBig: "BACH", labelTitle: "골드베르크 변주곡", labelArtist: "KIMIKO ISHIZAKA, PIANO",
         jTitle: "GOLDBERG", jSub1: "바흐 골드베르크 변주곡", jSub2: "Aria & Var. 1–7 · BWV 988",
-        labelBg: "#ece8dc", jacketBg: "#ece9e0", accent: "#8a6a1f",
+        labelBg: "#ece8dc", jacketBg: "#ece9e0", accent: "#8a6a1f", cover: "thumb/b/b6/Cover_of_the_Open_Goldberg_Variations.jpg/960px-Cover_of_the_Open_Goldberg_Variations.jpg",
         tracks: [
             { t: "Aria", f: "5/59/Kimiko_Ishizaka_-_J.S._Bach-_-Open-_Goldberg_Variations%2C_BWV_988_%28Piano%29_-_01_Aria.mp3" },
             { t: "Variatio 1", f: "6/6c/Kimiko_Ishizaka_-_J.S._Bach-_-Open-_Goldberg_Variations%2C_BWV_988_%28Piano%29_-_02_Variatio_1_a_1_Clav.mp3" },
@@ -816,7 +816,7 @@ const RECORDS = [
     {
         title: "골드베르크 변주곡 — B면", bwv: "BWV 988", composer: "J. S. BACH", performer: "Kimiko Ishizaka, piano", credit: "음원: Open Goldberg Variations · Kimiko Ishizaka · CC0 · Wikimedia Commons",
         labelBig: "BACH", labelTitle: "골드베르크 변주곡", labelArtist: "KIMIKO ISHIZAKA, PIANO", jTitle: "GOLDBERG", jSub1: "바흐 골드베르크 변주곡", jSub2: "Var. 8–15 · BWV 988",
-        labelBg: "#e4dccb", jacketBg: "#e6ded0", accent: "#7a5a24", side: "B",
+        labelBg: "#e4dccb", jacketBg: "#e6ded0", accent: "#7a5a24", side: "B", cover: "thumb/b/b6/Cover_of_the_Open_Goldberg_Variations.jpg/960px-Cover_of_the_Open_Goldberg_Variations.jpg",
         tracks: [
             { t: "Variatio 8", f: "d/d8/Kimiko_Ishizaka_-_J.S._Bach-_-Open-_Goldberg_Variations%2C_BWV_988_%28Piano%29_-_09_Variatio_8_a_2_Clav.mp3" },
             { t: "Variatio 9 Canone alla Terza", f: "9/99/Kimiko_Ishizaka_-_J.S._Bach-_-Open-_Goldberg_Variations%2C_BWV_988_%28Piano%29_-_10_Variatio_9_a_1_Clav._Canone_alla_Terza.mp3" },
@@ -831,7 +831,7 @@ const RECORDS = [
     {
         title: "골드베르크 변주곡 — C면", bwv: "BWV 988", composer: "J. S. BACH", performer: "Kimiko Ishizaka, piano", credit: "음원: Open Goldberg Variations · Kimiko Ishizaka · CC0 · Wikimedia Commons",
         labelBig: "BACH", labelTitle: "골드베르크 변주곡", labelArtist: "KIMIKO ISHIZAKA, PIANO", jTitle: "GOLDBERG", jSub1: "바흐 골드베르크 변주곡", jSub2: "Var. 16–23 · BWV 988",
-        labelBg: "#dcd6c4", jacketBg: "#e0d8c8", accent: "#6e5320", side: "C",
+        labelBg: "#dcd6c4", jacketBg: "#e0d8c8", accent: "#6e5320", side: "C", cover: "thumb/b/b6/Cover_of_the_Open_Goldberg_Variations.jpg/960px-Cover_of_the_Open_Goldberg_Variations.jpg",
         tracks: [
             { t: "Variatio 16 Ouverture", f: "6/62/Kimiko_Ishizaka_-_J.S._Bach-_-Open-_Goldberg_Variations%2C_BWV_988_%28Piano%29_-_17_Variatio_16_a_1_Clav._Ouverture.mp3" },
             { t: "Variatio 17", f: "6/6e/Kimiko_Ishizaka_-_J.S._Bach-_-Open-_Goldberg_Variations%2C_BWV_988_%28Piano%29_-_18_Variatio_17_a_2_Clav.mp3" },
@@ -846,7 +846,7 @@ const RECORDS = [
     {
         title: "골드베르크 변주곡 — D면", bwv: "BWV 988", composer: "J. S. BACH", performer: "Kimiko Ishizaka, piano", credit: "음원: Open Goldberg Variations · Kimiko Ishizaka · CC0 · Wikimedia Commons",
         labelBig: "BACH", labelTitle: "골드베르크 변주곡", labelArtist: "KIMIKO ISHIZAKA, PIANO", jTitle: "GOLDBERG", jSub1: "바흐 골드베르크 변주곡", jSub2: "Var. 24–30, Aria da Capo",
-        labelBg: "#e8e0cf", jacketBg: "#eae2d2", accent: "#7f6026", side: "D",
+        labelBg: "#e8e0cf", jacketBg: "#eae2d2", accent: "#7f6026", side: "D", cover: "thumb/b/b6/Cover_of_the_Open_Goldberg_Variations.jpg/960px-Cover_of_the_Open_Goldberg_Variations.jpg",
         tracks: [
             { t: "Variatio 24 Canone all Ottava", f: "f/f6/Kimiko_Ishizaka_-_J.S._Bach-_-Open-_Goldberg_Variations%2C_BWV_988_%28Piano%29_-_25_Variatio_24_a_1_Clav._Canone_all_Ottava.mp3" },
             { t: "Variatio 25", f: "2/26/Kimiko_Ishizaka_-_J.S._Bach-_-Open-_Goldberg_Variations%2C_BWV_988_%28Piano%29_-_26_Variatio_25_a_2_Clav.mp3" },
@@ -860,7 +860,7 @@ const RECORDS = [
     {
         title: "평균율 클라비어곡집 1권 — 제1집", bwv: "BWV 846–869", composer: "J. S. BACH", performer: "Kimiko Ishizaka, piano", credit: "음원: Open Well-Tempered Clavier · Kimiko Ishizaka · CC0 · Wikimedia Commons",
         labelBig: "BACH", labelTitle: "평균율 1권 · No.1–6", labelArtist: "KIMIKO ISHIZAKA, PIANO", jTitle: "WTC I", jSub1: "Well-Tempered Clavier, Book I", jSub2: "Prelude & Fugue No. 1–6",
-        labelBg: "#e7e2d6", jacketBg: "#e9e4d8", accent: "#3a5a3f", side: "I",
+        labelBg: "#e7e2d6", jacketBg: "#e9e4d8", accent: "#3a5a3f", side: "I", cover: "thumb/6/6a/Johann_Sebastian_Bach.jpg/960px-Johann_Sebastian_Bach.jpg",
         tracks: [
             { t: "Prelude 1 · C major", f: "b/b6/Kimiko_Ishizaka_-_Bach_-_Well-Tempered_Clavier%2C_Book_1_-_01_Prelude_No._1_in_C_major%2C_BWV_846.ogg" },
             { t: "Fugue 1 · C major", f: "e/e1/Kimiko_Ishizaka_-_Bach_-_Well-Tempered_Clavier%2C_Book_1_-_02_Fugue_No._1_in_C_major%2C_BWV_846.ogg" },
@@ -879,7 +879,7 @@ const RECORDS = [
     {
         title: "평균율 클라비어곡집 1권 — 제2집", bwv: "BWV 846–869", composer: "J. S. BACH", performer: "Kimiko Ishizaka, piano", credit: "음원: Open Well-Tempered Clavier · Kimiko Ishizaka · CC0 · Wikimedia Commons",
         labelBig: "BACH", labelTitle: "평균율 1권 · No.7–12", labelArtist: "KIMIKO ISHIZAKA, PIANO", jTitle: "WTC I", jSub1: "Well-Tempered Clavier, Book I", jSub2: "Prelude & Fugue No. 7–12",
-        labelBg: "#e2ddd0", jacketBg: "#e4dfd2", accent: "#2f5555", side: "II",
+        labelBg: "#e2ddd0", jacketBg: "#e4dfd2", accent: "#2f5555", side: "II", cover: "thumb/6/6a/Johann_Sebastian_Bach.jpg/960px-Johann_Sebastian_Bach.jpg",
         tracks: [
             { t: "Prelude 7 · E-flat major", f: "a/aa/Kimiko_Ishizaka_-_Bach_-_Well-Tempered_Clavier%2C_Book_1_-_13_Prelude_No._7_in_E-flat_major%2C_BWV_852.ogg" },
             { t: "Fugue 7 · E-flat major", f: "7/7b/Kimiko_Ishizaka_-_Bach_-_Well-Tempered_Clavier%2C_Book_1_-_14_Fugue_No._7_in_E-flat_major%2C_BWV_852.ogg" },
@@ -898,7 +898,7 @@ const RECORDS = [
     {
         title: "평균율 클라비어곡집 1권 — 제3집", bwv: "BWV 846–869", composer: "J. S. BACH", performer: "Kimiko Ishizaka, piano", credit: "음원: Open Well-Tempered Clavier · Kimiko Ishizaka · CC0 · Wikimedia Commons",
         labelBig: "BACH", labelTitle: "평균율 1권 · No.13–18", labelArtist: "KIMIKO ISHIZAKA, PIANO", jTitle: "WTC I", jSub1: "Well-Tempered Clavier, Book I", jSub2: "Prelude & Fugue No. 13–18",
-        labelBg: "#e5e0d2", jacketBg: "#e7e2d4", accent: "#4a4a72", side: "III",
+        labelBg: "#e5e0d2", jacketBg: "#e7e2d4", accent: "#4a4a72", side: "III", cover: "thumb/6/6a/Johann_Sebastian_Bach.jpg/960px-Johann_Sebastian_Bach.jpg",
         tracks: [
             { t: "Prelude 13 · F-sharp major", f: "e/e0/Kimiko_Ishizaka_-_Bach_-_Well-Tempered_Clavier%2C_Book_1_-_25_Prelude_No._13_in_F-sharp_major%2C_BWV_858.ogg" },
             { t: "Fugue 13 · F-sharp major", f: "4/46/Kimiko_Ishizaka_-_Bach_-_Well-Tempered_Clavier%2C_Book_1_-_26_Fugue_No._13_in_F-sharp_major%2C_BWV_858.ogg" },
@@ -917,7 +917,7 @@ const RECORDS = [
     {
         title: "평균율 클라비어곡집 1권 — 제4집", bwv: "BWV 846–869", composer: "J. S. BACH", performer: "Kimiko Ishizaka, piano", credit: "음원: Open Well-Tempered Clavier · Kimiko Ishizaka · CC0 · Wikimedia Commons",
         labelBig: "BACH", labelTitle: "평균율 1권 · No.19–24", labelArtist: "KIMIKO ISHIZAKA, PIANO", jTitle: "WTC I", jSub1: "Well-Tempered Clavier, Book I", jSub2: "Prelude & Fugue No. 19–24",
-        labelBg: "#e3ddce", jacketBg: "#e5dfd0", accent: "#6b4a6a", side: "IV",
+        labelBg: "#e3ddce", jacketBg: "#e5dfd0", accent: "#6b4a6a", side: "IV", cover: "thumb/6/6a/Johann_Sebastian_Bach.jpg/960px-Johann_Sebastian_Bach.jpg",
         tracks: [
             { t: "Prelude 19 · A major", f: "b/be/Kimiko_Ishizaka_-_Bach_-_Well-Tempered_Clavier%2C_Book_1_-_37_Prelude_No._19_in_A_major%2C_BWV_864.ogg" },
             { t: "Fugue 19 · A major", f: "2/24/Kimiko_Ishizaka_-_Bach_-_Well-Tempered_Clavier%2C_Book_1_-_38_Fugue_No._19_in_A_major%2C_BWV_864.ogg" },
@@ -936,7 +936,7 @@ const RECORDS = [
     {
         title: "사계", bwv: "Op. 8 · RV 269–297", composer: "A. VIVALDI", performer: "The Modena Chamber Orchestra", credit: "음원: Modena Chamber Orchestra · Musopen · PD · Wikimedia Commons",
         labelBig: "VIVALDI", labelTitle: "사계 (Le quattro stagioni)", labelArtist: "MODENA CHAMBER ORCH.", jTitle: "LE QUATTRO STAGIONI", jSub1: "비발디 · 사계", jSub2: "The Four Seasons · Op. 8",
-        labelBg: "#dfe7d3", jacketBg: "#e2e9d7", accent: "#3f6b34", side: "A",
+        labelBg: "#dfe7d3", jacketBg: "#e2e9d7", accent: "#3f6b34", side: "A", cover: "9/98/Antonio_Vivaldi_portrait.jpg",
         tracks: [
             { t: "La primavera I · Allegro", f: "1/18/The_Modena_Chamber_Orchestra_-_Vivaldi%27s_Spring%2C_RV_269_-_I._Allegro.ogg" },
             { t: "La primavera II · Largo", f: "3/39/The_Modena_Chamber_Orchestra_-_Vivaldi%27s_Spring%2C_RV_269_-_II._Largo.ogg" },
@@ -955,7 +955,7 @@ const RECORDS = [
     {
         title: "비발디 협주곡집", bwv: "RV 498 · 532 · 536", composer: "A. VIVALDI", performer: "The Modena Chamber Orchestra", credit: "음원: Modena Chamber Orchestra · Musopen · PD · Wikimedia Commons",
         labelBig: "VIVALDI", labelTitle: "협주곡집", labelArtist: "MODENA CHAMBER ORCH.", jTitle: "CONCERTI", jSub1: "비발디 협주곡집", jSub2: "Bassoon · Mandolins · Oboes",
-        labelBg: "#d8e0e6", jacketBg: "#dbe3e9", accent: "#2f5a72", side: "A",
+        labelBg: "#d8e0e6", jacketBg: "#dbe3e9", accent: "#2f5a72", side: "A", cover: "9/98/Antonio_Vivaldi_portrait.jpg",
         tracks: [
             { t: "바순 협주곡 RV 498 · I", f: "2/26/The_Modena_Chamber_Orchestra_-_Vivaldi%27s_Bassoon_Concerto_in_A_minor%2C_RV_498_-_I._Allegro_%28ma_molto_moderato%29.ogg" },
             { t: "바순 협주곡 RV 498 · II", f: "a/a7/The_Modena_Chamber_Orchestra_-_Vivaldi%27s_Bassoon_Concerto_in_A_minor%2C_RV_498_-_II._Larghetto.ogg" },
@@ -971,7 +971,7 @@ const RECORDS = [
     {
         title: "교향곡 제5번 '운명'", bwv: "Op. 67", composer: "L. van BEETHOVEN", performer: "Musopen Symphony Orchestra", credit: "음원: Musopen · PD · Wikimedia Commons",
         labelBig: "BEETHOVEN", labelTitle: "교향곡 5번 c단조", labelArtist: "MUSOPEN SYMPHONY", jTitle: "SYMPHONY No.5", jSub1: "베토벤 교향곡 5번 '운명'", jSub2: "C minor · Op. 67",
-        labelBg: "#e0cfc0", jacketBg: "#2a1f1a", accent: "#8a2020", side: "A",
+        labelBg: "#e0cfc0", jacketBg: "#2a1f1a", accent: "#8a2020", side: "A", cover: "thumb/6/6f/Beethoven.jpg/960px-Beethoven.jpg",
         tracks: [
             { t: "I. Allegro con brio", f: "e/e6/Ludwig_van_Beethoven_-_symphony_no._5_in_c_minor%2C_op._67_-_i._allegro_con_brio.ogg" },
             { t: "II. Andante con moto", f: "c/c0/Ludwig_van_Beethoven_-_symphony_no._5_in_c_minor%2C_op._67_-_ii._andante_con_moto.ogg" },
@@ -982,7 +982,7 @@ const RECORDS = [
     {
         title: "교향곡 제6번 '전원'", bwv: "Op. 68", composer: "L. van BEETHOVEN", performer: "Musopen Symphony Orchestra", credit: "음원: Musopen · PD · Wikimedia Commons",
         labelBig: "BEETHOVEN", labelTitle: "교향곡 6번 F장조", labelArtist: "MUSOPEN SYMPHONY", jTitle: "PASTORAL", jSub1: "베토벤 교향곡 6번 '전원'", jSub2: "F major · Op. 68",
-        labelBg: "#d7e0cd", jacketBg: "#33402c", accent: "#4a7a3a", side: "A",
+        labelBg: "#d7e0cd", jacketBg: "#33402c", accent: "#4a7a3a", side: "A", cover: "thumb/6/6f/Beethoven.jpg/960px-Beethoven.jpg",
         tracks: [
             { t: "I. Allegro ma non troppo", f: "d/d5/Ludwig_van_Beethoven_-_symphony_no._6_in_f_major_%27pastoral%27%2C_op._68_-_i._allegro_non_troppo.ogg" },
             { t: "II. Andante molto mosso", f: "a/a9/Ludwig_van_Beethoven_-_symphony_no._6_in_f_major_%27pastoral%27%2C_op._68_-_ii._andante_molto_mosso.ogg" },
@@ -994,7 +994,7 @@ const RECORDS = [
     {
         title: "피아노 소나타 제8번 '비창'", bwv: "Op. 13", composer: "L. van BEETHOVEN", performer: "Paul Pitman, piano", credit: "음원: Musopen · PD · Wikimedia Commons",
         labelBig: "BEETHOVEN", labelTitle: "비창 소나타 c단조", labelArtist: "PAUL PITMAN, PIANO", jTitle: "PATHÉTIQUE", jSub1: "베토벤 피아노 소나타 8번 '비창'", jSub2: "C minor · Op. 13",
-        labelBg: "#d9d2cc", jacketBg: "#2b2b30", accent: "#5a2a4a", side: "A",
+        labelBg: "#d9d2cc", jacketBg: "#2b2b30", accent: "#5a2a4a", side: "A", cover: "thumb/6/6f/Beethoven.jpg/960px-Beethoven.jpg",
         tracks: [
             { t: "I. Grave – Allegro di molto e con brio", f: "2/26/Beethoven%2C_Sonata_No._8_in_C_Minor_Pathetique%2C_Op._13_-_I._Grave_-_Allegro_di_molto_e_con_brio.ogg" },
             { t: "II. Adagio cantabile", f: "6/63/Beethoven%2C_Sonata_No._8_in_C_Minor_Pathetique%2C_Op._13_-_II._Adagio_cantabile.ogg" },
@@ -1004,7 +1004,7 @@ const RECORDS = [
     {
         title: "피아노 협주곡 제1번", bwv: "Op. 15", composer: "L. van BEETHOVEN", performer: "Musopen Orchestra", credit: "음원: Musopen · PD · Wikimedia Commons",
         labelBig: "BEETHOVEN", labelTitle: "피아노 협주곡 1번 C장조", labelArtist: "MUSOPEN ORCHESTRA", jTitle: "CONCERTO No.1", jSub1: "베토벤 피아노 협주곡 1번", jSub2: "C major · Op. 15",
-        labelBg: "#e0d6c2", jacketBg: "#2e2a22", accent: "#8a6a2a", side: "A",
+        labelBg: "#e0d6c2", jacketBg: "#2e2a22", accent: "#8a6a2a", side: "A", cover: "thumb/6/6f/Beethoven.jpg/960px-Beethoven.jpg",
         tracks: [
             { t: "I. Allegro con brio", f: "6/6f/Ludwig_van_Beethoven_-_piano_concerto_no._1_in_c_major%2C_op._15_-_i._allegro_con_brio.ogg" },
             { t: "II. Largo", f: "b/b4/Ludwig_van_Beethoven_-_piano_concerto_no._1_in_c_major%2C_op._15_-_ii._largo.ogg" },
@@ -1014,7 +1014,7 @@ const RECORDS = [
     {
         title: "교향곡 제1번", bwv: "Op. 68", composer: "J. BRAHMS", performer: "Musopen Symphony Orchestra", credit: "음원: Musopen · PD · Wikimedia Commons",
         labelBig: "BRAHMS", labelTitle: "교향곡 1번 c단조", labelArtist: "MUSOPEN SYMPHONY", jTitle: "SYMPHONY No.1", jSub1: "브람스 교향곡 1번", jSub2: "C minor · Op. 68",
-        labelBg: "#d5d8cf", jacketBg: "#26302a", accent: "#3a5a44", side: "A",
+        labelBg: "#d5d8cf", jacketBg: "#26302a", accent: "#3a5a44", side: "A", cover: "1/11/Johannes_Brahms_1853.jpg",
         tracks: [
             { t: "I. Un poco sostenuto – Allegro", f: "a/a7/Brahms%2C_Symphony_No._1_in_C_Minor%2C_Op._68_-_I._Un_poco_sostenuto_-_Allegro.ogg" },
             { t: "II. Andante sostenuto", f: "1/1f/Brahms%2C_Symphony_No._1_in_C_Minor%2C_Op._68_-_II._Andante_sostenuto.ogg" },
@@ -1025,7 +1025,7 @@ const RECORDS = [
     {
         title: "교향곡 제4번", bwv: "Op. 98", composer: "J. BRAHMS", performer: "Musopen Symphony Orchestra", credit: "음원: Musopen · PD · Wikimedia Commons",
         labelBig: "BRAHMS", labelTitle: "교향곡 4번 e단조", labelArtist: "MUSOPEN SYMPHONY", jTitle: "SYMPHONY No.4", jSub1: "브람스 교향곡 4번", jSub2: "E minor · Op. 98",
-        labelBg: "#d8d4cd", jacketBg: "#2c281f", accent: "#6b4a2a", side: "A",
+        labelBg: "#d8d4cd", jacketBg: "#2c281f", accent: "#6b4a2a", side: "A", cover: "a/a2/Johannes_Brahms_portrait.jpg",
         tracks: [
             { t: "I. Allegro non troppo", f: "7/79/Brahms%2C_Symphony_No._4_in_E_Minor%2C_Op._98_-_I._Allegro_Non_Troppo.ogg" },
             { t: "II. Andante moderato", f: "a/a1/Brahms%2C_Symphony_No._4_in_E_Minor%2C_Op._98_-_II._Andante_Moderato.ogg" },
@@ -1036,7 +1036,7 @@ const RECORDS = [
     {
         title: "교향곡 제6번 '비창'", bwv: "Op. 74", composer: "P. I. TCHAIKOVSKY", performer: "Symphony Orchestra", credit: "음원: Musopen · PD · Wikimedia Commons",
         labelBig: "TCHAIKOVSKY", labelTitle: "교향곡 6번 b단조", labelArtist: "SYMPHONY ORCHESTRA", jTitle: "PATHÉTIQUE", jSub1: "차이코프스키 교향곡 6번", jSub2: "B minor · Op. 74",
-        labelBg: "#cdd4e0", jacketBg: "#20283a", accent: "#3a4a8a", side: "A",
+        labelBg: "#cdd4e0", jacketBg: "#20283a", accent: "#3a4a8a", side: "A", cover: "5/51/Pyotr_Tchaikovsky_%D1%81._1870.jpg",
         tracks: [
             { t: "I. Adagio – Allegro non troppo", f: "b/b7/Tchaikovsky%2C_Symphony_No._6_In_B_Minor%2C_Op._74%2C_%27Pathetique%27_-_I._Adagio%2C_Allegro_Non_Troppo.ogg" },
             { t: "II. Allegro con grazia", f: "a/aa/Tchaikovsky%2C_Symphony_No._6_in_B_minor%2C_Op._74%2C_%27Pathetique%27_-_II._Allegro_con_gracia.ogg" },
@@ -1047,7 +1047,7 @@ const RECORDS = [
     {
         title: "피아노 협주곡 제1번", bwv: "Op. 23", composer: "P. I. TCHAIKOVSKY", performer: "Symphony Orchestra", credit: "음원: Musopen · PD · Wikimedia Commons",
         labelBig: "TCHAIKOVSKY", labelTitle: "피아노 협주곡 1번", labelArtist: "SYMPHONY ORCHESTRA", jTitle: "CONCERTO No.1", jSub1: "차이코프스키 피아노 협주곡 1번", jSub2: "B-flat minor · Op. 23",
-        labelBg: "#d4cfe0", jacketBg: "#241f30", accent: "#5a3a8a", side: "A",
+        labelBg: "#d4cfe0", jacketBg: "#241f30", accent: "#5a3a8a", side: "A", cover: "5/51/Pyotr_Tchaikovsky_%D1%81._1870.jpg",
         tracks: [
             { t: "I. Allegro non troppo e molto maestoso", f: "4/48/Tchaikovsky%2C_Concerto_No.1_in_B-flat_minor_Op.23%2C_I._Allegro.ogg" },
             { t: "II. Andantino semplice", f: "e/e2/Tchaikovsky%2C_Concerto_No.1_in_B-flat_minor_Op.23%2C_II._Andantino.ogg" },
@@ -1057,7 +1057,7 @@ const RECORDS = [
     {
         title: "교향곡 제9번 '신세계로부터'", bwv: "Op. 95", composer: "A. DVOŘÁK", performer: "Musopen Symphony Orchestra", credit: "음원: Musopen · PD · Wikimedia Commons",
         labelBig: "DVOŘÁK", labelTitle: "교향곡 9번 e단조", labelArtist: "MUSOPEN SYMPHONY", jTitle: "NEW WORLD", jSub1: "드보르작 교향곡 9번", jSub2: "'From the New World' · Op. 95",
-        labelBg: "#d5ddd0", jacketBg: "#232f26", accent: "#3a6b4a", side: "A",
+        labelBg: "#d5ddd0", jacketBg: "#232f26", accent: "#3a6b4a", side: "A", cover: "9/94/Anton%C3%ADn_Dvo%C5%99%C3%A1k%2C_portrait.jpg",
         tracks: [
             { t: "I. Adagio – Allegro molto", f: "5/5c/Antonin_Dvorak_-_symphony_no._9_in_e_minor_%27from_the_new_world%27%2C_op._95_-_i._adagio_-_allegro_molto.ogg" },
             { t: "II. Largo", f: "c/c3/Antonin_Dvorak_-_symphony_no._9_in_e_minor_%27from_the_new_world%27%2C_op._95_-_ii._largo.ogg" },
@@ -1068,7 +1068,7 @@ const RECORDS = [
     {
         title: "아이네 클라이네 나흐트무지크", bwv: "K. 525", composer: "W. A. MOZART", performer: "Serenade Ensemble", credit: "음원: Musopen · PD · Wikimedia Commons",
         labelBig: "MOZART", labelTitle: "세레나데 13번 G장조", labelArtist: "SERENADE ENSEMBLE", jTitle: "K. 525", jSub1: "아이네 클라이네 나흐트무지크", jSub2: "Serenade No. 13 · G major",
-        labelBg: "#eadfc4", jacketBg: "#e9e0c8", accent: "#8a6a1f", side: "A",
+        labelBg: "#eadfc4", jacketBg: "#e9e0c8", accent: "#8a6a1f", side: "A", cover: "thumb/f/fc/Barbara_Krafft_-_Portr%C3%A4t_Wolfgang_Amadeus_Mozart_%281819%29.jpg/960px-Barbara_Krafft_-_Portr%C3%A4t_Wolfgang_Amadeus_Mozart_%281819%29.jpg",
         tracks: [
             { t: "I. Allegro", f: "6/68/Mozart_K525_Serenade_in_G_Major_1_-_Allegro.ogg" },
             { t: "II. Romanze", f: "b/be/Mozart_K525_Serenade_in_G_Major_2_-_Romance.ogg" },
@@ -1079,7 +1079,7 @@ const RECORDS = [
     {
         title: "교향곡 제35번 '하프너'", bwv: "K. 385", composer: "W. A. MOZART", performer: "European Archive", credit: "음원: European Archive · Musopen · PD · Wikimedia Commons",
         labelBig: "MOZART", labelTitle: "교향곡 35번 D장조", labelArtist: "EUROPEAN ARCHIVE", jTitle: "HAFFNER", jSub1: "모차르트 교향곡 35번 '하프너'", jSub2: "D major · K. 385",
-        labelBg: "#e6dcc0", jacketBg: "#2c2820", accent: "#8a6a2a", side: "A",
+        labelBg: "#e6dcc0", jacketBg: "#2c2820", accent: "#8a6a2a", side: "A", cover: "thumb/f/fc/Barbara_Krafft_-_Portr%C3%A4t_Wolfgang_Amadeus_Mozart_%281819%29.jpg/960px-Barbara_Krafft_-_Portr%C3%A4t_Wolfgang_Amadeus_Mozart_%281819%29.jpg",
         tracks: [
             { t: "I. Allegro con spirito", f: "7/78/Symphony_no._35_in_D_%27Haffner%27_K._385_I._Allegro_con_spirito_%28Mozart%29_European_Archive.ogg" },
             { t: "II. Andante", f: "a/a1/Symphony_no._35_in_D_%27Haffner%27_K._385_II._Andante_%28Mozart%29_European_Archive.ogg" },
@@ -1090,7 +1090,7 @@ const RECORDS = [
     {
         title: "교향곡 제4번 '이탈리아'", bwv: "Op. 90", composer: "F. MENDELSSOHN", performer: "Musopen Symphony Orchestra", credit: "음원: Musopen · PD · Wikimedia Commons",
         labelBig: "MENDELSSOHN", labelTitle: "교향곡 4번 A장조", labelArtist: "MUSOPEN SYMPHONY", jTitle: "ITALIAN", jSub1: "멘델스존 교향곡 4번 '이탈리아'", jSub2: "A major · Op. 90",
-        labelBg: "#e6dcc2", jacketBg: "#2e2820", accent: "#b07a1f", side: "A",
+        labelBg: "#e6dcc2", jacketBg: "#2e2820", accent: "#b07a1f", side: "A", cover: "thumb/c/c2/Felix_Mendelssohn_Bartholdy_by_Eduard_Magnus_%281833%29.jpg/960px-Felix_Mendelssohn_Bartholdy_by_Eduard_Magnus_%281833%29.jpg",
         tracks: [
             { t: "I. Allegro vivace", f: "6/67/Mendelssohn%2C_Symphony_No._4_in_A_Major%2C_Op._90_%27Italian%27_-_I._Allegro_vivace.ogg" },
             { t: "II. Andante con moto", f: "9/9f/Mendelssohn%2C_Symphony_No._4_in_A_Major%2C_Op._90_%27Italian%27_-_II._Andante_con_moto.ogg" },
@@ -1101,7 +1101,7 @@ const RECORDS = [
     {
         title: "피아노 협주곡 a단조", bwv: "Op. 16", composer: "E. GRIEG", performer: "Musopen Orchestra", credit: "음원: Musopen · PD · Wikimedia Commons",
         labelBig: "GRIEG", labelTitle: "피아노 협주곡 a단조", labelArtist: "MUSOPEN ORCHESTRA", jTitle: "CONCERTO", jSub1: "그리그 피아노 협주곡", jSub2: "A minor · Op. 16",
-        labelBg: "#cfdae0", jacketBg: "#1f2a30", accent: "#2f6a8a", side: "A",
+        labelBg: "#cfdae0", jacketBg: "#1f2a30", accent: "#2f6a8a", side: "A", cover: "thumb/a/ad/Hans_Heyerdahl_-_Portrett_av_Edvard_Grieg_-_Oslo_Museum_-_OB.00036.jpg/960px-Hans_Heyerdahl_-_Portrett_av_Edvard_Grieg_-_Oslo_Museum_-_OB.00036.jpg",
         tracks: [
             { t: "I. Allegro molto moderato", f: "9/9a/Edvard_Grieg_-_piano_concerto_in_a_minor%2C_op._16_-_i._allegro_molto_moderato.ogg" },
             { t: "II. Adagio", f: "9/9d/Edvard_Grieg_-_piano_concerto_in_a_minor%2C_op._16_-_ii._adagio.ogg" },
@@ -1111,7 +1111,7 @@ const RECORDS = [
     {
         title: "방랑자 환상곡", bwv: "D. 760", composer: "F. SCHUBERT", performer: "Piano solo", credit: "음원: Musopen · PD · Wikimedia Commons",
         labelBig: "SCHUBERT", labelTitle: "환상곡 C장조 '방랑자'", labelArtist: "PIANO SOLO", jTitle: "WANDERER", jSub1: "슈베르트 방랑자 환상곡", jSub2: "C major · Op. 15 · D. 760",
-        labelBg: "#e0d2d4", jacketBg: "#2c2226", accent: "#8a3a5a", side: "A",
+        labelBg: "#e0d2d4", jacketBg: "#2c2226", accent: "#8a3a5a", side: "A", cover: "f/fb/Franz_Schubert_by_Wilhelm_August_Rieder.jpeg",
         tracks: [
             { t: "I. Allegro con fuoco", f: "4/41/Franz_Schubert_-_fantasy_in_c_major_op.15_d.760_%27wanderer%27_-_i._allegro_con_fuoco.ogg" },
             { t: "II. Adagio", f: "1/1f/Franz_Schubert_-_fantasy_in_c_major_op.15_d.760_%27wanderer%27_-_ii._adagio.ogg" },
@@ -1122,7 +1122,7 @@ const RECORDS = [
     {
         title: "어린이 정경", bwv: "Op. 15", composer: "R. SCHUMANN", performer: "Piano solo", credit: "음원: Musopen · PD · Wikimedia Commons",
         labelBig: "SCHUMANN", labelTitle: "어린이 정경", labelArtist: "PIANO SOLO", jTitle: "KINDERSZENEN", jSub1: "슈만 어린이 정경", jSub2: "Scenes from Childhood · Op. 15",
-        labelBg: "#e2d8cc", jacketBg: "#2a241e", accent: "#7a5236", side: "A",
+        labelBg: "#e2d8cc", jacketBg: "#2a241e", accent: "#7a5236", side: "A", cover: "7/78/Schumann-photo1850.jpg",
         tracks: [
             { t: "1. 낯선 나라와 사람들", f: "c/ce/Robert_Schumann_-_scenes_from_childhood%2C_op._15_-_i._of_foreign_lands_and_peoples.ogg" },
             { t: "2. 이상한 이야기", f: "2/2d/Robert_Schumann_-_scenes_from_childhood%2C_op._15_-_ii._a_curious_story.ogg" },
@@ -1142,7 +1142,7 @@ const RECORDS = [
     {
         title: "발라드 전곡", bwv: "Op. 23·38·47·52", composer: "F. CHOPIN", performer: "Piano solo", credit: "음원: Musopen · PD · Wikimedia Commons",
         labelBig: "CHOPIN", labelTitle: "4개의 발라드", labelArtist: "PIANO SOLO", jTitle: "BALLADES", jSub1: "쇼팽 발라드 전곡", jSub2: "Four Ballades",
-        labelBg: "#ddd0d4", jacketBg: "#241c20", accent: "#7a2a4a", side: "A",
+        labelBg: "#ddd0d4", jacketBg: "#241c20", accent: "#7a2a4a", side: "A", cover: "thumb/2/24/Fr%C3%A9d%C3%A9ric_Chopin_-_Eug%C3%A8ne_Delacroix_-_Mus%C3%A9e_du_Louvre_Peintures_RF_1717.jpg/960px-Fr%C3%A9d%C3%A9ric_Chopin_-_Eug%C3%A8ne_Delacroix_-_Mus%C3%A9e_du_Louvre_Peintures_RF_1717.jpg",
         tracks: [
             { t: "No. 1 in G minor, Op. 23", f: "3/33/Frederic_Chopin_-_ballade_no._1_in_g_minor%2C_op._23.ogg" },
             { t: "No. 2 in F major, Op. 38", f: "c/cf/Frederic_Chopin_-_ballade_no._2_in_f_major%2C_op._38.ogg" },
@@ -1153,7 +1153,7 @@ const RECORDS = [
     {
         title: "스케르초 전곡", bwv: "Op. 20·31·39·54", composer: "F. CHOPIN", performer: "Alice Gi-Young Hwang, piano", credit: "음원: Alice Gi-Young Hwang · Musopen · CC · Wikimedia Commons",
         labelBig: "CHOPIN", labelTitle: "4개의 스케르초", labelArtist: "ALICE GI-YOUNG HWANG", jTitle: "SCHERZI", jSub1: "쇼팽 스케르초 전곡", jSub2: "Four Scherzi",
-        labelBg: "#d4d0dd", jacketBg: "#1e1c26", accent: "#4a3a7a", side: "A",
+        labelBg: "#d4d0dd", jacketBg: "#1e1c26", accent: "#4a3a7a", side: "A", cover: "thumb/2/24/Fr%C3%A9d%C3%A9ric_Chopin_-_Eug%C3%A8ne_Delacroix_-_Mus%C3%A9e_du_Louvre_Peintures_RF_1717.jpg/960px-Fr%C3%A9d%C3%A9ric_Chopin_-_Eug%C3%A8ne_Delacroix_-_Mus%C3%A9e_du_Louvre_Peintures_RF_1717.jpg",
         tracks: [
             { t: "No. 1 in B minor, Op. 20", f: "f/f3/Chopin_Scherzo_no._1_in_B_minor%2C_Op._20%2C_Alice_Gi-Young_Hwang.ogg" },
             { t: "No. 2 in B-flat minor, Op. 31", f: "4/45/Chopin_Scherzo_no._2_in_B_flat_minor%2C_Op._31%2C_Alice_Gi-Young_Hwang.ogg" },
@@ -1164,7 +1164,7 @@ const RECORDS = [
     {
         title: "피아노 소나타 제2번 '장송'", bwv: "Op. 35", composer: "F. CHOPIN", performer: "Piano solo", credit: "음원: Musopen · PD · Wikimedia Commons",
         labelBig: "CHOPIN", labelTitle: "소나타 2번 b♭단조", labelArtist: "PIANO SOLO", jTitle: "Op. 35", jSub1: "쇼팽 피아노 소나타 2번", jSub2: "'Funeral March' · B-flat minor",
-        labelBg: "#d2ccce", jacketBg: "#1c1a1c", accent: "#5a2a3a", side: "A",
+        labelBg: "#d2ccce", jacketBg: "#1c1a1c", accent: "#5a2a3a", side: "A", cover: "thumb/2/24/Fr%C3%A9d%C3%A9ric_Chopin_-_Eug%C3%A8ne_Delacroix_-_Mus%C3%A9e_du_Louvre_Peintures_RF_1717.jpg/960px-Fr%C3%A9d%C3%A9ric_Chopin_-_Eug%C3%A8ne_Delacroix_-_Mus%C3%A9e_du_Louvre_Peintures_RF_1717.jpg",
         tracks: [
             { t: "I. Grave – Doppio movimento", f: "3/39/Frederic_Chopin_Piano_Sonata_No.2_in_B_flat_minor_Op35_-_I_Grave_Doppio_Movimento.ogg" },
             { t: "II. Scherzo", f: "f/f7/Frederic_Chopin_Piano_Sonata_No.2_in_B_flat_minor_Op35_-_II_Scherzo.ogg" },
@@ -1175,7 +1175,7 @@ const RECORDS = [
     {
         title: "녹턴집", bwv: "Op. 9·15·48·55·72", composer: "F. CHOPIN", performer: "Piano solo", credit: "음원: Musopen · PD/CC · Wikimedia Commons",
         labelBig: "CHOPIN", labelTitle: "녹턴 선집", labelArtist: "PIANO SOLO", jTitle: "NOCTURNES", jSub1: "쇼팽 녹턴집", jSub2: "Selected Nocturnes",
-        labelBg: "#cdd0d8", jacketBg: "#161822", accent: "#3a4a6a", side: "A",
+        labelBg: "#cdd0d8", jacketBg: "#161822", accent: "#3a4a6a", side: "A", cover: "thumb/2/24/Fr%C3%A9d%C3%A9ric_Chopin_-_Eug%C3%A8ne_Delacroix_-_Mus%C3%A9e_du_Louvre_Peintures_RF_1717.jpg/960px-Fr%C3%A9d%C3%A9ric_Chopin_-_Eug%C3%A8ne_Delacroix_-_Mus%C3%A9e_du_Louvre_Peintures_RF_1717.jpg",
         tracks: [
             { t: "Op. 9 No. 1 in B-flat minor", f: "b/bf/Chopin%2C_Nocturne_No._1_in_B_Flat_Minor%2C_Op._9.ogg" },
             { t: "Op. 9 No. 2 in E-flat major", f: "0/04/Chopin_Nocturne_No._2_in_E_Flat_Major%2C_Op._9.ogg" },
@@ -1191,7 +1191,7 @@ const RECORDS = [
     {
         title: "현악 4중주 '종달새'", bwv: "Op. 64-5", composer: "J. HAYDN", performer: "String Quartet", credit: "음원: Musopen · PD · Wikimedia Commons",
         labelBig: "HAYDN", labelTitle: "현악 4중주 D장조", labelArtist: "STRING QUARTET", jTitle: "THE LARK", jSub1: "하이든 현악 4중주 '종달새'", jSub2: "D major · Op. 64 No. 5",
-        labelBg: "#dce0d2", jacketBg: "#282e22", accent: "#5a6a2a", side: "A",
+        labelBg: "#dce0d2", jacketBg: "#282e22", accent: "#5a6a2a", side: "A", cover: "e/e5/Joseph_Haydn%2C_portrait_by_Thomas_Hardy.jpg",
         tracks: [
             { t: "I. Allegro moderato", f: "1/11/Haydn_StringQuartetInDMajorOp.64_JosephHaydn-StringQuartetInDOp.645H363Lark-01-AllegroModerato.ogg" },
             { t: "II. Adagio cantabile", f: "f/f0/Haydn_StringQuartetInDMajorOp.64_JosephHaydn-StringQuartetInDOp.645H363Lark-02-AdagioCantabile.ogg" },
@@ -1202,7 +1202,7 @@ const RECORDS = [
     {
         title: "비엔나 왈츠집", bwv: "Waltzes", composer: "J. STRAUSS II", performer: "Orchestra", credit: "음원: Musopen · PD · Wikimedia Commons",
         labelBig: "J. STRAUSS", labelTitle: "비엔나 왈츠집", labelArtist: "ORCHESTRA", jTitle: "WIENER WALZER", jSub1: "요한 슈트라우스 2세", jSub2: "Viennese Waltzes",
-        labelBg: "#eaddc2", jacketBg: "#2e2618", accent: "#b0862a", side: "A",
+        labelBg: "#eaddc2", jacketBg: "#2e2618", accent: "#b0862a", side: "A", cover: "thumb/6/67/Johann_Strauss_II_by_Fritz_Luckhardt.jpg/960px-Johann_Strauss_II_by_Fritz_Luckhardt.jpg",
         tracks: [
             { t: "아름답고 푸른 도나우", f: "9/91/Strauss%2C_An_der_sch%C3%B6nen_blauen_Donau.ogg" },
             { t: "황제 왈츠", f: "a/a6/Strauss%2C_Kaiserwalzer.ogg" },
@@ -1215,7 +1215,7 @@ const RECORDS = [
     {
         title: "첼로 소품집", bwv: "Cello Encores", composer: "CELLO RECITAL", performer: "John Michel, violoncello", credit: "음원: John Michel · CC BY-SA 3.0 · Wikimedia Commons",
         labelBig: "ENCORES", labelTitle: "첼로 앙코르 소품집", labelArtist: "JOHN MICHEL, CELLO", jTitle: "CELLO", jSub1: "존 미셸 첼로 소품집", jSub2: "Encores & Miniatures",
-        labelBg: "#d8c8b0", jacketBg: "#2a2018", accent: "#7a4a24", side: "A",
+        labelBg: "#d8c8b0", jacketBg: "#2a2018", accent: "#7a4a24", side: "A", cover: "thumb/4/4b/Violoncello_MET_DT7705.jpg/960px-Violoncello_MET_DT7705.jpg",
         tracks: [
             { t: "Saint-Saëns · 백조", f: "d/db/JOHN_MICHEL_CELLO-SAINT_SAENS_CARNIVAL_OF_ANIMALS_THE_SWAN.ogg" },
             { t: "Bach · 아베 마리아", f: "d/d4/JOHN_MICHEL_CELLO-BACH_AVE_MARIA.ogg" },
@@ -1276,6 +1276,24 @@ function mountTurntable() {
     // 트랙 수에 따라 행 간격을 조인다 (최대 13트랙 — 슈만 어린이 정경까지 수용)
     const nTracks = RECORD.tracks.length;
     const jc = jacketInk(RECORD.jacketBg);
+    // 라벨 인쇄 — 실물 LP처럼 스핀들 홀 아래에 곡 리스트를 인쇄한다.
+    // 8곡까지는 한 컬럼, 그 이상은 두 컬럼. 원 밖으로 나가는 긴 제목은 ttLabelClip이 자른다.
+    const labelTracks = (() => {
+        if (nTracks <= 8) {
+            const f = nTracks <= 4 ? 8.5 : nTracks <= 6 ? 7.5 : 6.8;
+            const step = nTracks <= 4 ? 13.5 : nTracks <= 6 ? 11 : 9.2;
+            return RECORD.tracks.map((tr, i) =>
+                '<text x="560" y="' + (344 + i * step) + '" font-family="Arial" font-size="' + f + '" fill="#3a2b1e" text-anchor="middle">' + (i + 1) + '. ' + tr.t + '</text>'
+            ).join("");
+        }
+        const rowsN = Math.ceil(nTracks / 2);
+        const step = rowsN > 6 ? 8.6 : 9.5;
+        return RECORD.tracks.map((tr, i) => {
+            const x = i < rowsN ? 516 : 604;
+            const row = i < rowsN ? i : i - rowsN;
+            return '<text x="' + x + '" y="' + (342 + row * step) + '" font-family="Arial" font-size="5.8" fill="#3a2b1e" text-anchor="middle">' + (i + 1) + '. ' + tr.t + '</text>';
+        }).join("");
+    })();
     const rowStep = nTracks > 12 ? 34 : nTracks > 8 ? 38 : nTracks > 6 ? 42 : 50;
     const rowFont = nTracks > 12 ? 13 : nTracks > 8 ? 14 : nTracks > 6 ? 15 : 17;
     const rows = RECORD.tracks.map((tr, i) => {
@@ -1292,6 +1310,9 @@ function mountTurntable() {
         '<radialGradient id="ttVinyl" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#1c1c1f"/><stop offset="0.35" stop-color="#141416"/><stop offset="0.85" stop-color="#0d0d0f"/><stop offset="1" stop-color="#131316"/></radialGradient>' +
         '<linearGradient id="ttSheen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity="0.14"/><stop offset="0.5" stop-color="#ffffff" stop-opacity="0"/></linearGradient>' +
         '<radialGradient id="ttMetal" cx="0.4" cy="0.35" r="0.9"><stop offset="0" stop-color="#d8d8dc"/><stop offset="0.6" stop-color="#9a9aa2"/><stop offset="1" stop-color="#5c5c64"/></radialGradient>' +
+        '<clipPath id="ttLabelClip"><circle cx="560" cy="330" r="83"/></clipPath>' +
+        '<path id="ttLabelArc" d="M 488 330 A 72 72 0 0 1 632 330" fill="none"/>' +
+        '<clipPath id="ttJacketClip"><rect x="1180" y="60" width="380" height="380" rx="4"/></clipPath>' +
         '</defs>' +
         '<rect width="2000" height="640" rx="10" fill="url(#ttWood)"/>' +
         '<rect x="24" y="24" width="1952" height="592" rx="8" fill="#17161a" stroke="#0a0a0c" stroke-width="2"/>' +
@@ -1309,11 +1330,14 @@ function mountTurntable() {
         '<path d="M 560 330 L 560 582 A 252 252 0 0 1 382 504 Z" fill="url(#ttSheen)" opacity="0.6"/>' +
         '<circle cx="560" cy="330" r="86" fill="' + RECORD.labelBg + '"/>' +
         '<circle cx="560" cy="330" r="86" fill="none" stroke="' + RECORD.accent + '" stroke-width="3"/>' +
-        '<text x="560" y="290" font-family="Georgia, serif" font-size="26" font-weight="700" fill="' + RECORD.accent + '" text-anchor="middle">' + RECORD.labelBig + '</text>' +
-        '<text x="560" y="314" font-family="Arial" font-size="11" fill="#3a2b1e" text-anchor="middle">' + RECORD.labelTitle + '</text>' +
-        '<text x="560" y="332" font-family="Arial" font-size="10" fill="#3a2b1e" text-anchor="middle">' + RECORD.bwv + ' · SIDE ' + (RECORD.side || 'A') + '</text>' +
-        '<text x="560" y="360" font-family="Arial" font-size="9" fill="#6b5d4a" text-anchor="middle">' + RECORD.labelArtist + '</text>' +
-        '<text x="560" y="380" font-family="Arial" font-size="9" letter-spacing="1" fill="' + RECORD.accent + '" text-anchor="middle">YAHAMA RECORDS · 33&#8531;</text>' +
+        '<circle cx="560" cy="330" r="79" fill="none" stroke="' + RECORD.accent + '" stroke-width="0.6" opacity="0.5"/>' +
+        // 브랜드는 실물처럼 라벨 상단 원호를 따라 인쇄한다
+        '<text font-family="Arial" font-size="7" letter-spacing="1.5" fill="' + RECORD.accent + '"><textPath href="#ttLabelArc" startOffset="50%" text-anchor="middle">YAHAMA RECORDS · STEREO · 33&#8531; RPM</textPath></text>' +
+        '<text x="560" y="281" font-family="Georgia, serif" font-size="' + (RECORD.labelBig.length > 9 ? 14 : RECORD.labelBig.length > 6 ? 17 : 20) + '" font-weight="700" fill="' + RECORD.accent + '" text-anchor="middle">' + RECORD.labelBig + '</text>' +
+        '<text x="560" y="295" font-family="Arial" font-size="9.5" fill="#3a2b1e" text-anchor="middle">' + RECORD.labelTitle + '</text>' +
+        '<text x="560" y="307" font-family="Arial" font-size="7.5" fill="#6b5d4a" text-anchor="middle">' + RECORD.labelArtist + '</text>' +
+        '<text x="560" y="319" font-family="Arial" font-size="7.5" font-weight="700" fill="' + RECORD.accent + '" text-anchor="middle">' + RECORD.bwv + ' · SIDE ' + (RECORD.side || 'A') + '</text>' +
+        '<g clip-path="url(#ttLabelClip)">' + labelTracks + '</g>' +
         '<circle cx="560" cy="330" r="7" fill="#c9c2ae" stroke="#55504a"/><circle cx="560" cy="330" r="2.5" fill="#111"/>' +
         '</g>' +
         // 톤암
@@ -1331,15 +1355,24 @@ function mountTurntable() {
         '<circle cx="1065" cy="120" r="8" fill="#0d0d10"/>' +
         // 앨범 재킷 — 좌우 화살표로 라이브러리의 다른 음반으로 교체한다
         '<rect x="1188" y="70" width="380" height="380" rx="4" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/>' +
-        '<rect x="1180" y="60" width="380" height="380" rx="4" fill="' + RECORD.jacketBg + '" stroke="' + jc.frame + '" stroke-width="2"/>' +
-        '<rect x="1196" y="76" width="348" height="348" fill="none" stroke="' + jc.inner + '" stroke-width="1" opacity="0.6"/>' +
-        '<text x="1370" y="170" font-family="Georgia, serif" font-size="' + (RECORD.jTitle.length > 16 ? 24 : RECORD.jTitle.length > 11 ? 30 : RECORD.jTitle.length > 6 ? 44 : 64) + '" font-weight="700" fill="' + jc.title + '" text-anchor="middle">' + RECORD.jTitle + '</text>' +
-        '<text x="1370" y="212" font-family="Arial" font-size="20" fill="' + jc.sub + '" text-anchor="middle">' + RECORD.jSub1 + '</text>' +
-        '<text x="1370" y="240" font-family="Arial" font-size="15" fill="' + jc.sub + '" text-anchor="middle">' + RECORD.jSub2 + '</text>' +
-        '<line x1="1260" y1="266" x2="1480" y2="266" stroke="' + jc.line + '" stroke-width="1"/>' +
-        '<text x="1370" y="296" font-family="Georgia, serif" font-style="italic" font-size="16" fill="' + jc.perf + '" text-anchor="middle">' + RECORD.performer + '</text>' +
-        '<rect x="1196" y="380" width="348" height="44" fill="' + RECORD.accent + '"/>' +
-        '<text x="1370" y="408" font-family="Arial" font-size="13" letter-spacing="2" fill="#f0e8d0" text-anchor="middle">YAHAMA RECORDS &#183; STEREO</text>' +
+        '<rect x="1180" y="60" width="380" height="380" rx="4" fill="' + RECORD.jacketBg + '"/>' +
+        (RECORD.cover
+            // 실제 이미지 재킷 — 위 3/4는 커버(초상·실물 커버), 아래 밴드에 인쇄 정보
+            ? '<image x="1180" y="60" width="380" height="296" href="' + PHONO_BASE + RECORD.cover + '" preserveAspectRatio="xMidYMin slice" clip-path="url(#ttJacketClip)"/>' +
+              '<rect x="1180" y="356" width="380" height="3" fill="' + RECORD.accent + '"/>' +
+              '<text x="1370" y="385" font-family="Georgia, serif" font-size="' + (RECORD.jTitle.length > 16 ? 15 : RECORD.jTitle.length > 11 ? 18 : 21) + '" font-weight="700" fill="' + jc.title + '" text-anchor="middle">' + RECORD.jTitle + '</text>' +
+              '<text x="1370" y="404" font-family="Arial" font-size="10.5" fill="' + jc.sub + '" text-anchor="middle">' + RECORD.jSub1 + ' · ' + RECORD.jSub2 + '</text>' +
+              '<text x="1370" y="423" font-family="Georgia, serif" font-style="italic" font-size="10.5" fill="' + jc.perf + '" text-anchor="middle">' + RECORD.performer + '</text>'
+            // 커버가 없는 음반 — 활자 중심의 인쇄 재킷
+            : '<rect x="1196" y="76" width="348" height="348" fill="none" stroke="' + jc.inner + '" stroke-width="1" opacity="0.6"/>' +
+              '<text x="1370" y="170" font-family="Georgia, serif" font-size="' + (RECORD.jTitle.length > 16 ? 24 : RECORD.jTitle.length > 11 ? 30 : RECORD.jTitle.length > 6 ? 44 : 64) + '" font-weight="700" fill="' + jc.title + '" text-anchor="middle">' + RECORD.jTitle + '</text>' +
+              '<text x="1370" y="212" font-family="Arial" font-size="20" fill="' + jc.sub + '" text-anchor="middle">' + RECORD.jSub1 + '</text>' +
+              '<text x="1370" y="240" font-family="Arial" font-size="15" fill="' + jc.sub + '" text-anchor="middle">' + RECORD.jSub2 + '</text>' +
+              '<line x1="1260" y1="266" x2="1480" y2="266" stroke="' + jc.line + '" stroke-width="1"/>' +
+              '<text x="1370" y="296" font-family="Georgia, serif" font-style="italic" font-size="16" fill="' + jc.perf + '" text-anchor="middle">' + RECORD.performer + '</text>' +
+              '<rect x="1196" y="380" width="348" height="44" fill="' + RECORD.accent + '"/>' +
+              '<text x="1370" y="408" font-family="Arial" font-size="13" letter-spacing="2" fill="#f0e8d0" text-anchor="middle">YAHAMA RECORDS &#183; STEREO</text>') +
+        '<rect x="1180" y="60" width="380" height="380" rx="4" fill="none" stroke="' + jc.frame + '" stroke-width="2"/>' +
         '<circle id="ttPrevRec" cx="1150" cy="250" r="24" fill="#26262b" stroke="#4a4a52" stroke-width="2" style="cursor:pointer"><title>이전 음반</title></circle>' +
         '<text x="1150" y="259" font-family="Georgia, serif" font-size="26" fill="#d9cfc0" text-anchor="middle" pointer-events="none">&#8249;</text>' +
         '<circle id="ttNextRec" cx="1590" cy="250" r="24" fill="#26262b" stroke="#4a4a52" stroke-width="2" style="cursor:pointer"><title>다음 음반</title></circle>' +
@@ -1670,11 +1703,17 @@ function jacketCard(rec, idx) {
     btn.type = "button";
     btn.className = "crate-jacket" + (idx === recordIdx ? " is-current" : "");
     btn.style.background = rec.jacketBg;
+    if (rec.cover) {
+        // 커버 이미지 위에 하단으로 갈수록 재킷 색으로 가라앉는 그라데이션 — 인쇄 정보가 읽히도록
+        btn.classList.add("has-cover");
+        btn.style.background = "linear-gradient(to bottom, rgba(0,0,0,0) 40%, " + rec.jacketBg + " 66%), url('" + PHONO_BASE + rec.cover + "') center 12%/cover no-repeat " + rec.jacketBg;
+    }
     btn.setAttribute("role", "listitem");
     btn.setAttribute("aria-label", rec.title + " · " + rec.performer);
+    const badgeInk = rec.cover ? "#f0e8d0" : jc.sub;  // 배지가 이미지 위에 놓이므로 밝은 잉크 + CSS 배경띠
     const parts = [
-        ["cj-num", jc.sub, String(idx + 1)],
-        ["cj-side", jc.sub, "SIDE " + (rec.side || "A")],
+        ["cj-num", badgeInk, String(idx + 1)],
+        ["cj-side", badgeInk, "SIDE " + (rec.side || "A")],
         ["cj-title", jc.title, rec.jTitle],
         ["cj-sub", jc.sub, rec.jSub1],
         ["cj-perf", jc.perf, rec.performer]
