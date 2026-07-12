@@ -1160,3 +1160,29 @@ body.mode-simple #stationMain.collapsed {
 .ampLegend {
     filter: drop-shadow(0 0 3px rgba(63, 227, 115, 0.55));
 }
+
+/* 돌출 부품의 캐스트 섀도 — 조작부는 패널 표면에서 떠 있다 (광원 좌상단) */
+[id^="tsSw"] {
+    filter: drop-shadow(1.5px 2.5px 1.5px rgba(0, 0, 0, 0.5));
+}
+
+#deckBtnPlay,
+#deckBtnStop,
+#deckBtnRew,
+#deckBtnFf,
+#deckBtnRec,
+#deckBtnEject {
+    filter: drop-shadow(2px 3px 2px rgba(0, 0, 0, 0.45));
+}
+
+#ttStartBtn,
+#tt33,
+#tt45,
+#ttPrevRec,
+#ttNextRec {
+    filter: drop-shadow(2px 3.5px 2px rgba(0, 0, 0, 0.5));
+}
+
+#eqDefeatBtn {
+    filter: drop-shadow(1.5px 2.5px 2px rgba(0, 0, 0, 0.5));
+}

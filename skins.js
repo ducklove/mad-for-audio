@@ -48,6 +48,7 @@ const LZ_DEFS = '<defs>' +
     '<radialGradient id="lzLampPool" cx="0.5" cy="0" r="1"><stop offset="0" stop-color="#fff8e2" stop-opacity="0.8"/><stop offset="0.4" stop-color="#ffedbb" stop-opacity="0.3"/><stop offset="1" stop-color="#ffedbb" stop-opacity="0"/></radialGradient>' +
     '<radialGradient id="lzFilHot" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff8e6" stop-opacity="0.95"/><stop offset="0.28" stop-color="#ffd98e" stop-opacity="0.85"/><stop offset="0.6" stop-color="#ff9a3a" stop-opacity="0.4"/><stop offset="1" stop-color="#ff9a3a" stop-opacity="0"/></radialGradient>' +
     '<radialGradient id="lzDeckPool" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffb45a" stop-opacity="0.5"/><stop offset="0.6" stop-color="#ff9a3a" stop-opacity="0.2"/><stop offset="1" stop-color="#ff9a3a" stop-opacity="0"/></radialGradient>' +
+    '<filter id="lzSoft" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="4.5"/></filter>' +
     '</defs>';
 
 function applyPanelLighting(svg) {
@@ -138,12 +139,12 @@ const TUNER_SKINS = {
             <rect id="tsPwrTop" x="140" y="172" width="24" height="15" rx="2" fill="#1c1a20"/>
             <rect id="tsPwrBot" x="140" y="190" width="24" height="15" rx="2" fill="#54525a"/>
             <g>
-                <rect x="252" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwRec" x="262" y="171" width="20" height="18" rx="3" fill="#57555d"/>
-                <rect x="346" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwBlend" x="356" y="171" width="20" height="18" rx="3" fill="#57555d"/>
-                <rect x="436" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwMode" x="446" y="171" width="20" height="18" rx="3" fill="#57555d"/>
-                <rect x="528" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwMute" x="538" y="171" width="20" height="18" rx="3" fill="#57555d"/>
-                <rect x="616" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwIf" x="626" y="171" width="20" height="18" rx="3" fill="#57555d"/>
-                <rect x="702" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwRf" x="712" y="171" width="20" height="18" rx="3" fill="#57555d"/>
+                <rect x="254" y="172" width="40" height="42" rx="4" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><rect x="252" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwRec" x="262" y="171" width="20" height="18" rx="3" fill="#57555d"/>
+                <rect x="348" y="172" width="40" height="42" rx="4" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><rect x="346" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwBlend" x="356" y="171" width="20" height="18" rx="3" fill="#57555d"/>
+                <rect x="438" y="172" width="40" height="42" rx="4" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><rect x="436" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwMode" x="446" y="171" width="20" height="18" rx="3" fill="#57555d"/>
+                <rect x="530" y="172" width="40" height="42" rx="4" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><rect x="528" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwMute" x="538" y="171" width="20" height="18" rx="3" fill="#57555d"/>
+                <rect x="618" y="172" width="40" height="42" rx="4" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><rect x="616" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwIf" x="626" y="171" width="20" height="18" rx="3" fill="#57555d"/>
+                <rect x="704" y="172" width="40" height="42" rx="4" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><rect x="702" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwRf" x="712" y="171" width="20" height="18" rx="3" fill="#57555d"/>
             </g>
             <g font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="600" letter-spacing="1.5" fill="#c3c1c8" text-anchor="middle">
                 <text x="1030" y="150">SIGNAL QUALITY</text><text x="1290" y="150">TUNING</text><text x="1520" y="150">STATION</text>
@@ -191,7 +192,7 @@ const TUNER_SKINS = {
             <rect x="1424" y="204" width="196" height="8" fill="url(#lzInBot)" opacity="0.55"/>
             <rect x="1422" y="159" width="200" height="3" fill="#04050a" opacity="0.55"/>
             <rect x="1422" y="213" width="200" height="2.5" fill="#ffffff" opacity="0.09"/>
-            <ellipse cx="1852" cy="140" rx="112" ry="110" fill="#1c1b20"/>
+            <ellipse cx="1863" cy="156" rx="113" ry="110" fill="#000000" opacity="0.45" filter="url(#lzSoft)"/><ellipse cx="1852" cy="140" rx="112" ry="110" fill="#1c1b20"/>
             <g id="tsKnob">
                 <ellipse cx="1852" cy="138" rx="110" ry="108" fill="url(#tnKnobRim)"/>
                 <ellipse cx="1852" cy="138" rx="98" ry="97" fill="url(#tnKnobFace)"/>
@@ -299,7 +300,7 @@ const TUNER_SKINS = {
             <!-- 튜닝 노브 (우상단, 다이얼 높이) -->
             <circle cx="1755" cy="215" r="134" fill="#050507"/>
             <g id="tsKnob">
-                <circle cx="1755" cy="215" r="130" fill="url(#mrKnob)" stroke="#c8c8ce" stroke-width="3"/>
+                <circle cx="1768.0" cy="238.4" r="132.6" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><circle cx="1755" cy="215" r="130" fill="url(#mrKnob)" stroke="#c8c8ce" stroke-width="3"/><path d="M 1661.4 150.0 A 114.4 114.4 0 0 1 1770.6 103.2" stroke="#ffffff" stroke-width="7.8" opacity="0.3" fill="none" stroke-linecap="round" pointer-events="none"/>
                 <circle cx="1755" cy="215" r="112" fill="none" stroke="#3a3a42" stroke-width="1.5"/>
                 <circle cx="1755" cy="123" r="8" fill="#4a4a52"/>
             </g>
@@ -312,12 +313,12 @@ const TUNER_SKINS = {
                 <text x="380" y="480">REC</text><text x="620" y="480">TIMER</text><text x="860" y="480">HI BLEND</text><text x="1100" y="480">MUTE</text><text x="1340" y="480">STEREO/MONO</text><text x="1580" y="480">LIST</text>
             </g>
             <g>
-                <circle cx="380" cy="533" r="40" fill="url(#mrKnob)" stroke="#9a9aa2" stroke-width="2"/><rect id="tsSwRec" x="378" y="497" width="4" height="18" rx="2" fill="#d8d8dc"/>
-                <circle cx="620" cy="533" r="40" fill="url(#mrKnob)" stroke="#9a9aa2" stroke-width="2"/><rect id="tsSwIf" x="618" y="497" width="4" height="18" rx="2" fill="#d8d8dc"/>
-                <circle cx="860" cy="533" r="40" fill="url(#mrKnob)" stroke="#9a9aa2" stroke-width="2"/><rect id="tsSwBlend" x="858" y="497" width="4" height="18" rx="2" fill="#d8d8dc"/>
-                <circle cx="1100" cy="533" r="40" fill="url(#mrKnob)" stroke="#9a9aa2" stroke-width="2"/><rect id="tsSwMute" x="1098" y="497" width="4" height="18" rx="2" fill="#d8d8dc"/>
-                <circle cx="1340" cy="533" r="40" fill="url(#mrKnob)" stroke="#9a9aa2" stroke-width="2"/><rect id="tsSwMode" x="1338" y="497" width="4" height="18" rx="2" fill="#d8d8dc"/>
-                <circle cx="1580" cy="533" r="40" fill="url(#mrKnob)" stroke="#9a9aa2" stroke-width="2"/><rect id="tsSwRf" x="1578" y="497" width="4" height="18" rx="2" fill="#d8d8dc"/>
+                <circle cx="384.0" cy="540.2" r="40.8" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><circle cx="380" cy="533" r="40" fill="url(#mrKnob)" stroke="#9a9aa2" stroke-width="2"/><path d="M 351.2 513.0 A 35.2 35.2 0 0 1 384.8 498.6" stroke="#ffffff" stroke-width="2.4" opacity="0.3" fill="none" stroke-linecap="round" pointer-events="none"/><rect id="tsSwRec" x="378" y="497" width="4" height="18" rx="2" fill="#d8d8dc"/>
+                <circle cx="624.0" cy="540.2" r="40.8" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><circle cx="620" cy="533" r="40" fill="url(#mrKnob)" stroke="#9a9aa2" stroke-width="2"/><path d="M 591.2 513.0 A 35.2 35.2 0 0 1 624.8 498.6" stroke="#ffffff" stroke-width="2.4" opacity="0.3" fill="none" stroke-linecap="round" pointer-events="none"/><rect id="tsSwIf" x="618" y="497" width="4" height="18" rx="2" fill="#d8d8dc"/>
+                <circle cx="864.0" cy="540.2" r="40.8" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><circle cx="860" cy="533" r="40" fill="url(#mrKnob)" stroke="#9a9aa2" stroke-width="2"/><path d="M 831.2 513.0 A 35.2 35.2 0 0 1 864.8 498.6" stroke="#ffffff" stroke-width="2.4" opacity="0.3" fill="none" stroke-linecap="round" pointer-events="none"/><rect id="tsSwBlend" x="858" y="497" width="4" height="18" rx="2" fill="#d8d8dc"/>
+                <circle cx="1104.0" cy="540.2" r="40.8" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><circle cx="1100" cy="533" r="40" fill="url(#mrKnob)" stroke="#9a9aa2" stroke-width="2"/><path d="M 1071.2 513.0 A 35.2 35.2 0 0 1 1104.8 498.6" stroke="#ffffff" stroke-width="2.4" opacity="0.3" fill="none" stroke-linecap="round" pointer-events="none"/><rect id="tsSwMute" x="1098" y="497" width="4" height="18" rx="2" fill="#d8d8dc"/>
+                <circle cx="1344.0" cy="540.2" r="40.8" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><circle cx="1340" cy="533" r="40" fill="url(#mrKnob)" stroke="#9a9aa2" stroke-width="2"/><path d="M 1311.2 513.0 A 35.2 35.2 0 0 1 1344.8 498.6" stroke="#ffffff" stroke-width="2.4" opacity="0.3" fill="none" stroke-linecap="round" pointer-events="none"/><rect id="tsSwMode" x="1338" y="497" width="4" height="18" rx="2" fill="#d8d8dc"/>
+                <circle cx="1584.0" cy="540.2" r="40.8" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><circle cx="1580" cy="533" r="40" fill="url(#mrKnob)" stroke="#9a9aa2" stroke-width="2"/><path d="M 1551.2 513.0 A 35.2 35.2 0 0 1 1584.8 498.6" stroke="#ffffff" stroke-width="2.4" opacity="0.3" fill="none" stroke-linecap="round" pointer-events="none"/><rect id="tsSwRf" x="1578" y="497" width="4" height="18" rx="2" fill="#d8d8dc"/>
             </g>
             <!-- PANLOC (좌 = 전원) -->
             <circle cx="105" cy="560" r="20" fill="#1c1c22" stroke="#8a8a92" stroke-width="1.6"/>
@@ -421,15 +422,15 @@ const TUNER_SKINS = {
                 <text x="480" y="596">blend</text><text x="680" y="596">mode</text><text x="1000" y="648">tuning</text><text x="1320" y="596">timer</text><text x="1520" y="596">power</text><text x="1720" y="596">muting</text>
             </g>
             <g>
-                <circle cx="480" cy="520" r="38" fill="#8f8a76"/><circle cx="480" cy="517" r="36" fill="url(#mzKnob)" stroke="#8f8a76" stroke-width="1.4"/><rect id="tsSwBlend" x="478" y="488" width="4" height="16" rx="2" fill="#4a4436"/>
-                <circle cx="680" cy="520" r="38" fill="#8f8a76"/><circle cx="680" cy="517" r="36" fill="url(#mzKnob)" stroke="#8f8a76" stroke-width="1.4"/><rect id="tsSwMode" x="678" y="488" width="4" height="16" rx="2" fill="#4a4436"/>
-                <circle cx="1320" cy="520" r="38" fill="#8f8a76"/><circle cx="1320" cy="517" r="36" fill="url(#mzKnob)" stroke="#8f8a76" stroke-width="1.4"/><rect id="tsSwIf" x="1318" y="488" width="4" height="16" rx="2" fill="#4a4436"/>
-                <circle cx="1520" cy="520" r="38" fill="#8f8a76"/><circle cx="1520" cy="517" r="36" fill="url(#mzKnob)" stroke="#8f8a76" stroke-width="1.4"/><rect id="tsSwPwr" x="1518" y="488" width="4" height="16" rx="2" fill="#4a4436"/>
-                <circle cx="1720" cy="520" r="38" fill="#8f8a76"/><circle cx="1720" cy="517" r="36" fill="url(#mzKnob)" stroke="#8f8a76" stroke-width="1.4"/><rect id="tsSwMute" x="1718" y="488" width="4" height="16" rx="2" fill="#4a4436"/>
+                <circle cx="480" cy="520" r="38" fill="#8f8a76"/><circle cx="483.6" cy="523.5" r="36.7" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><circle cx="480" cy="517" r="36" fill="url(#mzKnob)" stroke="#8f8a76" stroke-width="1.4"/><path d="M 454.1 499.0 A 31.7 31.7 0 0 1 484.3 486.0" stroke="#ffffff" stroke-width="2.2" opacity="0.3" fill="none" stroke-linecap="round" pointer-events="none"/><rect id="tsSwBlend" x="478" y="488" width="4" height="16" rx="2" fill="#4a4436"/>
+                <circle cx="680" cy="520" r="38" fill="#8f8a76"/><circle cx="683.6" cy="523.5" r="36.7" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><circle cx="680" cy="517" r="36" fill="url(#mzKnob)" stroke="#8f8a76" stroke-width="1.4"/><path d="M 654.1 499.0 A 31.7 31.7 0 0 1 684.3 486.0" stroke="#ffffff" stroke-width="2.2" opacity="0.3" fill="none" stroke-linecap="round" pointer-events="none"/><rect id="tsSwMode" x="678" y="488" width="4" height="16" rx="2" fill="#4a4436"/>
+                <circle cx="1320" cy="520" r="38" fill="#8f8a76"/><circle cx="1323.6" cy="523.5" r="36.7" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><circle cx="1320" cy="517" r="36" fill="url(#mzKnob)" stroke="#8f8a76" stroke-width="1.4"/><path d="M 1294.1 499.0 A 31.7 31.7 0 0 1 1324.3 486.0" stroke="#ffffff" stroke-width="2.2" opacity="0.3" fill="none" stroke-linecap="round" pointer-events="none"/><rect id="tsSwIf" x="1318" y="488" width="4" height="16" rx="2" fill="#4a4436"/>
+                <circle cx="1520" cy="520" r="38" fill="#8f8a76"/><circle cx="1523.6" cy="523.5" r="36.7" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><circle cx="1520" cy="517" r="36" fill="url(#mzKnob)" stroke="#8f8a76" stroke-width="1.4"/><path d="M 1494.1 499.0 A 31.7 31.7 0 0 1 1524.3 486.0" stroke="#ffffff" stroke-width="2.2" opacity="0.3" fill="none" stroke-linecap="round" pointer-events="none"/><rect id="tsSwPwr" x="1518" y="488" width="4" height="16" rx="2" fill="#4a4436"/>
+                <circle cx="1720" cy="520" r="38" fill="#8f8a76"/><circle cx="1723.6" cy="523.5" r="36.7" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><circle cx="1720" cy="517" r="36" fill="url(#mzKnob)" stroke="#8f8a76" stroke-width="1.4"/><path d="M 1694.1 499.0 A 31.7 31.7 0 0 1 1724.3 486.0" stroke="#ffffff" stroke-width="2.2" opacity="0.3" fill="none" stroke-linecap="round" pointer-events="none"/><rect id="tsSwMute" x="1718" y="488" width="4" height="16" rx="2" fill="#4a4436"/>
             </g>
             <circle cx="1000" cy="519" r="99" fill="#8f8a76"/>
             <g id="tsKnob">
-                <circle cx="1000" cy="515" r="95" fill="url(#mzKnob)" stroke="#8f8a76" stroke-width="2"/>
+                <circle cx="1009.5" cy="532.1" r="96.9" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><circle cx="1000" cy="515" r="95" fill="url(#mzKnob)" stroke="#8f8a76" stroke-width="2"/><path d="M 931.6 467.5 A 83.6 83.6 0 0 1 1011.4 433.3" stroke="#ffffff" stroke-width="5.7" opacity="0.3" fill="none" stroke-linecap="round" pointer-events="none"/>
                 <circle cx="1000" cy="446" r="6" fill="#4a4436"/>
             </g>
             <ellipse cx="968" cy="482" rx="34" ry="26" fill="#ffffff" opacity="0.25" pointer-events="none"/>
@@ -480,7 +481,7 @@ const TUNER_SKINS = {
                 <rect x="56" y="408" width="36" height="24" rx="3" fill="#26262c" stroke="#3a3a42"/><rect id="tsSwRf" x="62" y="412" width="24" height="9" rx="2" fill="#8a8a94"/>
             </g>
             <!-- OUTPUT LEVEL(장식) + POWER -->
-            <circle cx="95" cy="490" r="26" fill="url(#suKnob)" stroke="#4a4a52" stroke-width="1.6"/>
+            <circle cx="97.6" cy="494.7" r="26.5" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><circle cx="95" cy="490" r="26" fill="url(#suKnob)" stroke="#4a4a52" stroke-width="1.6"/><path d="M 76.3 477.0 A 22.9 22.9 0 0 1 98.1 467.6" stroke="#ffffff" stroke-width="1.6" opacity="0.3" fill="none" stroke-linecap="round" pointer-events="none"/>
             <rect x="93" y="466" width="4" height="12" rx="2" fill="#26262c"/>
             <text x="150" y="495" font-family="Arial, Helvetica, sans-serif" font-size="11" letter-spacing="0.8" fill="#8a8a94">OUTPUT LEVEL</text>
             <rect x="52" y="560" width="48" height="34" rx="4" fill="#26262c" stroke="#3a3a42"/>
@@ -548,7 +549,7 @@ const TUNER_SKINS = {
             <circle id="tsLedBlend" data-on="#ffb03a" data-off="#3a2a10" cx="1050" cy="416" r="9" fill="#3a2a10" filter="url(#suGlow)"/>
             <text x="1072" y="422" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#c8d8e8">HI-BLEND</text>
             <!-- 소형 노브(장식) -->
-            <circle cx="1250" cy="374" r="24" fill="url(#suKnob)" stroke="#4a4a52" stroke-width="1.6"/>
+            <circle cx="1252.4" cy="378.3" r="24.5" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><circle cx="1250" cy="374" r="24" fill="url(#suKnob)" stroke="#4a4a52" stroke-width="1.6"/><path d="M 1232.7 362.0 A 21.1 21.1 0 0 1 1252.9 353.4" stroke="#ffffff" stroke-width="1.6" opacity="0.3" fill="none" stroke-linecap="round" pointer-events="none"/>
             <rect x="1248" y="352" width="4" height="12" rx="2" fill="#26262c"/>
             <!-- STATION 디지트 -->
             <rect x="1360" y="312" width="230" height="94" rx="6" fill="#050505" stroke="#26303a" stroke-width="1.6"/>
@@ -563,7 +564,7 @@ const TUNER_SKINS = {
             <!-- 플라이휠 노브 -->
             <circle cx="1815" cy="314" r="154" fill="#050507"/>
             <g id="tsKnob">
-                <circle cx="1815" cy="310" r="150" fill="url(#suKnob)" stroke="#4a4a52" stroke-width="2.5"/>
+                <circle cx="1830.0" cy="337.0" r="153.0" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><circle cx="1815" cy="310" r="150" fill="url(#suKnob)" stroke="#4a4a52" stroke-width="2.5"/><path d="M 1707.0 235.0 A 132.0 132.0 0 0 1 1833.0 181.0" stroke="#ffffff" stroke-width="9.0" opacity="0.3" fill="none" stroke-linecap="round" pointer-events="none"/>
                 <circle cx="1815" cy="310" r="104" fill="none" stroke="#8a8a94" stroke-width="1.2" opacity="0.5"/>
                 <circle cx="1815" cy="190" r="8" fill="#3a3a40"/>
             </g>
@@ -668,7 +669,9 @@ AMP_MODELS.tr.svg = `<svg class="amp-svg" viewBox="0 0 2000 560" xmlns="http://w
     <text x="296" y="103" font-family="Arial" font-size="12.5" letter-spacing="2.5" fill="#5a5a64">NATURAL SOUND STEREO AMPLIFIER CA-100</text>
     <g>
         <ellipse cx="268" cy="392" rx="180" ry="22" fill="url(#caShadow)"/>
+        <rect x="105" y="147" width="336" height="240" rx="10" fill="#000000" opacity="0.42" filter="url(#lzSoft)"/>
         <rect x="100" y="140" width="336" height="240" rx="10" fill="#15151a"/>
+        <rect x="103" y="141.5" width="330" height="2.5" rx="1" fill="#ffffff" opacity="0.16"/>
         <rect x="103" y="143" width="330" height="234" rx="8" fill="none" stroke="#3c3e46" stroke-width="1.5"/>
         <rect x="114" y="154" width="308" height="212" rx="5" fill="#16110b"/>
         <rect class="ampLamp" x="114" y="154" width="308" height="212" rx="5" fill="url(#lzWarmFace)" opacity="0.02"/>
@@ -694,7 +697,9 @@ AMP_MODELS.tr.svg = `<svg class="amp-svg" viewBox="0 0 2000 560" xmlns="http://w
     </g>
     <g>
         <ellipse cx="640" cy="392" rx="180" ry="22" fill="url(#caShadow)"/>
+        <rect x="477" y="147" width="336" height="240" rx="10" fill="#000000" opacity="0.42" filter="url(#lzSoft)"/>
         <rect x="472" y="140" width="336" height="240" rx="10" fill="#15151a"/>
+        <rect x="475" y="141.5" width="330" height="2.5" rx="1" fill="#ffffff" opacity="0.16"/>
         <rect x="475" y="143" width="330" height="234" rx="8" fill="none" stroke="#3c3e46" stroke-width="1.5"/>
         <rect x="486" y="154" width="308" height="212" rx="5" fill="#16110b"/>
         <rect class="ampLamp" x="486" y="154" width="308" height="212" rx="5" fill="url(#lzWarmFace)" opacity="0.02"/>
@@ -739,19 +744,19 @@ AMP_MODELS.tr.svg = `<svg class="amp-svg" viewBox="0 0 2000 560" xmlns="http://w
     <rect x="906" y="368" width="26" height="88" rx="7" fill="#1c1c22"/><rect x="908" y="370" width="22" height="43" rx="5" fill="#2a2a32"/><rect x="911" y="374" width="16" height="35" rx="4" fill="url(#caKnob)"/>
     <circle cx="1058" cy="412" r="18" fill="#101014"/><circle cx="1058" cy="412" r="15" fill="#1e1e26"/><circle cx="1058" cy="412" r="7" fill="#050507"/>
     <ellipse cx="1196" cy="452" rx="44" ry="12" fill="url(#caShadow)"/>
-    <circle cx="1196" cy="412" r="40" fill="url(#caKnob)" stroke="#8a8c96" stroke-width="1.5"/>
+    <circle cx="1200.0" cy="419.2" r="40.8" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><circle cx="1196" cy="412" r="40" fill="url(#caKnob)" stroke="#8a8c96" stroke-width="1.5"/><path d="M 1167.2 392.0 A 35.2 35.2 0 0 1 1200.8 377.6" stroke="#ffffff" stroke-width="2.4" opacity="0.3" fill="none" stroke-linecap="round" pointer-events="none"/>
     <circle cx="1196" cy="412" r="40" fill="none" stroke="#6e707a" stroke-width="5" stroke-dasharray="1.8 5.5" opacity="0.5"/>
     <rect x="1193" y="376" width="6" height="18" rx="3" fill="#3a3a42"/>
     <ellipse cx="1184" cy="398" rx="13" ry="10" fill="#ffffff" opacity="0.4"/>
     <ellipse cx="1356" cy="452" rx="44" ry="12" fill="url(#caShadow)"/>
-    <circle cx="1356" cy="412" r="40" fill="url(#caKnob)" stroke="#8a8c96" stroke-width="1.5"/>
+    <circle cx="1360.0" cy="419.2" r="40.8" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><circle cx="1356" cy="412" r="40" fill="url(#caKnob)" stroke="#8a8c96" stroke-width="1.5"/><path d="M 1327.2 392.0 A 35.2 35.2 0 0 1 1360.8 377.6" stroke="#ffffff" stroke-width="2.4" opacity="0.3" fill="none" stroke-linecap="round" pointer-events="none"/>
     <circle cx="1356" cy="412" r="40" fill="none" stroke="#6e707a" stroke-width="5" stroke-dasharray="1.8 5.5" opacity="0.5"/>
     <rect x="1353" y="376" width="6" height="18" rx="3" fill="#3a3a42"/>
     <ellipse cx="1344" cy="398" rx="13" ry="10" fill="#ffffff" opacity="0.4"/>
     <text x="1770" y="160" font-family="Arial" font-size="12" letter-spacing="2" fill="#5a5a64" text-anchor="middle">VOLUME &#183; BALANCE</text>
     <ellipse cx="1770" cy="475" rx="160" ry="30" fill="url(#caShadow)"/>
     <circle cx="1770" cy="330" r="150" fill="#7e808a"/>
-    <circle cx="1770" cy="326" r="146" fill="url(#caKnob)" stroke="#9a9ca6" stroke-width="2"/>
+    <circle cx="1784.6" cy="352.3" r="148.9" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><circle cx="1770" cy="326" r="146" fill="url(#caKnob)" stroke="#9a9ca6" stroke-width="2"/><path d="M 1664.9 253.0 A 128.5 128.5 0 0 1 1787.5 200.4" stroke="#ffffff" stroke-width="8.8" opacity="0.3" fill="none" stroke-linecap="round" pointer-events="none"/>
     <circle cx="1770" cy="326" r="146" fill="none" stroke="#6e707a" stroke-width="12" stroke-dasharray="2.5 8" opacity="0.45"/>
     <circle cx="1770" cy="326" r="104" fill="none" stroke="#b6b8c0" stroke-width="1.2" opacity="0.7"/>
     <circle id="ampVolMark" cx="1770" cy="206" r="8" fill="#3a3a42"/>
@@ -770,12 +775,14 @@ AMP_MODELS.tr.svg = `<svg class="amp-svg" viewBox="0 0 2000 560" xmlns="http://w
     <rect x="0" y="2" width="2000" height="3" fill="#ffffff" opacity="0.28"/>
     <rect x="0" y="0" width="26" height="560" rx="8" fill="url(#m5Rail)"/>
     <rect x="1974" y="0" width="26" height="560" rx="8" fill="url(#m5Rail)"/>
-    <rect x="52" y="56" width="26" height="448" rx="13" fill="url(#m5Rail)"/>
-    <rect x="1922" y="56" width="26" height="448" rx="13" fill="url(#m5Rail)"/>
+    <rect x="58" y="64" width="26" height="448" rx="13" fill="#000000" opacity="0.5" filter="url(#lzSoft)"/><rect x="52" y="56" width="26" height="448" rx="13" fill="url(#m5Rail)"/>
+    <rect x="1928" y="64" width="26" height="448" rx="13" fill="#000000" opacity="0.5" filter="url(#lzSoft)"/><rect x="1922" y="56" width="26" height="448" rx="13" fill="url(#m5Rail)"/>
     <!-- 블루 와트미터 (L) -->
     <g>
+        <rect x="255" y="61" width="560" height="256" rx="10" fill="#000000" opacity="0.42" filter="url(#lzSoft)"/>
         <rect x="250" y="54" width="560" height="256" rx="10" fill="#101014"/>
         <rect x="250" y="54" width="560" height="256" rx="10" fill="none" stroke="#3c4048" stroke-width="2"/>
+        <rect x="253" y="55.5" width="554" height="2.5" rx="1" fill="#ffffff" opacity="0.16"/>
         <rect x="262" y="66" width="536" height="232" rx="6" fill="#071019"/>
         <rect class="ampLamp" x="262" y="66" width="536" height="232" rx="6" fill="url(#m5Face)" opacity="0.02"/>
         <path d="M 340 262 A 235 235 0 0 1 720 262" fill="none" stroke="#0b365e" stroke-width="2.5"/>
@@ -803,8 +810,10 @@ AMP_MODELS.tr.svg = `<svg class="amp-svg" viewBox="0 0 2000 560" xmlns="http://w
     </g>
     <!-- 블루 와트미터 (R) -->
     <g>
+        <rect x="1195" y="61" width="560" height="256" rx="10" fill="#000000" opacity="0.42" filter="url(#lzSoft)"/>
         <rect x="1190" y="54" width="560" height="256" rx="10" fill="#101014"/>
         <rect x="1190" y="54" width="560" height="256" rx="10" fill="none" stroke="#3c4048" stroke-width="2"/>
+        <rect x="1193" y="55.5" width="554" height="2.5" rx="1" fill="#ffffff" opacity="0.16"/>
         <rect x="1202" y="66" width="536" height="232" rx="6" fill="#071019"/>
         <rect class="ampLamp" x="1202" y="66" width="536" height="232" rx="6" fill="url(#m5Face)" opacity="0.02"/>
         <path d="M 1280 262 A 235 235 0 0 1 1660 262" fill="none" stroke="#0b365e" stroke-width="2.5"/>
@@ -897,7 +906,8 @@ AMP_MODELS.el34.svg = `<svg class="amp-svg" viewBox="0 0 2000 540" xmlns="http:/
     <rect x="40" y="280" width="1920" height="3" fill="#c8a860" opacity="0.5"/>
     <g>
         <ellipse cx="252" cy="486" rx="100" ry="16" fill="url(#m8Shadow)"/>
-        <circle cx="250" cy="408" r="82" fill="#15151a"/>
+        <circle cx="257" cy="418" r="82" fill="#000000" opacity="0.42" filter="url(#lzSoft)"/><circle cx="250" cy="408" r="82" fill="#15151a"/>
+        <path d="M 192 373 A 81 81 0 0 1 308 373" stroke="#ffffff" stroke-width="2" opacity="0.14" fill="none"/>
         <circle cx="250" cy="406" r="78" fill="none" stroke="#3c3e46" stroke-width="1.5"/>
         <circle cx="250" cy="406" r="68" fill="#16110b"/>
         <circle class="ampLamp" cx="250" cy="406" r="68" fill="url(#lzWarmFace)" opacity="0.02"/>
@@ -921,7 +931,7 @@ AMP_MODELS.el34.svg = `<svg class="amp-svg" viewBox="0 0 2000 540" xmlns="http:/
     <text x="560" y="474" font-family="Arial" font-size="11" letter-spacing="2" fill="#6b6252" text-anchor="middle">POWER</text>
     <ellipse cx="690" cy="438" rx="30" ry="9" fill="url(#m8Shadow)"/>
     <circle cx="690" cy="408" r="27" fill="#8a8068"/>
-    <circle cx="690" cy="406" r="25" fill="url(#m8MeterFace)" stroke="#8a8068" stroke-width="1.4"/>
+    <circle cx="692.5" cy="410.5" r="25.5" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><circle cx="690" cy="406" r="25" fill="url(#m8MeterFace)" stroke="#8a8068" stroke-width="1.4"/><path d="M 672.0 393.5 A 22.0 22.0 0 0 1 693.0 384.5" stroke="#ffffff" stroke-width="1.6" opacity="0.3" fill="none" stroke-linecap="round" pointer-events="none"/>
     <rect id="ampVolMark" x="688" y="384" width="4" height="12" rx="2" fill="#3a3226"/>
     <text x="690" y="474" font-family="Arial" font-size="11" letter-spacing="2" fill="#6b6252" text-anchor="middle">LEVEL</text>
     <rect x="866" y="368" width="268" height="76" rx="8" fill="#14120e"/>
@@ -982,7 +992,9 @@ AMP_MODELS["300b"].svg = `<svg class="amp-svg" viewBox="0 0 2000 560" xmlns="htt
         <circle cx="130" cy="524" r="12" fill="url(#weKnob)" stroke="#847c66" stroke-width="1.4"/><circle cx="126" cy="520" r="4" fill="#ffffff" opacity="0.5"/>
     </g>
     <ellipse cx="520" cy="530" rx="110" ry="14" fill="url(#weShadow)"/>
-    <rect x="420" y="322" width="200" height="200" rx="8" fill="#15130f"/>
+    <rect x="425" y="329" width="200" height="200" rx="8" fill="#000000" opacity="0.42" filter="url(#lzSoft)"/>
+        <rect x="420" y="322" width="200" height="200" rx="8" fill="#15130f"/>
+        <rect x="423" y="323.5" width="194" height="2.5" rx="1" fill="#ffffff" opacity="0.16"/>
     <rect x="428" y="330" width="184" height="184" rx="4" fill="#1a150e"/>
     <rect class="ampLamp" x="428" y="330" width="184" height="184" rx="4" fill="url(#lzWarmFace)" opacity="0.02"/>
     <ellipse class="ampLamp" cx="520" cy="348" rx="80" ry="44" fill="url(#lzLampPool)" opacity="0.02"/>
@@ -1001,7 +1013,7 @@ AMP_MODELS["300b"].svg = `<svg class="amp-svg" viewBox="0 0 2000 560" xmlns="htt
     <text x="520" y="510" font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-size="12" fill="#8a2020" text-anchor="middle">Western Eletric</text>
     <ellipse cx="880" cy="530" rx="120" ry="20" fill="url(#weShadow)"/>
     <circle cx="880" cy="424" r="108" fill="#7e765f"/>
-    <circle cx="880" cy="420" r="104" fill="url(#weKnob)" stroke="#a49d87" stroke-width="2"/>
+    <circle cx="890.4" cy="438.7" r="106.1" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><circle cx="880" cy="420" r="104" fill="url(#weKnob)" stroke="#a49d87" stroke-width="2"/><path d="M 805.1 368.0 A 91.5 91.5 0 0 1 892.5 330.6" stroke="#ffffff" stroke-width="6.2" opacity="0.3" fill="none" stroke-linecap="round" pointer-events="none"/>
     <circle cx="880" cy="420" r="104" fill="none" stroke="#847c66" stroke-width="8" stroke-dasharray="2 6" opacity="0.4"/>
     <circle cx="880" cy="420" r="76" fill="none" stroke="#b8b09a" stroke-width="1.4" opacity="0.7"/>
     <circle cx="880" cy="420" r="52" fill="url(#weKnob)"/>

@@ -526,7 +526,9 @@ function mountEq() {
     const sliders = EQ_FREQS.map((f, i) => {
         const x = EQ_X[i];
         return '<rect x="' + (x - 5) + '" y="' + (EQ_TOP - 8) + '" width="10" height="' + (EQ_BOT - EQ_TOP + 16) + '" rx="5" fill="#050506" stroke="#2e2e34" stroke-width="1.2"/>' +
+            '<rect x="' + (x - 5) + '" y="' + (EQ_TOP - 8) + '" width="10" height="14" rx="5" fill="#000000" opacity="0.6"/>' +
             '<g id="eqH' + i + '">' +
+            '<rect x="' + (x - hw + 2) + '" y="-11" width="' + EQ_CAPW + '" height="30" rx="4" fill="#000000" opacity="0.42" filter="url(#lzSoft)"/>' +
             '<rect x="' + (x - hw) + '" y="-15" width="' + EQ_CAPW + '" height="30" rx="4" fill="#26262c" stroke="#0a0a0c" stroke-width="1.5"/>' +
             '<rect x="' + (x - hw) + '" y="-15" width="' + EQ_CAPW + '" height="6" rx="3" fill="#3c3c44"/>' +
             '<rect x="' + (x - hw) + '" y="-2.5" width="' + EQ_CAPW + '" height="5" fill="#f2f2f4"/>' +
@@ -882,6 +884,7 @@ function mountTurntable() {
         '</g>' +
         '<circle cx="1065" cy="120" r="8" fill="#0d0d10"/>' +
         // 앨범 재킷 — 좌우 화살표로 라이브러리의 다른 음반으로 교체한다
+        '<rect x="1188" y="70" width="380" height="380" rx="4" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/>' +
         '<rect x="1180" y="60" width="380" height="380" rx="4" fill="' + RECORD.jacketBg + '" stroke="#b3a988" stroke-width="2"/>' +
         '<rect x="1196" y="76" width="348" height="348" fill="none" stroke="#8a7d5a" stroke-width="1" opacity="0.6"/>' +
         '<text x="1370" y="170" font-family="Georgia, serif" font-size="' + (RECORD.jTitle.length > 6 ? 48 : 64) + '" font-weight="700" fill="#3a2b1e" text-anchor="middle">' + RECORD.jTitle + '</text>' +

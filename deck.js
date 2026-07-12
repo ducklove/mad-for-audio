@@ -139,7 +139,9 @@ function mountDeck() {
         <rect x="700" y="336" width="60" height="14" rx="3" fill="#26262c"/>
         <g>
             <ellipse cx="1262" cy="292" rx="150" ry="18" fill="url(#dkShadow)"/>
-            <rect x="1120" y="110" width="284" height="172" rx="9" fill="#15151a"/>
+            <rect x="1125" y="117" width="284" height="172" rx="9" fill="#000000" opacity="0.42" filter="url(#lzSoft)"/>
+        <rect x="1120" y="110" width="284" height="172" rx="9" fill="#15151a"/>
+        <rect x="1123" y="111.5" width="278" height="2.5" rx="1" fill="#ffffff" opacity="0.16"/>
             <rect x="1130" y="120" width="264" height="152" rx="5" fill="#16110b"/>
             <rect class="ampLamp" x="1130" y="120" width="264" height="152" rx="5" fill="url(#lzWarmFace)" opacity="0.02"/>
             <ellipse class="ampLamp" cx="1262" cy="135" rx="116" ry="36" fill="url(#lzLampPool)" opacity="0.02"/>
@@ -160,7 +162,9 @@ function mountDeck() {
         </g>
         <g>
             <ellipse cx="1572" cy="292" rx="150" ry="18" fill="url(#dkShadow)"/>
-            <rect x="1430" y="110" width="284" height="172" rx="9" fill="#15151a"/>
+            <rect x="1435" y="117" width="284" height="172" rx="9" fill="#000000" opacity="0.42" filter="url(#lzSoft)"/>
+        <rect x="1430" y="110" width="284" height="172" rx="9" fill="#15151a"/>
+        <rect x="1433" y="111.5" width="278" height="2.5" rx="1" fill="#ffffff" opacity="0.16"/>
             <rect x="1440" y="120" width="264" height="152" rx="5" fill="#16110b"/>
             <rect class="ampLamp" x="1440" y="120" width="264" height="152" rx="5" fill="url(#lzWarmFace)" opacity="0.02"/>
             <ellipse class="ampLamp" cx="1572" cy="135" rx="116" ry="36" fill="url(#lzLampPool)" opacity="0.02"/>
