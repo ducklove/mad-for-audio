@@ -1703,13 +1703,16 @@ function jacketCard(rec, idx) {
     btn.type = "button";
     btn.className = "crate-jacket" + (idx === recordIdx ? " is-current" : "");
     btn.style.background = rec.jacketBg;
-    if (rec.cover) {
-        // 커버 이미지 위에 하단으로 갈수록 재킷 색으로 가라앉는 그라데이션 — 인쇄 정보가 읽히도록
-        btn.classList.add("has-cover");
-        btn.style.background = "linear-gradient(to bottom, rgba(0,0,0,0) 40%, " + rec.jacketBg + " 66%), url('" + PHONO_BASE + rec.cover + "') center 12%/cover no-repeat " + rec.jacketBg;
-    }
     btn.setAttribute("role", "listitem");
     btn.setAttribute("aria-label", rec.title + " · " + rec.performer);
+    if (rec.cover) {
+        // 턴테이블 큰 재킷과 같은 구성 — 위쪽은 커버 이미지, 글자는 아래 단색 밴드에만 얹는다
+        btn.classList.add("has-cover");
+        const art = document.createElement("span");
+        art.className = "cj-art";
+        art.style.backgroundImage = "url('" + PHONO_BASE + rec.cover + "')";
+        btn.appendChild(art);
+    }
     const badgeInk = rec.cover ? "#f0e8d0" : jc.sub;  // 배지가 이미지 위에 놓이므로 밝은 잉크 + CSS 배경띠
     const parts = [
         ["cj-num", badgeInk, String(idx + 1)],
