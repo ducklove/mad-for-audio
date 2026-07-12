@@ -480,7 +480,7 @@ const EQ_VB_H = 400;
 let EQ_FREQS = [], EQ_LABELS = [], EQ_X = [], EQ_CAPW = 60;
 
 const eqSaved = loadJson("fmRadio.eq", null);
-let eqModelId = (eqSaved && EQ_MODELS[eqSaved.model]) ? eqSaved.model : "ge5";
+let eqModelId = (eqSaved && EQ_MODELS[eqSaved.model]) ? eqSaved.model : "ge10";
 let eqState = { on: !eqSaved || eqSaved.on !== false, gains: {} };
 EQ_ORDER.forEach((k) => {
     const n = EQ_MODELS[k].freqs.length;
@@ -661,8 +661,8 @@ function updateEqVisuals() {
     if (led) led.style.fill = eqState.on ? "#ff7a3a" : "#3a2012";
 }
 
-let ampModelId = loadJson("fmRadio.amp", "tr");
-if (!AMP_MODELS[ampModelId]) ampModelId = "tr";
+let ampModelId = loadJson("fmRadio.amp", "mc2105");
+if (!AMP_MODELS[ampModelId]) ampModelId = "mc2105";
 
 
 function updateVolKnob() {
@@ -2149,7 +2149,7 @@ renderStations();
 restoreLastStation();
 updateRecButton();
 openRecordingDb();
-initTunerSkin(loadJson("fmRadio.skin", "t2"));
+initTunerSkin(loadJson("fmRadio.skin", "mr78"));
 mountEq();
 mountAmp();
 mountDeck();
