@@ -1045,17 +1045,26 @@ function ttFrame(now) {
     // 앰프: 진공관 글로우(웜업 연동)·갤러리 어둠·VU 바늘·전원 LED
     // 유리 할로·주변광은 은은하게, 필라멘트는 백열로 뜨겁게 (실제 진공관의 빛 분포)
     document.querySelectorAll(".ampGlow").forEach((el) => {
-        el.style.opacity = (0.012 + tubeWarm * (0.18 + tsSignal * 0.32)).toFixed(3);
+        el.style.opacity = (0.012 + tubeWarm * (0.32 + tsSignal * 0.34)).toFixed(3);
     });
     const filBloom = tubeWarm > 0.04
-        ? "drop-shadow(0 0 4px rgba(255,150,50," + (0.9 * tubeWarm).toFixed(2) + ")) drop-shadow(0 0 11px rgba(255,110,35," + (0.5 * tubeWarm).toFixed(2) + "))"
+        ? "drop-shadow(0 0 5px rgba(255,150,50," + tubeWarm.toFixed(2) + ")) drop-shadow(0 0 14px rgba(255,110,35," + (0.6 * tubeWarm).toFixed(2) + "))"
         : "none";
     document.querySelectorAll(".ampFil").forEach((el) => {
-        el.style.opacity = (0.02 + tubeWarm * (0.72 + tsSignal * 0.28)).toFixed(3);
+        el.style.opacity = (0.02 + tubeWarm * (0.85 + tsSignal * 0.15)).toFixed(3);
         el.style.filter = filBloom;
     });
+    // 필라멘트 핫코어 — 유리 안에서 작열하는 백열점. 큰 블룸으로 유리 전체에 번진다.
+    const hotBloom = tubeWarm > 0.04
+        ? "drop-shadow(0 0 10px rgba(255,170,70," + (0.85 * tubeWarm).toFixed(2) + ")) drop-shadow(0 0 26px rgba(255,120,40," + (0.45 * tubeWarm).toFixed(2) + "))"
+        : "none";
+    document.querySelectorAll(".ampFilHot").forEach((el) => {
+        el.style.opacity = (tubeWarm * (0.8 + tsSignal * 0.2)).toFixed(3);
+        el.style.filter = hotBloom;
+    });
+    // 켜지면 스모크 유리가 거의 걷힌다 — 달아오른 관은 노출된 유리처럼 보여야 한다
     document.querySelectorAll(".tubeDark").forEach((el) => {
-        el.style.opacity = (0.74 - tubeWarm * 0.62).toFixed(3);
+        el.style.opacity = (0.76 - tubeWarm * 0.7).toFixed(3);
     });
     const vuAng = -42 + Math.max(0, Math.min(1, tsSignal)) * 84;
     ["ampVuL", "ampVuR", "deckVuL", "deckVuR"].forEach((id, idx) => {

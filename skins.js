@@ -46,6 +46,8 @@ const LZ_DEFS = '<defs>' +
     '<radialGradient id="lzInCirc" cx="0.5" cy="0.46" r="0.54"><stop offset="0.66" stop-color="#000000" stop-opacity="0"/><stop offset="0.88" stop-color="#000000" stop-opacity="0.3"/><stop offset="1" stop-color="#000000" stop-opacity="0.55"/></radialGradient>' +
     '<linearGradient id="lzWarmFace" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff1cf"/><stop offset="0.16" stop-color="#f8e4b4"/><stop offset="0.55" stop-color="#efd9a2"/><stop offset="1" stop-color="#dcbe7e"/></linearGradient>' +
     '<radialGradient id="lzLampPool" cx="0.5" cy="0" r="1"><stop offset="0" stop-color="#fff8e2" stop-opacity="0.8"/><stop offset="0.4" stop-color="#ffedbb" stop-opacity="0.3"/><stop offset="1" stop-color="#ffedbb" stop-opacity="0"/></radialGradient>' +
+    '<radialGradient id="lzFilHot" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff8e6" stop-opacity="0.95"/><stop offset="0.28" stop-color="#ffd98e" stop-opacity="0.85"/><stop offset="0.6" stop-color="#ff9a3a" stop-opacity="0.4"/><stop offset="1" stop-color="#ff9a3a" stop-opacity="0"/></radialGradient>' +
+    '<radialGradient id="lzDeckPool" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffb45a" stop-opacity="0.5"/><stop offset="0.6" stop-color="#ff9a3a" stop-opacity="0.2"/><stop offset="1" stop-color="#ff9a3a" stop-opacity="0"/></radialGradient>' +
     '</defs>';
 
 function applyPanelLighting(svg) {
@@ -593,6 +595,7 @@ function tubeSvg(cx, baseY, w, h, kind) {
     const getterCy = top + (kind === "balloon" ? h * 0.1 : r * 0.52);
     const getterRy = kind === "balloon" ? h * 0.06 : r * 0.36;
     return '<g>' +
+        '<ellipse class="ampGlow" cx="' + cx + '" cy="' + (baseY + 5) + '" rx="' + (w * 1.15).toFixed(1) + '" ry="' + (w * 0.24).toFixed(1) + '" fill="url(#lzDeckPool)" opacity="0.02"/>' +
         '<ellipse class="ampGlow" cx="' + cx + '" cy="' + (top + h * 0.55).toFixed(1) + '" rx="' + (w * 0.85).toFixed(1) + '" ry="' + (h * 0.5).toFixed(1) + '" fill="' + glowFill + '" opacity="0.06" filter="url(#lzBloom)"/>' +
         '<rect x="' + (cx - r - 5).toFixed(1) + '" y="' + (baseY - 2) + '" width="' + (w + 10) + '" height="15" rx="5" fill="#17130e"/>' +
         '<rect x="' + (cx - r - 1).toFixed(1) + '" y="' + (baseY - 8) + '" width="' + (w + 2) + '" height="9" rx="3" fill="#2b2118"/>' +
@@ -603,6 +606,7 @@ function tubeSvg(cx, baseY, w, h, kind) {
         '<ellipse cx="' + cx + '" cy="' + (plateY - 3.5).toFixed(1) + '" rx="' + (plateW * 0.64).toFixed(1) + '" ry="3.4" fill="#8f8f96" opacity="0.85"/>' +
         '<ellipse cx="' + cx + '" cy="' + (plateY + plateH + 3.5).toFixed(1) + '" rx="' + (plateW * 0.64).toFixed(1) + '" ry="3.4" fill="#7a7a82" opacity="0.8"/>' +
         '<rect class="ampFil" x="' + (cx - 2.5) + '" y="' + (plateY + 3).toFixed(1) + '" width="5" height="' + (plateH - 6).toFixed(1) + '" rx="2.5" fill="' + filGrad + '" opacity="0.08"/>' +
+        '<ellipse class="ampFilHot" cx="' + cx + '" cy="' + (plateY + plateH * 0.48).toFixed(1) + '" rx="' + (w * 0.3).toFixed(1) + '" ry="' + (plateH * 0.36).toFixed(1) + '" fill="url(#lzFilHot)" opacity="0"/>' +
         '<ellipse cx="' + cx + '" cy="' + getterCy.toFixed(1) + '" rx="' + (r * 0.55).toFixed(1) + '" ry="' + getterRy.toFixed(1) + '" fill="url(#lzGetter)" opacity="0.9"/>' +
         '<path d="M ' + (cx - r * 0.64).toFixed(1) + ' ' + (top + h * 0.17).toFixed(1) + ' Q ' + (cx - r * 0.8).toFixed(1) + ' ' + (top + h * 0.52).toFixed(1) + ' ' + (cx - r * 0.58).toFixed(1) + ' ' + (baseY - h * 0.1).toFixed(1) + '" stroke="#ffffff" stroke-width="' + (w * 0.09).toFixed(1) + '" fill="none" opacity="0.16" stroke-linecap="round"/>' +
         '<path d="M ' + (cx + r * 0.54).toFixed(1) + ' ' + (top + h * 0.22).toFixed(1) + ' Q ' + (cx + r * 0.66).toFixed(1) + ' ' + (top + h * 0.52).toFixed(1) + ' ' + (cx + r * 0.5).toFixed(1) + ' ' + (baseY - h * 0.12).toFixed(1) + '" stroke="#ffffff" stroke-width="' + (w * 0.05).toFixed(1) + '" fill="none" opacity="0.07" stroke-linecap="round"/>' +
