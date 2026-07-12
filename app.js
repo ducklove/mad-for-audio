@@ -158,6 +158,12 @@ function tunerPreview(freq) {
     tsFreq.style.fill = d.lit;
     tsFreqGlow.style.fill = d.glow;
     tunerKnobAngle(freq);
+    // 105.2 부근(이스터에그 창)에서는 근접국을 발설하지 않는다 — 잡음뿐인 척
+    if (Math.abs(freq - 105.2) < 0.25) {
+        nowStation.textContent = "· · ·";
+        playerSubtext.textContent = "치지직… 이 부근에는 등록된 방송이 없습니다.";
+        return;
+    }
     const near = nearestStation(freq);
     nowStation.textContent = near.name;
     playerSubtext.textContent = near.name + " · " + near.freq.toFixed(1) + "MHz — 손을 떼면 선택됩니다.";
