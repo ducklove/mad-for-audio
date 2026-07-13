@@ -54,14 +54,14 @@ const LZ_DEFS = '<defs>' +
 function applyPanelLighting(svg) {
     if (!svg) return;
     const vb = (svg.getAttribute("viewBox") || "0 0 2000 400").split(/\s+/).map(Number);
-    const W = vb[2], H = vb[3];
+    const X = vb[0], Y = vb[1], W = vb[2], H = vb[3];   // viewBox 원점이 (0,0)이 아닐 수도 있다 (턴테이블)
     const g = document.createElementNS(SVG_NS, "g");
     g.setAttribute("pointer-events", "none");
     g.innerHTML = LZ_DEFS +
-        '<rect x="0" y="0" width="' + W + '" height="' + Math.round(H * 0.32) + '" rx="8" fill="url(#lzGloss)"/>' +
-        '<rect x="0" y="0" width="' + W + '" height="' + H + '" rx="8" fill="url(#lzShade)"/>' +
-        '<rect x="0" y="0" width="' + W + '" height="' + H + '" rx="8" fill="url(#lzVign)"/>' +
-        '<rect class="lzPowerDim" x="0" y="0" width="' + W + '" height="' + H + '" rx="8" fill="#000000" opacity="0.22"/>';
+        '<rect x="' + X + '" y="' + Y + '" width="' + W + '" height="' + Math.round(H * 0.32) + '" rx="8" fill="url(#lzGloss)"/>' +
+        '<rect x="' + X + '" y="' + Y + '" width="' + W + '" height="' + H + '" rx="8" fill="url(#lzShade)"/>' +
+        '<rect x="' + X + '" y="' + Y + '" width="' + W + '" height="' + H + '" rx="8" fill="url(#lzVign)"/>' +
+        '<rect class="lzPowerDim" x="' + X + '" y="' + Y + '" width="' + W + '" height="' + H + '" rx="8" fill="#000000" opacity="0.22"/>';
     svg.appendChild(g);
 }
 

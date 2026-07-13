@@ -1304,7 +1304,8 @@ function mountTurntable() {
             '<rect id="ttTrackHit' + i + '" x="1600" y="' + (y - 26) + '" width="360" height="' + (rowStep - 4) + '" fill="#000" fill-opacity="0" style="cursor:pointer"><title>' + tr.t + ' 재생</title></rect>';
     }).join("");
     document.getElementById("ttStage").innerHTML =
-        '<svg class="tt-svg" viewBox="0 0 2000 640" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="YAHAMA PL-12 턴테이블">' +
+        // viewBox를 위아래로 40씩 넓혀(640→720) 콘텐츠 좌표는 그대로 두고 여백만 확보한다
+        '<svg class="tt-svg" viewBox="0 -40 2000 720" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="YAHAMA PL-12 턴테이블">' +
         '<defs>' +
         '<linearGradient id="ttWood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5d4430"/><stop offset="0.5" stop-color="#4a3524"/><stop offset="1" stop-color="#33241a"/></linearGradient>' +
         '<radialGradient id="ttVinyl" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#1c1c1f"/><stop offset="0.35" stop-color="#141416"/><stop offset="0.85" stop-color="#0d0d0f"/><stop offset="1" stop-color="#131316"/></radialGradient>' +
@@ -1314,8 +1315,8 @@ function mountTurntable() {
         '<path id="ttLabelArc" d="M 488 330 A 72 72 0 0 1 632 330" fill="none"/>' +
         '<clipPath id="ttJacketClip"><rect x="1180" y="60" width="380" height="380" rx="4"/></clipPath>' +
         '</defs>' +
-        '<rect width="2000" height="640" rx="10" fill="url(#ttWood)"/>' +
-        '<rect x="24" y="24" width="1952" height="592" rx="8" fill="#17161a" stroke="#0a0a0c" stroke-width="2"/>' +
+        '<rect x="0" y="-40" width="2000" height="720" rx="10" fill="url(#ttWood)"/>' +
+        '<rect x="24" y="-16" width="1952" height="672" rx="8" fill="#17161a" stroke="#0a0a0c" stroke-width="2"/>' +
         '<text x="60" y="72" font-family="Arial" font-size="26" font-weight="700" letter-spacing="1.5" fill="#e6e5e8">YAHAMA PL-12</text>' +
         '<text x="60" y="98" font-family="Arial" font-size="12" letter-spacing="2.5" fill="#8a7d70">BELT-DRIVE TURNTABLE</text>' +
         // 플래터

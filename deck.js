@@ -146,10 +146,22 @@ function mountDeck() {
             <rect class="ampLamp" x="1130" y="120" width="264" height="152" rx="5" fill="url(#lzWarmFace)" opacity="0.02"/>
             <ellipse class="ampLamp" cx="1262" cy="135" rx="116" ry="36" fill="url(#lzLampPool)" opacity="0.02"/>
             <rect x="1130" y="120" width="264" height="20" fill="url(#lzInset)" opacity="0.5"/>
-            <path d="M 1176 250 A 100 100 0 0 1 1348 250" fill="none" stroke="#4a3a28" stroke-width="1.5"/>
-            <path d="M 1316 186 A 100 100 0 0 1 1348 250" fill="none" stroke="#c0392b" stroke-width="4"/>
-            <line id="deckVuL" data-cx="1262" data-cy="258" x1="1262" y1="258" x2="1262" y2="146" stroke="#d4501e" stroke-width="3" transform="rotate(-42 1262 258)"/>
-            <circle cx="1262" cy="258" r="7" fill="#1a1610"/>
+            <path d="M 1186.2 193.8 A 102 102 0 0 1 1337.8 193.8" fill="none" stroke="#4a3a28" stroke-width="1.5"/>
+            <path d="M 1283.2 162.2 A 102 102 0 0 1 1337.8 193.8" fill="none" stroke="#c0392b" stroke-width="4"/>
+            <g stroke="#4a3a28" stroke-width="1.5">
+                <line x1="1193.8" y1="186.2" x2="1189.1" y2="181.0"/><line x1="1214.1" y1="171.9" x2="1210.9" y2="165.7"/>
+                <line x1="1237.3" y1="163.0" x2="1235.6" y2="156.2"/><line x1="1262" y1="160" x2="1262" y2="153"/>
+            </g>
+            <g stroke="#c0392b" stroke-width="1.5">
+                <line x1="1286.7" y1="163.0" x2="1288.4" y2="156.2"/><line x1="1309.9" y1="171.9" x2="1313.1" y2="165.7"/>
+                <line x1="1330.2" y1="186.2" x2="1334.9" y2="181.0"/>
+            </g>
+            <text x="1183" y="177" font-family="Arial" font-size="9" fill="#4a3a28" text-anchor="middle">-20</text>
+            <text x="1287" y="149" font-family="Arial" font-size="9" fill="#4a3a28" text-anchor="middle">0</text>
+            <text x="1341" y="177" font-family="Arial" font-size="9" fill="#8a2020" text-anchor="middle">+3</text>
+            <text x="1262" y="236" font-family="Georgia, serif" font-size="16" font-weight="700" letter-spacing="2" fill="#6b5a40" text-anchor="middle">VU</text>
+            <line id="deckVuL" data-cx="1262" data-cy="262" x1="1262" y1="262" x2="1262" y2="150" stroke="#d4501e" stroke-width="3" transform="rotate(-42 1262 262)"/>
+            <circle cx="1262" cy="262" r="7" fill="#1a1610"/>
             <polygon points="1130,120 1290,120 1180,272 1130,272" fill="url(#lzStreak)"/>
             <rect x="1130" y="120" width="264" height="33.4" fill="url(#lzInset)" opacity="0.62"/>
             <rect x="1130" y="120" width="13.2" height="152" fill="url(#lzInL)" opacity="0.5"/>
@@ -169,10 +181,22 @@ function mountDeck() {
             <rect class="ampLamp" x="1440" y="120" width="264" height="152" rx="5" fill="url(#lzWarmFace)" opacity="0.02"/>
             <ellipse class="ampLamp" cx="1572" cy="135" rx="116" ry="36" fill="url(#lzLampPool)" opacity="0.02"/>
             <rect x="1440" y="120" width="264" height="20" fill="url(#lzInset)" opacity="0.5"/>
-            <path d="M 1486 250 A 100 100 0 0 1 1658 250" fill="none" stroke="#4a3a28" stroke-width="1.5"/>
-            <path d="M 1626 186 A 100 100 0 0 1 1658 250" fill="none" stroke="#c0392b" stroke-width="4"/>
-            <line id="deckVuR" data-cx="1572" data-cy="258" x1="1572" y1="258" x2="1572" y2="146" stroke="#d4501e" stroke-width="3" transform="rotate(-42 1572 258)"/>
-            <circle cx="1572" cy="258" r="7" fill="#1a1610"/>
+            <path d="M 1496.2 193.8 A 102 102 0 0 1 1647.8 193.8" fill="none" stroke="#4a3a28" stroke-width="1.5"/>
+            <path d="M 1593.2 162.2 A 102 102 0 0 1 1647.8 193.8" fill="none" stroke="#c0392b" stroke-width="4"/>
+            <g stroke="#4a3a28" stroke-width="1.5">
+                <line x1="1503.8" y1="186.2" x2="1499.1" y2="181.0"/><line x1="1524.1" y1="171.9" x2="1520.9" y2="165.7"/>
+                <line x1="1547.3" y1="163.0" x2="1545.6" y2="156.2"/><line x1="1572" y1="160" x2="1572" y2="153"/>
+            </g>
+            <g stroke="#c0392b" stroke-width="1.5">
+                <line x1="1596.7" y1="163.0" x2="1598.4" y2="156.2"/><line x1="1619.9" y1="171.9" x2="1623.1" y2="165.7"/>
+                <line x1="1640.2" y1="186.2" x2="1644.9" y2="181.0"/>
+            </g>
+            <text x="1493" y="177" font-family="Arial" font-size="9" fill="#4a3a28" text-anchor="middle">-20</text>
+            <text x="1597" y="149" font-family="Arial" font-size="9" fill="#4a3a28" text-anchor="middle">0</text>
+            <text x="1651" y="177" font-family="Arial" font-size="9" fill="#8a2020" text-anchor="middle">+3</text>
+            <text x="1572" y="236" font-family="Georgia, serif" font-size="16" font-weight="700" letter-spacing="2" fill="#6b5a40" text-anchor="middle">VU</text>
+            <line id="deckVuR" data-cx="1572" data-cy="262" x1="1572" y1="262" x2="1572" y2="150" stroke="#d4501e" stroke-width="3" transform="rotate(-42 1572 262)"/>
+            <circle cx="1572" cy="262" r="7" fill="#1a1610"/>
             <polygon points="1440,120 1600,120 1490,272 1440,272" fill="url(#lzStreak)"/>
             <rect x="1440" y="120" width="264" height="33.4" fill="url(#lzInset)" opacity="0.62"/>
             <rect x="1440" y="120" width="13.2" height="152" fill="url(#lzInL)" opacity="0.5"/>
