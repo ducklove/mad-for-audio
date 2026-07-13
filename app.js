@@ -1227,7 +1227,523 @@ const RECORDS = [
             { t: "Lidström · Tango", f: "e/e1/CELLO_ENCORES_JOHN_MICHEL-Mats_Lidstrom_Tango.ogg" },
             { t: "Paganini · 한 줄을 위한 변주곡", f: "3/39/CELLO_ENCORES_JOHN_MICHEL-Paganini_Variations_on_One_String.ogg" },
         ]
+    },
+    {
+
+        title: "교향곡 제3번 '영웅'", bwv: "Op. 55", composer: "L. van BEETHOVEN", performer: "Musopen Symphony Orchestra", credit: "음원: Musopen · PD · Wikimedia Commons",
+
+        labelBig: "BEETHOVEN", labelTitle: "교향곡 3번 E♭장조", labelArtist: "MUSOPEN SYMPHONY", jTitle: "EROICA", jSub1: "베토벤 교향곡 3번 '영웅'", jSub2: "E-flat major · Op. 55",
+
+        labelBg: "#e6dcc0", jacketBg: "#2a2c34", accent: "#7a2e28", side: "A", cover: "thumb/6/6f/Beethoven.jpg/960px-Beethoven.jpg",
+
+        tracks: [
+
+            { t: "I. Allegro con brio", f: "d/da/Beethoven_SymphonyNo.3Eroica_LudwigVanBeethoven-SymphonyNo.3InEFlatMajorEroicaOp.55-01-AllegroConBrio.ogg" },
+
+            { t: "II. Marcia funebre", f: "1/14/Beethoven_SymphonyNo.3Eroica_LudwigVanBeethoven-SymphonyNo.3InEFlatMajorEroicaOp.55-02-MarciaFunebreAdagioAssai.ogg" },
+
+            { t: "III. Scherzo. Allegro", f: "0/07/Beethoven_SymphonyNo.3Eroica_LudwigVanBeethoven-SymphonyNo.3InEFlatMajorEroicaOp.55-03-ScherzoAllegroVivace.ogg" },
+
+            { t: "IV. Finale. Allegro molto", f: "6/6e/Beethoven_SymphonyNo.3Eroica_LudwigVanBeethoven-SymphonyNo.3InEFlatMajorEroicaOp.55-04-FinaleAllegroMolto.ogg" },
+
+        ]
+
+    },
+
+    {
+
+        title: "교향곡 제8번", bwv: "Op. 93", composer: "L. van BEETHOVEN", performer: "Musopen Symphony Orchestra", credit: "음원: Musopen · PD · Wikimedia Commons",
+
+        labelBig: "BEETHOVEN", labelTitle: "교향곡 8번 F장조", labelArtist: "MUSOPEN SYMPHONY", jTitle: "SYMPHONY No.8", jSub1: "베토벤 교향곡 8번", jSub2: "F major · Op. 93",
+
+        labelBg: "#dfe3d0", jacketBg: "#3a4a3f", accent: "#4a6741", side: "A", cover: "thumb/6/6f/Beethoven.jpg/960px-Beethoven.jpg",
+
+        tracks: [
+
+            { t: "I. Allegro vivace e con brio", f: "2/28/Ludwig_van_Beethoven_-_symphony_no._8_in_f_major%2C_op._93_-_i._allegro_vivace_e_con_brio.ogg" },
+
+            { t: "II. Allegretto scherzando", f: "8/89/Ludwig_van_Beethoven_-_symphony_no._8_in_f_major%2C_op._93_-_ii._allegretto_scherzando.ogg" },
+
+            { t: "III. Tempo di menuetto", f: "f/fe/Ludwig_van_Beethoven_-_symphony_no._8_in_f_major%2C_op._93_-_iii._tempo_di_menuetto.ogg" },
+
+            { t: "IV. Allegro vivace", f: "2/2d/Ludwig_van_Beethoven_-_symphony_no._8_in_f_major%2C_op._93_-_iv._allegro_vivace.ogg" },
+
+        ]
+
+    },
+
+    {
+
+        title: "피아노 협주곡 제5번 '황제'", bwv: "Op. 73", composer: "L. van BEETHOVEN", performer: "Piano and orchestra", credit: "음원: Musopen · PD · Wikimedia Commons",
+
+        labelBig: "BEETHOVEN", labelTitle: "피아노 협주곡 5번 E♭장조", labelArtist: "MUSOPEN", jTitle: "EMPEROR", jSub1: "베토벤 피아노 협주곡 5번 '황제'", jSub2: "E-flat major · Op. 73",
+
+        labelBg: "#ece2c8", jacketBg: "#1f2733", accent: "#8a6d2f", side: "A", cover: "thumb/6/6f/Beethoven.jpg/960px-Beethoven.jpg",
+
+        tracks: [
+
+            { t: "I. Allegro", f: "5/57/Beethoven_Op._73_-_1_Allegro.ogg" },
+
+            { t: "II. Adagio un poco mosso", f: "4/43/Beethoven_Op._73_-_2_Adagio.ogg" },
+
+            { t: "III. Rondo. Allegro", f: "2/2c/Beethoven_Op._73_-_3_Rondo.ogg" },
+
+        ]
+
+    },
+
+    {
+
+        title: "관악 6중주", bwv: "Op. 71", composer: "L. van BEETHOVEN", performer: "Wind ensemble", credit: "음원: Musopen · PD · Wikimedia Commons",
+
+        labelBig: "BEETHOVEN", labelTitle: "관악 6중주 E♭장조", labelArtist: "MUSOPEN", jTitle: "WIND SEXTET", jSub1: "베토벤 관악 6중주", jSub2: "E-flat major · Op. 71",
+
+        labelBg: "#e4e0cf", jacketBg: "#45473f", accent: "#6b5b3e", side: "A", cover: "thumb/6/6f/Beethoven.jpg/960px-Beethoven.jpg",
+
+        tracks: [
+
+            { t: "I. Adagio - Allegro", f: "0/03/Ludwig_van_Beethoven_-_wind_sextet_in_e_flat%2C_op._71_-_i._adagio_-_allegro.ogg" },
+
+            { t: "II. Adagio", f: "4/46/Ludwig_van_Beethoven_-_wind_sextet_in_e_flat%2C_op._71_-_ii._adagio.ogg" },
+
+            { t: "III. Menuetto", f: "2/24/Ludwig_van_Beethoven_-_wind_sextet_in_e_flat%2C_op._71_-_iii._menuetto_-_quasi_allegretto.ogg" },
+
+            { t: "IV. Rondo - Allegro", f: "b/bf/Ludwig_van_Beethoven_-_wind_sextet_in_e_flat%2C_op._71_-_iv._rondo_-_allegro.ogg" },
+
+        ]
+
+    },
+
+    {
+
+        title: "피아노 소나타 제15번 '전원'", bwv: "Op. 28", composer: "L. van BEETHOVEN", performer: "Piano solo", credit: "음원: Musopen · PD · Wikimedia Commons",
+
+        labelBig: "BEETHOVEN", labelTitle: "피아노 소나타 15번 '전원'", labelArtist: "PIANO SOLO", jTitle: "PASTORALE", jSub1: "베토벤 피아노 소나타 15번 '전원'", jSub2: "D major · Op. 28",
+
+        labelBg: "#dde7d3", jacketBg: "#33402f", accent: "#4d6b3a", side: "A", cover: "thumb/6/6f/Beethoven.jpg/960px-Beethoven.jpg",
+
+        tracks: [
+
+            { t: "I. Allegro", f: "5/54/Ludwig_van_Beethoven_-_sonata_no._15_in_d_major%2C_op._28_%27pastorale%27_-_i._allegro.ogg" },
+
+            { t: "II. Andante", f: "4/49/Ludwig_van_Beethoven_-_sonata_no._15_in_d_major%2C_op._28_%27pastorale%27_-_ii._andante.ogg" },
+
+            { t: "III. Scherzo. Allegro vivace", f: "e/e6/Ludwig_van_Beethoven_-_sonata_no._15_in_d_major%2C_op._28_%27pastorale%27_-_iii._scherzo._allegro_vivace.ogg" },
+
+            { t: "IV. Rondo. Allegro", f: "c/c6/Ludwig_van_Beethoven_-_sonata_no._15_in_d_major%2C_op._28_%27pastorale%27_-_iv._rondo._allegro%2C_ma_non_troppo.ogg" },
+
+        ]
+
+    },
+
+    {
+
+        title: "현악 4중주 제6번", bwv: "Op. 18 No. 6", composer: "L. van BEETHOVEN", performer: "Musopen String Quartet", credit: "음원: Musopen · PD · Wikimedia Commons",
+
+        labelBig: "BEETHOVEN", labelTitle: "현악 4중주 6번 B♭장조", labelArtist: "MUSOPEN QUARTET", jTitle: "QUARTET No.6", jSub1: "베토벤 현악 4중주 6번", jSub2: "B-flat major · Op. 18/6",
+
+        labelBg: "#e6dfd0", jacketBg: "#35323c", accent: "#5b4a6b", side: "A", cover: "thumb/6/6f/Beethoven.jpg/960px-Beethoven.jpg",
+
+        tracks: [
+
+            { t: "I. Allegro con brio", f: "e/eb/Beethoven_StringQuartetNo.6inBFlatMajorOp.18_LudwigVanBeethoven-StringQuartetNo.6InBFlatMajorOp.18No.6-01-AllegroConBrio.ogg" },
+
+            { t: "II. Adagio, ma non troppo", f: "7/7d/Beethoven_StringQuartetNo.6inBFlatMajorOp.18_LudwigVanBeethoven-StringQuartetNo.6InBFlatMajorOp.18No.6-02-AdagioMaNonTroppo.ogg" },
+
+            { t: "III. Scherzo. Allegro", f: "d/d1/Beethoven_StringQuartetNo.6inBFlatMajorOp.18_LudwigVanBeethoven-StringQuartetNo.6InBFlatMajorOp.18No.6-03-ScherzoAllegro.ogg" },
+
+            { t: "IV. La malinconia", f: "7/75/Beethoven_StringQuartetNo.6inBFlatMajorOp.18_LudwigVanBeethoven-StringQuartetNo.6InBFlatMajorOp.18No.6-04-adagioLaMalinconia.ogg" },
+
+        ]
+
+    },
+
+    {
+
+        title: "교향곡 제2번", bwv: "Op. 73", composer: "J. BRAHMS", performer: "Musopen Symphony Orchestra", credit: "음원: Musopen · PD · Wikimedia Commons",
+
+        labelBig: "BRAHMS", labelTitle: "교향곡 2번 D장조", labelArtist: "MUSOPEN SYMPHONY", jTitle: "SYMPHONY No.2", jSub1: "브람스 교향곡 2번", jSub2: "D major · Op. 73",
+
+        labelBg: "#e3ddcd", jacketBg: "#2f2a26", accent: "#6b4a2e", side: "A", cover: "a/a2/Johannes_Brahms_portrait.jpg",
+
+        tracks: [
+
+            { t: "I. Allegro non troppo", f: "e/e6/Brahms%2C_Symphony_No._2_in_D_Major%2C_Op._73_-_I._Allegro_non_troppo.ogg" },
+
+            { t: "II. Adagio non troppo", f: "7/77/Brahms%2C_Symphony_No._2_in_D_Major%2C_Op._73_-_II._Adagio_non_troppo.ogg" },
+
+            { t: "III. Allegretto grazioso", f: "8/83/Brahms%2C_Symphony_No._2_in_D_Major%2C_Op._73_-_III._Allegretto_Grazioso.ogg" },
+
+            { t: "IV. Allegro con spirito", f: "7/76/Brahms%2C_Symphony_No._2_in_D_Major%2C_Op._73_-_IV._Allegro_Con_Spirito.ogg" },
+
+        ]
+
+    },
+
+    {
+
+        title: "이중 협주곡", bwv: "Op. 102", composer: "J. BRAHMS", performer: "Violin, cello and orchestra", credit: "음원: Musopen · PD · Wikimedia Commons",
+
+        labelBig: "BRAHMS", labelTitle: "이중 협주곡 A단조", labelArtist: "MUSOPEN", jTitle: "DOUBLE CONCERTO", jSub1: "브람스 이중 협주곡", jSub2: "A minor · Op. 102",
+
+        labelBg: "#e0dccb", jacketBg: "#2a2e33", accent: "#4a5a6b", side: "A", cover: "1/11/Johannes_Brahms_1853.jpg",
+
+        tracks: [
+
+            { t: "I. Allegro", f: "5/52/Johannes_Brahms_-_concerto_in_a_minor%2C_op._102_%27double_concerto%27_-_i._allegro.ogg" },
+
+            { t: "II. Andante", f: "4/47/Johannes_Brahms_-_concerto_in_a_minor%2C_op._102_%27double_concerto%27_-_ii._andante.ogg" },
+
+            { t: "III. Vivace non troppo", f: "2/29/Johannes_Brahms_-_concerto_in_a_minor%2C_op._102_%27double_concerto%27_-_iii._vivace_non_troppo.ogg" },
+
+        ]
+
+    },
+
+    {
+
+        title: "교향곡 제29번", bwv: "K. 201", composer: "W. A. MOZART", performer: "Chamber orchestra", credit: "음원: Musopen · PD · Wikimedia Commons",
+
+        labelBig: "MOZART", labelTitle: "교향곡 29번 A장조", labelArtist: "MUSOPEN", jTitle: "SYMPHONY No.29", jSub1: "모차르트 교향곡 29번", jSub2: "A major · K. 201",
+
+        labelBg: "#efe6d6", jacketBg: "#3a3550", accent: "#8a5a3a", side: "A", cover: "thumb/f/fc/Barbara_Krafft_-_Portr%C3%A4t_Wolfgang_Amadeus_Mozart_%281819%29.jpg/960px-Barbara_Krafft_-_Portr%C3%A4t_Wolfgang_Amadeus_Mozart_%281819%29.jpg",
+
+        tracks: [
+
+            { t: "I. Allegro moderato", f: "b/b6/IMSLP348253-PMLP01555-Mozart_29-1.ogg" },
+
+            { t: "II. Andante", f: "e/e7/IMSLP348254-PMLP01555-Mozart_29-2.ogg" },
+
+            { t: "III. Menuetto", f: "8/80/IMSLP348255-PMLP01555-Mozart_29-3.ogg" },
+
+            { t: "IV. Allegro con spirito", f: "1/1d/IMSLP348256-PMLP01555-Mozart_29-4.ogg" },
+
+        ]
+
+    },
+
+    {
+
+        title: "오보에 협주곡", bwv: "K. 314", composer: "W. A. MOZART", performer: "European Archive", credit: "음원: · European Archive · Musopen · PD ·",
+
+        labelBig: "MOZART", labelTitle: "오보에 협주곡 C장조", labelArtist: "EUROPEAN ARCHIVE", jTitle: "OBOE CONCERTO", jSub1: "모차르트 오보에 협주곡", jSub2: "C major · K. 314",
+
+        labelBg: "#e7ecdc", jacketBg: "#45543f", accent: "#5a7a4a", side: "A", cover: "thumb/f/fc/Barbara_Krafft_-_Portr%C3%A4t_Wolfgang_Amadeus_Mozart_%281819%29.jpg/960px-Barbara_Krafft_-_Portr%C3%A4t_Wolfgang_Amadeus_Mozart_%281819%29.jpg",
+
+        tracks: [
+
+            { t: "I. Allegro", f: "7/7d/Oboe_Concerto_in_C_K.314_271k_I._Allegro_%28Mozart%29_European_Archive.ogg" },
+
+            { t: "II. Andantino", f: "8/86/Oboe_Concerto_in_C_K.314_271k_II._Andantino_%28Mozart%29_European_Archive.ogg" },
+
+            { t: "III. Rondo. Allegro", f: "0/00/Oboe_Concerto_in_C_K.314_271k_III._Rondo_Allegro_%28Mozart%29_European_Archive.ogg" },
+
+        ]
+
+    },
+
+    {
+
+        title: "피아노 협주곡 제17번", bwv: "K. 453", composer: "W. A. MOZART", performer: "Piano and orchestra", credit: "음원: Musopen · PD · Wikimedia Commons",
+
+        labelBig: "MOZART", labelTitle: "피아노 협주곡 17번 G장조", labelArtist: "MUSOPEN", jTitle: "CONCERTO No.17", jSub1: "모차르트 피아노 협주곡 17번", jSub2: "G major · K. 453",
+
+        labelBg: "#ece3d8", jacketBg: "#40384a", accent: "#7a4a6a", side: "A", cover: "thumb/f/fc/Barbara_Krafft_-_Portr%C3%A4t_Wolfgang_Amadeus_Mozart_%281819%29.jpg/960px-Barbara_Krafft_-_Portr%C3%A4t_Wolfgang_Amadeus_Mozart_%281819%29.jpg",
+
+        tracks: [
+
+            { t: "I. Allegro", f: "3/38/Mozart_-_Concerto_No.17_in_G_-_I._Allegro.ogg" },
+
+            { t: "II. Andante", f: "e/ef/Mozart_-_Concerto_No.17_in_G_-_II._Andante.ogg" },
+
+            { t: "III. Allegretto", f: "c/c7/Mozart_-_Concerto_No.17_in_G_-_III._Allegretto.ogg" },
+
+        ]
+
+    },
+
+    {
+
+        title: "피아노 소나타 제13번", bwv: "K. 333", composer: "W. A. MOZART", performer: "Piano solo", credit: "음원: Musopen · PD · Wikimedia Commons",
+
+        labelBig: "MOZART", labelTitle: "피아노 소나타 13번 B♭장조", labelArtist: "PIANO SOLO", jTitle: "SONATA No.13", jSub1: "모차르트 피아노 소나타 13번", jSub2: "B-flat major · K. 333",
+
+        labelBg: "#ede8d6", jacketBg: "#4a4436", accent: "#8a6a3a", side: "A", cover: "thumb/f/fc/Barbara_Krafft_-_Portr%C3%A4t_Wolfgang_Amadeus_Mozart_%281819%29.jpg/960px-Barbara_Krafft_-_Portr%C3%A4t_Wolfgang_Amadeus_Mozart_%281819%29.jpg",
+
+        tracks: [
+
+            { t: "I. Allegro", f: "d/d1/Wolfgang_Amadeus_Mozart_-_sonata_no._13_in_b_flat_major%2C_k.333_-_i._allegro.ogg" },
+
+            { t: "II. Andante cantabile", f: "7/78/Wolfgang_Amadeus_Mozart_-_sonata_no._13_in_b_flat_major%2C_k.333_-_ii._andante_cantabile.ogg" },
+
+            { t: "III. Allegretto grazioso", f: "1/14/Wolfgang_Amadeus_Mozart_-_sonata_no._13_in_b_flat_major%2C_k.333_-_iii._allegretto_grazioso.ogg" },
+
+        ]
+
+    },
+
+    {
+
+        title: "교향곡 제3번 '스코틀랜드'", bwv: "Op. 56", composer: "F. MENDELSSOHN", performer: "Musopen Symphony Orchestra", credit: "음원: Musopen · PD · Wikimedia Commons",
+
+        labelBig: "MENDELSSOHN", labelTitle: "교향곡 3번 '스코틀랜드'", labelArtist: "MUSOPEN SYMPHONY", jTitle: "SCOTTISH", jSub1: "멘델스존 교향곡 3번 '스코틀랜드'", jSub2: "A minor · Op. 56",
+
+        labelBg: "#dde3d5", jacketBg: "#2e3a34", accent: "#3e5a4a", side: "A", cover: "thumb/c/c2/Felix_Mendelssohn_Bartholdy_by_Eduard_Magnus_%281833%29.jpg/960px-Felix_Mendelssohn_Bartholdy_by_Eduard_Magnus_%281833%29.jpg",
+
+        tracks: [
+
+            { t: "I. Andante con moto - Allegro", f: "8/82/The_Musopen_Symphony_Orchestra_-_Mendelssohn%27s_Symphony_No._3_in_A_minor%2C_Op._56%2C_MWV_N_18_-_I._Andante_con_moto-Allegro_un_poco_agitato.ogg" },
+
+            { t: "II. Vivace non troppo", f: "d/d0/The_Musopen_Symphony_Orchestra_-_Mendelssohn%27s_Symphony_No._3_in_A_minor%2C_Op._56%2C_MWV_N_18_-_II._Vivace_non_troppo.ogg" },
+
+            { t: "III. Adagio", f: "c/cf/The_Musopen_Symphony_Orchestra_-_Mendelssohn%27s_Symphony_No._3_in_A_minor%2C_Op._56%2C_MWV_N_18_-_III._Adagio.ogg" },
+
+            { t: "IV. Allegro vivacissimo", f: "f/f1/The_Musopen_Symphony_Orchestra_-_Mendelssohn%27s_Symphony_No._3_in_A_minor%2C_Op._56%2C_MWV_N_18_-_IV._Allegro_vivacissimo-Allegro_maestoso_assai.ogg" },
+
+        ]
+
+    },
+
+    {
+
+        title: "한여름 밤의 꿈", bwv: "Op. 61", composer: "F. MENDELSSOHN", performer: "European Archive", credit: "음원: · European Archive · Musopen · PD ·",
+
+        labelBig: "MENDELSSOHN", labelTitle: "한여름 밤의 꿈 모음곡", labelArtist: "EUROPEAN ARCHIVE", jTitle: "MIDSUMMER", jSub1: "멘델스존 '한여름 밤의 꿈'", jSub2: "Incidental music · Op. 61",
+
+        labelBg: "#dce6dd", jacketBg: "#27352c", accent: "#4a6b4f", side: "A", cover: "thumb/c/c2/Felix_Mendelssohn_Bartholdy_by_Eduard_Magnus_%281833%29.jpg/960px-Felix_Mendelssohn_Bartholdy_by_Eduard_Magnus_%281833%29.jpg",
+
+        tracks: [
+
+            { t: "Overture", f: "b/b0/A_Midsummer_Night%27s_Dream_Op._61_Overture_%28Mendelssohn%29_European_Archive.ogg" },
+
+            { t: "Scherzo", f: "7/71/A_Midsummer_Night%27s_Dream_Op._61_Scherzo_%28Mendelssohn%29_European_Archive.ogg" },
+
+            { t: "Song with Choir", f: "2/2e/A_Midsummer_Night%27s_Dream_Op._61_Song_with_choir_%28Mendelssohn%29_European_Archive.ogg" },
+
+            { t: "Wedding March", f: "c/cb/A_Midsummer_Night%27s_Dream_Op._61_Wedding_March_%28Mendelssohn%29_European_Archive.ogg" },
+
+            { t: "Dance of the Clowns", f: "4/4f/A_Midsummer_Night%27s_Dream_Op._61_Dance_of_Clowns_%28Mendelssohn%29_European_Archive.ogg" },
+
+        ]
+
+    },
+
+    {
+
+        title: "현악 4중주 제6번", bwv: "Op. 80", composer: "F. MENDELSSOHN", performer: "String quartet", credit: "음원: Musopen · PD · Wikimedia Commons",
+
+        labelBig: "MENDELSSOHN", labelTitle: "현악 4중주 6번 F단조", labelArtist: "STRING QUARTET", jTitle: "QUARTET No.6", jSub1: "멘델스존 현악 4중주 6번", jSub2: "F minor · Op. 80",
+
+        labelBg: "#e2ddcf", jacketBg: "#382e30", accent: "#6b3a4a", side: "A", cover: "thumb/c/c2/Felix_Mendelssohn_Bartholdy_by_Eduard_Magnus_%281833%29.jpg/960px-Felix_Mendelssohn_Bartholdy_by_Eduard_Magnus_%281833%29.jpg",
+
+        tracks: [
+
+            { t: "I. Allegro vivace assai", f: "6/66/IMSLP247103-PMLP27022-String_Quartet_No._6_in_F_minor%2C_Op._80_-_I._Allegro_vivace_assai.ogg" },
+
+            { t: "II. Allegro assai", f: "1/1e/IMSLP247104-PMLP27022-String_Quartet_No._6_in_F_minor%2C_Op._80_-_II._Allegro_assai.ogg" },
+
+            { t: "III. Adagio", f: "0/04/IMSLP247105-PMLP27022-String_Quartet_No._6_in_F_minor%2C_Op._80_-_III._Adagio.ogg" },
+
+            { t: "IV. Finale. Allegro molto", f: "3/3d/IMSLP247106-PMLP27022-String_Quartet_No._6_in_F_minor%2C_Op._80_-_IV._Fuga.ogg" },
+
+        ]
+
+    },
+
+    {
+
+        title: "피아노 소나타 제13번", bwv: "D. 664", composer: "F. SCHUBERT", performer: "Piano solo", credit: "음원: Musopen · PD · Wikimedia Commons",
+
+        labelBig: "SCHUBERT", labelTitle: "피아노 소나타 13번 A장조", labelArtist: "PIANO SOLO", jTitle: "SONATA D.664", jSub1: "슈베르트 피아노 소나타 13번", jSub2: "A major · D. 664",
+
+        labelBg: "#e6e0d0", jacketBg: "#33303a", accent: "#5a4a7a", side: "A", cover: "f/fb/Franz_Schubert_by_Wilhelm_August_Rieder.jpeg",
+
+        tracks: [
+
+            { t: "I. Allegro moderato", f: "2/24/Schubert%2C_Sonata_A_Major%2C_D._664_-_I._Allegro_moderato.ogg" },
+
+            { t: "II. Andante", f: "6/62/Schubert%2C_Sonata_A_Major%2C_D._664_-_II._Andante.ogg" },
+
+            { t: "III. Allegro", f: "7/7e/Schubert%2C_Sonata_A_Major%2C_D._664_-_III._Allegro.ogg" },
+
+        ]
+
+    },
+
+    {
+
+        title: "피아노 협주곡", bwv: "Op. 54", composer: "R. SCHUMANN", performer: "Piano and orchestra", credit: "음원: Musopen · PD · Wikimedia Commons",
+
+        labelBig: "SCHUMANN", labelTitle: "피아노 협주곡 A단조", labelArtist: "MUSOPEN", jTitle: "CONCERTO", jSub1: "슈만 피아노 협주곡", jSub2: "A minor · Op. 54",
+
+        labelBg: "#e4dece", jacketBg: "#2e2a34", accent: "#7a4a3a", side: "A", cover: "7/78/Schumann-photo1850.jpg",
+
+        tracks: [
+
+            { t: "I. Allegro affettuoso", f: "e/ea/Schumann_-_Piano_Concerto_in_A_minor_Op.54_-_I._Allegro.ogg" },
+
+            { t: "II. Intermezzo & III. Allegro vivace", f: "9/9e/Schumann_-_Piano_Concerto_in_A_minor_Op.54_-_II._Intermezzo_and_III._Allegro_vivace.ogg" },
+
+        ]
+
+    },
+
+    {
+
+        title: "교향곡 제4번", bwv: "Op. 36", composer: "P. I. TCHAIKOVSKY", performer: "European Archive", credit: "음원: · European Archive · Musopen · PD ·",
+
+        labelBig: "TCHAIKOVSKY", labelTitle: "교향곡 4번 F단조", labelArtist: "EUROPEAN ARCHIVE", jTitle: "SYMPHONY No.4", jSub1: "차이콥스키 교향곡 4번", jSub2: "F minor · Op. 36",
+
+        labelBg: "#e0dccb", jacketBg: "#2a2f3a", accent: "#5a3a4a", side: "A", cover: "5/51/Pyotr_Tchaikovsky_%D1%81._1870.jpg",
+
+        tracks: [
+
+            { t: "I. Andante sostenuto", f: "d/dc/P.I._Tchalkovsky_Symphony_No.4_in_F_Minor_Op.36_I._Andante_sossenuto_%28Tchaikovsky%29_European_Archive.ogg" },
+
+            { t: "II. Andantino", f: "9/97/P.I._Tchalkovsky_Symphony_No.4_in_F_Minor_Op.36_II._Andantino_%28Tchaikovsky%29_European_Archive.ogg" },
+
+            { t: "III. Scherzo. Pizzicato ostinato", f: "f/f6/P.I._Tchaikovsky_Symphony_No.4_in_F_minor_Op.36_III._Scherzo_%28Tchaikovsky%29_European_Archive.ogg" },
+
+            { t: "IV. Finale. Allegro con fuoco", f: "5/5e/P.I._Tchalkovsky_Symphony_No.4_in_F_Minor_Op.36_IV._Finale_Allegro_con_fuocco_%28Tchaikovsky%29_European_Archive.ogg" },
+
+        ]
+
+    },
+
+    {
+
+        title: "백조의 호수 (발췌)", bwv: "Op. 20", composer: "P. I. TCHAIKOVSKY", performer: "Ballet orchestra", credit: "음원: Musopen · PD · Wikimedia Commons",
+
+        labelBig: "TCHAIKOVSKY", labelTitle: "발레 '백조의 호수'", labelArtist: "MUSOPEN", jTitle: "SWAN LAKE", jSub1: "차이콥스키 '백조의 호수'", jSub2: "Ballet · Op. 20",
+
+        labelBg: "#dfe4ea", jacketBg: "#26303f", accent: "#3a5a7a", side: "A", cover: "5/51/Pyotr_Tchaikovsky_%D1%81._1870.jpg",
+
+        tracks: [
+
+            { t: "Act I - Introduction", f: "4/4f/Tchaikovsky_-_Swan_Lake_Op.20_-_Act_I_Intro.ogg" },
+
+            { t: "Act II - Part 1", f: "8/82/Tchaikovsky_-_Swan_Lake_Op.20_-_Act_II_Pt.1.ogg" },
+
+            { t: "Act II - Conclusion", f: "8/81/Tchaikovsky_-_Swan_Lake_Op.20_-_Act_II_Concl.ogg" },
+
+            { t: "Act III - Part 1", f: "b/b4/Tchaikovsky_-_Swan_Lake_Op.20_-_Act_III_Pt.1.ogg" },
+
+            { t: "Act III - Conclusion", f: "2/2b/Tchaikovsky_-_Swan_Lake_Op.20_-_Act_III_Concl%2C_Allegro.ogg" },
+
+            { t: "Act IV - Introduction", f: "5/51/Tchaikovsky_-_Swan_Lake_Op.20_-_Act_IV_Intro.ogg" },
+
+        ]
+
+    },
+
+    {
+
+        title: "이탈리아 협주곡", bwv: "BWV 971", composer: "J. S. BACH", performer: "Harpsichord solo", credit: "음원: Musopen · PD · Wikimedia Commons",
+
+        labelBig: "BACH", labelTitle: "이탈리아 협주곡 F장조", labelArtist: "HARPSICHORD", jTitle: "ITALIAN CONCERTO", jSub1: "바흐 이탈리아 협주곡", jSub2: "F major · BWV 971",
+
+        labelBg: "#e8e0cc", jacketBg: "#33302a", accent: "#7a5a2e", side: "A", cover: "thumb/6/6a/Johann_Sebastian_Bach.jpg/960px-Johann_Sebastian_Bach.jpg",
+
+        tracks: [
+
+            { t: "I. (Allegro)", f: "a/a8/J._S._Bach_-_Italian_Concerto%2C_BWV._971_-_1._Without_tempo_indication.ogg" },
+
+            { t: "II. Andante", f: "c/c4/J._S._Bach_-_Italian_Concerto%2C_BWV._971_-_2._Andante.ogg" },
+
+            { t: "III. Presto", f: "1/1c/J._S._Bach_-_Italian_Concerto%2C_BWV._971_-_3._Presto.ogg" },
+
+        ]
+
+    },
+
+    {
+
+        title: "하프시코드 협주곡 제5번", bwv: "BWV 1056", composer: "J. S. BACH", performer: "Harpsichord and strings", credit: "음원: Musopen · PD · Wikimedia Commons",
+
+        labelBig: "BACH", labelTitle: "하프시코드 협주곡 5번", labelArtist: "MUSOPEN", jTitle: "BWV 1056", jSub1: "바흐 하프시코드 협주곡 5번", jSub2: "F minor · BWV 1056",
+
+        labelBg: "#e5ddc9", jacketBg: "#2e2b26", accent: "#6b4a2a", side: "A", cover: "thumb/6/6a/Johann_Sebastian_Bach.jpg/960px-Johann_Sebastian_Bach.jpg",
+
+        tracks: [
+
+            { t: "I. Allegro", f: "e/eb/Harpsichord_Concerto_no._5_in_F_minor%2C_BWV_1056_-_I._Allegro.ogg" },
+
+            { t: "II. Largo", f: "a/aa/Harpsichord_Concerto_no._5_in_F_minor%2C_BWV_1056_-_II._Largo.ogg" },
+
+            { t: "III. Presto", f: "9/95/Harpsichord_Concerto_no._5_in_F_minor%2C_BWV_1056_-_III._Presto.ogg" },
+
+        ]
+
+    },
+
+    {
+
+        title: "합주 협주곡 (Op. 3)", bwv: "HWV 312-317", composer: "G. F. HANDEL", performer: "Baroque orchestra", credit: "음원: Musopen · PD · Wikimedia Commons",
+
+        labelBig: "HANDEL", labelTitle: "합주 협주곡 Op. 3", labelArtist: "MUSOPEN", jTitle: "CONCERTI GROSSI", jSub1: "헨델 합주 협주곡 Op. 3", jSub2: "HWV 312-317",
+
+        labelBg: "#e9e1cd", jacketBg: "#35302a", accent: "#8a6a3a", side: "A", cover: "9/9f/George_Frideric_Handel_by_Thomas_Hudson_-_1756.jpg",
+
+        tracks: [
+
+            { t: "No. 1 in B-flat, HWV 312", f: "3/32/Concerto_Grosso_in_B-flat_major_HWV_312.mp3" },
+
+            { t: "No. 2 in B-flat, HWV 313", f: "4/4b/Concerto_Grosso_in_B-flat_major%2C_HWV_313.mp3" },
+
+            { t: "No. 3 in G, HWV 314", f: "a/a0/Concerto_Grosso_in_G_major%2C_HWV_314.mp3" },
+
+            { t: "No. 4 in F, HWV 315", f: "d/da/Concerto_Grosso_in_F_major%2C_HWV_315.mp3" },
+
+            { t: "No. 5 in D minor, HWV 316", f: "2/2b/Concerto_Grosso_in_D_minor_HWV_316.mp3" },
+
+            { t: "No. 6 in D, HWV 317", f: "3/3e/Concerto_Grosso_in_D_major_HWV_317.mp3" },
+
+        ]
+
+    },
+
+    {
+
+        title: "첼로 협주곡 제1번", bwv: "Op. 33", composer: "C. SAINT-SAËNS", performer: "Cello and orchestra", credit: "음원: Musopen · PD · Wikimedia Commons",
+
+        labelBig: "SAINT-SAENS", labelTitle: "첼로 협주곡 1번 A단조", labelArtist: "MUSOPEN", jTitle: "CELLO CONCERTO", jSub1: "생상스 첼로 협주곡 1번", jSub2: "A minor · Op. 33",
+
+        labelBg: "#e2ddd0", jacketBg: "#2c2a30", accent: "#6b3a3a", side: "A", cover: "thumb/a/a0/Portrait_of_Camille_Saint-Sa%C3%ABns_by_Henri_Manuel.jpg/960px-Portrait_of_Camille_Saint-Sa%C3%ABns_by_Henri_Manuel.jpg",
+
+        tracks: [
+
+            { t: "I. Allegro non troppo", f: "d/d1/Camille_Saint-Saens_-_cello_concerto_no._1_in_a_minor%2C_op._33_-_i._allegro_non_troppo.ogg" },
+
+            { t: "II. Allegretto con moto", f: "9/97/Camille_Saint-Saens_-_cello_concerto_no._1_in_a_minor%2C_op._33_-_ii._allegretto_con_mot.ogg" },
+
+            { t: "III. Tempo primo", f: "2/2e/Camille_Saint-Saens_-_cello_concerto_no._1_in_a_minor%2C_op._33_-_iii._%28tempo_primo%29.ogg" },
+
+        ]
+
+    },
+
+    {
+
+        title: "즉흥곡 전곡", bwv: "Op. 29·36·51·66", composer: "F. CHOPIN", performer: "Piano solo", credit: "음원: Musopen · PD · Wikimedia Commons",
+
+        labelBig: "CHOPIN", labelTitle: "즉흥곡 (Impromptus)", labelArtist: "PIANO SOLO", jTitle: "IMPROMPTUS", jSub1: "쇼팽 즉흥곡 전곡", jSub2: "Op. 29 · 36 · 51 · 66",
+
+        labelBg: "#ece0e0", jacketBg: "#2e2830", accent: "#7a3a5a", side: "A", cover: "thumb/2/24/Fr%C3%A9d%C3%A9ric_Chopin_-_Eug%C3%A8ne_Delacroix_-_Mus%C3%A9e_du_Louvre_Peintures_RF_1717.jpg/960px-Fr%C3%A9d%C3%A9ric_Chopin_-_Eug%C3%A8ne_Delacroix_-_Mus%C3%A9e_du_Louvre_Peintures_RF_1717.jpg",
+
+        tracks: [
+
+            { t: "No. 1 in A-flat, Op. 29", f: "9/9a/Impromptu_no._1_-_Op._29.mp3" },
+
+            { t: "No. 2 in F-sharp, Op. 36", f: "1/1e/Impromptu_no._2_-_Op._36.mp3" },
+
+            { t: "No. 3 in G-flat, Op. 51", f: "1/1e/Impromptu_no._3_-_Op._51.mp3" },
+
+            { t: "No. 4 Fantaisie-Impromptu, Op. 66", f: "2/2b/Fantaisie_Impromptu_Op._66.mp3" },
+
+        ]
+
     }
+
 ];
 let recordIdx = loadJson("fmRadio.record", 0);
 if (typeof recordIdx !== "number" || !RECORDS[recordIdx]) recordIdx = 0;
