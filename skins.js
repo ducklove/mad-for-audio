@@ -618,45 +618,45 @@ function tubeSvg(cx, baseY, w, h, kind) {
 const AMP_CIRCUITS = {
     el34PushPull: {
         topology: "ultralinear-push-pull-ab",
-        pre: { drive: .90, knee: .92, ceiling: .966, even: .003, kind: "triode" },
-        power: { drive: .95, knee: .76, ceiling: .885, even: .0015, crossover: .0003, kind: "pentode" },
-        sag: { threshold: -15, knee: 16, ratio: 1.45, attack: .008, release: .28 },
+        pre: { drive: 1, knee: .92, ceiling: .975, even: .004, body: .01, kind: "triode" },
+        power: { drive: 1.08, knee: .78, ceiling: .94, even: .0015, body: .035, crossover: .0003, kind: "pentode" },
+        sag: { threshold: -13, knee: 14, ratio: 1.38, attack: .01, release: .26 },
         transformer: { low: 28, lowQ: .72, high: 21000, highQ: .72 },
-        damping: { factor: 8, bass: [72, .8, 1], high: [4500, .25] }
+        damping: { factor: 8, bass: [72, 1, 1.02], high: [4500, .3] }
     },
     triode300bSE: {
         topology: "single-ended-triode-a",
-        pre: { drive: .88, knee: .92, ceiling: .966, even: .006, kind: "triode" },
-        power: { drive: .95, knee: .82, ceiling: .928, even: .04, crossover: 0, kind: "triode" },
+        pre: { drive: 1, knee: .94, ceiling: .98, even: .008, body: .006, kind: "triode" },
+        power: { drive: 1.06, knee: .82, ceiling: .95, even: .04, body: .018, crossover: 0, kind: "triode" },
         // 클래스 A는 평균 전류 변화가 작으므로 정류 새그보다 출력관의 비대칭 포화가 중심이다.
-        sag: { threshold: -6, knee: 12, ratio: 1.05, attack: .02, release: .12 },
+        sag: { threshold: -4, knee: 12, ratio: 1.04, attack: .02, release: .12 },
         transformer: { low: 38, lowQ: .72, high: 16500, highQ: .7 },
-        damping: { factor: 2.5, bass: [68, 2.3, 1.05], high: [4200, .9] }
+        damping: { factor: 2.5, bass: [68, 2.1, 1.08], high: [4200, .75] }
     },
     kt88UnityPushPull: {
         topology: "unity-coupled-push-pull-ab",
-        pre: { drive: .92, knee: .94, ceiling: .976, even: .0015, kind: "triode" },
-        power: { drive: .98, knee: .84, ceiling: .936, even: .0005, crossover: 0, kind: "beam" },
-        sag: { threshold: -10, knee: 10, ratio: 1.18, attack: .004, release: .16 },
+        pre: { drive: 1, knee: .95, ceiling: .98, even: .0015, body: .004, kind: "triode" },
+        power: { drive: 1.04, knee: .88, ceiling: .965, even: .0005, body: .012, crossover: 0, kind: "beam" },
+        sag: { threshold: -8, knee: 10, ratio: 1.14, attack: .004, release: .16 },
         transformer: { low: 18, lowQ: .707, high: 28000, highQ: .707 },
-        damping: { factor: 15, bass: [65, .3, .82], high: [5200, .15] }
+        damping: { factor: 15, bass: [65, .35, .86], high: [5200, .15] }
     },
     ma2375UnityCoupled: {
         topology: "kt88-unity-coupled-push-pull-ab-sgs",
-        pre: { drive: .94, knee: .95, ceiling: .98, even: .001, kind: "triode" },
-        power: { drive: .98, knee: .90, ceiling: .96, even: .0004, crossover: 0, kind: "beam" },
+        pre: { drive: .98, knee: .97, ceiling: .985, even: .001, body: .002, kind: "triode" },
+        power: { drive: 1.01, knee: .93, ceiling: .975, even: .0004, body: .005, crossover: 0, kind: "beam" },
         // Power Guard SGS가 큰 피크에서만 빠르게 개입하는 동작을 완만한 보호 압축으로 근사한다.
-        sag: { threshold: -5, knee: 8, ratio: 1.12, attack: .002, release: .12 },
+        sag: { threshold: -3, knee: 8, ratio: 1.08, attack: .002, release: .12 },
         transformer: { low: 10, lowQ: .707, high: 50000, highQ: .707 },
         damping: { factor: 22, bass: [62, .12, .78], high: [5600, .08] }
     },
     sixL6PushPull: {
         topology: "6l6gc-push-pull-ab",
-        pre: { drive: .90, knee: .92, ceiling: .965, even: .004, kind: "triode" },
-        power: { drive: .94, knee: .74, ceiling: .865, even: .002, crossover: .0008, kind: "beam" },
-        sag: { threshold: -15, knee: 18, ratio: 1.55, attack: .01, release: .34 },
+        pre: { drive: 1, knee: .92, ceiling: .975, even: .004, body: .012, kind: "triode" },
+        power: { drive: 1.07, knee: .79, ceiling: .94, even: .003, body: .04, crossover: .0008, kind: "beam" },
+        sag: { threshold: -13, knee: 16, ratio: 1.45, attack: .012, release: .32 },
         transformer: { low: 30, lowQ: .72, high: 19000, highQ: .7 },
-        damping: { factor: 5, bass: [76, 1.3, 1.02], high: [4400, .35] }
+        damping: { factor: 5, bass: [76, 1.4, 1.05], high: [4400, .4] }
     }
 };
 
@@ -678,21 +678,21 @@ const AMP_MODELS = {
         pill: "EL34 · 8B",
         desc: "EL34 울트라리니어 푸시풀 — 3차 배음, 완만한 AB 클리핑과 중간 새그 (Marantz 8B 오마주)",
         vol: { cx: 690, cy: 406, r: 34 },
-        drive: 2.2, k: 1.7, asym: 0.12, bass: [100, .4], lowMid: [320, .6, 0.8], mid: [1600, .7, 0.9], presence: [4000, -0.2, 1], treble: [8500, -.35], out: 1.02,
+        drive: 2.2, k: 1.7, asym: 0.12, bass: [100, .4], lowMid: [320, .6, 0.8], mid: [1600, .7, 0.9], presence: [4000, -0.2, 1], treble: [8500, -.35], out: .92,
         circuit: AMP_CIRCUITS.el34PushPull
     },
     "300b": {
         pill: "300B · 91E",
         desc: "300B 싱글엔디드 클래스 A — 우세한 2차 배음, 비대칭 소프트 포화와 낮은 댐핑 (WE 91E 오마주)",
         vol: { cx: 880, cy: 420, r: 112 },
-        drive: 2.8, k: 1.15, asym: 0.38, bass: [100, .3], lowMid: [300, .45, 0.72], mid: [800, .25, 0.8], presence: [3200, -.25, 0.9], treble: [7000, -.65], out: 1.05,
+        drive: 2.8, k: 1.15, asym: 0.38, bass: [100, .3], lowMid: [300, .45, 0.72], mid: [800, .25, 0.8], presence: [3200, -.25, 0.9], treble: [7000, -.65], out: .90,
         circuit: AMP_CIRCUITS.triode300bSE
     },
     kt88: {
         pill: "KT88 · 275",
         desc: "KT88 유니티 커플드 푸시풀 — 높은 헤드룸, 낮은 배음과 강한 댐핑 (McIntosh MC275 오마주)",
         vol: { cx: 600, cy: 422, r: 32 },
-        drive: 1.9, k: 1.45, asym: 0.08, bass: [80, .15], lowMid: [260, .1, 0.8], mid: [1200, -.1, 1], presence: [3800, .15, 0.9], treble: [10000, .25], out: .98,
+        drive: 1.9, k: 1.45, asym: 0.08, bass: [80, .15], lowMid: [260, .1, 0.8], mid: [1200, -.1, 1], presence: [3800, .15, 0.9], treble: [10000, .25], out: .95,
         circuit: AMP_CIRCUITS.kt88UnityPushPull
     }
 };

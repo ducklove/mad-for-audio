@@ -1324,7 +1324,7 @@ function playPhonoTrack(i, auto) {
     if (typeof Hls !== "undefined" && Hls.isSupported() && !SAFARI_LIKE) ensureAudioGraph();
     phonoActive = true;
     phonoTrack = i;
-    if (gainNode) gainNode.gain.value = volumeLevel * PHONO_GAIN;
+    if (gainNode) applyGainStaging();
     currentStation = null;
     tunerSetStation(null);
     document.querySelectorAll(".station").forEach((el) => el.classList.remove("active", "playing", "loading"));
@@ -1360,7 +1360,7 @@ function stopPhono() {
     if (crackleGain) crackleGain.gain.value = 0;
     if (scratchGain) scratchGain.gain.value = 0;
     ttScratchEnergy = 0;
-    if (gainNode) gainNode.gain.value = volumeLevel;
+    if (gainNode) applyGainStaging();
     updatePhonoVisuals();
 }
 
@@ -2141,12 +2141,7 @@ function playEasterEgg() {
 }
 
 function setVolume(value) {
-    volumeLevel = value / 100;
-    if (gainNode) {
-        gainNode.gain.value = volumeLevel * (phonoActive ? PHONO_GAIN : 1);
-    } else {
-        audio.volume = volumeLevel;
-    }
+    setVolumeLevel(value / 100);
 }
 
 // ----- 녹음 -----

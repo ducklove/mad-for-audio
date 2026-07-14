@@ -141,12 +141,12 @@ test.describe("데스크톱", () => {
     test("진공관 DSP: 싱글엔디드 배음·푸시풀 대칭·새그·댐핑이 모델별로 다름", async ({ page }) => {
         const dsp = await page.evaluate(() => {
             const api = window.MFA_AmpDSP;
-            const harmonics = (id, fullChain = false) => {
+            const harmonics = (id, fullChain = false, amplitude = .98) => {
                 const size = 1024;
                 const wave = Array.from({ length: size }, (_, i) =>
                     fullChain
-                        ? api.sampleChain(id, .98 * Math.sin(2 * Math.PI * i / size))
-                        : api.sample(id, "power", .98 * Math.sin(2 * Math.PI * i / size)));
+                        ? api.sampleChain(id, amplitude * Math.sin(2 * Math.PI * i / size))
+                        : api.sample(id, "power", amplitude * Math.sin(2 * Math.PI * i / size)));
                 const magnitude = (harmonic) => {
                     let re = 0;
                     let im = 0;
@@ -167,6 +167,15 @@ test.describe("데스크톱", () => {
             const n300 = api.sample("300b", "power", -.5);
             const pkt = api.sample("kt88", "power", .5);
             const nkt = api.sample("kt88", "power", -.5);
+            const nominalRms = (id) => {
+                const size = 1024;
+                const out = AMP_MODELS[id].out;
+                const energy = Array.from({ length: size }, (_, i) => {
+                    const y = api.sampleChain(id, .65 * Math.sin(2 * Math.PI * i / size)) * out;
+                    return y * y;
+                }).reduce((sum, value) => sum + value, 0);
+                return Math.sqrt(energy / size);
+            };
             return {
                 asym300b: Math.abs(p300 + n300),
                 asymKt88: Math.abs(pkt + nkt),
@@ -184,11 +193,17 @@ test.describe("데스크톱", () => {
                 hEl34: harmonics("el34"),
                 hKt88: harmonics("kt88"),
                 hAu111: harmonics("au111"),
-                chain300b: harmonics("300b", true),
-                chainEl34: harmonics("el34", true),
-                chainKt88: harmonics("kt88", true),
-                chainAu111: harmonics("au111", true),
-                chainMa2375: harmonics("ma2375", true),
+                nominal300b: harmonics("300b", true, .65),
+                nominalEl34: harmonics("el34", true, .65),
+                nominalKt88: harmonics("kt88", true, .65),
+                nominalAu111: harmonics("au111", true, .65),
+                nominalMa2375: harmonics("ma2375", true, .65),
+                peak300b: harmonics("300b", true),
+                peakEl34: harmonics("el34", true),
+                peakKt88: harmonics("kt88", true),
+                peakAu111: harmonics("au111", true),
+                peakMa2375: harmonics("ma2375", true),
+                nominalRms: ["300b", "el34", "au111", "kt88", "ma2375"].map(nominalRms),
             };
         });
         expect(dsp.asym300b).toBeGreaterThan(0.015);
@@ -199,11 +214,17 @@ test.describe("데스크톱", () => {
         expect(dsp.hAu111.h3).toBeGreaterThan(dsp.hAu111.h2);
         expect(dsp.hKt88.thd).toBeLessThan(dsp.hEl34.thd);
         expect(dsp.hKt88.thd).toBeLessThan(.02);
-        expect(dsp.chain300b.thd).toBeLessThan(.035);
-        expect(dsp.chainEl34.thd).toBeLessThan(.015);
-        expect(dsp.chainKt88.thd).toBeLessThan(.01);
-        expect(dsp.chainAu111.thd).toBeLessThan(.02);
-        expect(dsp.chainMa2375.thd).toBeLessThan(.005);
+        expect(dsp.nominal300b.h2).toBeGreaterThan(dsp.nominal300b.h3);
+        expect(dsp.nominal300b.thd).toBeGreaterThan(.012);
+        expect(dsp.nominalAu111.h3).toBeGreaterThan(dsp.nominalEl34.h3);
+        expect(dsp.nominalEl34.thd).toBeGreaterThan(dsp.nominalKt88.thd * 2);
+        expect(dsp.nominalKt88.thd).toBeGreaterThan(dsp.nominalMa2375.thd * 1.5);
+        expect(dsp.peak300b.thd).toBeLessThan(.05);
+        expect(dsp.peakEl34.thd).toBeLessThan(.06);
+        expect(dsp.peakKt88.thd).toBeLessThan(.025);
+        expect(dsp.peakAu111.thd).toBeLessThan(.06);
+        expect(dsp.peakMa2375.thd).toBeLessThan(.005);
+        expect(Math.max(...dsp.nominalRms) - Math.min(...dsp.nominalRms)).toBeLessThan(.035);
         expect(dsp.centerSlope).toBeGreaterThan(.09);
         expect(dsp.centerSlope).toBeLessThan(.11);
         expect(dsp.softSlopeHigh).toBeLessThan(dsp.softSlopeLow);
@@ -216,6 +237,12 @@ test.describe("데스크톱", () => {
         expect(dsp.ma2375.dampingFactor).toBeGreaterThan(dsp.kt88.dampingFactor);
         expect(dsp.ma2375.sagRatio).toBeLessThan(dsp.kt88.sagRatio);
         expect(dsp.ma2375.transformerBand[1]).toBeGreaterThan(dsp.kt88.transformerBand[1]);
+        expect(dsp.p300.speakerMemory.feedback).toBeGreaterThan(dsp.au111.speakerMemory.feedback);
+        expect(dsp.au111.speakerMemory.feedback).toBeGreaterThan(dsp.el34.speakerMemory.feedback);
+        expect(dsp.el34.speakerMemory.feedback).toBeGreaterThan(dsp.kt88.speakerMemory.feedback);
+        expect(dsp.kt88.speakerMemory.feedback).toBeGreaterThan(dsp.ma2375.speakerMemory.feedback);
+        expect(dsp.p300.speakerMemory.wet).toBeGreaterThan(.12);
+        expect(dsp.ma2375.speakerMemory.wet).toBeLessThan(.02);
     });
 
     test("재생 중 진공관 5종 전환: Web Audio 회로 재설정 후에도 재생 유지", async ({ page }) => {
@@ -232,6 +259,22 @@ test.describe("데스크톱", () => {
             await page.waitForTimeout(100);
             await expect(page.locator("#audioPlayer")).toHaveJSProperty("paused", false);
         }
+
+        await page.evaluate(() => setVolume(20));
+        await page.waitForTimeout(100);
+        const quietRuntime = await page.evaluate(() => window.MFA_AmpDSP.runtime());
+        expect(quietRuntime.graphReady).toBe(true);
+        expect(quietRuntime.masterGain).toBeCloseTo(.2, 2);
+        expect(quietRuntime.inputTrim).toBeCloseTo(1, 2);
+        expect(quietRuntime.speakerWet).toBeLessThan(.02);
+
+        await page.locator("#ampPicker .skin-btn", { hasText: "300B · 91E" }).click();
+        await page.waitForTimeout(100);
+        const looseRuntime = await page.evaluate(() => window.MFA_AmpDSP.runtime());
+        expect(looseRuntime.masterGain).toBeCloseTo(.2, 2);
+        expect(looseRuntime.inputTrim).toBeCloseTo(1, 2);
+        expect(looseRuntime.speakerWet).toBeGreaterThan(.12);
+        expect(looseRuntime.speakerFeedback).toBeGreaterThan(.5);
     });
 });
 

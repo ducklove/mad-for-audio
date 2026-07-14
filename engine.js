@@ -1,9 +1,11 @@
 // 오디오 엔진 모듈 — Web Audio 그래프, EQ 체인, 앰프 보이싱, 크랙클/히스, 오디오 상태 머신.
 // 클래식 스크립트 — 전역 렉시컬 스코프를 공유한다. 로드 순서: store→skins→engine→deck→app.
 
-// 오디오 그래프: source → gain(청취 볼륨) → 스피커, source → recDest(원음 레벨) → MediaRecorder, source → analyser(VU)
+// 오디오 그래프: source → 입력 기준 레벨 → 앰프 → master gain(청취 볼륨) → 스피커.
+// 청취 볼륨과 출력관 구동을 분리해 작은 음량에서도 모델 고유의 배음·댐핑이 유지된다.
 let audioCtx = null;
 let gainNode = null;
+let ampInputTrim = null;
 let recDest = null;
 let analyser = null;
 let blendFilter = null;
@@ -24,6 +26,11 @@ let ampTransformerHP = null;
 let ampTransformerLP = null;
 let ampDampingBass = null;
 let ampDampingHigh = null;
+let ampSpeakerResonance = null;
+let ampSpeakerDelay = null;
+let ampSpeakerTone = null;
+let ampSpeakerFeedback = null;
+let ampSpeakerWet = null;
 let ampOut = null;
 let crackleGain = null;
 let crackleSrc = null;
@@ -92,6 +99,7 @@ function valveCurve(stage) {
     const kind = stage.kind || "pentode";
     const asym = Math.max(-.8, Math.min(.8, stage.asym || 0));
     const even = Math.max(-.15, Math.min(.15, stage.even || 0));
+    const body = Math.max(0, Math.min(.14, stage.body || 0));
     const crossover = Math.max(0, Math.min(.025, stage.crossover || 0));
     const transfer = (mag, k) => {
         if (mag <= 0) return 0;
@@ -125,6 +133,9 @@ function valveCurve(stage) {
                 const soft = t + (10 * q - 6) * t ** 3 + (8 - 15 * q) * t ** 4 + (6 * q - 3) * t ** 5;
                 shaped = knee + width * soft;
             }
+            // 정상 청취 레벨에서도 관종별 gm 곡률이 사라지지 않도록 아주 완만한
+            // 3차 압축 성분을 남긴다. 소프트 니의 C² 연속성은 그대로 유지된다.
+            shaped -= body * shaped * shaped * shaped;
             // 싱글엔디드 300B에만 작은 제곱항을 남겨 2차 배음을 만든다.
             // 포화 곡선 자체는 양·음 모두 같은 C² 소프트 니를 유지한다.
             c[i] = sign * shaped + even * shaped * shaped;
@@ -136,6 +147,25 @@ function valveCurve(stage) {
     }
     valveCurveCache.set(stage, c);
     return c;
+}
+
+// 댐핑 팩터를 실제 시간축 스피커 부하로 변환한다. 낮은 DF일수록 우퍼 공진 Q,
+// 저역 에너지의 짧은 피드백 꼬리와 회복 시간이 커진다. 방 잔향을 더하는 리버브가
+// 아니라 출력 임피던스가 높은 앰프에 물린 드라이버의 에너지 저장을 근사한 것이다.
+function speakerLoadProfile(circuit) {
+    const damping = circuit && circuit.damping || { factor: 80, bass: [70, 0, .8] };
+    const factor = Math.max(1, damping.factor || 80);
+    const looseness = Math.max(0, Math.min(1, (24 - factor) / 22));
+    return {
+        factor,
+        looseness,
+        resonance: damping.bass[0] || 70,
+        q: .75 + looseness * .7,
+        delay: .0055 + looseness * .0065,
+        feedback: looseness * .55,
+        wet: looseness * .14,
+        tone: 900 + (1 - looseness) * 700
+    };
 }
 
 function sampleValveStage(stage, x) {
@@ -152,11 +182,15 @@ window.MFA_AmpDSP = Object.freeze({
         const model = AMP_MODELS[id];
         const c = model && model.circuit;
         if (!c) return null;
+        const speaker = speakerLoadProfile(c);
         return {
             topology: c.topology,
             dampingFactor: c.damping.factor,
             sagRatio: c.sag.ratio,
-            transformerBand: [c.transformer.low, c.transformer.high]
+            transformerBand: [c.transformer.low, c.transformer.high],
+            drive: [c.pre.drive, c.power.drive],
+            knees: [c.pre.knee, c.power.knee],
+            speakerMemory: speaker
         };
     },
     sample(id, stageName, x) {
@@ -170,6 +204,16 @@ window.MFA_AmpDSP = Object.freeze({
         if (!circuit) return x;
         const pre = sampleValveStage(circuit.pre, x * circuit.pre.drive);
         return sampleValveStage(circuit.power, pre * circuit.power.drive);
+    },
+    runtime() {
+        return {
+            graphReady: !!audioCtx,
+            masterGain: gainNode ? gainNode.gain.value : null,
+            inputTrim: ampInputTrim ? ampInputTrim.gain.value : null,
+            speakerWet: ampSpeakerWet ? ampSpeakerWet.gain.value : null,
+            speakerFeedback: ampSpeakerFeedback ? ampSpeakerFeedback.gain.value : null,
+            speakerResonance: ampSpeakerResonance ? ampSpeakerResonance.frequency.value : null
+        };
     }
 });
 
@@ -191,6 +235,7 @@ function applyAmp() {
     const sag = circuit.sag || { threshold: 0, knee: 0, ratio: 1, attack: .003, release: .08 };
     const transformer = circuit.transformer || { low: 10, lowQ: .707, high: 36000, highQ: .707 };
     const damping = circuit.damping || { factor: 80, bass: [70, 0, .8], high: [4500, 0] };
+    const speaker = speakerLoadProfile(circuit);
 
     setAudioParam(ampDrive.gain, pre.drive || 1);
     ampShaper.curve = valveCurve(pre);
@@ -226,13 +271,27 @@ function applyAmp() {
     ampDampingBass.Q.value = damping.bass[2];
     ampDampingHigh.frequency.value = damping.high[0];
     ampDampingHigh.gain.value = damping.high[1];
+    ampSpeakerResonance.frequency.value = speaker.resonance;
+    ampSpeakerResonance.Q.value = speaker.q;
+    ampSpeakerDelay.delayTime.value = speaker.delay;
+    ampSpeakerTone.frequency.value = speaker.tone;
+    setAudioParam(ampSpeakerFeedback.gain, speaker.feedback, .03);
+    setAudioParam(ampSpeakerWet.gain, speaker.wet, .03);
     setAudioParam(ampOut.gain, m.out);
+}
+
+function applyGainStaging() {
+    if (!gainNode) return;
+    // 포노 보정은 앰프 입력에, 사용자의 청취 볼륨은 모든 회로 뒤에 적용한다.
+    // 따라서 작은 청취 음량에서도 출력관 구동과 스피커 댐핑 특성이 사라지지 않는다.
+    if (ampInputTrim) setAudioParam(ampInputTrim.gain, phonoActive ? PHONO_GAIN : 1, .02);
+    setAudioParam(gainNode.gain, volumeLevel, .012);
 }
 
 function setVolumeLevel(v) {
     volumeLevel = Math.max(0, Math.min(1, v));
     if (gainNode) {
-        gainNode.gain.value = volumeLevel * (phonoActive ? PHONO_GAIN : 1);
+        applyGainStaging();
     } else {
         try { audio.volume = volumeLevel; } catch (e) {}
     }
@@ -335,6 +394,7 @@ function ensureAudioGraph() {
         blendFilter = audioCtx.createBiquadFilter();
         blendFilter.type = "lowpass";
         monoGain = audioCtx.createGain();
+        ampInputTrim = audioCtx.createGain();
         // 앰프: 전압 증폭단 → 5단 보이싱 → 출력관 → 정류/전원 새그 → OPT → 스피커 부하
         ampDrive = audioCtx.createGain();
         ampShaper = audioCtx.createWaveShaper();
@@ -361,11 +421,24 @@ function ensureAudioGraph() {
         ampDampingBass.type = "peaking";
         ampDampingHigh = audioCtx.createBiquadFilter();
         ampDampingHigh.type = "highshelf";
+        ampSpeakerResonance = audioCtx.createBiquadFilter();
+        ampSpeakerResonance.type = "bandpass";
+        ampSpeakerDelay = audioCtx.createDelay(.05);
+        ampSpeakerTone = audioCtx.createBiquadFilter();
+        ampSpeakerTone.type = "lowpass";
+        ampSpeakerFeedback = audioCtx.createGain();
+        ampSpeakerWet = audioCtx.createGain();
         ampOut = audioCtx.createGain();
-        source.connect(gainNode).connect(blendFilter).connect(monoGain);
+        source.connect(ampInputTrim).connect(blendFilter).connect(monoGain);
         ampDrive.connect(ampShaper).connect(ampBass).connect(ampLowMid).connect(ampMid).connect(ampPresence).connect(ampTreble)
             .connect(ampPowerDrive).connect(ampPowerShaper).connect(ampSag).connect(ampTransformerHP).connect(ampTransformerLP)
-            .connect(ampDampingBass).connect(ampDampingHigh).connect(ampOut).connect(audioCtx.destination);
+            .connect(ampDampingBass).connect(ampDampingHigh);
+        ampDampingHigh.connect(ampOut);
+        ampDampingHigh.connect(ampSpeakerResonance);
+        ampSpeakerResonance.connect(ampSpeakerDelay);
+        ampSpeakerDelay.connect(ampSpeakerTone).connect(ampSpeakerWet).connect(ampOut);
+        ampSpeakerDelay.connect(ampSpeakerFeedback).connect(ampSpeakerResonance);
+        ampOut.connect(gainNode).connect(audioCtx.destination);
         // 바이닐 크랙클 (포노 재생 시에만 게인이 올라간다) — EQ 앞에 섞어 앰프 음색까지 입힌다
         crackleGain = audioCtx.createGain();
         crackleGain.gain.value = 0;
@@ -378,7 +451,7 @@ function ensureAudioGraph() {
         applyBlend();
         applyMono();
         applyAmp();
-        gainNode.gain.value = volumeLevel * (phonoActive ? PHONO_GAIN : 1);
+        applyGainStaging();
         audio.volume = 1;
         if (audioCtx.state === "suspended") {
             audioCtx.resume();
@@ -389,6 +462,7 @@ function ensureAudioGraph() {
         console.error(error);
         audioCtx = null;
         gainNode = null;
+        ampInputTrim = null;
         recDest = null;
         analyser = null;
         blendFilter = null;
@@ -408,6 +482,11 @@ function ensureAudioGraph() {
         ampTransformerLP = null;
         ampDampingBass = null;
         ampDampingHigh = null;
+        ampSpeakerResonance = null;
+        ampSpeakerDelay = null;
+        ampSpeakerTone = null;
+        ampSpeakerFeedback = null;
+        ampSpeakerWet = null;
         ampOut = null;
         crackleGain = null;
         scratchGain = null;
