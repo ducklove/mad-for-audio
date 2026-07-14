@@ -180,7 +180,13 @@ function ensureScratch() {
     } catch (e) { scratchSrc = null; }
 }
 
+// WebKit(사파리·맥 앱 WKWebView)의 MediaElementSource는 크로스오리진 미디어에서
+// CORS가 열려 있어도 무음을 내는 문제가 있다. 크롬 계열에서만 Web Audio 체인을 쓰고,
+// 그 외에는 iOS처럼 네이티브 직결 경로로 소리를 보장한다 (음색·이펙트는 계기 표시만).
+const SAFARI_LIKE = /AppleWebKit/i.test(navigator.userAgent) && !/Chrome|CriOS|Edg|OPR/i.test(navigator.userAgent);
+
 function ensureAudioGraph() {
+    if (SAFARI_LIKE) return false;
     if (audioCtx) return true;
 
     const Ctx = window.AudioContext || window.webkitAudioContext;

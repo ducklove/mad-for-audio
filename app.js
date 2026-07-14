@@ -1862,6 +1862,7 @@ let phonoTrack = -1;
 let ttSpin = 0;
 let ttAngle = 0;
 let ttArmAng = -26;
+let ttArmDrag = false;   // 톤암을 손으로 잡고 있는 동안 자동 추적을 멈춘다
 let ttRpm45 = false;
 let ttLastTs = 0;
 let ttDust = 0;           // 판에 쌓인 먼지 0..1 — 시간이 흐르면 랜덤하게 쌓이고, 크랙클이 비례해 커진다
@@ -1871,6 +1872,87 @@ let ttRubLast = null;     // 문지름 드래그의 직전 포인터 좌표
 let tubeWarm = 0;    // 진공관 웜업 상태 0..1 (켜면 서서히 달아오르고, 꺼지면 더 천천히 식는다)
 let tunerWarm = 0;   // 튜너 조명 상태 0..1 — 라디오 수신 중에만 점등 (포노/테이프 중엔 튜너는 꺼진 것)
 let tsPreviewUntil = 0;   // 다이얼 조작 중 디스플레이 웨이크 시각
+
+// 톤암 각도 → 트랙 번호 (-5° 미만 = 거치대)
+function trackAtAngle(ang) {
+    if (ang < -5) return -1;
+    const seg = 21 / RECORD.tracks.length;
+    return Math.max(0, Math.min(RECORD.tracks.length - 1, Math.floor((ang + 2) / seg)));
+}
+
+// 톤암 드래그 — 실물처럼 암을 들어 원하는 트랙 위에 내려놓으면 그 곡부터 재생.
+// 거치대 쪽(-5° 미만)에 내려놓으면 연주를 멈춘다.
+function bindArmDrag() {
+    const hit = document.getElementById("ttArmHit");
+    if (!hit) return;
+    const angleAt = (e) => {
+        const svg = document.querySelector("#ttStage svg");
+        const r = svg.getBoundingClientRect();
+        const vb = svg.getAttribute("viewBox").split(/\s+/).map(Number);
+        const x = vb[0] + (e.clientX - r.left) / r.width * vb[2];
+        const y = vb[1] + (e.clientY - r.top) / r.height * vb[3];
+        let deg = (Math.atan2(y - 120, x - 1065) - Math.atan2(428 - 120, 768 - 1065)) * 180 / Math.PI;
+        if (deg > 180) deg -= 360;
+        if (deg < -180) deg += 360;
+        return Math.max(-30, Math.min(24, deg));
+    };
+    let dragging = false;
+    hit.addEventListener("pointerdown", (e) => {
+        dragging = true;
+        ttArmDrag = true;
+        try { hit.setPointerCapture(e.pointerId); } catch (err) {}
+        if (phonoActive && isPlaying) audio.pause();   // 바늘을 들었다 — 소리도 멈춘다
+        e.preventDefault();
+    });
+    hit.addEventListener("pointermove", (e) => {
+        if (!dragging) return;
+        ttArmAng = angleAt(e);
+        const i = trackAtAngle(ttArmAng);
+        playerSubtext.textContent = i >= 0 ? "여기 놓으면 재생: " + RECORD.tracks[i].t : "톤암 거치대 — 놓으면 연주를 멈춥니다";
+    });
+    const drop = (e) => {
+        if (!dragging) return;
+        dragging = false;
+        ttArmDrag = false;
+        const i = trackAtAngle(angleAt(e));
+        if (i >= 0) {
+            playPhonoTrack(i);
+        } else if (phonoActive) {
+            stopPhono();
+            isPlaying = false;
+            updatePlayButton();
+            playerSubtext.textContent = "톤암을 거치대에 올렸습니다.";
+        }
+    };
+    hit.addEventListener("pointerup", drop);
+    hit.addEventListener("pointercancel", () => { dragging = false; ttArmDrag = false; });
+}
+
+// ----- 재킷 크게 보기 -----
+function openJacketView() {
+    const art = document.getElementById("jacketBigArt");
+    const cap = document.getElementById("jacketBigCap");
+    const jc = jacketInk(RECORD.jacketBg);
+    if (RECORD.cover) {
+        art.style.background = "#101010 url('" + PHONO_BASE + RECORD.cover + "') center/cover no-repeat";
+        art.innerHTML = "";
+    } else {
+        art.style.background = RECORD.jacketBg;
+        art.innerHTML = '<div class="jbig-type"><div class="jbig-title" style="color:' + jc.title + '">' + RECORD.jTitle +
+            '</div><div class="jbig-sub" style="color:' + jc.sub + '">' + RECORD.jSub1 + " · " + RECORD.jSub2 + "</div></div>";
+    }
+    cap.textContent = RECORD.title + " — " + RECORD.performer + " · SIDE " + (RECORD.side || "A");
+    document.getElementById("jacketOverlay").hidden = false;
+}
+
+function closeJacketView() {
+    document.getElementById("jacketOverlay").hidden = true;
+}
+
+document.getElementById("jacketOverlay").addEventListener("click", closeJacketView);
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !document.getElementById("jacketOverlay").hidden) closeJacketView();
+});
 
 function mountTurntable() {
     let grooves = "";
@@ -1987,6 +2069,7 @@ function mountTurntable() {
         '<line x1="1065" y1="120" x2="768" y2="428" stroke="#3c3c44" stroke-width="11" stroke-linecap="round"/>' +
         '<line x1="1065" y1="120" x2="768" y2="428" stroke="#b8b8c0" stroke-width="7" stroke-linecap="round"/>' +
         '<g transform="rotate(-46 762 434)"><rect x="734" y="420" width="58" height="26" rx="5" fill="#1c1c22" stroke="#4a4a52"/><rect x="742" y="444" width="14" height="8" rx="2" fill="#8a2020"/></g>' +
+        '<circle id="ttArmHit" cx="768" cy="428" r="58" fill="#000000" fill-opacity="0" style="cursor:grab"><title>톤암 — 잡아서 원하는 트랙 위에 내려놓으세요</title></circle>' +
         '</g>' +
         '<circle cx="1065" cy="120" r="8" fill="#0d0d10"/>' +
         // 앨범 재킷 — 바이닐 지름(504)급 508×508. 수납장 버튼은 위, 컨트롤·화살표는 아래 한 줄로.
@@ -2026,6 +2109,7 @@ function mountTurntable() {
         '<circle id="ttPrevRec" cx="1600" cy="621" r="24" fill="#26262b" stroke="#4a4a52" stroke-width="2" style="cursor:pointer"><title>이전 음반</title></circle>' +
         '<text x="1600" y="630" font-family="Georgia, serif" font-size="26" fill="#d9cfc0" text-anchor="middle" pointer-events="none">&#8249;</text>' +
         '<circle id="ttNextRec" cx="1656" cy="621" r="24" fill="#26262b" stroke="#4a4a52" stroke-width="2" style="cursor:pointer"><title>다음 음반</title></circle>' +
+        '<rect id="ttJacketHit" x="1170" y="76" width="508" height="508" fill="#000000" fill-opacity="0" style="cursor:zoom-in"><title>재킷 크게 보기</title></rect>' +
         '<text x="1656" y="630" font-family="Georgia, serif" font-size="26" fill="#d9cfc0" text-anchor="middle" pointer-events="none">&#8250;</text>' +
         '<text x="60" y="648" font-family="Arial" font-size="12" fill="#8a7d70">' + RECORD.credit + '</text>' +
         '</svg>';
@@ -2064,6 +2148,9 @@ function mountTurntable() {
     const rubEnd = () => { ttRubLast = null; vinylHit.style.cursor = "grab"; };
     vinylHit.addEventListener("pointerup", rubEnd);
     vinylHit.addEventListener("pointercancel", rubEnd);
+    document.getElementById("ttJacketHit").addEventListener("click", openJacketView);
+    svgButtonize("ttJacketHit", "재킷 크게 보기");
+    bindArmDrag();
     svgButtonize("ttStartBtn", "턴테이블 START/STOP");
     svgButtonize("ttCleanBtn", "레코드 브러시 클리닝");
     svgButtonize("tt33", "33⅓ RPM");
@@ -2081,7 +2168,7 @@ function playPhonoTrack(i, auto) {
     stopDeck();
     if (player) { player.destroy(); player = null; }
     // 그래프는 MSE 지원 브라우저에서만 (iOS 네이티브 HLS 충돌 회피 — 라디오와 동일한 기준)
-    if (typeof Hls !== "undefined" && Hls.isSupported()) ensureAudioGraph();
+    if (typeof Hls !== "undefined" && Hls.isSupported() && !SAFARI_LIKE) ensureAudioGraph();
     phonoActive = true;
     phonoTrack = i;
     if (gainNode) gainNode.gain.value = volumeLevel * PHONO_GAIN;
@@ -2180,7 +2267,7 @@ function ttFrame(now) {
         const seg = 21 / RECORD.tracks.length;
         armTarget = -2 + seg * (phonoTrack + p);
     }
-    ttArmAng += (armTarget - ttArmAng) * Math.min(1, dt * 3.5);
+    if (!ttArmDrag) ttArmAng += (armTarget - ttArmAng) * Math.min(1, dt * 3.5);
     const arm = document.getElementById("ttArmG");
     if (arm) arm.setAttribute("transform", "rotate(" + ttArmAng.toFixed(2) + " 1065 120)");
 
@@ -2639,7 +2726,7 @@ function playStream(url) {
         player = null;
     }
 
-    if (typeof Hls !== "undefined" && Hls.isSupported() && url.indexOf(".m3u8") !== -1) {
+    if (typeof Hls !== "undefined" && Hls.isSupported() && !SAFARI_LIKE && url.indexOf(".m3u8") !== -1) {
         // MSE 경로에서는 미리 그래프를 만들어 VU 미터를 켠다.
         // (Safari 네이티브 HLS는 MediaElementSource와 충돌할 수 있어 제외)
         ensureAudioGraph();

@@ -1518,3 +1518,65 @@ body.mode-bar .btn-play-main {
 .tuner-stage[hidden] {
     display: none !important;
 }
+
+/* ----- 재킷 크게 보기 ----- */
+.jacket-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    background: rgba(8, 6, 5, 0.84);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: zoom-out;
+    backdrop-filter: blur(6px);
+}
+
+.jacket-overlay[hidden] {
+    display: none !important;
+}
+
+.jacket-big {
+    text-align: center;
+}
+
+.jacket-big-art {
+    width: min(82vmin, 680px);
+    aspect-ratio: 1 / 1;
+    border-radius: 6px;
+    box-shadow: 0 40px 90px rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.jbig-type {
+    padding: 8%;
+}
+
+.jbig-title {
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 700;
+    font-size: clamp(2rem, 8vmin, 4rem);
+    line-height: 1.1;
+}
+
+.jbig-sub {
+    margin-top: 14px;
+    font-size: clamp(0.9rem, 2.6vmin, 1.2rem);
+    opacity: 0.8;
+}
+
+.jacket-big figcaption {
+    margin-top: 14px;
+    color: #d9cfc0;
+    font-size: 0.92rem;
+}
+
+/* ----- 수납장 호버 — 그 앨범을 꺼내 보듯 전체가 위로 떠오른다 ----- */
+.crate-jacket:hover,
+.crate-jacket:focus-visible {
+    transform: translateY(-8px) scale(1.32);
+    z-index: 30;
+    box-shadow: 0 26px 52px rgba(0, 0, 0, 0.66);
+}
