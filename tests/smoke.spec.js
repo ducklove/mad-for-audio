@@ -113,7 +113,7 @@ test.describe("데스크톱", () => {
         await expect(page.locator('#deckStage svg[aria-label*="REVOX B215"]')).toHaveCount(1);
         await page.locator('#ttPicker .skin-btn', { hasText: "TECHNICS SL-1200MK2" }).click();
         await expect(page.locator('#ttStage svg[aria-label*="TECHNICS SL-1200MK2"]')).toHaveCount(1);
-        await page.locator('#eqPicker .skin-btn', { hasText: "CHROME · 10밴드" }).click();
+        await page.locator('#eqPicker .skin-btn', { hasText: "CHAMPAGNE · 10밴드" }).click();
         await expect(page.locator('#eqStage svg[aria-label*="GE-10C"]')).toHaveCount(1);
         await expect(page.locator('[id^="eqBandLvl"]')).toHaveCount(80);
 

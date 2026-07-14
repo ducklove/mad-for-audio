@@ -499,7 +499,7 @@ function svgButtonize(id, label) {
 const EQ_THEMES = {
     black: { top: "#1b1b1f", mid: "#121215", bot: "#0b0b0d", ear: "#101013", fieldA: "#0e0e11", fieldB: "#141419", edge: "#3c3c44", ink: "#f0f0f2", sub: "#8a8a94", slot: "#050506", cap: "#26262c", capTop: "#3c3c44", mark: "#f2f2f4", ledOff: "#16221c" },
     silver: { top: "#f2f1ec", mid: "#c8c8c5", bot: "#85878a", ear: "#a5a7a8", fieldA: "#484b4e", fieldB: "#56595c", edge: "#6d7073", ink: "#202225", sub: "#4f5255", slot: "#1b1d1f", cap: "#bfc1c2", capTop: "#f4f4f1", mark: "#2c2e31", ledOff: "#213129" },
-    chrome: { top: "#fafafa", mid: "#aeb1b5", bot: "#565a60", ear: "#777b80", fieldA: "#25282c", fieldB: "#31353a", edge: "#d8dadd", ink: "#111316", sub: "#3e4247", slot: "#090a0c", cap: "#d9dbdc", capTop: "#ffffff", mark: "#16181b", ledOff: "#1d2b24" }
+    chrome: { top: "#fff8e6", mid: "#b9a475", bot: "#655638", ear: "#756342", fieldA: "#191712", fieldB: "#252117", edge: "#efdfb5", ink: "#2a2418", sub: "#5a4d34", slot: "#0a0805", cap: "#d9c596", capTop: "#fff4d3", mark: "#514321", ledOff: "#29261b" }
 };
 const EQ_MODELS = {
     ge5: { pill: "GE-5 · 5밴드", name: "GE-5", theme: "black", q: 1.0, capW: 60,
@@ -514,7 +514,7 @@ const EQ_MODELS = {
         freqs: [31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000],
         labels: ["31", "62", "125", "250", "500", "1k", "2k", "4k", "8k", "16k"],
         xs: [755, 880, 1005, 1130, 1255, 1380, 1505, 1630, 1755, 1880] },
-    ge10chrome: { pill: "CHROME · 10밴드", name: "GE-10C", theme: "chrome", q: 1.4, capW: 44,
+    ge10chrome: { pill: "CHAMPAGNE · 10밴드", name: "GE-10C", theme: "chrome", q: 1.4, capW: 44,
         freqs: [31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000],
         labels: ["31", "62", "125", "250", "500", "1k", "2k", "4k", "8k", "16k"],
         xs: [755, 880, 1005, 1130, 1255, 1380, 1505, 1630, 1755, 1880] }
@@ -690,6 +690,7 @@ function eqGainToY(g) {
 function mountEq() {
     const model = EQ_MODELS[eqModelId];
     const theme = EQ_THEMES[model.theme] || EQ_THEMES.black;
+    const chrome = model.theme === "chrome";
     // 필드 배경: dB 그리드 라인
     let grid = "";
     [-12, -9, -6, -3, 0, 3, 6, 9, 12].forEach((g) => {
@@ -709,7 +710,7 @@ function mountEq() {
             spectrum +
             '<g id="eqH' + i + '">' +
             '<rect x="' + (x - hw + 2) + '" y="-11" width="' + EQ_CAPW + '" height="30" rx="4" fill="#000000" opacity="0.42" filter="url(#lzSoft)"/>' +
-            '<rect x="' + (x - hw) + '" y="-15" width="' + EQ_CAPW + '" height="30" rx="4" fill="' + theme.cap + '" stroke="#0a0a0c" stroke-width="1.5"/>' +
+            '<rect x="' + (x - hw) + '" y="-15" width="' + EQ_CAPW + '" height="30" rx="4" fill="' + (chrome ? 'url(#eqChromeCap)' : theme.cap) + '" stroke="#0a0a0c" stroke-width="1.5"/>' +
             '<rect x="' + (x - hw) + '" y="-15" width="' + EQ_CAPW + '" height="6" rx="3" fill="' + theme.capTop + '"/>' +
             '<rect x="' + (x - hw) + '" y="-2.5" width="' + EQ_CAPW + '" height="5" fill="' + theme.mark + '"/>' +
             '</g>' +
@@ -725,9 +726,11 @@ function mountEq() {
         '<svg class="eq-svg" viewBox="0 0 2000 400" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="YAMAHA ' + model.name + ' 스테레오 그래픽 이퀄라이저">' +
         '<defs>' +
         '<linearGradient id="eqPanel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + theme.top + '"/><stop offset="0.5" stop-color="' + theme.mid + '"/><stop offset="1" stop-color="' + theme.bot + '"/></linearGradient>' +
+        (chrome ? '<linearGradient id="eqChromeBands" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff9e8"/><stop offset=".08" stop-color="#c5b184"/><stop offset=".18" stop-color="#f2e4c2"/><stop offset=".34" stop-color="#bda978"/><stop offset=".48" stop-color="#f8edcf"/><stop offset=".62" stop-color="#958155"/><stop offset=".76" stop-color="#ddc99f"/><stop offset=".9" stop-color="#aa976d"/><stop offset="1" stop-color="#67583a"/></linearGradient><linearGradient id="eqChromeSweep" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e7c986" stop-opacity=".1"/><stop offset=".18" stop-color="#fff8e3" stop-opacity="0"/><stop offset=".46" stop-color="#fff5d8" stop-opacity=".24"/><stop offset=".49" stop-color="#fffdf2" stop-opacity=".52"/><stop offset=".52" stop-color="#d7bb78" stop-opacity=".08"/><stop offset=".82" stop-color="#bfa464" stop-opacity="0"/><stop offset="1" stop-color="#dbc07d" stop-opacity=".14"/></linearGradient><linearGradient id="eqChromeCap" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#786641"/><stop offset=".18" stop-color="#fff2c9"/><stop offset=".42" stop-color="#bda774"/><stop offset=".68" stop-color="#f4e4bd"/><stop offset="1" stop-color="#665536"/></linearGradient>' : '') +
         '<pattern id="eqRidge" width="14" height="8" patternUnits="userSpaceOnUse"><rect width="7" height="8" fill="' + theme.fieldA + '"/><rect x="7" width="7" height="8" fill="' + theme.fieldB + '"/></pattern>' +
         '</defs>' +
-        '<rect width="2000" height="400" rx="8" fill="url(#eqPanel)"/>' +
+        '<rect width="2000" height="400" rx="8" fill="' + (chrome ? 'url(#eqChromeBands)' : 'url(#eqPanel)') + '"/>' +
+        (chrome ? '<rect x="45" y="8" width="1910" height="380" rx="7" fill="url(#eqChromeSweep)"/><rect x="52" y="14" width="1896" height="368" rx="6" fill="none" stroke="#f2dfad" stroke-width="3" opacity=".72"/><path d="M58 24 H1942 M58 376 H1942" stroke="#fff8df" stroke-width="2" opacity=".58"/>' : '') +
         '<rect width="2000" height="6" fill="#ffffff" opacity="0.06"/>' +
         '<rect y="388" width="2000" height="12" fill="#000" opacity="0.4"/>' +
         // 랙 이어
@@ -736,6 +739,7 @@ function mountEq() {
         // 좌측 컨트롤 블록
         '<text x="90" y="96" font-family="Arial" font-size="30" font-weight="700" letter-spacing="1.5" fill="' + theme.ink + '">YAMAHA</text>' +
         '<text x="90" y="126" font-family="Arial" font-size="14" letter-spacing="1.5" fill="' + theme.sub + '">Stereo Graphic Equalizer ' + model.name + '</text>' +
+        (chrome ? '<rect x="88" y="142" width="244" height="30" rx="15" fill="#54472f" stroke="#ead8a8"/><text x="210" y="162" font-family="Arial" font-size="11" font-weight="700" letter-spacing="2" fill="#fff1c9" text-anchor="middle">CHAMPAGNE GOLD</text>' : '') +
         '<text x="92" y="196" font-family="Arial" font-size="11" letter-spacing="1" fill="#8a8a94">power</text>' +
         '<rect x="90" y="206" width="34" height="64" rx="3" fill="#e8e8ec" stroke="#0a0a0c" stroke-width="1.5"/>' +
         '<text x="92" y="304" font-family="Arial" font-size="11" letter-spacing="1" fill="#8a8a94">tape monitor</text>' +
