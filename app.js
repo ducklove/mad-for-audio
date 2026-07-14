@@ -43,15 +43,11 @@ document.addEventListener("audiostate", (e) => {
     busySince = (e.detail.state === "buffering" || e.detail.state === "resolving") ? performance.now() : 0;
 });
 
-// ----- 보기 모드: 간편 플레이어(simple) ↔ 하이파이 랙(rack) -----
-// 모바일(좁은 화면·터치)은 간편 모드가 기본, 데스크톱은 랙이 기본.
-// URL 파라미터 ?view=rack|simple 은 저장값보다 우선한다 —
-// 맥 메뉴바 앱이 팝오버를 항상 랙 뷰로 고정하는 데 쓴다.
+// ----- 보기 모드 -----
+// 하이파이 랙이 모든 기기의 기본이다 — 모바일도 랙 + 하단 슬림 플레이 바로 본다.
+// ?view=simple 파라미터로만 간편 화면(목록+플레이어)을 쓸 수 있다.
 const urlView = new URLSearchParams(location.search).get("view");
-let viewMode = (urlView === "rack" || urlView === "simple") ? urlView : loadJson("fmRadio.viewMode", null);
-if (viewMode !== "simple" && viewMode !== "rack") {
-    viewMode = window.matchMedia("(min-width: 721px) and (pointer: fine)").matches ? "rack" : "simple";
-}
+let viewMode = urlView === "simple" ? "simple" : "rack";
 
 // ----- 바 오버레이 (맥 앱의 '간편 플레이어') -----
 // 페이지를 리로드하지 않고 body 클래스만 토글한다 — 재생 중 전환해도 소리가 끊기지 않는다.
