@@ -26,6 +26,13 @@ const SIZE = {
 // 트레이 메뉴에서 클릭 즉시 재생해야 하므로 사용자 제스처 요건을 끈다
 app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
 
+// 패키징 앱과 개발 실행(electron .)이 같은 프로필을 공유하지 않도록 분리한다.
+// (기본값은 둘 다 package.json name을 따라 같은 폴더가 되어, 단일 인스턴스 락 충돌과
+//  개발 중 프로필 조작이 사용자 실행분을 건드리는 사고로 이어진다)
+if (app.isPackaged) {
+    app.setPath("userData", path.join(app.getPath("appData"), "Mad for Audio Tray"));
+}
+
 // 개발 중에는 저장소 루트, 패키징 후에는 resources/web 아래에서 웹 자산을 찾는다
 const webRoot = app.isPackaged ? path.join(process.resourcesPath, "web") : path.join(__dirname, "..");
 
@@ -366,9 +373,19 @@ if (!gotLock) {
         if (win && tray) showFull();
     });
 
-    app.whenReady().then(() => {
+    app.whenReady().then(async () => {
         app.setAppUserModelId("com.madforaudio.tray");
         loadSettings();
+        // 시작할 때 웹 캐시·서비스워커 저장소를 비운다 — 온라인 전용이라 캐시 이득이 없고,
+        // 손상되거나 낡은 SW 캐시가 랙 페이지 렌더링을 깨뜨리는 일을 원천 차단한다.
+        // (설정·즐겨찾기(localStorage)와 녹음(IndexedDB)은 지우지 않는다)
+        try {
+            const { session } = require("electron");
+            await session.defaultSession.clearCache();
+            await session.defaultSession.clearStorageData({ storages: ["serviceworkers", "cachestorage"] });
+        } catch (error) {
+            console.error("캐시 정리 실패:", error);
+        }
         createWindow();
         createTray();
     });
