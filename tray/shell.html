@@ -11,6 +11,7 @@
             height: 100%;
             overflow: hidden;
             background: #0b0a09;
+            font-family: "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
         }
 
         iframe {
@@ -19,24 +20,187 @@
             width: 100%;
             height: 100%;
         }
+
+        /* 슬림 '나우 플레잉' 바 — 재생 중 창을 닫으면 iframe 위를 덮어 곡명+재생/정지만 남긴다.
+           iframe은 display를 끄지 않고 뒤에 살려 둔다(오디오 유지). */
+        #miniBar {
+            position: fixed;
+            inset: 0;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 12px;
+            color: #f2e3c8;
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0) 40%),
+                linear-gradient(180deg, #2b2723 0%, #1a1613 100%);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 -2px 6px rgba(0, 0, 0, 0.5);
+            -webkit-app-region: drag;
+        }
+
+        #miniBar[hidden] {
+            display: none;
+        }
+
+        #miniPlay {
+            -webkit-app-region: no-drag;
+            flex-shrink: 0;
+            width: 34px;
+            height: 34px;
+            border: 1px solid #0d0b09;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #f0c064;
+            background: radial-gradient(circle at 32% 28%, #5a5249, #2e2a24 58%, #171310 100%);
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.25), 0 3px 7px rgba(0, 0, 0, 0.5);
+            cursor: pointer;
+        }
+
+        #miniPlay:active {
+            transform: scale(0.96);
+        }
+
+        #miniPlay svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        #miniText {
+            -webkit-app-region: no-drag;
+            min-width: 0;
+            flex: 1;
+            cursor: pointer;
+        }
+
+        #miniStation {
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        #miniStatus {
+            margin-top: 1px;
+            font-size: 0.68rem;
+            color: #a3937d;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        #miniExpand {
+            -webkit-app-region: no-drag;
+            flex-shrink: 0;
+            color: #a3937d;
+            font-size: 0.7rem;
+            background: none;
+            border: 0;
+            cursor: pointer;
+        }
+
+        #miniExpand:hover {
+            color: #f2e3c8;
+        }
     </style>
 </head>
 <body>
-    <!-- 재생 엔진은 기존 미니 플레이어(widget.html) 그대로 — postMessage API를 IPC로 중계만 한다 -->
+    <!-- 재생 엔진: 튜너형은 로컬 widget.html, 오디오 시스템은 배포판 index.html — postMessage API를 IPC로 중계 -->
     <iframe id="widgetFrame" allow="autoplay"></iframe>
-    <script>
-        const frame = document.getElementById("widgetFrame");
-        frame.src = new URLSearchParams(location.search).get("widget");
 
+    <div id="miniBar" hidden>
+        <button id="miniPlay" type="button" aria-label="재생 또는 일시정지">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path id="miniPlayIcon" d="M8 5v14l11-7z"></path></svg>
+        </button>
+        <div id="miniText" role="button" tabindex="0" title="클릭하면 플레이어를 펼칩니다">
+            <div id="miniStation">Mad for Audio</div>
+            <div id="miniStatus">정지</div>
+        </div>
+        <button id="miniExpand" type="button" title="플레이어 펼치기" aria-label="플레이어 펼치기">펼치기 ▸</button>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(location.search);
+        const TUNER_URL = params.get("tuner");
+        const SYSTEM_URL = params.get("system");
+
+        const frame = document.getElementById("widgetFrame");
+        const miniBar = document.getElementById("miniBar");
+        const miniPlay = document.getElementById("miniPlay");
+        const miniPlayIcon = document.getElementById("miniPlayIcon");
+        const miniStation = document.getElementById("miniStation");
+        const miniStatus = document.getElementById("miniStatus");
+        const miniText = document.getElementById("miniText");
+        const miniExpand = document.getElementById("miniExpand");
+
+        let currentView = "tuner";
+        let lastState = null;
+
+        frame.src = TUNER_URL;
+
+        function postToFrame(message) {
+            if (frame.contentWindow) frame.contentWindow.postMessage(message, "*");
+        }
+
+        function setView(view) {
+            const next = view === "system" ? "system" : "tuner";
+            if (next === currentView) return;
+            currentView = next;
+            frame.src = next === "system" ? SYSTEM_URL : TUNER_URL;
+            trayBridge.sendView(next);
+        }
+
+        function applyMode(mode) {
+            miniBar.hidden = mode !== "bar";
+        }
+
+        function updateMini(state) {
+            miniStation.textContent = state.stationName || (state.title || "Mad for Audio");
+            miniStatus.textContent = state.loading ? "연결 중…" : state.playing ? "재생 중" : "정지";
+            miniPlayIcon.setAttribute("d", state.playing ? "M6 19h4V5H6v14zm8-14v14h4V5h-4z" : "M8 5v14l11-7z");
+        }
+
+        // iframe(위젯/랙) → 셸
         window.addEventListener("message", (event) => {
             const data = event.data;
             if (!data || typeof data.type !== "string" || !data.type.startsWith("fmRadio:")) return;
+            if (data.type === "fmRadio:openView") {
+                setView(data.view);
+                return;
+            }
+            lastState = data;
+            updateMini(data);
             trayBridge.sendState(data);
         });
 
+        // 메인 프로세스 → 셸
         trayBridge.onCommand((message) => {
-            if (frame.contentWindow) frame.contentWindow.postMessage(message, "*");
+            if (!message || typeof message !== "object") return;
+            if (typeof message.trayMode === "string") {
+                applyMode(message.trayMode);
+                return;
+            }
+            if (typeof message.setView === "string") {
+                setView(message.setView);
+                return;
+            }
+            postToFrame(message);
         });
+
+        miniPlay.addEventListener("click", () => postToFrame({ type: "fmRadio:toggle" }));
+        miniText.addEventListener("click", () => trayBridge.requestFull());
+        miniText.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                trayBridge.requestFull();
+            }
+        });
+        miniExpand.addEventListener("click", () => trayBridge.requestFull());
     </script>
 </body>
 </html>

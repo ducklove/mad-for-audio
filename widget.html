@@ -10,7 +10,8 @@
         (function () {
             const boot = new URLSearchParams(location.search);
             document.documentElement.dataset.theme = boot.get("theme") === "light" ? "light" : "dark";
-            document.documentElement.dataset.skin = boot.get("skin") === "tuner" ? "tuner" : "basic";
+            // 기본 스킨을 튜너형으로 — 기본형은 ?skin=basic 으로만 남긴다(하위호환)
+            document.documentElement.dataset.skin = boot.get("skin") === "basic" ? "basic" : "tuner";
         })();
     </script>
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-S8GLTG1KYZ"></script>
@@ -238,6 +239,16 @@
         .home-link:hover,
         .skin-link:hover {
             color: var(--text);
+        }
+
+        .skin-link.is-active {
+            color: var(--text);
+            font-weight: 700;
+            cursor: default;
+        }
+
+        :root[data-skin="tuner"] .skin-link.is-active {
+            color: #f0c064;
         }
 
         /* ----- 튜너 스킨 ----- */
@@ -832,8 +843,8 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"></path></svg>
                 <input type="range" id="volume" min="0" max="100" value="80" aria-label="볼륨">
             </div>
-            <a class="skin-link" id="skinLink" href="#">튜너형</a>
-            <a class="home-link" href="index.html" target="_blank" rel="noopener">전체 페이지 ↗</a>
+            <span class="skin-link is-active" id="tunerLink" aria-current="page">튜너형</span>
+            <a class="home-link" id="systemLink" href="index.html">오디오 시스템 ↗</a>
         </div>
         <div class="tuner-brand" aria-hidden="true">
             <span>NATURAL SOUND</span>
@@ -861,7 +872,7 @@
         const dialNeedle = document.getElementById("dialNeedle");
         const freqDigits = document.getElementById("freqDigits");
         const lampStereo = document.getElementById("lampStereo");
-        const skinLink = document.getElementById("skinLink");
+        const systemLink = document.getElementById("systemLink");
         const meterNeedle = document.getElementById("meterNeedle");
         const tuningKnob = document.getElementById("tuningKnob");
         const knobCap = document.getElementById("knobCap");
@@ -875,6 +886,17 @@
         const TUNER_ACCENT = "#e8b06a";
         const DIAL_MIN = 87.5;
         const DIAL_MAX = 108.5;
+
+        // 트레이 셸 안(chrome=tray)에서는 '오디오 시스템' 전환을 부모(셸)가 창 안에서 처리한다
+        const isTray = params.get("chrome") === "tray";
+        if (isTray) {
+            systemLink.addEventListener("click", (event) => {
+                event.preventDefault();
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({ type: "fmRadio:openView", view: "system" }, "*");
+                }
+            });
+        }
 
         let current = stations.find((item) => item.id === params.get("station")) || stations[0];
         let isPlaying = false;
@@ -943,19 +965,6 @@
             }
         }
 
-        function updateSkinLink() {
-            const next = new URLSearchParams(location.search);
-            next.set("station", current.id);
-            if (skin === "tuner") {
-                next.delete("skin");
-                skinLink.textContent = "기본형";
-            } else {
-                next.set("skin", "tuner");
-                skinLink.textContent = "튜너형";
-            }
-            skinLink.href = `widget.html?${next.toString()}`;
-        }
-
         function applyStation() {
             select.value = current.id;
             wStation.textContent = current.name;
@@ -966,8 +975,6 @@
                 freqDigits.textContent = current.freq.toFixed(1);
                 knobCap.style.transform = `rotate(${(-135 + freqToPercent(current.freq) * 2.7).toFixed(1)}deg)`;
             }
-
-            updateSkinLink();
         }
 
         function stepStation(delta) {
@@ -1157,7 +1164,6 @@
                 audio.play().catch(playBlocked);
             }
             updateUi();
-            updateSkinLink();
             broadcastState();
 
             gtag('event', 'play_media', { media_title: media.title });

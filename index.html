@@ -45,6 +45,7 @@
                 </div>
             </div>
             <div class="header-actions">
+                <a class="mini-open" id="miniPlayerLink" href="widget.html?skin=tuner" title="튜너 미니 플레이어로 전환">미니 플레이어</a>
                 <a class="mini-open" href="manual.html" title="기기별 리뷰와 조작 안내">설명서</a>
                 <button class="mini-open" type="button" id="viewModeBtn" onclick="toggleViewMode()" title="간편 플레이어와 하이파이 랙 화면을 전환합니다">랙 보기</button>
                 <button class="mini-open" type="button" onclick="toggleSettings(true)" title="튜너·앰프 모델을 선택합니다">⚙ 설정</button>
@@ -185,6 +186,19 @@
                     console.warn("서비스워커 등록 실패:", error);
                 });
             });
+        }
+
+        // 트레이 셸(chrome=tray) 안에서는 '미니 플레이어' 전환을 부모(셸)가 창 안에서 처리한다
+        if (new URLSearchParams(location.search).get("chrome") === "tray") {
+            const miniLink = document.getElementById("miniPlayerLink");
+            if (miniLink) {
+                miniLink.addEventListener("click", (event) => {
+                    event.preventDefault();
+                    if (window.parent && window.parent !== window) {
+                        window.parent.postMessage({ type: "fmRadio:openView", view: "tuner" }, "*");
+                    }
+                });
+            }
         }
     </script>
 </body>

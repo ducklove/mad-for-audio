@@ -1,17 +1,25 @@
 // Mad for Audio 트레이 플레이어 — Electron 메인 프로세스.
-// 재생은 기존 widget.html(미니 플레이어)을 숨은 창의 iframe으로 띄워 그대로 쓰고,
-// 트레이 메뉴 ↔ 위젯 사이는 문서화된 postMessage API(fmRadio:*)를 IPC로 중계한다.
+// 하나의 숨은 창(shell.html) 안 iframe에서 두 보기를 오간다:
+//   튜너형     = 로컬 widget.html (미니 플레이어, 빠른 셸)
+//   오디오 시스템 = 배포판 index.html (전체 하이파이 랙)
+// 위젯/랙의 postMessage API(fmRadio:*)를 IPC로 중계해 트레이 메뉴와 연결하고,
+// 튜너형 재생 중 창을 닫으면 곡명+재생/정지만 남긴 슬림 바로 축소한다.
 const { app, BrowserWindow, Tray, Menu, ipcMain, nativeImage, screen, shell } = require("electron");
 const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
 const { pathToFileURL } = require("url");
 
-const WIN_WIDTH = 540;
-const WIN_HEIGHT = 280;
 const HOME_URL = "https://ducklove.github.io/mad-for-audio/";
 const VOLUME_PRESETS = [100, 80, 60, 40, 20, 0];
 const DEBUG = !!process.env.MFA_TRAY_DEBUG;
+
+// 보기별 창 크기 (슬림 바는 곡명 + 재생/정지만)
+const SIZE = {
+    tuner: { w: 540, h: 300 },
+    system: { w: 520, h: 840 },
+    bar: { w: 340, h: 58 }
+};
 
 // 트레이 메뉴에서 클릭 즉시 재생해야 하므로 사용자 제스처 요건을 끈다
 app.commandLine.appendSwitch("autoplay-policy", "no-user-gesture-required");
@@ -64,6 +72,8 @@ function saveSettings() {
 
 let win = null;
 let tray = null;
+let currentView = "tuner";   // "tuner" | "system"
+let barMode = false;
 let state = { playing: false, loading: false, station: null, stationName: "", volume: defaultSettings.volume };
 
 function sendCommand(message) {
@@ -72,8 +82,8 @@ function sendCommand(message) {
 
 function createWindow() {
     win = new BrowserWindow({
-        width: WIN_WIDTH,
-        height: WIN_HEIGHT,
+        width: SIZE.tuner.w,
+        height: SIZE.tuner.h,
         show: false,
         frame: false,
         resizable: false,
@@ -85,60 +95,98 @@ function createWindow() {
             contextIsolation: true,
             // 방송사 API·HLS 세그먼트의 CORS 헤더가 제각각이라 로컬 신뢰 콘텐츠에 한해 끈다
             webSecurity: false,
-            // 창이 숨겨져도 재시도 타이머 등이 늦어지지 않게 한다
+            // 창이 숨겨져도(슬림 바·백그라운드) 재생·재시도 타이머가 늦어지지 않게 한다
             backgroundThrottling: false
         }
     });
 
-    const widgetUrl = pathToFileURL(path.join(webRoot, "widget.html"));
-    widgetUrl.searchParams.set("skin", "tuner");
-    widgetUrl.searchParams.set("station", settings.stationId);
-    if (settings.autoplayOnStart) widgetUrl.searchParams.set("autoplay", "1");
+    // 튜너형: 로컬 widget.html
+    const tunerUrl = pathToFileURL(path.join(webRoot, "widget.html"));
+    tunerUrl.searchParams.set("skin", "tuner");
+    tunerUrl.searchParams.set("station", settings.stationId);
+    tunerUrl.searchParams.set("chrome", "tray");
+    if (settings.autoplayOnStart) tunerUrl.searchParams.set("autoplay", "1");
 
-    win.loadFile(path.join(__dirname, "shell.html"), { query: { widget: widgetUrl.href } });
+    // 오디오 시스템: 배포판 전체 랙(온라인) — macOS 앱과 동일하게 배포판을 로드
+    const systemUrl = `${HOME_URL}?view=rack&chrome=tray`;
 
-    // '전체 페이지 ↗' 등 새 창 요청은 기본 브라우저로 돌린다 (로컬 index.html은 배포 페이지로)
+    win.loadFile(path.join(__dirname, "shell.html"), {
+        query: { tuner: tunerUrl.href, system: systemUrl }
+    });
+
+    // 위젯/랙 밖으로 나가는 새 창 요청(window.open 등)은 기본 브라우저로 돌린다
     win.webContents.setWindowOpenHandler(({ url }) => {
         shell.openExternal(url.startsWith("file:") ? HOME_URL : url);
         return { action: "deny" };
     });
 
     win.on("blur", () => {
-        if (win.isVisible()) win.hide();
+        if (barMode || !win.isVisible()) return;
+        // 튜너형 재생 중이면 바로 숨기지 않고 슬림 바로 축소한다
+        if (state.playing && currentView === "tuner") enterBarMode();
+        else win.hide();
     });
 
     win.webContents.on("before-input-event", (event, input) => {
-        if (input.type === "keyDown" && input.key === "Escape") {
-            event.preventDefault();
-            win.hide();
-        }
+        if (input.type !== "keyDown" || input.key !== "Escape") return;
+        event.preventDefault();
+        if (barMode) win.hide();
+        else if (state.playing && currentView === "tuner") enterBarMode();
+        else win.hide();
     });
 
     if (DEBUG) {
         win.webContents.on("console-message", (_event, _level, message) => {
-            console.log("[widget]", message);
+            console.log("[shell]", message);
         });
     }
 }
 
-function showWindow() {
+// 트레이 아이콘 근처에 지정 크기로 놓을 좌표·높이를 계산한다 (작업표시줄 위치 대응)
+function placement(size) {
     const trayBounds = tray.getBounds();
     const area = screen.getDisplayNearestPoint({ x: trayBounds.x, y: trayBounds.y }).workArea;
+    const height = Math.min(size.h, area.height - 24);
 
-    let x = Math.round(trayBounds.x + trayBounds.width / 2 - WIN_WIDTH / 2);
-    x = Math.max(area.x + 8, Math.min(x, area.x + area.width - WIN_WIDTH - 8));
-    // 작업표시줄이 위쪽이면 화면 상단에, 아니면 하단(트레이 위)에 붙인다
+    let x = Math.round(trayBounds.x + trayBounds.width / 2 - size.w / 2);
+    x = Math.max(area.x + 8, Math.min(x, area.x + area.width - size.w - 8));
+
     const trayOnTop = trayBounds.y < area.y + area.height / 2;
-    const y = trayOnTop ? area.y + 12 : area.y + area.height - WIN_HEIGHT - 12;
+    let y = trayOnTop ? area.y + 12 : area.y + area.height - height - 12;
+    y = Math.max(area.y + 8, y);
 
-    win.setPosition(x, y);
+    return { x, y, width: size.w, height };
+}
+
+// resizable:false 창도 프로그램에서는 크기를 바꿀 수 있도록 잠깐 풀었다 되돌린다
+function setBoundsSized(size) {
+    const bounds = placement(size);
+    win.setResizable(true);
+    win.setBounds(bounds);
+    win.setResizable(false);
+}
+
+function showFull() {
+    barMode = false;
+    sendCommand({ trayMode: "full" });
+    setBoundsSized(SIZE[currentView]);
     win.show();
     win.focus();
+    refreshTray();
+}
+
+function enterBarMode() {
+    barMode = true;
+    sendCommand({ trayMode: "bar" });
+    setBoundsSized(SIZE.bar);   // 창은 계속 떠 있고(오디오 유지) 슬림 바 크기로 줄어든다
+    refreshTray();
 }
 
 function toggleWindow() {
-    if (win.isVisible()) win.hide();
-    else showWindow();
+    if (!win.isVisible()) return showFull();
+    if (barMode) return showFull();
+    if (state.playing && currentView === "tuner") enterBarMode();
+    else win.hide();
 }
 
 // 개발 모드에서는 electron.exe가 실행 파일이므로 앱 경로를 인자로 넘겨야 한다
@@ -160,6 +208,7 @@ function stationMenuItems() {
                 click: () => {
                     settings.stationId = station.id;
                     saveSettings();
+                    if (currentView !== "tuner") sendCommand({ setView: "tuner" });
                     sendCommand({ type: "fmRadio:setStation", station: station.id, autoplay: true });
                 }
             });
@@ -174,6 +223,14 @@ function buildMenu() {
             label: state.loading ? "연결 중…" : state.playing ? "일시정지" : "재생",
             enabled: !state.loading,
             click: () => sendCommand({ type: state.playing ? "fmRadio:pause" : "fmRadio:play" })
+        },
+        { type: "separator" },
+        {
+            label: "보기",
+            submenu: [
+                { label: "튜너형", type: "radio", checked: currentView === "tuner", click: () => sendCommand({ setView: "tuner" }) },
+                { label: "오디오 시스템", type: "radio", checked: currentView === "system", click: () => sendCommand({ setView: "system" }) }
+            ]
         },
         { type: "separator" },
         ...stationMenuItems(),
@@ -214,7 +271,8 @@ function refreshTray() {
     const fallback = stations.find((station) => station.id === settings.stationId);
     const stationName = state.stationName || (fallback ? fallback.name : "");
     const status = state.loading ? "연결 중…" : state.playing ? "재생 중" : "정지";
-    tray.setToolTip(`Mad for Audio — ${stationName} ${status}`);
+    const viewLabel = currentView === "system" ? "오디오 시스템" : "튜너";
+    tray.setToolTip(`Mad for Audio · ${viewLabel} — ${stationName} ${status}`);
     tray.setContextMenu(buildMenu());
 }
 
@@ -227,12 +285,22 @@ function createTray() {
     refreshTray();
 }
 
+// 셸이 보기를 바꾸면(사용자가 '오디오 시스템'/'미니 플레이어'를 누름) 창 크기를 맞춘다
+ipcMain.on("widget-view", (_event, view) => {
+    currentView = view === "system" ? "system" : "tuner";
+    if (win.isVisible() && !barMode) setBoundsSized(SIZE[currentView]);
+    refreshTray();
+});
+
+// 슬림 바에서 '펼치기'
+ipcMain.on("widget-request-full", () => showFull());
+
 ipcMain.on("widget-state", (_event, message) => {
     if (!message || typeof message.type !== "string") return;
     if (DEBUG) console.log("[state]", JSON.stringify(message));
 
     if (message.type === "fmRadio:ready") {
-        // 위젯이 뜨면 저장해 둔 볼륨을 복원한다 (채널은 URL 파라미터로 이미 전달)
+        // 튜너 위젯이 뜨면 저장해 둔 볼륨을 복원한다 (채널은 URL 파라미터로 이미 전달)
         sendCommand({ type: "fmRadio:setVolume", value: settings.volume });
         return;
     }
@@ -262,7 +330,7 @@ if (!gotLock) {
     app.quit();
 } else {
     app.on("second-instance", () => {
-        if (win && tray) showWindow();
+        if (win && tray) showFull();
     });
 
     app.whenReady().then(() => {
