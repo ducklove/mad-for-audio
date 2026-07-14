@@ -641,6 +641,15 @@ const AMP_CIRCUITS = {
         transformer: { low: 18, lowQ: .707, high: 28000, highQ: .707 },
         damping: { factor: 15, bass: [65, .3, .82], high: [5200, .15] }
     },
+    ma2375UnityCoupled: {
+        topology: "kt88-unity-coupled-push-pull-ab-sgs",
+        pre: { drive: .94, knee: .95, ceiling: .98, even: .001, kind: "triode" },
+        power: { drive: .98, knee: .90, ceiling: .96, even: .0004, crossover: 0, kind: "beam" },
+        // Power Guard SGS가 큰 피크에서만 빠르게 개입하는 동작을 완만한 보호 압축으로 근사한다.
+        sag: { threshold: -5, knee: 8, ratio: 1.12, attack: .002, release: .12 },
+        transformer: { low: 10, lowQ: .707, high: 50000, highQ: .707 },
+        damping: { factor: 22, bass: [62, .12, .78], high: [5600, .08] }
+    },
     sixL6PushPull: {
         topology: "6l6gc-push-pull-ab",
         pre: { drive: .90, knee: .92, ceiling: .965, even: .004, kind: "triode" },

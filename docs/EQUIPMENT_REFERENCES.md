@@ -2,7 +2,7 @@
 
 추가 스킨은 아래 실물 사진과 제조사 자료를 보면서 전면 패널의 비례, 재질, 대표 조작부를
 관찰해 새로 그린 코드 기반 SVG다. 사진 원본을 앱에 포함하거나 벡터 트레이싱하지 않는다.
-링크는 고증과 라이선스 확인을 위한 것이며 2026-07-14에 확인했다.
+링크는 고증과 라이선스 확인을 위한 것이며 2026-07-15에 확인했다.
 
 ## 튜너
 
@@ -21,6 +21,7 @@
 | Sansui AU-111 | [Wikimedia Commons · public domain](https://commons.wikimedia.org/wiki/File:AU-111.jpg) | 검정 전면판, 금색 인쇄, 진공관 장비의 어두운 창과 촘촘한 조작계 |
 | Luxman L-550 | [1983 Luxman catalogue](https://e-staff-net.com/shiryou/catalogue/lux/lux_1983_5.pdf) | 샴페인 골드 패널, 우드 케이스, Class A 방열구, 부드러운 금속 노브 톤 |
 | Accuphase E-303 | [HiFi-Do](https://www.hifido.co.jp/sold/23-41462-27564-00.html?LNG=E) | 샴페인 골드 전면, 듀얼 파워 미터, 정밀한 스위치 그리드, 대형 볼륨 |
+| McIntosh MA2375 | [ecoustics 제품 기사](https://www.ecoustics.com/products/mcintosh-ma2375-tube-integrated-amplifier/), [McIntosh 공식 제품 페이지](https://www.mcintoshlabs.com/products/integrated-amplifiers/MA2375) | 높은 블랙 글라스와 듀얼 블루 와트미터, 중앙 녹색 로고·청록 표시창, 전면의 KT88 크롬 케이지, 스테인리스 경사 패널과 5밴드 노브 |
 
 ## 카세트 데크
 

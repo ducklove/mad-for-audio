@@ -24,6 +24,8 @@
   https://pub.dega-akustik.de/DAGA_2018/data/articles/000119.pdf
 - Analog Devices, *SHARC Audio Module Audio Elements and Effects*. 공식 `audio_processing.zip`의 tube distortion 예제는 `입력 필터 → 드라이브 → smootherstep 클리퍼 → 출력 게인 → 출력 필터` 구조와 8배 리샘플링 클리퍼를 제공한다.
   https://wiki.analog.com/resources/tools-software/sharc-audio-module/baremetal/audio-elements
+- McIntosh, *MA2375 Vacuum Tube Integrated Amplifier*. KT88 ×4, 12AT7 드라이버 ×4, 올튜브 프리앰프, 75W/ch, Unity Coupled 출력 트랜스, THD 0.5% 이하, 10Hz–50kHz(-3dB), 댐핑 팩터 22 이상을 모델의 기준으로 삼았다.
+  https://www.mcintoshlabs.com/products/integrated-amplifiers/MA2375
 
 ## 구현 구조
 
@@ -48,6 +50,7 @@
 | EL34 · 8B | 울트라리니어 푸시풀 AB | 3차 중심, 완만한 AB 포화 | 중간, 280ms 회복 | 28Hz–21kHz | DF 8 |
 | 6L6GC · AU-111 | 빔관 푸시풀 AB | 굵은 3차, AB 전환부 | 가장 큼, 340ms 회복 | 30Hz–19kHz | DF 5 |
 | KT88 · 275 | 유니티 커플드 푸시풀 AB | 낮은 왜곡, 가장 대칭적 | 약함, 빠른 회복 | 18Hz–28kHz | DF 15, 저역 제어 강함 |
+| KT88 · MA2375 | 유니티 커플드 푸시풀 AB + SGS | 가장 높은 선형 헤드룸, 보호 소프트 리미팅 | 매우 약함, 120ms 회복 | 10Hz–50kHz | DF 22, 가장 강한 제동 |
 
 볼륨 노드는 비선형 스테이지 앞에 있으므로 볼륨을 올리면 단순히 최종 음량만 커지는 것이 아니라 실제 앰프처럼 전압 증폭단과 출력단의 포화점에 가까워진다.
 

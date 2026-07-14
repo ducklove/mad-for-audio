@@ -890,7 +890,9 @@ function bindAmpVolume() {
 }
 
 function mountAmp() {
-    document.getElementById("ampStage").innerHTML = AMP_MODELS[ampModelId].svg;
+    const stage = document.getElementById("ampStage");
+    stage.classList.toggle("amp-stage-tall", !!AMP_MODELS[ampModelId].tall);
+    stage.innerHTML = AMP_MODELS[ampModelId].svg;
     applyPanelLighting(document.querySelector("#ampStage svg"));
     bindAmpVolume();
     updateVolKnob();

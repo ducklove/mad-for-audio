@@ -97,10 +97,10 @@ test.describe("데스크톱", () => {
         await expect(page.locator("#settingsOverlay")).toBeHidden();
     });
 
-    test("추가 하이파이 16종: 피커 등록·기기군별 스킨 전환", async ({ page }) => {
+    test("추가 하이파이 18종: 피커 등록·기기군별 스킨 전환", async ({ page }) => {
         await page.click('button:has-text("오디오 구성")');
         await expect(page.locator("#skinPicker .skin-btn")).toHaveCount(9);
-        await expect(page.locator("#ampPicker .skin-btn")).toHaveCount(10);
+        await expect(page.locator("#ampPicker .skin-btn")).toHaveCount(11);
         await expect(page.locator("#deckPicker .skin-btn")).toHaveCount(6);
         await expect(page.locator("#ttPicker .skin-btn")).toHaveCount(6);
         await expect(page.locator("#eqPicker .skin-btn")).toHaveCount(5);
@@ -109,6 +109,10 @@ test.describe("데스크톱", () => {
         await expect(page.locator('#tunerStage svg[aria-label*="REVOX B760"]')).toHaveCount(1);
         await page.locator('#ampPicker .skin-btn', { hasText: "CLASS A · L-550" }).click();
         await expect(page.locator('#ampStage svg[aria-label*="LUXMAN L-550"]')).toHaveCount(1);
+        await page.locator('#ampPicker .skin-btn', { hasText: "KT88 · MA2375" }).click();
+        await expect(page.locator('#ampStage svg[aria-label*="McIntosh MA2375"]')).toHaveCount(1);
+        await expect(page.locator("#ampStage")).toHaveClass(/amp-stage-tall/);
+        expect(await page.locator("#ampStage svg").getAttribute("viewBox")).toBe("0 0 2000 1040");
         await page.locator('#deckPicker .skin-btn', { hasText: "REVOX B215" }).click();
         await expect(page.locator('#deckStage svg[aria-label*="REVOX B215"]')).toHaveCount(1);
         await page.locator('#ttPicker .skin-btn', { hasText: "TECHNICS SL-1200MK2" }).click();
@@ -123,13 +127,13 @@ test.describe("데스크톱", () => {
             deck: JSON.parse(localStorage.getItem("fmRadio.deck")),
             turntable: JSON.parse(localStorage.getItem("fmRadio.turntable")),
         }));
-        expect(saved).toEqual({ tuner: "b760", amp: "l550", deck: "b215", turntable: "sl1200" });
+        expect(saved).toEqual({ tuner: "b760", amp: "ma2375", deck: "b215", turntable: "sl1200" });
         expect(await page.evaluate(() => JSON.parse(localStorage.getItem("fmRadio.eq")).model)).toBe("ge10chrome");
     });
 
     test("설명서에 신규 기기별 소개와 음색·동작 차이가 기록됨", async ({ page }) => {
         await page.goto("/manual.html");
-        for (const name of ["TX-9500 II", "T-110", "T-100", "B760", "SA-9900", "AU-111", "L-550", "E-303", "B215", "TCD 3014A", "TC-KA7ES", "CT-F1250", "SL-1200MK2", "TD 124", "GARRARD", "Sondek LP12", "GE-10S / GE-10C"]) {
+        for (const name of ["TX-9500 II", "T-110", "T-100", "B760", "SA-9900", "AU-111", "L-550", "E-303", "MA2375", "B215", "TCD 3014A", "TC-KA7ES", "CT-F1250", "SL-1200MK2", "TD 124", "GARRARD", "Sondek LP12", "GE-10S / GE-10C"]) {
             await expect(page.locator("body")).toContainText(name);
         }
     });
@@ -175,6 +179,7 @@ test.describe("데스크톱", () => {
                 el34: api.inspect("el34"),
                 kt88: api.inspect("kt88"),
                 au111: api.inspect("au111"),
+                ma2375: api.inspect("ma2375"),
                 h300b: harmonics("300b"),
                 hEl34: harmonics("el34"),
                 hKt88: harmonics("kt88"),
@@ -183,6 +188,7 @@ test.describe("데스크톱", () => {
                 chainEl34: harmonics("el34", true),
                 chainKt88: harmonics("kt88", true),
                 chainAu111: harmonics("au111", true),
+                chainMa2375: harmonics("ma2375", true),
             };
         });
         expect(dsp.asym300b).toBeGreaterThan(0.015);
@@ -197,6 +203,7 @@ test.describe("데스크톱", () => {
         expect(dsp.chainEl34.thd).toBeLessThan(.015);
         expect(dsp.chainKt88.thd).toBeLessThan(.01);
         expect(dsp.chainAu111.thd).toBeLessThan(.02);
+        expect(dsp.chainMa2375.thd).toBeLessThan(.005);
         expect(dsp.centerSlope).toBeGreaterThan(.09);
         expect(dsp.centerSlope).toBeLessThan(.11);
         expect(dsp.softSlopeHigh).toBeLessThan(dsp.softSlopeLow);
@@ -206,9 +213,12 @@ test.describe("데스크톱", () => {
         expect(dsp.au111.sagRatio).toBeGreaterThan(dsp.el34.sagRatio);
         expect(dsp.p300.sagRatio).toBeLessThan(dsp.kt88.sagRatio);
         expect(dsp.p300.transformerBand[1]).toBeLessThan(dsp.kt88.transformerBand[1]);
+        expect(dsp.ma2375.dampingFactor).toBeGreaterThan(dsp.kt88.dampingFactor);
+        expect(dsp.ma2375.sagRatio).toBeLessThan(dsp.kt88.sagRatio);
+        expect(dsp.ma2375.transformerBand[1]).toBeGreaterThan(dsp.kt88.transformerBand[1]);
     });
 
-    test("재생 중 진공관 4종 전환: Web Audio 회로 재설정 후에도 재생 유지", async ({ page }) => {
+    test("재생 중 진공관 5종 전환: Web Audio 회로 재설정 후에도 재생 유지", async ({ page }) => {
         await page.click("#tsRfHit");
         await page.locator("#kbsList .station").first().click();
         await page.waitForFunction(() => {
@@ -217,7 +227,7 @@ test.describe("데스크톱", () => {
         }, null, { timeout: 15000 });
 
         await page.click('button:has-text("오디오 구성")');
-        for (const label of ["EL34 · 8B", "300B · 91E", "KT88 · 275", "6L6GC · AU-111"]) {
+        for (const label of ["EL34 · 8B", "300B · 91E", "KT88 · 275", "6L6GC · AU-111", "KT88 · MA2375"]) {
             await page.locator("#ampPicker .skin-btn", { hasText: label }).click();
             await page.waitForTimeout(100);
             await expect(page.locator("#audioPlayer")).toHaveJSProperty("paused", false);
