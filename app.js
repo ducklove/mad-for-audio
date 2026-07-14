@@ -205,8 +205,14 @@ function tunerLoop(now) {
             const rms = Math.sqrt(sum2 / tsTimeData.length);   // 음악 RMS ≈ 0.05~0.3
             target = Math.min(1, rms * 2.6);
         } else {
-            // iOS 네이티브 HLS: 오디오 분석 불가 → 낮은 레벨로 자연스럽게 시뮬레이션
-            target = 0.3 + Math.sin(performance.now() / 300) * 0.05 + (Math.random() - 0.5) * 0.03;
+            // 그래프가 없는 환경(사파리·맥 앱·iOS 네이티브 경로): 오디오 분석 불가.
+            // 느린 악구(프레이즈) 곡선 위에 박자 펄스와 미세 흔들림을 얹어
+            // 바늘이 음악을 타는 것처럼 움직이게 한다.
+            const t = (now || performance.now()) / 1000;
+            const phrase = 0.32 + 0.13 * Math.sin(t * 0.31) + 0.09 * Math.sin(t * 0.73 + 1.4);
+            const beat = Math.pow(Math.max(0, Math.sin(t * 4.4)), 3) * 0.22
+                + Math.pow(Math.max(0, Math.sin(t * 2.2 + 0.6)), 5) * 0.12;
+            target = Math.max(0.04, Math.min(0.92, phrase + beat + (Math.random() - 0.5) * 0.05));
         }
     }
     // VU 탄도: 300ms급 관성으로 바늘이 음악을 타고, 피크는 즉시 튀고 천천히 내려온다
