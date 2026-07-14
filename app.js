@@ -1954,6 +1954,29 @@ document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !document.getElementById("jacketOverlay").hidden) closeJacketView();
 });
 
+// 턴테이블 전원 — 일시정지와 달리 완전히 내려놓는다:
+// 톤암 복귀·플래터 런다운·소스 해제. 대기 중이던 방송국이 있으면 이어서 연결한다.
+function phonoPower() {
+    if (phonoActive) {
+        audio.pause();
+        stopPhono();
+        isPlaying = false;
+        streamLoaded = false;
+        updatePlayButton();
+        if (radioStandby) {
+            const next = radioStandby;
+            radioStandby = null;
+            playerSubtext.textContent = "턴테이블 전원 OFF — 대기 중이던 " + next.name + "에 연결합니다.";
+            selectStation(next.id);
+        } else {
+            setAudioState("idle");
+            playerSubtext.textContent = "턴테이블 전원을 껐습니다.";
+        }
+    } else {
+        playPhonoTrack(0);
+    }
+}
+
 function mountTurntable() {
     let grooves = "";
     for (let r = 108; r <= 246; r += 7) {
@@ -2100,6 +2123,9 @@ function mountTurntable() {
         '<text x="1690" y="86" font-family="Arial" font-size="14" font-weight="700" letter-spacing="2" fill="#8a7d70">SIDE ' + (RECORD.side || 'A') + '</text>' +
         '<g clip-path="url(#ttListClip)">' + rows + '</g>' +
         // 컨트롤 — 재킷 아래 한 줄: START · 33 · 45 · 이전/다음 음반
+        '<rect id="ttPowerBtn" x="1046" y="592" width="110" height="58" rx="8" fill="#26262b" stroke="#4a4a52" stroke-width="2" style="cursor:pointer"><title>턴테이블 전원 — 끄면 톤암이 복귀하고, 대기 중인 방송이 있으면 연결됩니다</title></rect>' +
+        '<circle id="ttPwrLed" cx="1072" cy="621" r="6" fill="#3a2012"/>' +
+        '<text x="1114" y="627" font-family="Arial" font-size="13" font-weight="700" letter-spacing="1.5" fill="#e6e5e8" text-anchor="middle" pointer-events="none">POWER</text>' +
         '<rect id="ttStartBtn" x="1170" y="592" width="180" height="58" rx="8" fill="#26262b" stroke="#4a4a52" stroke-width="2" style="cursor:pointer"><title>START/STOP</title></rect>' +
         '<text id="ttStartLabel" x="1260" y="628" font-family="Arial" font-size="18" font-weight="700" letter-spacing="3" fill="#e6e5e8" text-anchor="middle" pointer-events="none">START</text>' +
         '<rect id="tt33" x="1370" y="595" width="85" height="52" rx="8" fill="#26262b" stroke="#4a4a52" style="cursor:pointer"><title>33 1/3 RPM</title></rect>' +
@@ -2151,6 +2177,8 @@ function mountTurntable() {
     document.getElementById("ttJacketHit").addEventListener("click", openJacketView);
     svgButtonize("ttJacketHit", "재킷 크게 보기");
     bindArmDrag();
+    document.getElementById("ttPowerBtn").addEventListener("click", phonoPower);
+    svgButtonize("ttPowerBtn", "턴테이블 전원");
     svgButtonize("ttStartBtn", "턴테이블 START/STOP");
     svgButtonize("ttCleanBtn", "레코드 브러시 클리닝");
     svgButtonize("tt33", "33⅓ RPM");
@@ -2211,6 +2239,8 @@ function stopPhono() {
 }
 
 function updatePhonoVisuals() {
+    const pwrLed = document.getElementById("ttPwrLed");
+    if (pwrLed) pwrLed.setAttribute("fill", phonoActive ? "#ff7a2a" : "#3a2012");
     RECORD.tracks.forEach((tr, i) => {
         const bg = document.getElementById("ttTrackBg" + i);
         if (bg) bg.setAttribute("opacity", i === phonoTrack ? "0.22" : "0");
@@ -2771,8 +2801,9 @@ async function selectStation(id) {
     if ((phonoActive && isPlaying) || deckMode === "play") {
         radioStandby = station;
         tunerSetStation(station);
-        const medium = phonoActive ? "턴테이블" : "테이프";
-        playerSubtext.textContent = station.name + " 대기 중 — " + medium + " 재생이 우선입니다. 끝나면 연결합니다.";
+        playerSubtext.textContent = phonoActive
+            ? station.name + " 대기 — 턴테이블이 재생 중입니다. 지금 들으려면 턴테이블 POWER를 꺼 주세요. (음반이 끝나면 자동 연결)"
+            : station.name + " 대기 — 테이프가 재생 중입니다. 지금 들으려면 데크를 정지(\u25a0)해 주세요.";
         return;
     }
 
