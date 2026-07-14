@@ -12,7 +12,8 @@ n = int(re.search(r"fm-radio-v(\d+)", sw).group(1)) + 1
 sw = re.sub(r"fm-radio-v\d+", f"fm-radio-v{n}", sw)
 
 ASSETS = ["styles.css", "stations.js", "player-core.js", "store.js",
-          "skins.js", "engine.js", "deck.js", "app.js"]
+          "skins.js", "engine.js", "deck.js", "records.json",
+          "bootstrap.js", "app.js"]
 
 idx = (root / "index.html").read_text(encoding="utf-8")
 for a in ASSETS:
@@ -23,7 +24,7 @@ for a in ASSETS:
 def core_repl(m):
     name = m.group(1)
     return f'"{name}?v={n}"' if name in ASSETS else m.group(0)
-sw = re.sub(r'"([a-z\-]+\.(?:js|css))(?:\?v=\d+)?"', core_repl, sw)
+sw = re.sub(r'"([a-z\-]+\.(?:js|css|json))(?:\?v=\d+)?"', core_repl, sw)
 (root / "sw.js").write_text(sw, encoding="utf-8")
 
 print(f"v{n}")

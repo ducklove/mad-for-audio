@@ -763,7 +763,7 @@ AMP_MODELS.tr.svg = `<svg class="amp-svg" viewBox="0 0 2000 560" xmlns="http://w
     <ellipse cx="1712" cy="262" rx="54" ry="40" fill="#ffffff" opacity="0.35" pointer-events="none"/>
 </svg>`;
 
-        AMP_MODELS.mc2105.svg = `<svg class="amp-svg" viewBox="0 0 2000 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="McIntoch MC 2105 솔리드스테이트 앰프">
+        AMP_MODELS.mc2105.svg = `<svg class="amp-svg" viewBox="0 0 2000 560" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="McIntoch MC 2105 솔리드스테이트 앰프">
     <defs>
         <linearGradient id="m5Glass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#141418"/><stop offset="0.5" stop-color="#0c0c10"/><stop offset="1" stop-color="#060608"/></linearGradient>
         <linearGradient id="m5Rail" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e2e4ea"/><stop offset="0.5" stop-color="#9aa0ac"/><stop offset="1" stop-color="#5c626e"/></linearGradient>

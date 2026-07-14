@@ -3,7 +3,8 @@
   "private": true,
   "description": "FM 라디오 스모크 테스트 — 렌더링·선국·재생(모의 HLS)·모바일 뷰포트 검증",
   "scripts": {
-    "pretest": "node gen-stream.js",
+    "catalog": "node catalog-check.js",
+    "pretest": "node catalog-check.js && node gen-stream.js",
     "test": "playwright test",
     "live": "node live-check.js"
   },

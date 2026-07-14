@@ -13,20 +13,35 @@ test.describe("데스크톱", () => {
         errors = collectErrors(page);
         await page.goto("/");
         await page.waitForFunction(() => typeof window.Hls !== "undefined");
+        await page.waitForFunction(() => Array.isArray(window.MFA_RECORDS));
     });
 
     test.afterEach(() => {
         expect(errors, "콘솔 오류·페이지 예외 없음").toEqual([]);
     });
 
-    test("초기 렌더링: 랙 5기기·가로 오버플로 없음", async ({ page }) => {
-        await expect(page).toHaveTitle(/FM 라디오/);
-        for (const id of ["tunerStage", "eqStage", "ampStage", "deckStage", "ttStage"]) {
+    test("초기 렌더링: 기본 랙 4기기·숨김 EQ·가로 오버플로 없음", async ({ page }) => {
+        await expect(page).toHaveTitle(/Mad for Audio/);
+        for (const id of ["tunerStage", "ampStage", "deckStage", "ttStage"]) {
             await expect(page.locator(`#${id} svg`)).toBeVisible();
         }
+        await expect(page.locator("#eqStage svg")).toHaveCount(1);
+        await expect(page.locator("#eqStage")).toBeHidden();
         const overflow = await page.evaluate(() =>
             document.documentElement.scrollWidth - document.documentElement.clientWidth);
         expect(overflow).toBe(0);
+    });
+
+    test("음반 카탈로그 JSON 로드·기본 형식 검증", async ({ page }) => {
+        const catalog = await page.evaluate(() => ({
+            count: window.MFA_RECORDS.length,
+            valid: window.MFA_RECORDS.every((record) =>
+                record.title && record.composer && record.performer && record.credit &&
+                Array.isArray(record.tracks) && record.tracks.length > 0 &&
+                record.tracks.every((track) => track.t && track.f)),
+        }));
+        expect(catalog.count).toBeGreaterThanOrEqual(58);
+        expect(catalog.valid).toBe(true);
     });
 
     test("RF 스위치로 채널 목록 열기 → 전 채널 렌더링", async ({ page }) => {
@@ -76,7 +91,7 @@ test.describe("데스크톱", () => {
     });
 
     test("설정 모달: 열기 → ESC로 닫기", async ({ page }) => {
-        await page.click('button:has-text("설정")');
+        await page.click('button:has-text("오디오 구성")');
         await expect(page.locator("#settingsOverlay")).toBeVisible();
         await page.keyboard.press("Escape");
         await expect(page.locator("#settingsOverlay")).toBeHidden();
@@ -95,6 +110,7 @@ test.describe("모바일 390px", () => {
         await mockExternal(context);
         await page.goto("/");
         await page.waitForFunction(() => typeof window.Hls !== "undefined");
+        await page.waitForFunction(() => Array.isArray(window.MFA_RECORDS));
     });
 
     test("가로 오버플로 없음 + 선국·재생", async ({ page }) => {
@@ -153,6 +169,7 @@ test.describe("키보드 조작", () => {
         await mockExternal(context);
         await page.goto("/");
         await page.waitForFunction(() => typeof window.Hls !== "undefined");
+        await page.waitForFunction(() => Array.isArray(window.MFA_RECORDS));
     });
 
     test("튜너 RF 스위치: 포커스 + Enter로 채널 목록 토글", async ({ page }) => {
@@ -170,10 +187,13 @@ test.describe("키보드 조작", () => {
     });
 
     test("EQ 슬라이더: 화살표 키로 게인 조절 + 저장", async ({ page }) => {
+        await page.click('button:has-text("오디오 구성")');
+        await page.click('button:has-text("GE-10 · 10밴드")');
+        await page.keyboard.press("Escape");
         await page.evaluate(() => document.getElementById("eqHit0").focus());
         await page.keyboard.press("ArrowUp");
         await page.keyboard.press("ArrowUp");
-        const gain = await page.evaluate(() => JSON.parse(localStorage.getItem("fmRadio.eq")).gains[0]);
+        const gain = await page.evaluate(() => JSON.parse(localStorage.getItem("fmRadio.eq")).gains.ge10[0]);
         expect(gain).toBe(2);
         const valueNow = await page.getAttribute("#eqHit0", "aria-valuenow");
         expect(valueNow).toBe("2");
@@ -250,7 +270,12 @@ test.describe("접근성", () => {
         await page.addScriptTag({ path: require.resolve("axe-core/axe.min.js") });
         const violations = await page.evaluate(async () => {
             const res = await axe.run(document, { resultTypes: ["violations"] });
-            return res.violations.map((v) => ({ id: v.id, impact: v.impact, count: v.nodes.length }));
+            return res.violations.map((v) => ({
+                id: v.id,
+                impact: v.impact,
+                count: v.nodes.length,
+                targets: v.nodes.map((node) => node.target.join(" ")),
+            }));
         });
         const serious = violations.filter((v) => v.impact === "serious" || v.impact === "critical");
         expect(serious, JSON.stringify(violations)).toEqual([]);
