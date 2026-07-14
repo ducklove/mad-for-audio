@@ -69,6 +69,8 @@ MBC는 스트림 URL 발급에 서버 측 호출이 필요해 개인 프록시(`
 Web Audio의 EQ·앰프 처리를 위해 CORS가 허용된 음원만 사용할 수 있다.
 각 음반에는 출처와 라이선스를 확인할 수 있는 `credit`을 반드시 기록한다.
 후보 저장소와 권리·CORS 검수 절차는 `docs/AUDIO_SOURCES.md`에 정리했다.
+진공관 앰프의 배음·클리핑·전원 새그·출력 트랜스·댐핑 구현 근거와 모델별 값은
+`docs/TUBE_AMP_MODEL.md`에 정리했다.
 
 확인 가능한 경우 음반 객체에 `recordingYear`와 `source.provider`/`source.license`를,
 각 트랙에 `quality`와 `sourcePage`를 기록한다. `quality`는 `format`, `lossless`,

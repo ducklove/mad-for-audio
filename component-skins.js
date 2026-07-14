@@ -193,7 +193,7 @@ function mfaAmpSvg(spec) {
 
 const MFA_AMPS = [
     { id: "sa9900", brand: "PIONEER", model: "SA-9900", pill: "TR · SA-9900", face: "silver", wood: true, signature: "pioneer", tagline: "dual-mono direct coupled", desc: "단단한 저역과 또렷한 프레즌스의 다이렉트 커플드 사운드", drive: 1.08, k: .08, asym: .01, bass: [70, .8], lowMid: [260, -.2, .8], mid: [1000, 0, 1], presence: [3300, .8, .9], treble: [10000, .7], out: .93 },
-    { id: "au111", brand: "SANSUI", model: "AU-111", pill: "6L6GC · AU-111", face: "black", wood: true, signature: "sansui", tagline: "tube control amplifier", desc: "저중역의 밀도와 둥근 고역을 앞세운 6L6GC 빈티지 톤", drive: 2.05, k: 1.45, asym: .16, bass: [90, 1.5], lowMid: [310, 1.2, .78], mid: [1400, .7, .9], presence: [3600, -.4, 1], treble: [7600, -.8], out: .73 },
+    { id: "au111", brand: "SANSUI", model: "AU-111", pill: "6L6GC · AU-111", face: "black", wood: true, signature: "sansui", tagline: "tube control amplifier", desc: "6L6GC 푸시풀 — 묵직한 3차 배음, 가장 큰 전원 새그와 낮은 댐핑", drive: 2.05, k: 1.45, asym: .16, bass: [90, .35], lowMid: [310, .5, .78], mid: [1400, .2, .9], presence: [3600, -.15, 1], treble: [7600, -.3], out: .78, circuit: AMP_CIRCUITS.sixL6PushPull },
     { id: "l550", brand: "LUXMAN", model: "L-550", pill: "CLASS A · L-550", face: "champagne", wood: true, signature: "luxman", tagline: "pure class A integrated", desc: "매끈한 중역과 섬세한 윤기를 살린 클래스 A 보이싱", drive: 1.22, k: .32, asym: .04, bass: [75, 1.2], lowMid: [280, .5, .8], mid: [900, .3, 1], presence: [3200, .3, .9], treble: [9500, .4], out: .86 },
     { id: "e303", brand: "ACCUPHASE", model: "E-303", pill: "TR · E-303", face: "champagne", wood: true, signature: "accuphase", tagline: "precision stereo control", desc: "빠른 과도응답과 개방적인 상단을 노린 정밀 제어형 사운드", drive: 1.03, k: .06, asym: 0, bass: [65, .2], lowMid: [250, 0, .82], mid: [1100, 0, 1], presence: [3400, .4, .9], treble: [11000, .6], out: .96 }
 ];
@@ -204,7 +204,7 @@ MFA_AMPS.forEach((spec) => {
         desc: spec.desc,
         vol: { cx: 1595, cy: 244, r: 158 },
         drive: spec.drive, k: spec.k, asym: spec.asym,
-        bass: spec.bass, lowMid: spec.lowMid, mid: spec.mid, presence: spec.presence, treble: spec.treble, out: spec.out,
+        bass: spec.bass, lowMid: spec.lowMid, mid: spec.mid, presence: spec.presence, treble: spec.treble, out: spec.out, circuit: spec.circuit,
         svg: mfaAmpSvg(spec)
     };
     AMP_ORDER.push(spec.id);

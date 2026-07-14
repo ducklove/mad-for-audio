@@ -133,6 +133,71 @@ test.describe("데스크톱", () => {
             await expect(page.locator("body")).toContainText(name);
         }
     });
+
+    test("진공관 DSP: 싱글엔디드 배음·푸시풀 대칭·새그·댐핑이 모델별로 다름", async ({ page }) => {
+        const dsp = await page.evaluate(() => {
+            const api = window.MFA_AmpDSP;
+            const harmonics = (id) => {
+                const size = 1024;
+                const wave = Array.from({ length: size }, (_, i) =>
+                    api.sample(id, "power", .8 * Math.sin(2 * Math.PI * i / size)));
+                const magnitude = (harmonic) => {
+                    let re = 0;
+                    let im = 0;
+                    for (let i = 0; i < size; i++) {
+                        const phase = 2 * Math.PI * harmonic * i / size;
+                        re += wave[i] * Math.cos(phase);
+                        im -= wave[i] * Math.sin(phase);
+                    }
+                    return Math.hypot(re, im);
+                };
+                const fundamental = magnitude(1);
+                return { h2: magnitude(2) / fundamental, h3: magnitude(3) / fundamental };
+            };
+            const p300 = api.sample("300b", "power", .5);
+            const n300 = api.sample("300b", "power", -.5);
+            const pkt = api.sample("kt88", "power", .5);
+            const nkt = api.sample("kt88", "power", -.5);
+            return {
+                asym300b: Math.abs(p300 + n300),
+                asymKt88: Math.abs(pkt + nkt),
+                softSlopeHigh: api.sample("300b", "power", .95) - api.sample("300b", "power", .85),
+                softSlopeLow: api.sample("300b", "power", .25) - api.sample("300b", "power", .15),
+                p300: api.inspect("300b"),
+                el34: api.inspect("el34"),
+                kt88: api.inspect("kt88"),
+                au111: api.inspect("au111"),
+                h300b: harmonics("300b"),
+                hKt88: harmonics("kt88"),
+            };
+        });
+        expect(dsp.asym300b).toBeGreaterThan(0.04);
+        expect(dsp.asymKt88).toBeLessThan(0.01);
+        expect(dsp.h300b.h2).toBeGreaterThan(dsp.h300b.h3);
+        expect(dsp.hKt88.h3).toBeGreaterThan(dsp.hKt88.h2 * 5);
+        expect(dsp.softSlopeHigh).toBeLessThan(dsp.softSlopeLow);
+        expect(dsp.p300.dampingFactor).toBeLessThan(dsp.el34.dampingFactor);
+        expect(dsp.el34.dampingFactor).toBeLessThan(dsp.kt88.dampingFactor);
+        expect(dsp.au111.sagRatio).toBeGreaterThan(dsp.el34.sagRatio);
+        expect(dsp.p300.sagRatio).toBeLessThan(dsp.kt88.sagRatio);
+        expect(dsp.p300.transformerBand[1]).toBeLessThan(dsp.kt88.transformerBand[1]);
+    });
+
+    test("재생 중 진공관 4종 전환: Web Audio 회로 재설정 후에도 재생 유지", async ({ page }) => {
+        await page.click("#tsRfHit");
+        await page.locator("#kbsList .station").first().click();
+        await page.waitForFunction(() => {
+            const audio = document.getElementById("audioPlayer");
+            return !audio.paused && audio.currentTime > 0.5;
+        }, null, { timeout: 15000 });
+
+        await page.click('button:has-text("오디오 구성")');
+        for (const label of ["EL34 · 8B", "300B · 91E", "KT88 · 275", "6L6GC · AU-111"]) {
+            await page.locator("#ampPicker .skin-btn", { hasText: label }).click();
+            await page.waitForTimeout(100);
+            await expect(page.locator("#audioPlayer")).toHaveJSProperty("paused", false);
+        }
+    });
 });
 
 test.describe("모바일 390px", () => {

@@ -8,7 +8,7 @@ let recDest = null;
 let analyser = null;
 let blendFilter = null;
 let monoGain = null;
-// 하이파이 랙 체인: EQ(5밴드) → 앰프(드라이브→쉐이퍼→톤→출력), 크랙클(포노 전용)
+// 하이파이 랙 체인: EQ → 전압증폭관 → 톤 → 출력관 → 전원 새그 → 출력트랜스/스피커 부하
 let eqNodes = null;
 let ampDrive = null;
 let ampShaper = null;
@@ -17,6 +17,13 @@ let ampLowMid = null;
 let ampMid = null;
 let ampPresence = null;
 let ampTreble = null;
+let ampPowerDrive = null;
+let ampPowerShaper = null;
+let ampSag = null;
+let ampTransformerHP = null;
+let ampTransformerLP = null;
+let ampDampingBass = null;
+let ampDampingHigh = null;
 let ampOut = null;
 let crackleGain = null;
 let crackleSrc = null;
@@ -74,23 +81,85 @@ function buildEqChain() {
     applyEq();
 }
 
-function tubeCurve(k, asym) {
-    const n = 1024;
+// 진공관 스테이지 전달함수. 양/음 반주기의 곡률 차이로 싱글엔디드의 짝수 배음과
+// 푸시풀의 대칭적인 홀수 배음을 구분한다. 생기는 DC는 출력 트랜스 HP가 차단한다.
+function valveCurve(stage) {
+    if (!stage || !stage.k || stage.k <= 0) return null;
+    const n = 4096;
     const c = new Float32Array(n);
-    const norm = Math.tanh(k);
+    const kind = stage.kind || "pentode";
+    const asym = Math.max(-.8, Math.min(.8, stage.asym || 0));
+    const crossover = Math.max(0, Math.min(.025, stage.crossover || 0));
+    const transfer = (mag, k) => {
+        if (mag <= 0) return 0;
+        if (kind === "triode") return (1 - Math.exp(-k * mag)) / (1 - Math.exp(-k));
+        if (kind === "beam") return Math.atan(k * mag) / Math.atan(k);
+        return Math.tanh(k * mag) / Math.tanh(k);
+    };
     for (let i = 0; i < n; i++) {
         const x = i / (n - 1) * 2 - 1;
-        const shifted = x + asym * (1 - x * x);   // 비대칭 → 짝수 배음
-        c[i] = Math.tanh(k * shifted) / norm;
+        const sign = x < 0 ? -1 : 1;
+        let mag = Math.abs(x);
+        // 클래스 AB 바이어스 전환부의 아주 작은 gm 노치. 정상 레벨에서는 거의 사라지고
+        // 잔향과 저레벨 신호에서만 푸시풀 특유의 결을 남긴다.
+        if (crossover > 0) {
+            const loss = crossover * (1 - mag) * Math.exp(-mag * 18);
+            mag = Math.max(0, mag - loss);
+        }
+        const shaped = transfer(mag, Math.max(.05, stage.k));
+        // 싱글엔디드의 비대칭 전달은 signed 기본파에 같은 극성의 제곱항을 더해
+        // 실제 2차 배음을 만든다. 이때 생기는 DC는 뒤의 출력 트랜스 HP가 차단한다.
+        // 푸시풀 프로필의 asym은 매우 작으므로 짝수차가 상쇄되고 3차가 주로 남는다.
+        c[i] = (sign * shaped + asym * shaped * shaped) / (1 + Math.abs(asym));
     }
     return c;
+}
+
+// 자동 검증과 설명서 수치 확인용 읽기 전용 진단 표면.
+window.MFA_AmpDSP = Object.freeze({
+    inspect(id) {
+        const model = AMP_MODELS[id];
+        const c = model && model.circuit;
+        if (!c) return null;
+        return {
+            topology: c.topology,
+            dampingFactor: c.damping.factor,
+            sagRatio: c.sag.ratio,
+            transformerBand: [c.transformer.low, c.transformer.high]
+        };
+    },
+    sample(id, stageName, x) {
+        const model = AMP_MODELS[id];
+        const stage = model && model.circuit && model.circuit[stageName];
+        const curve = valveCurve(stage);
+        if (!curve) return x;
+        const clamped = Math.max(-1, Math.min(1, x));
+        const index = Math.round((clamped + 1) * .5 * (curve.length - 1));
+        return curve[index];
+    }
+});
+
+function setAudioParam(param, value, time) {
+    if (!param) return;
+    const now = audioCtx ? audioCtx.currentTime : 0;
+    try {
+        param.cancelScheduledValues(now);
+        param.setTargetAtTime(value, now, time || .012);
+    } catch (e) { param.value = value; }
 }
 
 function applyAmp() {
     if (!ampDrive) return;
     const m = AMP_MODELS[ampModelId];
-    ampDrive.gain.value = m.drive;
-    ampShaper.curve = m.k > 0 ? tubeCurve(m.k, m.asym) : null;
+    const circuit = m.circuit || {};
+    const pre = circuit.pre || { drive: m.drive, k: m.k, asym: m.asym, kind: "pentode" };
+    const power = circuit.power || { drive: 1, k: 0, asym: 0, kind: "pentode" };
+    const sag = circuit.sag || { threshold: 0, knee: 0, ratio: 1, attack: .003, release: .08 };
+    const transformer = circuit.transformer || { low: 10, lowQ: .707, high: 36000, highQ: .707 };
+    const damping = circuit.damping || { factor: 80, bass: [70, 0, .8], high: [4500, 0] };
+
+    setAudioParam(ampDrive.gain, pre.drive || 1);
+    ampShaper.curve = valveCurve(pre);
     ampBass.frequency.value = m.bass[0];
     ampBass.gain.value = m.bass[1];
     const lowMid = m.lowMid || [280, 0, .8];
@@ -106,7 +175,24 @@ function applyAmp() {
     ampPresence.Q.value = presence[2];
     ampTreble.frequency.value = m.treble[0];
     ampTreble.gain.value = m.treble[1];
-    ampOut.gain.value = m.out;
+
+    setAudioParam(ampPowerDrive.gain, power.drive || 1);
+    ampPowerShaper.curve = valveCurve(power);
+    ampSag.threshold.value = sag.threshold;
+    ampSag.knee.value = sag.knee;
+    ampSag.ratio.value = sag.ratio;
+    ampSag.attack.value = sag.attack;
+    ampSag.release.value = sag.release;
+    ampTransformerHP.frequency.value = transformer.low;
+    ampTransformerHP.Q.value = transformer.lowQ || .707;
+    ampTransformerLP.frequency.value = transformer.high;
+    ampTransformerLP.Q.value = transformer.highQ || .707;
+    ampDampingBass.frequency.value = damping.bass[0];
+    ampDampingBass.gain.value = damping.bass[1];
+    ampDampingBass.Q.value = damping.bass[2];
+    ampDampingHigh.frequency.value = damping.high[0];
+    ampDampingHigh.gain.value = damping.high[1];
+    setAudioParam(ampOut.gain, m.out);
 }
 
 function setVolumeLevel(v) {
@@ -215,7 +301,7 @@ function ensureAudioGraph() {
         blendFilter = audioCtx.createBiquadFilter();
         blendFilter.type = "lowpass";
         monoGain = audioCtx.createGain();
-        // 앰프 스테이지: drive → 쉐이퍼 → 5단 보이싱(저/저중/중/프레즌스/고) → 출력
+        // 앰프: 전압 증폭단 → 5단 보이싱 → 출력관 → 정류/전원 새그 → OPT → 스피커 부하
         ampDrive = audioCtx.createGain();
         ampShaper = audioCtx.createWaveShaper();
         ampShaper.oversample = "4x";
@@ -229,9 +315,23 @@ function ensureAudioGraph() {
         ampPresence.type = "peaking";
         ampTreble = audioCtx.createBiquadFilter();
         ampTreble.type = "highshelf";
+        ampPowerDrive = audioCtx.createGain();
+        ampPowerShaper = audioCtx.createWaveShaper();
+        ampPowerShaper.oversample = "4x";
+        ampSag = audioCtx.createDynamicsCompressor();
+        ampTransformerHP = audioCtx.createBiquadFilter();
+        ampTransformerHP.type = "highpass";
+        ampTransformerLP = audioCtx.createBiquadFilter();
+        ampTransformerLP.type = "lowpass";
+        ampDampingBass = audioCtx.createBiquadFilter();
+        ampDampingBass.type = "peaking";
+        ampDampingHigh = audioCtx.createBiquadFilter();
+        ampDampingHigh.type = "highshelf";
         ampOut = audioCtx.createGain();
         source.connect(gainNode).connect(blendFilter).connect(monoGain);
-        ampDrive.connect(ampShaper).connect(ampBass).connect(ampLowMid).connect(ampMid).connect(ampPresence).connect(ampTreble).connect(ampOut).connect(audioCtx.destination);
+        ampDrive.connect(ampShaper).connect(ampBass).connect(ampLowMid).connect(ampMid).connect(ampPresence).connect(ampTreble)
+            .connect(ampPowerDrive).connect(ampPowerShaper).connect(ampSag).connect(ampTransformerHP).connect(ampTransformerLP)
+            .connect(ampDampingBass).connect(ampDampingHigh).connect(ampOut).connect(audioCtx.destination);
         // 바이닐 크랙클 (포노 재생 시에만 게인이 올라간다) — EQ 앞에 섞어 앰프 음색까지 입힌다
         crackleGain = audioCtx.createGain();
         crackleGain.gain.value = 0;
@@ -267,6 +367,13 @@ function ensureAudioGraph() {
         ampMid = null;
         ampPresence = null;
         ampTreble = null;
+        ampPowerDrive = null;
+        ampPowerShaper = null;
+        ampSag = null;
+        ampTransformerHP = null;
+        ampTransformerLP = null;
+        ampDampingBass = null;
+        ampDampingHigh = null;
         ampOut = null;
         crackleGain = null;
         scratchGain = null;
