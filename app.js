@@ -33,12 +33,14 @@ const AUDIO_STATE_UI = {
     blocked:   { label: "차단됨",  cls: "st-warn", text: "브라우저가 자동 재생을 막았습니다 — 재생 버튼을 눌러 주세요." },
     error:     { label: "오류",    cls: "st-err", text: "연결에 실패했습니다 — 채널을 다시 선택해 주세요." }
 };
+let busySince = 0;   // 연결/버퍼링 진입 시각 — 고착 워치독용 (ttFrame에서 검사)
 document.addEventListener("audiostate", (e) => {
     const ui = AUDIO_STATE_UI[e.detail.state] || AUDIO_STATE_UI.idle;
     audioStateChip.hidden = e.detail.state === "idle";
     audioStateChip.textContent = ui.label + (e.detail.info ? " · " + e.detail.info : "");
     audioStateChip.className = "audio-state-chip " + (ui.cls || "");
     if (ui.text) playerSubtext.textContent = ui.text;
+    busySince = (e.detail.state === "buffering" || e.detail.state === "resolving") ? performance.now() : 0;
 });
 
 // ----- 보기 모드: 간편 플레이어(simple) ↔ 하이파이 랙(rack) -----
@@ -51,9 +53,20 @@ if (viewMode !== "simple" && viewMode !== "rack") {
     viewMode = window.matchMedia("(min-width: 721px) and (pointer: fine)").matches ? "rack" : "simple";
 }
 
+// ----- 바 오버레이 (맥 앱의 '간편 플레이어') -----
+// 페이지를 리로드하지 않고 body 클래스만 토글한다 — 재생 중 전환해도 소리가 끊기지 않는다.
+// 맥 앱이 evaluateJavaScript로 호출한다 (?view=bar 로 시작할 수도 있다).
+let barOverlay = urlView === "bar";
+
+function setPopupBarMode(on) {
+    barOverlay = !!on;
+    document.body.classList.toggle("mode-bar", barOverlay);
+}
+
 function applyViewMode() {
     document.body.classList.toggle("mode-simple", viewMode === "simple");
     document.body.classList.toggle("mode-rack", viewMode === "rack");
+    document.body.classList.toggle("mode-bar", barOverlay);
     const btn = document.getElementById("viewModeBtn");
     if (btn) btn.textContent = viewMode === "simple" ? "랙 보기" : "간편 플레이어";
     if (viewMode === "simple") {
@@ -2092,6 +2105,18 @@ function ttFrame(now) {
         lockLed.style.opacity = busy ? ((now / 300 | 0) % 2 ? "1" : "0.25") : "";
     }
 
+    // 고착 워치독 — 12초 넘게 연결/버퍼링에 머물면 정리한다:
+    // 소리가 흐르고 있으면 재생 중으로 승격, 멈춰 있으면 오류로 내려 재시도를 유도
+    if (busySince && performance.now() - busySince > 12000) {
+        busySince = 0;
+        if (!audio.paused && streamLoaded) {
+            setAudioState("playing", currentStation ? currentStation.name : "");
+        } else if (streamLoaded) {
+            setAudioState("error", "응답 없음");
+            playerSubtext.textContent = "스트림 응답이 없습니다 — 채널을 다시 선택해 주세요.";
+        }
+    }
+
     const rpm = ttRpm45 ? 45 : 100 / 3;
     const spinTarget = (phonoActive && isPlaying) ? 1 : 0;
     const step = spinTarget > ttSpin ? dt / 1.4 : dt / 2.6;   // 스핀업은 빠르게, 런다운은 관성으로
@@ -3249,6 +3274,15 @@ audio.addEventListener("ended", () => {
         } else {
             playerSubtext.textContent = "음반 한 면이 끝났습니다. 톤암이 복귀합니다.";
         }
+    }
+});
+
+// 일부 엔진(특히 WebKit 네이티브 HLS)은 버퍼링 복구 후 'playing' 이벤트를 건너뛴다 —
+// 실제로 재생 시간이 흐르고 있으면 재생 중으로 승격한다 (최초 POWER 후 '버퍼링' 고착 수정)
+audio.addEventListener("timeupdate", () => {
+    if (!audio.paused && streamLoaded && (audioState === "buffering" || audioState === "resolving")) {
+        setAudioState("playing", currentStation ? currentStation.name
+            : phonoActive ? "PHONO" : deckMode === "play" ? "TAPE" : "");
     }
 });
 

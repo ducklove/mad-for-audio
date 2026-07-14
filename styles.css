@@ -1462,3 +1462,55 @@ body.mode-simple .hero-visual {
 .rack-unit[hidden] {
     display: none !important;
 }
+
+/* ----- 바 모드 (맥 앱 '간편 플레이어') — 슬림 플레이 바만 남긴다 ----- */
+/* 페이지 리로드 없이 body 클래스로 전환되므로 재생이 끊기지 않는다 */
+body.mode-bar .site-header,
+body.mode-bar .list-toggle-wrap,
+body.mode-bar #stationMain,
+body.mode-bar .tuner-stage,
+body.mode-bar .rack-unit,
+body.mode-bar .vu-canvas,
+body.mode-bar .site-footer,
+body.mode-bar .coach-layer {
+    display: none !important;
+}
+
+body.mode-bar .page-shell {
+    padding: 0;
+}
+
+body.mode-bar .hero-visual {
+    background: none;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+}
+
+body.mode-bar .hero-player-wrap {
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    z-index: 40;
+}
+
+/* 창 폭과 무관하게 바 모드는 항상 슬림 (미디어쿼리 밖 안전망) */
+body.mode-bar .now-label,
+body.mode-bar .player-subtext {
+    display: none;
+}
+
+body.mode-bar .player-bar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 18px;
+}
+
+body.mode-bar .btn-play-main {
+    width: 40px;
+    height: 40px;
+}
