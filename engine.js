@@ -83,12 +83,15 @@ function buildEqChain() {
 
 // 진공관 스테이지 전달함수. 양/음 반주기의 곡률 차이로 싱글엔디드의 짝수 배음과
 // 푸시풀의 대칭적인 홀수 배음을 구분한다. 생기는 DC는 출력 트랜스 HP가 차단한다.
+const valveCurveCache = new WeakMap();
 function valveCurve(stage) {
-    if (!stage || !stage.k || stage.k <= 0) return null;
+    if (!stage || ((!stage.k || stage.k <= 0) && stage.knee == null)) return null;
+    if (valveCurveCache.has(stage)) return valveCurveCache.get(stage);
     const n = 4096;
     const c = new Float32Array(n);
     const kind = stage.kind || "pentode";
     const asym = Math.max(-.8, Math.min(.8, stage.asym || 0));
+    const even = Math.max(-.15, Math.min(.15, stage.even || 0));
     const crossover = Math.max(0, Math.min(.025, stage.crossover || 0));
     const transfer = (mag, k) => {
         if (mag <= 0) return 0;
@@ -106,13 +109,41 @@ function valveCurve(stage) {
             const loss = crossover * (1 - mag) * Math.exp(-mag * 18);
             mag = Math.max(0, mag - loss);
         }
-        const shaped = transfer(mag, Math.max(.05, stage.k));
-        // 싱글엔디드의 비대칭 전달은 signed 기본파에 같은 극성의 제곱항을 더해
-        // 실제 2차 배음을 만든다. 이때 생기는 DC는 뒤의 출력 트랜스 HP가 차단한다.
-        // 푸시풀 프로필의 asym은 매우 작으므로 짝수차가 상쇄되고 3차가 주로 남는다.
-        c[i] = (sign * shaped + asym * shaped * shaped) / (1 + Math.abs(asym));
+        let shaped;
+        if (stage.knee != null) {
+            // ADI SHARC의 smootherstep 클리퍼를 하이파이용 C² 소프트 니로 변형했다.
+            // knee 아래는 정확히 선형이고, ±1에서 1·2차 미분이 모두 0이 되어
+            // 파형의 위아래가 모서리 없이 둥글게 포화한다.
+            const knee = Math.max(.5, Math.min(.96, stage.knee));
+            const ceiling = Math.max(knee, Math.min(.99, stage.ceiling || .95));
+            if (mag <= knee) {
+                shaped = mag;
+            } else {
+                const width = 1 - knee;
+                const t = (mag - knee) / width;
+                const q = (ceiling - knee) / width;
+                const soft = t + (10 * q - 6) * t ** 3 + (8 - 15 * q) * t ** 4 + (6 * q - 3) * t ** 5;
+                shaped = knee + width * soft;
+            }
+            // 싱글엔디드 300B에만 작은 제곱항을 남겨 2차 배음을 만든다.
+            // 포화 곡선 자체는 양·음 모두 같은 C² 소프트 니를 유지한다.
+            c[i] = sign * shaped + even * shaped * shaped;
+        } else {
+            shaped = transfer(mag, Math.max(.05, stage.k));
+            // 기존 솔리드스테이트 스킨과의 호환용 전달함수.
+            c[i] = (sign * shaped + asym * shaped * shaped) / (1 + Math.abs(asym));
+        }
     }
+    valveCurveCache.set(stage, c);
     return c;
+}
+
+function sampleValveStage(stage, x) {
+    const curve = valveCurve(stage);
+    if (!curve) return x;
+    const clamped = Math.max(-1, Math.min(1, x));
+    const index = Math.round((clamped + 1) * .5 * (curve.length - 1));
+    return curve[index];
 }
 
 // 자동 검증과 설명서 수치 확인용 읽기 전용 진단 표면.
@@ -131,11 +162,14 @@ window.MFA_AmpDSP = Object.freeze({
     sample(id, stageName, x) {
         const model = AMP_MODELS[id];
         const stage = model && model.circuit && model.circuit[stageName];
-        const curve = valveCurve(stage);
-        if (!curve) return x;
-        const clamped = Math.max(-1, Math.min(1, x));
-        const index = Math.round((clamped + 1) * .5 * (curve.length - 1));
-        return curve[index];
+        return sampleValveStage(stage, x);
+    },
+    sampleChain(id, x) {
+        const model = AMP_MODELS[id];
+        const circuit = model && model.circuit;
+        if (!circuit) return x;
+        const pre = sampleValveStage(circuit.pre, x * circuit.pre.drive);
+        return sampleValveStage(circuit.power, pre * circuit.power.drive);
     }
 });
 

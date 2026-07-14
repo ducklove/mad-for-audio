@@ -618,16 +618,16 @@ function tubeSvg(cx, baseY, w, h, kind) {
 const AMP_CIRCUITS = {
     el34PushPull: {
         topology: "ultralinear-push-pull-ab",
-        pre: { drive: 1.15, k: .55, asym: .10, kind: "triode" },
-        power: { drive: 1.25, k: 1.15, asym: .025, crossover: .004, kind: "pentode" },
+        pre: { drive: .90, knee: .92, ceiling: .966, even: .003, kind: "triode" },
+        power: { drive: .95, knee: .76, ceiling: .885, even: .0015, crossover: .0003, kind: "pentode" },
         sag: { threshold: -15, knee: 16, ratio: 1.45, attack: .008, release: .28 },
         transformer: { low: 28, lowQ: .72, high: 21000, highQ: .72 },
         damping: { factor: 8, bass: [72, .8, 1], high: [4500, .25] }
     },
     triode300bSE: {
         topology: "single-ended-triode-a",
-        pre: { drive: 1.12, k: .48, asym: .12, kind: "triode" },
-        power: { drive: 1.42, k: .9, asym: .34, crossover: 0, kind: "triode" },
+        pre: { drive: .88, knee: .92, ceiling: .966, even: .006, kind: "triode" },
+        power: { drive: .95, knee: .82, ceiling: .928, even: .04, crossover: 0, kind: "triode" },
         // 클래스 A는 평균 전류 변화가 작으므로 정류 새그보다 출력관의 비대칭 포화가 중심이다.
         sag: { threshold: -6, knee: 12, ratio: 1.05, attack: .02, release: .12 },
         transformer: { low: 38, lowQ: .72, high: 16500, highQ: .7 },
@@ -635,16 +635,16 @@ const AMP_CIRCUITS = {
     },
     kt88UnityPushPull: {
         topology: "unity-coupled-push-pull-ab",
-        pre: { drive: 1.08, k: .45, asym: .05, kind: "triode" },
-        power: { drive: 1.18, k: .85, asym: .012, crossover: .002, kind: "beam" },
+        pre: { drive: .92, knee: .94, ceiling: .976, even: .0015, kind: "triode" },
+        power: { drive: .98, knee: .84, ceiling: .936, even: .0005, crossover: 0, kind: "beam" },
         sag: { threshold: -10, knee: 10, ratio: 1.18, attack: .004, release: .16 },
         transformer: { low: 18, lowQ: .707, high: 28000, highQ: .707 },
         damping: { factor: 15, bass: [65, .3, .82], high: [5200, .15] }
     },
     sixL6PushPull: {
         topology: "6l6gc-push-pull-ab",
-        pre: { drive: 1.18, k: .65, asym: .12, kind: "triode" },
-        power: { drive: 1.3, k: 1.2, asym: .04, crossover: .006, kind: "beam" },
+        pre: { drive: .90, knee: .92, ceiling: .965, even: .004, kind: "triode" },
+        power: { drive: .94, knee: .74, ceiling: .865, even: .002, crossover: .0008, kind: "beam" },
         sag: { threshold: -15, knee: 18, ratio: 1.55, attack: .01, release: .34 },
         transformer: { low: 30, lowQ: .72, high: 19000, highQ: .7 },
         damping: { factor: 5, bass: [76, 1.3, 1.02], high: [4400, .35] }
@@ -669,21 +669,21 @@ const AMP_MODELS = {
         pill: "EL34 · 8B",
         desc: "EL34 울트라리니어 푸시풀 — 3차 배음, 완만한 AB 클리핑과 중간 새그 (Marantz 8B 오마주)",
         vol: { cx: 690, cy: 406, r: 34 },
-        drive: 2.2, k: 1.7, asym: 0.12, bass: [100, .4], lowMid: [320, .6, 0.8], mid: [1600, .7, 0.9], presence: [4000, -0.2, 1], treble: [8500, -.35], out: .8,
+        drive: 2.2, k: 1.7, asym: 0.12, bass: [100, .4], lowMid: [320, .6, 0.8], mid: [1600, .7, 0.9], presence: [4000, -0.2, 1], treble: [8500, -.35], out: 1.02,
         circuit: AMP_CIRCUITS.el34PushPull
     },
     "300b": {
         pill: "300B · 91E",
         desc: "300B 싱글엔디드 클래스 A — 우세한 2차 배음, 비대칭 소프트 포화와 낮은 댐핑 (WE 91E 오마주)",
         vol: { cx: 880, cy: 420, r: 112 },
-        drive: 2.8, k: 1.15, asym: 0.38, bass: [100, .3], lowMid: [300, .45, 0.72], mid: [800, .25, 0.8], presence: [3200, -.25, 0.9], treble: [7000, -.65], out: .74,
+        drive: 2.8, k: 1.15, asym: 0.38, bass: [100, .3], lowMid: [300, .45, 0.72], mid: [800, .25, 0.8], presence: [3200, -.25, 0.9], treble: [7000, -.65], out: 1.05,
         circuit: AMP_CIRCUITS.triode300bSE
     },
     kt88: {
         pill: "KT88 · 275",
         desc: "KT88 유니티 커플드 푸시풀 — 높은 헤드룸, 낮은 배음과 강한 댐핑 (McIntosh MC275 오마주)",
         vol: { cx: 600, cy: 422, r: 32 },
-        drive: 1.9, k: 1.45, asym: 0.08, bass: [80, .15], lowMid: [260, .1, 0.8], mid: [1200, -.1, 1], presence: [3800, .15, 0.9], treble: [10000, .25], out: .88,
+        drive: 1.9, k: 1.45, asym: 0.08, bass: [80, .15], lowMid: [260, .1, 0.8], mid: [1200, -.1, 1], presence: [3800, .15, 0.9], treble: [10000, .25], out: .98,
         circuit: AMP_CIRCUITS.kt88UnityPushPull
     }
 };

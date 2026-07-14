@@ -137,10 +137,12 @@ test.describe("데스크톱", () => {
     test("진공관 DSP: 싱글엔디드 배음·푸시풀 대칭·새그·댐핑이 모델별로 다름", async ({ page }) => {
         const dsp = await page.evaluate(() => {
             const api = window.MFA_AmpDSP;
-            const harmonics = (id) => {
+            const harmonics = (id, fullChain = false) => {
                 const size = 1024;
                 const wave = Array.from({ length: size }, (_, i) =>
-                    api.sample(id, "power", .8 * Math.sin(2 * Math.PI * i / size)));
+                    fullChain
+                        ? api.sampleChain(id, .98 * Math.sin(2 * Math.PI * i / size))
+                        : api.sample(id, "power", .98 * Math.sin(2 * Math.PI * i / size)));
                 const magnitude = (harmonic) => {
                     let re = 0;
                     let im = 0;
@@ -152,7 +154,10 @@ test.describe("데스크톱", () => {
                     return Math.hypot(re, im);
                 };
                 const fundamental = magnitude(1);
-                return { h2: magnitude(2) / fundamental, h3: magnitude(3) / fundamental };
+                const h2 = magnitude(2) / fundamental;
+                const h3 = magnitude(3) / fundamental;
+                const h5 = magnitude(5) / fundamental;
+                return { h2, h3, h5, thd: Math.hypot(h2, h3, h5) };
             };
             const p300 = api.sample("300b", "power", .5);
             const n300 = api.sample("300b", "power", -.5);
@@ -163,19 +168,39 @@ test.describe("데스크톱", () => {
                 asymKt88: Math.abs(pkt + nkt),
                 softSlopeHigh: api.sample("300b", "power", .95) - api.sample("300b", "power", .85),
                 softSlopeLow: api.sample("300b", "power", .25) - api.sample("300b", "power", .15),
+                softSlopeNegativeHigh: api.sample("300b", "power", -.85) - api.sample("300b", "power", -.95),
+                softSlopeNegativeLow: api.sample("300b", "power", -.15) - api.sample("300b", "power", -.25),
+                centerSlope: api.sample("300b", "power", .4) - api.sample("300b", "power", .3),
                 p300: api.inspect("300b"),
                 el34: api.inspect("el34"),
                 kt88: api.inspect("kt88"),
                 au111: api.inspect("au111"),
                 h300b: harmonics("300b"),
+                hEl34: harmonics("el34"),
                 hKt88: harmonics("kt88"),
+                hAu111: harmonics("au111"),
+                chain300b: harmonics("300b", true),
+                chainEl34: harmonics("el34", true),
+                chainKt88: harmonics("kt88", true),
+                chainAu111: harmonics("au111", true),
             };
         });
-        expect(dsp.asym300b).toBeGreaterThan(0.04);
+        expect(dsp.asym300b).toBeGreaterThan(0.015);
         expect(dsp.asymKt88).toBeLessThan(0.01);
         expect(dsp.h300b.h2).toBeGreaterThan(dsp.h300b.h3);
         expect(dsp.hKt88.h3).toBeGreaterThan(dsp.hKt88.h2 * 5);
+        expect(dsp.hEl34.h3).toBeGreaterThan(dsp.hEl34.h2);
+        expect(dsp.hAu111.h3).toBeGreaterThan(dsp.hAu111.h2);
+        expect(dsp.hKt88.thd).toBeLessThan(dsp.hEl34.thd);
+        expect(dsp.hKt88.thd).toBeLessThan(.02);
+        expect(dsp.chain300b.thd).toBeLessThan(.035);
+        expect(dsp.chainEl34.thd).toBeLessThan(.015);
+        expect(dsp.chainKt88.thd).toBeLessThan(.01);
+        expect(dsp.chainAu111.thd).toBeLessThan(.02);
+        expect(dsp.centerSlope).toBeGreaterThan(.09);
+        expect(dsp.centerSlope).toBeLessThan(.11);
         expect(dsp.softSlopeHigh).toBeLessThan(dsp.softSlopeLow);
+        expect(dsp.softSlopeNegativeHigh).toBeLessThan(dsp.softSlopeNegativeLow);
         expect(dsp.p300.dampingFactor).toBeLessThan(dsp.el34.dampingFactor);
         expect(dsp.el34.dampingFactor).toBeLessThan(dsp.kt88.dampingFactor);
         expect(dsp.au111.sagRatio).toBeGreaterThan(dsp.el34.sagRatio);
