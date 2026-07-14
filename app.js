@@ -56,11 +56,13 @@ if (viewMode !== "simple" && viewMode !== "rack") {
 // ----- 바 오버레이 (맥 앱의 '간편 플레이어') -----
 // 페이지를 리로드하지 않고 body 클래스만 토글한다 — 재생 중 전환해도 소리가 끊기지 않는다.
 // 맥 앱이 evaluateJavaScript로 호출한다 (?view=bar 로 시작할 수도 있다).
-let barOverlay = urlView === "bar";
+// sessionStorage에 보존해 바 상태에서 새로고침해도 풀 랙 레이아웃으로 리셋되지 않는다.
+let barOverlay = urlView === "bar" || sessionStorage.getItem("fmRadio.bar") === "1";
 
 function setPopupBarMode(on) {
     barOverlay = !!on;
     document.body.classList.toggle("mode-bar", barOverlay);
+    try { sessionStorage.setItem("fmRadio.bar", barOverlay ? "1" : "0"); } catch (e) {}
 }
 
 function applyViewMode() {

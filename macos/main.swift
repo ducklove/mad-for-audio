@@ -33,7 +33,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
 
         // 플로팅 패널 — 투명 타이틀바(상단 스트립)를 잡고 드래그해 옮긴다
         panel = NSPanel(contentRect: NSRect(origin: .zero, size: FULL_SIZE),
-                        styleMask: [.titled, .closable, .fullSizeContentView, .nonactivatingPanel],
+                        styleMask: [.titled, .fullSizeContentView, .nonactivatingPanel],
                         backing: .buffered, defer: false)
         panel.title = "Mad for Audio"
         panel.titleVisibility = .hidden
@@ -44,7 +44,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         panel.hidesOnDeactivate = false
         panel.standardWindowButton(.miniaturizeButton)?.isHidden = true
         panel.standardWindowButton(.zoomButton)?.isHidden = true
-        panel.standardWindowButton(.closeButton)?.isHidden = true   // 닫기는 메뉴/상태바 아이콘으로만
         panel.contentView = webView
         panel.delegate = self
 
@@ -193,6 +192,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         } catch {
             NSSound.beep()
         }
+    }
+
+    // 로드(새로고침 포함)가 끝나면 현재 모드를 페이지에 다시 주입한다
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        let on = barMode ? "true" : "false"
+        webView.evaluateJavaScript("if (typeof setPopupBarMode === 'function') setPopupBarMode(\(on));", completionHandler: nil)
     }
 
     // ----- 내비게이션 정책: 플레이어 페이지에 머문다 -----
