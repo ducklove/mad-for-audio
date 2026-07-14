@@ -1026,7 +1026,9 @@ body.mode-simple #stationMain.collapsed {
     }
 }
 
-@media (max-width: 420px) {
+/* 좁은 창(맥 팝오버 440px 포함): 헤더를 두 줄로 쌓고 버튼 줄바꿈을 허용한다.
+   420px 이하에만 걸려 있던 규칙이라 421~600px 구간에서 브랜드가 짓눌렸었다. */
+@media (max-width: 600px) {
     .site-header {
         flex-wrap: wrap;
         row-gap: 10px;
@@ -1035,6 +1037,8 @@ body.mode-simple #stationMain.collapsed {
     .header-actions {
         width: 100%;
         justify-content: flex-start;
+        flex-wrap: wrap;
+        row-gap: 8px;
     }
 }
 
@@ -1413,4 +1417,14 @@ a.mini-open {
     .crate-grid {
         grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     }
+}
+
+/* 간편 모드에서 랙이 숨으면 hero 컨테이너는 껍데기만 남는다 — 카드 장식을 걷어낸다
+   (빈 검은 알약으로 보이던 문제) */
+body.mode-simple .hero-visual {
+    background: none;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    margin-bottom: 0;
 }
