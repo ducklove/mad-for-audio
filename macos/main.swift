@@ -44,6 +44,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
         panel.hidesOnDeactivate = false
         panel.standardWindowButton(.miniaturizeButton)?.isHidden = true
         panel.standardWindowButton(.zoomButton)?.isHidden = true
+        panel.standardWindowButton(.closeButton)?.isHidden = true   // 닫기는 메뉴/상태바 아이콘으로만
         panel.contentView = webView
         panel.delegate = self
 

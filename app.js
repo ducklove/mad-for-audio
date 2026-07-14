@@ -449,11 +449,16 @@ function renderSkinPicker() {
     SKIN_ORDER.forEach((id) => {
         const b = document.createElement("button");
         b.type = "button";
-        b.className = "skin-btn" + (id === tunerSkinId ? " active" : "");
+        b.className = "skin-btn" + (unitShow.tuner && id === tunerSkinId ? " active" : "");
         b.textContent = TUNER_SKINS[id].label;
-        b.addEventListener("click", () => { if (id !== tunerSkinId) initTunerSkin(id); });
+        b.addEventListener("click", () => {
+            if (!unitShow.tuner) setUnitShow("tuner", true);
+            if (id !== tunerSkinId) initTunerSkin(id);
+            renderSkinPicker();
+        });
         el.appendChild(b);
     });
+    el.appendChild(hidePill("tuner"));
 }
 
 // ===================================================================
@@ -530,20 +535,60 @@ function setEqModel(id) {
     playerSubtext.textContent = "이퀄라이저: " + EQ_MODELS[id].pill;
 }
 
-// EQ 유닛 표시 여부 — 숨겨도 오디오 체인의 EQ는 그대로 동작한다 (시각만 접는다)
-let eqVisible = loadJson("fmRadio.eqShow", false);
+// ----- 컴포넌트 표시 구성 -----
+// 오디오 구성에서 랙 유닛을 개별로 숨길 수 있다. 숨김은 시각적일 뿐 —
+// 오디오 체인(EQ 등)과 재생 중인 소리는 그대로다. EQ만 기본 숨김.
+const UNIT_STAGES = { tuner: "tunerStage", eq: "eqStage", amp: "ampStage", deck: "deckStage", tt: "ttStage" };
+let unitShow = loadJson("fmRadio.units", null);
+if (!unitShow || typeof unitShow !== "object") {
+    unitShow = { tuner: true, eq: loadJson("fmRadio.eqShow", false), amp: true, deck: true, tt: true };
+}
+Object.keys(UNIT_STAGES).forEach((k) => { if (typeof unitShow[k] !== "boolean") unitShow[k] = k !== "eq"; });
 
-function applyEqVisible() {
-    const stage = document.getElementById("eqStage");
-    if (stage) stage.hidden = !eqVisible;
+function applyUnitVisibility() {
+    Object.entries(UNIT_STAGES).forEach(([key, id]) => {
+        const el = document.getElementById(id);
+        if (el) el.hidden = !unitShow[key];
+    });
 }
 
-function setEqVisible(show) {
-    eqVisible = show;
-    saveJson("fmRadio.eqShow", eqVisible);
-    applyEqVisible();
+function setUnitShow(key, show) {
+    unitShow[key] = !!show;
+    saveJson("fmRadio.units", unitShow);
+    applyUnitVisibility();
+    renderSkinPicker();
     renderEqPicker();
+    renderAmpPicker();
+    renderDeckPicker();
+    renderTtPicker();
 }
+
+// 피커 공통 '숨김' 알약
+function hidePill(key) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "skin-btn" + (unitShow[key] ? "" : " active");
+    b.textContent = "숨김";
+    b.addEventListener("click", () => setUnitShow(key, false));
+    return b;
+}
+
+// 모델이 한 종류뿐인 컴포넌트도 명칭 알약 + 숨김으로 구성한다
+function renderSinglePicker(elId, key, label) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    el.innerHTML = "";
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "skin-btn" + (unitShow[key] ? " active" : "");
+    b.textContent = label;
+    b.addEventListener("click", () => setUnitShow(key, true));
+    el.appendChild(b);
+    el.appendChild(hidePill(key));
+}
+
+function renderDeckPicker() { renderSinglePicker("deckPicker", "deck", "Nakamichy DRAGON"); }
+function renderTtPicker() { renderSinglePicker("ttPicker", "tt", "YAHAMA PL-12"); }
 
 function renderEqPicker() {
     const el = document.getElementById("eqPicker");
@@ -552,21 +597,16 @@ function renderEqPicker() {
     EQ_ORDER.forEach((id) => {
         const b = document.createElement("button");
         b.type = "button";
-        b.className = "skin-btn" + (eqVisible && id === eqModelId ? " active" : "");
+        b.className = "skin-btn" + (unitShow.eq && id === eqModelId ? " active" : "");
         b.textContent = EQ_MODELS[id].pill;
         b.addEventListener("click", () => {
-            if (!eqVisible) setEqVisible(true);
+            if (!unitShow.eq) setUnitShow("eq", true);
             setEqModel(id);
             renderEqPicker();
         });
         el.appendChild(b);
     });
-    const hide = document.createElement("button");
-    hide.type = "button";
-    hide.className = "skin-btn" + (eqVisible ? "" : " active");
-    hide.textContent = "숨김";
-    hide.addEventListener("click", () => setEqVisible(false));
-    el.appendChild(hide);
+    el.appendChild(hidePill("eq"));
 }
 
 function eqGainToY(g) {
@@ -778,19 +818,23 @@ function renderAmpPicker() {
     AMP_ORDER.forEach((id) => {
         const b = document.createElement("button");
         b.type = "button";
-        b.className = "skin-btn" + (id === ampModelId ? " active" : "");
+        b.className = "skin-btn" + (unitShow.amp && id === ampModelId ? " active" : "");
         b.textContent = AMP_MODELS[id].pill;
         b.title = AMP_MODELS[id].desc;
         b.addEventListener("click", () => {
-            if (id === ampModelId) return;
-            ampModelId = id;
-            applyAmp();
-            mountAmp();
-            saveJson("fmRadio.amp", id);
-            playerSubtext.textContent = "앰프: " + AMP_MODELS[id].pill + " — " + AMP_MODELS[id].desc;
+            if (!unitShow.amp) setUnitShow("amp", true);
+            if (id !== ampModelId) {
+                ampModelId = id;
+                applyAmp();
+                mountAmp();
+                saveJson("fmRadio.amp", id);
+                playerSubtext.textContent = "앰프: " + AMP_MODELS[id].pill + " — " + AMP_MODELS[id].desc;
+            }
+            renderAmpPicker();
         });
         el.appendChild(b);
     });
+    el.appendChild(hidePill("amp"));
 }
 
 // ----- 턴테이블 (YAHAMA PL-12) — 아날로그 감성 재현 -----
@@ -3374,9 +3418,11 @@ updateRecButton();
 openRecordingDb();
 initTunerSkin(loadJson("fmRadio.skin", "mr78"));
 mountEq();
-applyEqVisible();
 mountAmp();
 mountDeck();
 mountTurntable();
+applyUnitVisibility();
+renderDeckPicker();
+renderTtPicker();
 tunerLoop();
 mountCoach();

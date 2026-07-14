@@ -45,10 +45,8 @@
                 </div>
             </div>
             <div class="header-actions">
-                <a class="mini-open" id="miniPlayerLink" href="widget.html?skin=tuner" title="튜너 미니 플레이어로 전환">미니 플레이어</a>
-                <a class="mini-open" href="manual.html" title="기기별 리뷰와 조작 안내">설명서</a>
-                <button class="mini-open" type="button" id="viewModeBtn" onclick="toggleViewMode()" title="간편 플레이어와 하이파이 랙 화면을 전환합니다">랙 보기</button>
-                <button class="mini-open" type="button" onclick="toggleSettings(true)" title="튜너·앰프 모델을 선택합니다">⚙ 설정</button>
+                <a class="mini-open" href="manual.html" title="기기별 리뷰와 조작 안내">소개</a>
+                <button class="mini-open" type="button" onclick="toggleSettings(true)" title="컴포넌트 표시와 모델을 고릅니다">⚙ 오디오 구성</button>
                 <div class="live-clock" id="liveClock" aria-label="현재 시각">--:--:--</div>
             </div>
         </header>
@@ -133,22 +131,30 @@
     </div>
 
     <div class="settings-overlay" id="settingsOverlay" hidden>
-        <div class="settings-panel" role="dialog" aria-modal="true" aria-label="설정">
+        <div class="settings-panel" role="dialog" aria-modal="true" aria-label="오디오 구성">
             <div class="settings-head">
-                설정
-                <button class="settings-close" type="button" aria-label="설정 닫기" onclick="toggleSettings(false)">✕</button>
+                오디오 구성
+                <button class="settings-close" type="button" aria-label="오디오 구성 닫기" onclick="toggleSettings(false)">✕</button>
             </div>
             <div class="settings-sec">
-                <div class="settings-title">튜너 모델</div>
-                <div class="skin-picker" id="skinPicker" role="group" aria-label="튜너 스킨 선택"></div>
-            </div>
-            <div class="settings-sec">
-                <div class="settings-title">앰프 모델</div>
-                <div class="skin-picker" id="ampPicker" role="group" aria-label="앰프 모델 선택"></div>
+                <div class="settings-title">튜너</div>
+                <div class="skin-picker" id="skinPicker" role="group" aria-label="튜너 선택"></div>
             </div>
             <div class="settings-sec">
                 <div class="settings-title">이퀄라이저</div>
-                <div class="skin-picker" id="eqPicker" role="group" aria-label="이퀄라이저 모델 선택"></div>
+                <div class="skin-picker" id="eqPicker" role="group" aria-label="이퀄라이저 선택"></div>
+            </div>
+            <div class="settings-sec">
+                <div class="settings-title">앰프</div>
+                <div class="skin-picker" id="ampPicker" role="group" aria-label="앰프 선택"></div>
+            </div>
+            <div class="settings-sec">
+                <div class="settings-title">카세트 데크</div>
+                <div class="skin-picker" id="deckPicker" role="group" aria-label="카세트 데크 표시"></div>
+            </div>
+            <div class="settings-sec">
+                <div class="settings-title">턴테이블</div>
+                <div class="skin-picker" id="ttPicker" role="group" aria-label="턴테이블 표시"></div>
             </div>
             <div class="settings-sec">
                 <div class="settings-title">채널</div>

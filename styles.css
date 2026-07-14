@@ -1514,3 +1514,7 @@ body.mode-bar .btn-play-main {
     width: 40px;
     height: 40px;
 }
+
+.tuner-stage[hidden] {
+    display: none !important;
+}
