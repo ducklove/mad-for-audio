@@ -2317,12 +2317,19 @@ function ttFrame(now) {
     if (arm) arm.setAttribute("transform", "rotate(" + ttArmAng.toFixed(2) + " 1065 120)");
 
     // 와우·플러터 + 스핀업 피치 + 45회전
+    // 주의(실측 webprobe): WebKit은 매 프레임 playbackRate를 바꾸면 미디어가
+    // 0.6초마다 리셋되어 사실상 무음이 된다 — 사파리 계열은 흔들림을 생략하고,
+    // 값이 실제로 달라질 때만(45회전·스핀업) 대입한다.
     if (phonoActive && isPlaying) {
         const t = now / 1000;
-        const wow = 1 + 0.0022 * Math.sin(t * 2 * Math.PI * 0.43) + 0.0007 * Math.sin(t * 2 * Math.PI * 3.1);
+        const wow = SAFARI_LIKE ? 1
+            : 1 + 0.0022 * Math.sin(t * 2 * Math.PI * 0.43) + 0.0007 * Math.sin(t * 2 * Math.PI * 3.1);
         const spinPitch = ttSpin < 0.999 ? (0.5 + 0.5 * ttSpin) : 1;
         const mult = ttRpm45 ? 1.35 : 1;
-        try { audio.playbackRate = wow * spinPitch * mult; } catch (e) {}
+        const rate = wow * spinPitch * mult;
+        try {
+            if (Math.abs(audio.playbackRate - rate) > 0.0005) audio.playbackRate = rate;
+        } catch (e) {}
     }
     // 먼지 — 시간이 흐르면 랜덤하게 쌓인다 (판이 도는 동안 3배 빨리). 클리닝 중엔 빠르게 닦인다.
     const cleaning = now < ttCleanUntil;

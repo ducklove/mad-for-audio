@@ -179,7 +179,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
     }
 
     @objc func menuHide() { panel.orderOut(nil) }
-    @objc func menuReload() { webView.reload() }
+    @objc func menuReload() { webView.reloadFromOrigin() }   // 캐시 무시 — 배포 직후에도 새 코드를 받는다
     @objc func menuOpenBrowser() { NSWorkspace.shared.open(APP_URL) }
 
     @objc func menuLoginItem() {
