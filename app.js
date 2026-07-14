@@ -591,8 +591,57 @@ function renderSinglePicker(elId, key, label) {
     el.appendChild(hidePill(key));
 }
 
-function renderDeckPicker() { renderSinglePicker("deckPicker", "deck", "Nakamichy DRAGON"); }
-function renderTtPicker() { renderSinglePicker("ttPicker", "tt", "YAHAMA PL-12"); }
+let ttModelId = loadJson("fmRadio.turntable", "pl12");
+if (!TT_MODELS[ttModelId]) ttModelId = "pl12";
+
+function renderDeckPicker() {
+    const el = document.getElementById("deckPicker");
+    if (!el) return;
+    el.innerHTML = "";
+    DECK_ORDER.forEach((id) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "skin-btn" + (unitShow.deck && id === deckModelId ? " active" : "");
+        b.textContent = DECK_MODELS[id].label;
+        b.addEventListener("click", () => {
+            if (!unitShow.deck) setUnitShow("deck", true);
+            if (id !== deckModelId) {
+                deckModelId = id;
+                saveJson("fmRadio.deck", id);
+                mountDeck();
+                deckRefreshShelf();
+                playerSubtext.textContent = "카세트 데크: " + DECK_MODELS[id].label;
+            }
+            renderDeckPicker();
+        });
+        el.appendChild(b);
+    });
+    el.appendChild(hidePill("deck"));
+}
+
+function renderTtPicker() {
+    const el = document.getElementById("ttPicker");
+    if (!el) return;
+    el.innerHTML = "";
+    TT_ORDER.forEach((id) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "skin-btn" + (unitShow.tt && id === ttModelId ? " active" : "");
+        b.textContent = TT_MODELS[id].label;
+        b.addEventListener("click", () => {
+            if (!unitShow.tt) setUnitShow("tt", true);
+            if (id !== ttModelId) {
+                ttModelId = id;
+                saveJson("fmRadio.turntable", id);
+                mountTurntable();
+                playerSubtext.textContent = "턴테이블: " + TT_MODELS[id].label;
+            }
+            renderTtPicker();
+        });
+        el.appendChild(b);
+    });
+    el.appendChild(hidePill("tt"));
+}
 
 function renderEqPicker() {
     const el = document.getElementById("eqPicker");
@@ -1018,6 +1067,7 @@ function phonoPower() {
 }
 
 function mountTurntable() {
+    const ttSkin = TT_MODELS[ttModelId];
     let grooves = "";
     for (let r = 108; r <= 246; r += 7) {
         grooves += '<circle cx="560" cy="330" r="' + r + '" fill="none" stroke="#000" stroke-width="0.8" opacity="0.5"/>';
@@ -1061,13 +1111,13 @@ function mountTurntable() {
     const rows = RECORD.tracks.map((tr, i) => {
         const y = 128 + i * rowStep;
         return '<rect id="ttTrackBg' + i + '" x="1690" y="' + (y - 26) + '" width="286" height="' + (rowStep - 6) + '" rx="6" fill="#d36a42" opacity="0"/>' +
-            '<text x="1700" y="' + y + '" font-family="Arial" font-size="' + (rowFont + 1) + '" font-weight="700" fill="#8a7d70">' + (i + 1) + '</text>' +
-            '<text x="1728" y="' + y + '" font-family="Georgia, serif" font-size="' + rowFont + '" fill="#d9cfc0">' + tr.t + '</text>' +
+            '<text x="1700" y="' + y + '" font-family="Arial" font-size="' + (rowFont + 1) + '" font-weight="700" fill="' + (ttSkin.muted || "#8a7d70") + '">' + (i + 1) + '</text>' +
+            '<text x="1728" y="' + y + '" font-family="Georgia, serif" font-size="' + rowFont + '" fill="' + (ttSkin.ink || "#d9cfc0") + '">' + tr.t + '</text>' +
             '<rect id="ttTrackHit' + i + '" x="1690" y="' + (y - 26) + '" width="286" height="' + (rowStep - 4) + '" fill="#000" fill-opacity="0" style="cursor:pointer"><title>' + tr.t + ' 재생</title></rect>';
     }).join("");
     document.getElementById("ttStage").innerHTML =
         // viewBox를 위아래로 40씩 넓혀(640→720) 콘텐츠 좌표는 그대로 두고 여백만 확보한다
-        '<svg class="tt-svg" viewBox="0 -40 2000 720" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="YAHAMA PL-12 턴테이블">' +
+        '<svg class="tt-svg" viewBox="0 -40 2000 720" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="' + ttSkin.label + ' 턴테이블">' +
         '<defs>' +
         '<linearGradient id="ttWood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5d4430"/><stop offset="0.5" stop-color="#4a3524"/><stop offset="1" stop-color="#33241a"/></linearGradient>' +
         '<radialGradient id="ttVinyl" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#1c1c1f"/><stop offset="0.35" stop-color="#141416"/><stop offset="0.85" stop-color="#0d0d0f"/><stop offset="1" stop-color="#131316"/></radialGradient>' +
@@ -1078,10 +1128,11 @@ function mountTurntable() {
         '<clipPath id="ttJacketClip"><rect x="1170" y="76" width="508" height="508" rx="4"/></clipPath>' +
         '<clipPath id="ttListClip"><rect x="1690" y="56" width="286" height="590"/></clipPath>' +
         '</defs>' +
-        '<rect x="0" y="-40" width="2000" height="720" rx="10" fill="url(#ttWood)"/>' +
-        '<rect x="24" y="-16" width="1952" height="672" rx="8" fill="#17161a" stroke="#0a0a0c" stroke-width="2"/>' +
-        '<text x="60" y="72" font-family="Arial" font-size="26" font-weight="700" letter-spacing="1.5" fill="#e6e5e8">YAHAMA PL-12</text>' +
-        '<text x="60" y="98" font-family="Arial" font-size="12" letter-spacing="2.5" fill="#8a7d70">BELT-DRIVE TURNTABLE</text>' +
+        '<rect x="0" y="-40" width="2000" height="720" rx="10" fill="' + ttSkin.plinth + '"/>' +
+        '<rect x="24" y="-16" width="1952" height="672" rx="8" fill="' + ttSkin.deck + '" stroke="#0a0a0c" stroke-width="2"/>' +
+        ttSkin.detail +
+        '<text x="60" y="72" font-family="Arial" font-size="26" font-weight="700" letter-spacing="1.5" fill="' + ttSkin.accent + '">' + ttSkin.brand + '</text>' +
+        '<text x="60" y="98" font-family="Arial" font-size="12" letter-spacing="2.5" fill="' + ttSkin.accent + '">' + ttSkin.subtitle + '</text>' +
         // 레코드 브러시 — 쌓인 먼지를 닦아낸다. 게이지는 현재 먼지량.
         '<rect id="ttCleanBtn" x="44" y="150" width="200" height="56" rx="8" fill="#26262b" stroke="#4a4a52" stroke-width="2" style="cursor:pointer"><title>레코드 브러시 — 판의 먼지를 닦아냅니다</title></rect>' +
         '<rect x="60" y="170" width="44" height="16" rx="4" fill="#4a3524" pointer-events="none"/>' +
@@ -1092,7 +1143,7 @@ function mountTurntable() {
         '<rect id="ttDustBar" x="88" y="229" width="0" height="10" rx="5" fill="#b06a2a"/>' +
         // 플래터
         '<ellipse cx="566" cy="342" rx="282" ry="280" fill="#000" opacity="0.5"/>' +
-        '<circle cx="560" cy="330" r="278" fill="#26262b"/>' +
+        '<circle cx="560" cy="330" r="278" fill="' + ttSkin.platter + '"/>' +
         '<circle cx="560" cy="330" r="272" fill="#0c0c0e" stroke="#3a3a40" stroke-width="2"/>' +
         '<g id="ttSpinG">' +
         '<circle cx="560" cy="330" r="264" fill="none" stroke="#3c3c44" stroke-width="4" stroke-dasharray="3 9"/>' +
@@ -1160,7 +1211,7 @@ function mountTurntable() {
               '<text x="1424" y="536" font-family="Arial" font-size="17" letter-spacing="2" fill="#f0e8d0" text-anchor="middle">YAHAMA RECORDS &#183; STEREO</text>') +
         '<rect x="1170" y="76" width="508" height="508" rx="4" fill="none" stroke="' + jc.frame + '" stroke-width="2"/>' +
         // 트랙 리스트
-        '<text x="1690" y="86" font-family="Arial" font-size="14" font-weight="700" letter-spacing="2" fill="#8a7d70">SIDE ' + (RECORD.side || 'A') + '</text>' +
+        '<text x="1690" y="86" font-family="Arial" font-size="14" font-weight="700" letter-spacing="2" fill="' + (ttSkin.muted || "#8a7d70") + '">SIDE ' + (RECORD.side || 'A') + '</text>' +
         '<g clip-path="url(#ttListClip)">' + rows + '</g>' +
         // 컨트롤 — 재킷 아래 한 줄: START · 33 · 45 · 이전/다음 음반
         '<rect id="ttPowerBtn" x="1046" y="592" width="110" height="58" rx="8" fill="#26262b" stroke="#4a4a52" stroke-width="2" style="cursor:pointer"><title>턴테이블 전원 — 끄면 톤암이 복귀하고, 대기 중인 방송이 있으면 연결됩니다</title></rect>' +
@@ -1177,7 +1228,7 @@ function mountTurntable() {
         '<circle id="ttNextRec" cx="1656" cy="621" r="24" fill="#26262b" stroke="#4a4a52" stroke-width="2" style="cursor:pointer"><title>다음 음반</title></circle>' +
         '<rect id="ttJacketHit" x="1170" y="76" width="508" height="508" fill="#000000" fill-opacity="0" style="cursor:zoom-in"><title>재킷 크게 보기</title></rect>' +
         '<text x="1656" y="630" font-family="Georgia, serif" font-size="26" fill="#d9cfc0" text-anchor="middle" pointer-events="none">&#8250;</text>' +
-        '<text x="60" y="648" font-family="Arial" font-size="12" fill="#8a7d70">' + RECORD.credit + '</text>' +
+        '<text x="60" y="648" font-family="Arial" font-size="12" fill="' + (ttSkin.muted || "#8a7d70") + '">' + RECORD.credit + '</text>' +
         '</svg>';
 
     applyPanelLighting(document.querySelector("#ttStage svg"));

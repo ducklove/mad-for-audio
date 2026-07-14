@@ -12,7 +12,7 @@ n = int(re.search(r"fm-radio-v(\d+)", sw).group(1)) + 1
 sw = re.sub(r"fm-radio-v\d+", f"fm-radio-v{n}", sw)
 
 ASSETS = ["styles.css", "stations.js", "player-core.js", "store.js",
-          "skins.js", "engine.js", "deck.js", "records.json",
+          "skins.js", "component-skins.js", "engine.js", "deck.js", "records.json",
           "bootstrap.js", "app.js"]
 
 idx = (root / "index.html").read_text(encoding="utf-8")

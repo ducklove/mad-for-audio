@@ -18,6 +18,8 @@ let deckReelAngle = 0;
 let tapeSeq = 1;
 let hissGain = null;
 let hissSrc = null;
+let deckModelId = loadJson("fmRadio.deck", "dragon");
+if (!DECK_MODELS[deckModelId]) deckModelId = "dragon";
 
 function newBlankTape() {
     const t = { id: "tape-" + Date.now() + "-" + tapeSeq, label: "C-30 · TAPE " + tapeSeq, segments: [], pos: 0 };
@@ -98,7 +100,7 @@ function deckStartSegment(seg, innerOffset) {
 }
 
 function mountDeck() {
-    document.getElementById("deckStage").innerHTML =
+    document.getElementById("deckStage").innerHTML = deckModelId === "dragon" ?
         `<svg class="deck-svg" viewBox="0 0 2000 540" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="Nakamichy DRAGON 카세트 데크">
         <defs>
             <linearGradient id="dkFace" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d1d21"/><stop offset="0.5" stop-color="#131316"/><stop offset="1" stop-color="#0b0b0d"/></linearGradient>
@@ -234,7 +236,7 @@ function mountDeck() {
             <circle cx="1008" cy="466" r="14" fill="#d03a2a" pointer-events="none"/>
         </g>
         <g id="deckShelf"></g>
-        </svg>`;
+        </svg>` : DECK_MODELS[deckModelId].svg;
     applyPanelLighting(document.querySelector("#deckStage svg"));
     document.getElementById("deckBtnPlay").addEventListener("click", deckPlay);
     document.getElementById("deckBtnStop").addEventListener("click", deckStopTransport);

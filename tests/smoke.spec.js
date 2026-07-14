@@ -96,6 +96,31 @@ test.describe("데스크톱", () => {
         await page.keyboard.press("Escape");
         await expect(page.locator("#settingsOverlay")).toBeHidden();
     });
+
+    test("추가 하이파이 16종: 피커 등록·기기군별 스킨 전환", async ({ page }) => {
+        await page.click('button:has-text("오디오 구성")');
+        await expect(page.locator("#skinPicker .skin-btn")).toHaveCount(9);
+        await expect(page.locator("#ampPicker .skin-btn")).toHaveCount(10);
+        await expect(page.locator("#deckPicker .skin-btn")).toHaveCount(6);
+        await expect(page.locator("#ttPicker .skin-btn")).toHaveCount(6);
+
+        await page.locator('#skinPicker .skin-btn', { hasText: "REVOX B760" }).click();
+        await expect(page.locator('#tunerStage svg[aria-label*="REVOX B760"]')).toHaveCount(1);
+        await page.locator('#ampPicker .skin-btn', { hasText: "CLASS A · L-550" }).click();
+        await expect(page.locator('#ampStage svg[aria-label*="LUXMAN L-550"]')).toHaveCount(1);
+        await page.locator('#deckPicker .skin-btn', { hasText: "REVOX B215" }).click();
+        await expect(page.locator('#deckStage svg[aria-label*="REVOX B215"]')).toHaveCount(1);
+        await page.locator('#ttPicker .skin-btn', { hasText: "TECHNICS SL-1200MK2" }).click();
+        await expect(page.locator('#ttStage svg[aria-label*="TECHNICS SL-1200MK2"]')).toHaveCount(1);
+
+        const saved = await page.evaluate(() => ({
+            tuner: JSON.parse(localStorage.getItem("fmRadio.skin")),
+            amp: JSON.parse(localStorage.getItem("fmRadio.amp")),
+            deck: JSON.parse(localStorage.getItem("fmRadio.deck")),
+            turntable: JSON.parse(localStorage.getItem("fmRadio.turntable")),
+        }));
+        expect(saved).toEqual({ tuner: "b760", amp: "l550", deck: "b215", turntable: "sl1200" });
+    });
 });
 
 test.describe("모바일 390px", () => {
