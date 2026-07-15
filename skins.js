@@ -48,8 +48,70 @@ const LZ_DEFS = '<defs>' +
     '<radialGradient id="lzLampPool" cx="0.5" cy="0" r="1"><stop offset="0" stop-color="#fff8e2" stop-opacity="0.8"/><stop offset="0.4" stop-color="#ffedbb" stop-opacity="0.3"/><stop offset="1" stop-color="#ffedbb" stop-opacity="0"/></radialGradient>' +
     '<radialGradient id="lzFilHot" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff8e6" stop-opacity="0.95"/><stop offset="0.28" stop-color="#ffd98e" stop-opacity="0.85"/><stop offset="0.6" stop-color="#ff9a3a" stop-opacity="0.4"/><stop offset="1" stop-color="#ff9a3a" stop-opacity="0"/></radialGradient>' +
     '<radialGradient id="lzDeckPool" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffb45a" stop-opacity="0.5"/><stop offset="0.6" stop-color="#ff9a3a" stop-opacity="0.2"/><stop offset="1" stop-color="#ff9a3a" stop-opacity="0"/></radialGradient>' +
+    '<linearGradient id="lzControlGloss" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity="0.42"/><stop offset="0.16" stop-color="#ffffff" stop-opacity="0.18"/><stop offset="0.48" stop-color="#ffffff" stop-opacity="0.025"/><stop offset="0.7" stop-color="#000000" stop-opacity="0"/><stop offset="1" stop-color="#000000" stop-opacity="0.22"/></linearGradient>' +
+    '<radialGradient id="lzControlGlossRound" cx="0.32" cy="0.22" r="0.86"><stop offset="0" stop-color="#ffffff" stop-opacity="0.46"/><stop offset="0.22" stop-color="#ffffff" stop-opacity="0.12"/><stop offset="0.62" stop-color="#000000" stop-opacity="0"/><stop offset="1" stop-color="#000000" stop-opacity="0.38"/></radialGradient>' +
+    '<radialGradient id="lzKnobGloss" cx="0.3" cy="0.23" r="0.9"><stop offset="0" stop-color="#ffffff" stop-opacity="0.38"/><stop offset="0.2" stop-color="#ffffff" stop-opacity="0.09"/><stop offset="0.58" stop-color="#000000" stop-opacity="0"/><stop offset="1" stop-color="#000000" stop-opacity="0.4"/></radialGradient>' +
+    '<linearGradient id="lzSwitchFace" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity="0.45"/><stop offset="0.2" stop-color="#ffffff" stop-opacity="0.12"/><stop offset="0.68" stop-color="#000000" stop-opacity="0.02"/><stop offset="1" stop-color="#000000" stop-opacity="0.38"/></linearGradient>' +
+    '<filter id="lzButtonDepth" x="-30%" y="-35%" width="160%" height="190%"><feGaussianBlur in="SourceAlpha" stdDeviation="3.2" result="lzBtnBlur"/><feOffset in="lzBtnBlur" dx="1.5" dy="6" result="lzBtnOffset"/><feFlood flood-color="#000000" flood-opacity="0.72" result="lzBtnColor"/><feComposite in="lzBtnColor" in2="lzBtnOffset" operator="in" result="lzBtnShadow"/><feMerge><feMergeNode in="lzBtnShadow"/><feMergeNode in="SourceGraphic"/></feMerge></filter>' +
+    '<filter id="lzButtonPressed" x="-22%" y="-25%" width="144%" height="160%"><feGaussianBlur in="SourceAlpha" stdDeviation="1.5" result="lzPressBlur"/><feOffset in="lzPressBlur" dx="0.5" dy="2" result="lzPressOffset"/><feFlood flood-color="#000000" flood-opacity="0.62" result="lzPressColor"/><feComposite in="lzPressColor" in2="lzPressOffset" operator="in" result="lzPressShadow"/><feMerge><feMergeNode in="lzPressShadow"/><feMergeNode in="SourceGraphic"/></feMerge></filter>' +
+    '<filter id="lzKnobDepth" x="-35%" y="-35%" width="180%" height="190%"><feGaussianBlur in="SourceAlpha" stdDeviation="4" result="lzKnobBlur"/><feOffset in="lzKnobBlur" dx="3" dy="7" result="lzKnobOffset"/><feFlood flood-color="#000000" flood-opacity="0.62" result="lzKnobColor"/><feComposite in="lzKnobColor" in2="lzKnobOffset" operator="in" result="lzKnobShadow"/><feMerge><feMergeNode in="lzKnobShadow"/><feMergeNode in="SourceGraphic"/></feMerge></filter>' +
+    '<filter id="lzSwitchDepth" x="-50%" y="-45%" width="200%" height="210%"><feGaussianBlur in="SourceAlpha" stdDeviation="1.8" result="lzSwBlur"/><feOffset in="lzSwBlur" dx="1" dy="3" result="lzSwOffset"/><feFlood flood-color="#000000" flood-opacity="0.68" result="lzSwColor"/><feComposite in="lzSwColor" in2="lzSwOffset" operator="in" result="lzSwShadow"/><feMerge><feMergeNode in="lzSwShadow"/><feMergeNode in="SourceGraphic"/></feMerge></filter>' +
     '<filter id="lzSoft" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="4.5"/></filter>' +
     '</defs>';
+
+const LZ_HARDWARE_BUTTONS = [
+    '[id^="deckBtn"]', '#eqDefeatBtn', '#ttCleanBtn', '#ttPowerBtn', '#ttStartBtn',
+    '#tt33', '#tt45', '#ttPrevRec', '#ttNextRec'
+].join(',');
+
+function lzStripControlClone(el, className) {
+    const clone = el.cloneNode(false);
+    ["id", "style", "tabindex", "role", "aria-label", "filter", "class"].forEach((name) => clone.removeAttribute(name));
+    clone.setAttribute("class", className);
+    clone.setAttribute("pointer-events", "none");
+    return clone;
+}
+
+function lzDecorateHardwareButton(el) {
+    if (!el || el.dataset.lzHardware === "button") return;
+    const tag = el.tagName.toLowerCase();
+    if (tag !== "rect" && tag !== "circle") return;
+    el.dataset.lzHardware = "button";
+    el.classList.add("lz-hardware-button");
+
+    const side = lzStripControlClone(el, "lz-hardware-side");
+    side.setAttribute("fill", "#07080a");
+    side.setAttribute("stroke", "#020304");
+    side.setAttribute("opacity", ".94");
+    if (tag === "rect") side.setAttribute("y", String(Number(el.getAttribute("y") || 0) + 7));
+    else side.setAttribute("cy", String(Number(el.getAttribute("cy") || 0) + 5));
+    el.parentNode.insertBefore(side, el);
+
+    const gloss = lzStripControlClone(el, "lz-hardware-gloss");
+    gloss.setAttribute("fill", tag === "circle" ? "url(#lzControlGlossRound)" : "url(#lzControlGloss)");
+    gloss.setAttribute("stroke", "none");
+    gloss.setAttribute("opacity", ".72");
+    el.parentNode.insertBefore(gloss, el.nextSibling);
+
+    const setPressed = (pressed) => {
+        el.classList.toggle("lz-pressed", pressed);
+        gloss.classList.toggle("lz-pressed", pressed);
+    };
+    el.addEventListener("pointerdown", () => setPressed(true));
+    ["pointerup", "pointercancel", "pointerleave"].forEach((name) => el.addEventListener(name, () => setPressed(false)));
+    el.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") setPressed(true);
+    });
+    el.addEventListener("keyup", () => setPressed(false));
+    el.addEventListener("blur", () => setPressed(false));
+}
+
+function applyHardwareDepth(svg) {
+    if (!svg) return;
+    svg.querySelectorAll(LZ_HARDWARE_BUTTONS).forEach(lzDecorateHardwareButton);
+    svg.querySelectorAll('[id^="tsSw"], .lz-hardware-switch').forEach((el) => el.classList.add("lz-hardware-switch"));
+    svg.querySelectorAll('#tsKnob, .lz-hardware-knob').forEach((el) => el.classList.add("lz-hardware-knob"));
+}
 
 function applyPanelLighting(svg) {
     if (!svg) return;
@@ -63,6 +125,7 @@ function applyPanelLighting(svg) {
         '<rect x="' + X + '" y="' + Y + '" width="' + W + '" height="' + H + '" rx="8" fill="url(#lzVign)"/>' +
         '<rect class="lzPowerDim" x="' + X + '" y="' + Y + '" width="' + W + '" height="' + H + '" rx="8" fill="#000000" opacity="0.22"/>';
     svg.appendChild(g);
+    applyHardwareDepth(svg);
 }
 
 const TS_HIT_META = {

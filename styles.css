@@ -847,6 +847,41 @@ body.mode-simple #stationMain.collapsed {
         0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
+/* SVG 조작계도 실제 하드웨어처럼 패널에서 떠 보이게 한다.
+   하부 몸체·상판 글로스는 applyHardwareDepth가 생성하고 여기서는 광학 깊이와 눌림을 담당한다. */
+.rack-unit svg .lz-hardware-button {
+    filter: url(#lzButtonDepth);
+    transition: filter 70ms ease, opacity 70ms ease;
+}
+
+.rack-unit svg .lz-hardware-button.lz-pressed {
+    filter: url(#lzButtonPressed);
+    opacity: 0.9;
+}
+
+.rack-unit svg .lz-hardware-gloss {
+    transition: opacity 70ms ease;
+}
+
+.rack-unit svg .lz-hardware-gloss.lz-pressed {
+    opacity: 0.38;
+}
+
+.rack-unit svg .lz-hardware-knob {
+    filter: url(#lzKnobDepth);
+}
+
+.rack-unit svg .lz-hardware-switch {
+    filter: url(#lzSwitchDepth);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .rack-unit svg .lz-hardware-button,
+    .rack-unit svg .lz-hardware-gloss {
+        transition: none;
+    }
+}
+
 .list-toggle-wrap {
     display: flex;
     justify-content: center;

@@ -11,21 +11,28 @@ function mfaSvgKnob(cx, cy, r, id, face, mark) {
         const y2 = (cy + Math.sin(a) * r).toFixed(1);
         return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '"/>';
     }).join("");
-    return '<g' + (id ? ' id="' + id + '"' : '') + '>' +
-        '<circle cx="' + (cx + 5) + '" cy="' + (cy + 7) + '" r="' + (r + 3) + '" fill="#000" opacity=".42" filter="url(#lzSoft)"/>' +
+    return '<g class="lz-hardware-knob"' + (id ? ' id="' + id + '"' : '') + '>' +
+        '<ellipse cx="' + (cx + 4) + '" cy="' + (cy + r * .72).toFixed(1) + '" rx="' + (r * .84).toFixed(1) + '" ry="' + (r * .3).toFixed(1) + '" fill="#000" opacity=".54" filter="url(#lzSoft)"/>' +
+        '<circle cx="' + cx + '" cy="' + (cy + 5) + '" r="' + (r + 3) + '" fill="#08090b" stroke="#020304" stroke-width="3"/>' +
         '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r + 2) + '" fill="#17181b" stroke="#050506" stroke-width="3"/>' +
         '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="' + face + '" stroke="#a9a9aa" stroke-width="1.5"/>' +
+        '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r - 1) + '" fill="url(#lzKnobGloss)" pointer-events="none"/>' +
+        '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * .77).toFixed(1) + '" fill="none" stroke="#fff" stroke-width="1.2" opacity=".11" pointer-events="none"/>' +
         '<g stroke="#17181b" stroke-width="2.2" opacity=".82">' + ridges + '</g>' +
         (mark ? '<rect id="' + mark + '" x="' + (cx - 2) + '" y="' + (cy - r + 8) + '" width="4" height="' + Math.max(12, r * .24) + '" rx="2" fill="#e8e1cf"/>' : '') +
-        '<ellipse cx="' + (cx - r * .28) + '" cy="' + (cy - r * .3) + '" rx="' + (r * .28) + '" ry="' + (r * .2) + '" fill="#fff" opacity=".12"/>' +
+        '<path d="M' + (cx - r * .66).toFixed(1) + ' ' + (cy - r * .35).toFixed(1) + ' Q' + (cx - r * .28).toFixed(1) + ' ' + (cy - r * .82).toFixed(1) + ' ' + (cx + r * .14).toFixed(1) + ' ' + (cy - r * .76).toFixed(1) + '" fill="none" stroke="#fff" stroke-width="' + Math.max(1.5, r * .045).toFixed(1) + '" opacity=".28" stroke-linecap="round" pointer-events="none"/>' +
+        '<path d="M' + (cx - r * .63).toFixed(1) + ' ' + (cy + r * .49).toFixed(1) + ' Q' + cx + ' ' + (cy + r * .86).toFixed(1) + ' ' + (cx + r * .63).toFixed(1) + ' ' + (cy + r * .49).toFixed(1) + '" fill="none" stroke="#000" stroke-width="' + Math.max(2, r * .055).toFixed(1) + '" opacity=".34" pointer-events="none"/>' +
         '</g>';
 }
 
 function mfaSvgToggle(x, y, id, light) {
     return '<g>' +
-        '<rect x="' + (x - 18) + '" y="' + (y - 27) + '" width="36" height="58" rx="5" fill="#090a0c" stroke="#575a60"/>' +
-        '<rect id="' + id + '" x="' + (x - 11) + '" y="' + (y - 20) + '" width="22" height="30" rx="4" fill="' + (light || '#b8babd') + '"/>' +
-        '<rect x="' + (x - 8) + '" y="' + (y - 17) + '" width="16" height="5" rx="2" fill="#fff" opacity=".4" pointer-events="none"/>' +
+        '<rect x="' + (x - 19) + '" y="' + (y - 24) + '" width="38" height="59" rx="6" fill="#000" opacity=".48" filter="url(#lzSoft)"/>' +
+        '<rect x="' + (x - 18) + '" y="' + (y - 27) + '" width="36" height="58" rx="5" fill="#090a0c" stroke="#575a60" stroke-width="1.5"/>' +
+        '<rect id="' + id + '" class="lz-hardware-switch" x="' + (x - 11) + '" y="' + (y - 20) + '" width="22" height="30" rx="4" fill="' + (light || '#b8babd') + '" stroke="#090a0c" stroke-width="1"/>' +
+        '<rect x="' + (x - 11) + '" y="' + (y - 20) + '" width="22" height="30" rx="4" fill="url(#lzSwitchFace)" pointer-events="none"/>' +
+        '<rect x="' + (x - 8) + '" y="' + (y - 17) + '" width="16" height="5" rx="2" fill="#fff" opacity=".46" pointer-events="none"/>' +
+        '<path d="M' + (x - 8) + ' ' + (y + 7) + ' H' + (x + 8) + '" stroke="#000" stroke-width="2" opacity=".38" pointer-events="none"/>' +
         '</g>';
 }
 
@@ -352,7 +359,7 @@ function mfaDeckSvg(spec) {
             ? '<g fill="#25272b" stroke="#777a80">' + [0,1,2,3].map(i => '<rect x="' + (78 + i * 74) + '" y="190" width="56" height="92" rx="7"/>').join("") + '</g><g fill="#d6d0be">' + [0,1,2,3].map(i => '<circle cx="' + (106 + i * 74) + '" cy="236" r="17"/>').join("") + '</g>'
             : spec.signature === "sony"
                 ? '<rect x="76" y="186" width="300" height="88" rx="5" fill="#07090b" stroke="#3d4248"/><text x="226" y="238" font-family="Courier New" font-size="23" fill="#85e7b0" text-anchor="middle">AUTO CAL · HX PRO</text>'
-                : '<g fill="#292c31" stroke="#73767b">' + [0,1,2,3].map(i => '<circle cx="' + (104 + i * 78) + '" cy="232" r="27"/>').join("") + '</g><g stroke="#d4d0c4" stroke-width="2">' + [0,1,2,3].map(i => '<line x1="' + (104 + i * 78) + '" y1="210" x2="' + (104 + i * 78) + '" y2="220"/>').join("") + '</g>';
+                : '<g>' + [0,1,2,3].map(i => mfaSvgKnob(104 + i * 78, 232, 27, null, 'url(#' + uid + 'Btn)', null)).join("") + '</g><g stroke="#d4d0c4" stroke-width="2.4">' + [0,1,2,3].map(i => '<line x1="' + (104 + i * 78) + '" y1="209" x2="' + (104 + i * 78) + '" y2="219"/>').join("") + '</g>';
     return '<svg class="deck-svg" viewBox="0 0 2000 540" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="' + spec.brand + ' ' + spec.model + ' 카세트 데크">' +
         '<defs><linearGradient id="' + uid + 'Face" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + top + '"/><stop offset=".5" stop-color="' + (pale ? '#b9b4a8' : '#17191d') + '"/><stop offset="1" stop-color="' + bot + '"/></linearGradient><linearGradient id="' + uid + 'Btn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#45484e"/><stop offset=".5" stop-color="#25282d"/><stop offset="1" stop-color="#101216"/></linearGradient></defs>' +
         (spec.wood ? '<rect width="2000" height="540" rx="10" fill="#5a321a"/><path d="M0 34 Q520 8 1050 36 T2000 28 M0 516 Q600 490 1120 514 T2000 498" fill="none" stroke="#98623b" stroke-width="6" opacity=".5"/>' : '') +
