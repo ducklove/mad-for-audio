@@ -115,7 +115,13 @@ test.describe("데스크톱", () => {
         await page.locator('#ampPicker .skin-btn', { hasText: "KT88 · MA2375" }).click();
         await expect(page.locator('#ampStage svg[aria-label*="McIntosh MA2375"]')).toHaveCount(1);
         await expect(page.locator("#ampStage")).not.toHaveClass(/amp-stage-tall/);
-        expect(await page.locator("#ampStage svg").getAttribute("viewBox")).toBe("0 0 2000 1000");
+        expect(await page.locator("#ampStage svg").getAttribute("viewBox")).toBe("0 0 2000 860");
+        await expect(page.locator("#ampStage .ma2375-cylinder-knob")).toHaveCount(7);
+        await expect(page.locator("#ma2375Volume #ampVolMark")).toHaveCount(1);
+        const maVolume = page.locator('#ampStage [role="slider"][aria-label="볼륨"]');
+        await expect(maVolume).toHaveAttribute("cx", "1602");
+        await expect(maVolume).toHaveAttribute("cy", "593.4");
+        await expect(page.locator("#ampVolMark")).toHaveAttribute("transform", /1602 593\.4/);
         await page.locator('#deckPicker .skin-btn', { hasText: "PIONEER CT-F1250" }).click();
         await expect(page.locator('#deckStage svg[aria-label*="PIONEER CT-F1250"]')).toHaveCount(1);
         await expect(page.locator("#deckBtnPlay")).toHaveClass(/lz-hardware-button/);

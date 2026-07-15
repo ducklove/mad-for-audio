@@ -258,10 +258,39 @@ function mfaMa2375Tube(cx, baseY, scale, cage) {
         '<rect x="' + (cx - w * .52).toFixed(1) + '" y="' + (baseY - h * .1).toFixed(1) + '" width="' + (w * 1.04).toFixed(1) + '" height="' + (h * .12).toFixed(1) + '" rx="7" fill="#111416" stroke="#8d9295" stroke-width="2"/>' + cageLines + '</g>';
 }
 
+function mfaMa2375Knob(cx, faceY, r, options) {
+    const opt = options || {};
+    const depth = opt.depth || r * 1.05;
+    const faceRy = r * .7;
+    const bodyRx = r * .88;
+    const ridgeCount = Math.max(9, Math.round(r / 4));
+    const ridges = Array.from({ length: ridgeCount }, (_, i) => {
+        const x = cx - bodyRx * .78 + i * (bodyRx * 1.56 / (ridgeCount - 1));
+        return '<line x1="' + x.toFixed(1) + '" y1="' + (faceY + faceRy * .42).toFixed(1) + '" x2="' + x.toFixed(1) + '" y2="' + (faceY + depth - r * .12).toFixed(1) + '"/>';
+    }).join("");
+    const id = opt.id ? ' id="' + opt.id + '"' : '';
+    const mark = opt.mark
+        ? '<path id="' + opt.mark + '" d="M' + cx + ' ' + (faceY - faceRy * .83).toFixed(1) + ' L' + cx + ' ' + (faceY - faceRy * .54).toFixed(1) + '" fill="none" stroke="#f3f0db" stroke-width="' + Math.max(3, r * .07).toFixed(1) + '" stroke-linecap="round"/>'
+        : '';
+    return '<g' + id + ' class="ma2375-cylinder-knob">' +
+        '<ellipse cx="' + (cx + r * .08).toFixed(1) + '" cy="' + (faceY + depth + r * .18).toFixed(1) + '" rx="' + (bodyRx * 1.02).toFixed(1) + '" ry="' + (r * .26).toFixed(1) + '" fill="#000" opacity=".62" filter="url(#ma2375KnobShadow)"/>' +
+        '<ellipse cx="' + cx + '" cy="' + (faceY + depth).toFixed(1) + '" rx="' + bodyRx.toFixed(1) + '" ry="' + (r * .22).toFixed(1) + '" fill="#33373a" stroke="#17191b" stroke-width="2"/>' +
+        '<path d="M' + (cx - bodyRx).toFixed(1) + ' ' + faceY + ' L' + (cx - bodyRx).toFixed(1) + ' ' + (faceY + depth).toFixed(1) + ' Q' + cx + ' ' + (faceY + depth + r * .23).toFixed(1) + ' ' + (cx + bodyRx).toFixed(1) + ' ' + (faceY + depth).toFixed(1) + ' L' + (cx + bodyRx).toFixed(1) + ' ' + faceY + ' Z" fill="url(#ma2375KnobSide)" stroke="#4a4e51" stroke-width="2"/>' +
+        '<g stroke="#45494c" stroke-width="' + Math.max(1.2, r * .025).toFixed(1) + '" opacity=".72">' + ridges + '</g>' +
+        '<path d="M' + (cx - bodyRx * .9).toFixed(1) + ' ' + (faceY + depth * .68).toFixed(1) + ' Q' + cx + ' ' + (faceY + depth * .79).toFixed(1) + ' ' + (cx + bodyRx * .9).toFixed(1) + ' ' + (faceY + depth * .68).toFixed(1) + '" fill="none" stroke="#f5f5f1" stroke-width="2" opacity=".38"/>' +
+        '<ellipse cx="' + cx + '" cy="' + faceY + '" rx="' + r + '" ry="' + faceRy.toFixed(1) + '" fill="url(#ma2375KnobBezel)" stroke="#272a2d" stroke-width="3"/>' +
+        '<ellipse cx="' + cx + '" cy="' + (faceY - r * .02).toFixed(1) + '" rx="' + (r * .75).toFixed(1) + '" ry="' + (faceRy * .7).toFixed(1) + '" fill="url(#ma2375KnobCap)" stroke="#9ca0a2" stroke-width="2"/>' +
+        '<path d="M' + (cx - r * .57).toFixed(1) + ' ' + (faceY - faceRy * .18).toFixed(1) + ' Q' + (cx - r * .12).toFixed(1) + ' ' + (faceY - faceRy * .76).toFixed(1) + ' ' + (cx + r * .42).toFixed(1) + ' ' + (faceY - faceRy * .48).toFixed(1) + '" fill="none" stroke="#fff" stroke-width="' + Math.max(1.5, r * .035).toFixed(1) + '" opacity=".25" stroke-linecap="round"/>' + mark +
+        '</g>';
+}
+
 function mfaMa2375Svg() {
     const powerTubes = [380, 620, 1380, 1620].map((x) => mfaMa2375Tube(x, 642, 1.12, true)).join("");
-    const eqKnobs = [760, 880, 1000, 1120, 1240].map((x) => mfaSvgKnob(x, 736, 39, null, 'url(#ma2375Knob)', null)).join("");
-    return `<svg class="amp-svg ma2375-svg" viewBox="0 0 2000 1000" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="McIntosh MA2375 KT88 진공관 인티그레이티드 앰프 정면">
+    const eqKnobs = [720, 860, 1000, 1140, 1280].map((x) => mfaMa2375Knob(x, 690, 34, { depth: 64 })).join("");
+    const scale = .86, offsetX = 140;
+    const volumeX = offsetX + 1700 * scale;
+    const volumeY = 690 * scale;
+    return `<svg class="amp-svg ma2375-svg" viewBox="0 0 2000 860" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="McIntosh MA2375 KT88 진공관 인티그레이티드 앰프 정면">
     <defs>
         <linearGradient id="ma2375Backdrop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14171b"/><stop offset=".68" stop-color="#07090c"/><stop offset="1" stop-color="#020304"/></linearGradient>
         <linearGradient id="ma2375Glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#03070b"/><stop offset=".35" stop-color="#111820"/><stop offset=".55" stop-color="#020406"/><stop offset="1" stop-color="#0b0e12"/></linearGradient>
@@ -270,16 +299,20 @@ function mfaMa2375Svg() {
         <linearGradient id="ma2375Edge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#63666a"/><stop offset=".35" stop-color="#f0f0ed"/><stop offset=".62" stop-color="#96999c"/><stop offset="1" stop-color="#3d4044"/></linearGradient>
         <linearGradient id="ma2375Cage" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#34383b"/><stop offset=".2" stop-color="#f1f2ef"/><stop offset=".45" stop-color="#85898b"/><stop offset=".72" stop-color="#f7f7f3"/><stop offset="1" stop-color="#4b4f52"/></linearGradient>
         <radialGradient id="ma2375Chrome"><stop offset="0" stop-color="#f5f5f1"/><stop offset=".42" stop-color="#a4a7aa"/><stop offset=".75" stop-color="#3b3f43"/><stop offset="1" stop-color="#e1e2df"/></radialGradient>
-        <radialGradient id="ma2375Knob" cx="34%" cy="28%"><stop offset="0" stop-color="#fafaf7"/><stop offset=".25" stop-color="#b6b8ba"/><stop offset=".58" stop-color="#5d6064"/><stop offset=".82" stop-color="#d7d8d5"/><stop offset="1" stop-color="#292c30"/></radialGradient>
+        <linearGradient id="ma2375KnobSide" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3a3d40"/><stop offset=".12" stop-color="#d9dad7"/><stop offset=".28" stop-color="#73777a"/><stop offset=".5" stop-color="#f2f2ee"/><stop offset=".68" stop-color="#686c6f"/><stop offset=".88" stop-color="#d3d4d1"/><stop offset="1" stop-color="#2b2e31"/></linearGradient>
+        <linearGradient id="ma2375KnobBezel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f5f5f1"/><stop offset=".34" stop-color="#aeb0b1"/><stop offset=".72" stop-color="#4b4f52"/><stop offset="1" stop-color="#d9dad7"/></linearGradient>
+        <radialGradient id="ma2375KnobCap" cx="38%" cy="30%" r="76%"><stop offset="0" stop-color="#51565a"/><stop offset=".26" stop-color="#272b2e"/><stop offset=".72" stop-color="#111315"/><stop offset="1" stop-color="#030405"/></radialGradient>
         <linearGradient id="ma2375MeterBlue" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#44d2ff"/><stop offset=".32" stop-color="#29aee9"/><stop offset=".72" stop-color="#1682c2"/><stop offset="1" stop-color="#0a487e"/></linearGradient>
         <linearGradient id="ma2375TubeGlass" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#101519"/><stop offset=".25" stop-color="#e8f1ef" stop-opacity=".34"/><stop offset=".48" stop-color="#252b2f" stop-opacity=".82"/><stop offset=".75" stop-color="#dfe8e7" stop-opacity=".28"/><stop offset="1" stop-color="#090d10"/></linearGradient>
         <filter id="ma2375Shadow" x="-30%" y="-30%" width="160%" height="180%"><feGaussianBlur stdDeviation="24"/></filter>
         <filter id="ma2375BlueGlow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="11"/></filter>
         <filter id="ma2375TubeGlow" x="-80%" y="-60%" width="260%" height="240%"><feGaussianBlur stdDeviation="24"/></filter>
+        <filter id="ma2375KnobShadow" x="-50%" y="-50%" width="200%" height="220%"><feGaussianBlur stdDeviation="8"/></filter>
         <filter id="lzSoft" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="12"/></filter>
     </defs>
-    <rect width="2000" height="1000" rx="18" fill="url(#ma2375Backdrop)"/>
-    <ellipse cx="1000" cy="922" rx="870" ry="54" fill="#000" opacity=".82" filter="url(#ma2375Shadow)"/>
+    <rect width="2000" height="860" rx="18" fill="url(#ma2375Backdrop)"/>
+    <ellipse cx="1000" cy="805" rx="720" ry="38" fill="#000" opacity=".82" filter="url(#ma2375Shadow)"/>
+    <g transform="translate(${offsetX} 0) scale(${scale})">
     <rect x="128" y="92" width="1744" height="830" rx="7" fill="#090b0e" stroke="#34383c" stroke-width="7"/>
     <rect x="158" y="112" width="1684" height="536" rx="4" fill="#05070a" stroke="url(#ma2375Edge)" stroke-width="12"/>
     <rect x="192" y="126" width="1616" height="508" rx="2" fill="url(#ma2375Glass)" stroke="#1c242b" stroke-width="4"/>
@@ -293,25 +326,26 @@ function mfaMa2375Svg() {
     <g font-family="monospace" fill="#63e2e8" filter="url(#lzSoft)"><text x="732" y="450" font-size="27">BAL 2</text><text x="1218" y="450" font-size="27" text-anchor="end">40%</text></g>
     <g font-family="monospace" fill="#76f1f3"><text x="732" y="450" font-size="27">BAL 2</text><text x="1218" y="450" font-size="27" text-anchor="end">40%</text></g>
     ${powerTubes}
-    <rect x="108" y="632" width="1784" height="292" rx="5" fill="url(#ma2375Steel)" stroke="#202326" stroke-width="8"/>
-    <path d="M119 650 H1881" stroke="#fff" stroke-width="5" opacity=".68"/>
-    <path d="M113 808 H1887" stroke="#55585a" stroke-width="5" opacity=".9"/><path d="M120 815 H1880" stroke="#f7f7f4" stroke-width="3" opacity=".42"/>
-    <rect x="124" y="821" width="1752" height="88" rx="2" fill="url(#ma2375SteelBand)" opacity=".32"/>
-    ${mfaSvgKnob(250, 724, 88, null, 'url(#ma2375Knob)', null)}
-    <circle cx="490" cy="738" r="22" fill="#080a0c" stroke="#777a7c" stroke-width="6"/><circle cx="490" cy="738" r="10" fill="#010203"/>
+    <path d="M108 632 H1892 L1887 812 H113 Z" fill="url(#ma2375Steel)" stroke="#202326" stroke-width="8"/>
+    <path d="M120 650 H1880" stroke="#fff" stroke-width="5" opacity=".7"/>
+    <path d="M113 812 H1887 L1878 925 H122 Z" fill="url(#ma2375SteelBand)" stroke="#24272a" stroke-width="7"/>
+    <path d="M116 808 H1884" stroke="#655c49" stroke-width="5" opacity=".9"/><path d="M122 816 H1878" stroke="#fbfbf7" stroke-width="3" opacity=".48"/>
+    ${mfaMa2375Knob(300, 690, 70, { depth: 78 })}
+    <circle cx="540" cy="707" r="24" fill="#090b0d" stroke="#777b7e" stroke-width="7"/><circle cx="540" cy="707" r="11" fill="#010203"/><ellipse cx="533" cy="699" rx="7" ry="5" fill="#fff" opacity=".14"/>
     ${eqKnobs}
-    ${mfaSvgKnob(1750, 724, 94, "ma2375Volume", 'url(#ma2375Knob)', 'ampVolMark')}
-    <g font-family="Arial" text-anchor="middle" fill="#3c3f41"><text x="250" y="797" font-size="13" letter-spacing="4">PUSH · TRIM</text><text x="490" y="705" font-size="10" letter-spacing="2">HEADPHONES</text><text x="760" y="799" font-size="11">30Hz</text><text x="880" y="799" font-size="11">250Hz</text><text x="1000" y="799" font-size="11">1kHz</text><text x="1120" y="799" font-size="11">4kHz</text><text x="1240" y="799" font-size="11">10kHz</text><text x="1750" y="797" font-size="13" letter-spacing="4">PUSH · POWER</text></g>
-    <circle cx="1510" cy="743" r="12" fill="#372410" stroke="#8a754c" stroke-width="3"/><circle id="ampPwrLed" cx="1510" cy="743" r="7" fill="#3a2012"/>
-    <path d="M145 922 V952 H265 V922 M1735 922 V952 H1855 V922" fill="#111417" stroke="#44494d" stroke-width="4"/>
+    <g font-family="Arial" text-anchor="middle" fill="#3c3f41"><text x="300" y="792" font-size="13" letter-spacing="4">PUSH · TRIM</text><text x="540" y="674" font-size="10" letter-spacing="2">HEADPHONES</text><text x="720" y="790" font-size="11">30Hz</text><text x="860" y="790" font-size="11">250Hz</text><text x="1000" y="790" font-size="11">1kHz</text><text x="1140" y="790" font-size="11">4kHz</text><text x="1280" y="790" font-size="11">10kHz</text><text x="1700" y="792" font-size="13" letter-spacing="4">PUSH · POWER</text></g>
+    <circle cx="1490" cy="711" r="12" fill="#372410" stroke="#8a754c" stroke-width="3"/><circle id="ampPwrLed" cx="1490" cy="711" r="7" fill="#3a2012"/>
+    <path d="M150 924 V982 H275 V924 M1725 924 V982 H1850 V924" fill="#111417" stroke="#44494d" stroke-width="4"/>
     <g pointer-events="none"><circle cx="132" cy="670" r="9" fill="#292c2f" stroke="#ecece8"/><circle cx="1868" cy="670" r="9" fill="#292c2f" stroke="#ecece8"/><circle cx="132" cy="890" r="8" fill="#232629" stroke="#dadbd8"/><circle cx="1868" cy="890" r="8" fill="#232629" stroke="#dadbd8"/></g>
+    </g>
+    ${mfaMa2375Knob(volumeX, volumeY, 60, { id: "ma2375Volume", mark: "ampVolMark", depth: 67 })}
 </svg>`;
 }
 
 AMP_MODELS.ma2375 = {
     pill: "KT88 · MA2375",
     desc: "올튜브 KT88 유니티 커플드 — 0.5% 이하 저왜율, 10Hz–50kHz 광대역과 DF 22의 강한 제동",
-    vol: { cx: 1750, cy: 724, r: 108 },
+    vol: { cx: 1602, cy: 593.4, r: 82 },
     drive: 1, k: 0, asym: 0,
     bass: [65, .08], lowMid: [280, 0, .8], mid: [1000, 0, 1], presence: [3600, .08, .9], treble: [10000, .1], out: .97,
     circuit: AMP_CIRCUITS.ma2375UnityCoupled,
