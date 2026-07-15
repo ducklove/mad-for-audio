@@ -287,10 +287,12 @@ function mfaMa2375Knob(cx, faceY, r, options) {
 function mfaMa2375Svg() {
     const powerTubes = [380, 620, 1380, 1620].map((x) => mfaMa2375Tube(x, 642, 1.12, true)).join("");
     const eqKnobs = [720, 860, 1000, 1140, 1280].map((x) => mfaMa2375Knob(x, 690, 34, { depth: 64 })).join("");
-    const scale = .86, offsetX = 140;
+    const scale = 1.076, offsetX = -76;
     const volumeX = offsetX + 1700 * scale;
     const volumeY = 690 * scale;
-    return `<svg class="amp-svg ma2375-svg" viewBox="0 0 2000 860" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="McIntosh MA2375 KT88 진공관 인티그레이티드 앰프 정면">
+    const volumeR = 70 * scale;
+    const volumeDepth = 78 * scale;
+    return `<svg class="amp-svg ma2375-svg" viewBox="0 0 2000 1080" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="McIntosh MA2375 KT88 진공관 인티그레이티드 앰프 정면">
     <defs>
         <linearGradient id="ma2375Backdrop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14171b"/><stop offset=".68" stop-color="#07090c"/><stop offset="1" stop-color="#020304"/></linearGradient>
         <linearGradient id="ma2375Glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#03070b"/><stop offset=".35" stop-color="#111820"/><stop offset=".55" stop-color="#020406"/><stop offset="1" stop-color="#0b0e12"/></linearGradient>
@@ -310,15 +312,15 @@ function mfaMa2375Svg() {
         <filter id="ma2375KnobShadow" x="-50%" y="-50%" width="200%" height="220%"><feGaussianBlur stdDeviation="8"/></filter>
         <filter id="lzSoft" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="12"/></filter>
     </defs>
-    <rect width="2000" height="860" rx="18" fill="url(#ma2375Backdrop)"/>
-    <ellipse cx="1000" cy="805" rx="720" ry="38" fill="#000" opacity=".82" filter="url(#ma2375Shadow)"/>
+    <rect width="2000" height="1080" rx="18" fill="url(#ma2375Backdrop)"/>
+    <ellipse cx="1000" cy="1040" rx="920" ry="42" fill="#000" opacity=".82" filter="url(#ma2375Shadow)"/>
     <g transform="translate(${offsetX} 0) scale(${scale})">
-    <rect x="128" y="92" width="1744" height="830" rx="7" fill="#090b0e" stroke="#34383c" stroke-width="7"/>
-    <rect x="158" y="112" width="1684" height="536" rx="4" fill="#05070a" stroke="url(#ma2375Edge)" stroke-width="12"/>
-    <rect x="192" y="126" width="1616" height="508" rx="2" fill="url(#ma2375Glass)" stroke="#1c242b" stroke-width="4"/>
-    <rect x="158" y="112" width="36" height="536" fill="url(#ma2375SteelBand)" opacity=".92"/>
-    <rect x="1806" y="112" width="36" height="536" fill="url(#ma2375SteelBand)" opacity=".92"/>
-    <path d="M204 139 H1796" stroke="#fff" stroke-width="4" opacity=".11"/>
+    <rect x="180" y="92" width="1640" height="873" rx="7" fill="#090b0e" stroke="#34383c" stroke-width="7"/>
+    <rect x="200" y="112" width="1600" height="536" rx="4" fill="#05070a" stroke="url(#ma2375Edge)" stroke-width="12"/>
+    <rect x="225" y="126" width="1550" height="508" rx="2" fill="url(#ma2375Glass)" stroke="#1c242b" stroke-width="4"/>
+    <rect x="200" y="112" width="36" height="536" fill="url(#ma2375SteelBand)" opacity=".92"/>
+    <rect x="1764" y="112" width="36" height="536" fill="url(#ma2375SteelBand)" opacity=".92"/>
+    <path d="M238 139 H1762" stroke="#fff" stroke-width="4" opacity=".11"/>
     ${mfaMa2375Meter(250, "ampVuL")}${mfaMa2375Meter(1366, "ampVuR")}
     <g text-anchor="middle"><text x="1000" y="252" font-family="Georgia" font-size="58" font-style="italic" fill="#62ef86" opacity=".55" filter="url(#ma2375TubeGlow)">McIntosh</text><text x="1000" y="252" font-family="Georgia" font-size="58" font-style="italic" fill="#62ef86" stroke="#235e38" stroke-width="1">McIntosh</text><text x="1000" y="291" font-family="Arial" font-size="18" font-weight="700" letter-spacing="8" fill="#54d477">MA2375</text><text x="1000" y="319" font-family="Arial" font-size="12" letter-spacing="4" fill="#50c771">TUBE INTEGRATED AMPLIFIER</text><circle cx="1000" cy="344" r="4" fill="#b52c27"/></g>
     <rect x="700" y="405" width="600" height="125" rx="5" fill="#020607" stroke="#0c2026" stroke-width="4"/>
@@ -326,26 +328,25 @@ function mfaMa2375Svg() {
     <g font-family="monospace" fill="#63e2e8" filter="url(#lzSoft)"><text x="732" y="450" font-size="27">BAL 2</text><text x="1218" y="450" font-size="27" text-anchor="end">40%</text></g>
     <g font-family="monospace" fill="#76f1f3"><text x="732" y="450" font-size="27">BAL 2</text><text x="1218" y="450" font-size="27" text-anchor="end">40%</text></g>
     ${powerTubes}
-    <path d="M108 632 H1892 L1887 812 H113 Z" fill="url(#ma2375Steel)" stroke="#202326" stroke-width="8"/>
-    <path d="M120 650 H1880" stroke="#fff" stroke-width="5" opacity=".7"/>
-    <path d="M113 812 H1887 L1878 925 H122 Z" fill="url(#ma2375SteelBand)" stroke="#24272a" stroke-width="7"/>
-    <path d="M116 808 H1884" stroke="#655c49" stroke-width="5" opacity=".9"/><path d="M122 816 H1878" stroke="#fbfbf7" stroke-width="3" opacity=".48"/>
+    <path d="M130 632 H1870 L1892 812 H108 Z" fill="url(#ma2375Steel)" stroke="#202326" stroke-width="8"/>
+    <path d="M140 650 H1860" stroke="#fff" stroke-width="5" opacity=".66"/>
+    <path d="M108 812 H1892 L1900 965 H100 Z" fill="url(#ma2375SteelBand)" stroke="#24272a" stroke-width="7"/>
+    <path d="M108 808 H1892" stroke="#655c49" stroke-width="5" opacity=".96"/><path d="M112 816 H1888" stroke="#fbfbf7" stroke-width="3" opacity=".52"/>
     ${mfaMa2375Knob(300, 690, 70, { depth: 78 })}
     <circle cx="540" cy="707" r="24" fill="#090b0d" stroke="#777b7e" stroke-width="7"/><circle cx="540" cy="707" r="11" fill="#010203"/><ellipse cx="533" cy="699" rx="7" ry="5" fill="#fff" opacity=".14"/>
     ${eqKnobs}
     <g font-family="Arial" text-anchor="middle" fill="#3c3f41"><text x="300" y="792" font-size="13" letter-spacing="4">PUSH · TRIM</text><text x="540" y="674" font-size="10" letter-spacing="2">HEADPHONES</text><text x="720" y="790" font-size="11">30Hz</text><text x="860" y="790" font-size="11">250Hz</text><text x="1000" y="790" font-size="11">1kHz</text><text x="1140" y="790" font-size="11">4kHz</text><text x="1280" y="790" font-size="11">10kHz</text><text x="1700" y="792" font-size="13" letter-spacing="4">PUSH · POWER</text></g>
     <circle cx="1490" cy="711" r="12" fill="#372410" stroke="#8a754c" stroke-width="3"/><circle id="ampPwrLed" cx="1490" cy="711" r="7" fill="#3a2012"/>
-    <path d="M150 924 V982 H275 V924 M1725 924 V982 H1850 V924" fill="#111417" stroke="#44494d" stroke-width="4"/>
-    <g pointer-events="none"><circle cx="132" cy="670" r="9" fill="#292c2f" stroke="#ecece8"/><circle cx="1868" cy="670" r="9" fill="#292c2f" stroke="#ecece8"/><circle cx="132" cy="890" r="8" fill="#232629" stroke="#dadbd8"/><circle cx="1868" cy="890" r="8" fill="#232629" stroke="#dadbd8"/></g>
+    <g pointer-events="none"><circle cx="132" cy="670" r="9" fill="#292c2f" stroke="#ecece8"/><circle cx="1868" cy="670" r="9" fill="#292c2f" stroke="#ecece8"/><circle cx="122" cy="930" r="8" fill="#232629" stroke="#dadbd8"/><circle cx="1878" cy="930" r="8" fill="#232629" stroke="#dadbd8"/></g>
     </g>
-    ${mfaMa2375Knob(volumeX, volumeY, 60, { id: "ma2375Volume", mark: "ampVolMark", depth: 67 })}
+    ${mfaMa2375Knob(volumeX, volumeY, volumeR, { id: "ma2375Volume", mark: "ampVolMark", depth: volumeDepth })}
 </svg>`;
 }
 
 AMP_MODELS.ma2375 = {
     pill: "KT88 · MA2375",
     desc: "올튜브 KT88 유니티 커플드 — 0.5% 이하 저왜율, 10Hz–50kHz 광대역과 DF 22의 강한 제동",
-    vol: { cx: 1602, cy: 593.4, r: 82 },
+    vol: { cx: 1753.2, cy: 742.44, r: 102 },
     drive: 1, k: 0, asym: 0,
     bass: [65, .08], lowMid: [280, 0, .8], mid: [1000, 0, 1], presence: [3600, .08, .9], treble: [10000, .1], out: .97,
     circuit: AMP_CIRCUITS.ma2375UnityCoupled,
