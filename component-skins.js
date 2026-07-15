@@ -211,25 +211,26 @@ MFA_AMPS.forEach((spec) => {
 });
 
 function mfaMa2375Meter(x, needleId) {
-    const cx = x + 225, cy = 410;
+    const cx = x + 192, cy = 354;
     const ticks = Array.from({ length: 13 }, (_, i) => {
-        const deg = -42 + i * 7;
+        const deg = -48 + i * 8;
         const a = deg * Math.PI / 180;
         const major = i % 3 === 0;
-        const x1 = (cx + Math.sin(a) * (major ? 150 : 158)).toFixed(1);
-        const y1 = (cy - Math.cos(a) * (major ? 150 : 158)).toFixed(1);
-        const x2 = (cx + Math.sin(a) * 174).toFixed(1);
-        const y2 = (cy - Math.cos(a) * 174).toFixed(1);
-        return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="#183d5b" stroke-width="' + (major ? 3 : 1.5) + '"/>';
+        const x1 = (cx + Math.sin(a) * (major ? 116 : 121)).toFixed(1);
+        const y1 = (cy - Math.cos(a) * (major ? 116 : 121)).toFixed(1);
+        const x2 = (cx + Math.sin(a) * 133).toFixed(1);
+        const y2 = (cy - Math.cos(a) * 133).toFixed(1);
+        return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="#123b5b" stroke-width="' + (major ? 2.5 : 1.3) + '"/>';
     }).join("");
     return '<g>' +
-        '<rect x="' + x + '" y="188" width="450" height="260" rx="12" fill="#020407" stroke="url(#ma2375Chrome)" stroke-width="10"/>' +
-        '<rect class="lampGlow" x="' + (x + 18) + '" y="205" width="414" height="222" rx="5" fill="url(#ma2375MeterBlue)" opacity=".42" filter="url(#ma2375BlueGlow)"/>' +
-        '<path d="M' + (x + 38) + ' 403 Q' + cx + ' 134 ' + (x + 412) + ' 403" fill="none" stroke="#214b67" stroke-width="2"/>' + ticks +
-        '<g font-family="Arial" fill="#12354f" text-anchor="middle"><text x="' + (x + 67) + '" y="326" font-size="18">.075</text><text x="' + (x + 150) + '" y="276" font-size="18">.75</text><text x="' + (x + 300) + '" y="276" font-size="18">7.5</text><text x="' + (x + 385) + '" y="326" font-size="18">75</text><text x="' + cx + '" y="365" font-size="17" letter-spacing="4">WATTS</text><text x="' + cx + '" y="392" font-size="12" letter-spacing="3">DECIBELS</text></g>' +
-        '<line id="' + needleId + '" data-cx="' + cx + '" data-cy="' + cy + '" x1="' + cx + '" y1="' + cy + '" x2="' + cx + '" y2="242" stroke="#071019" stroke-width="5" transform="rotate(-42 ' + cx + ' ' + cy + ')"/>' +
-        '<circle cx="' + cx + '" cy="' + cy + '" r="13" fill="#111820" stroke="#6288a0" stroke-width="2"/>' +
-        '<path d="M' + (x + 25) + ' 214 H' + (x + 425) + '" stroke="#fff" stroke-width="3" opacity=".2"/>' +
+        '<rect x="' + x + '" y="174" width="384" height="202" rx="4" fill="#05080b" stroke="#161a1f" stroke-width="14"/>' +
+        '<rect class="lampGlow" x="' + (x + 15) + '" y="189" width="354" height="172" rx="2" fill="url(#ma2375MeterBlue)" opacity=".48" filter="url(#ma2375BlueGlow)"/>' +
+        '<rect x="' + (x + 15) + '" y="189" width="354" height="172" rx="2" fill="url(#ma2375MeterBlue)" opacity=".74"/>' +
+        '<path d="M' + (x + 35) + ' 344 Q' + cx + ' 126 ' + (x + 349) + ' 344" fill="none" stroke="#153e5b" stroke-width="2"/>' + ticks +
+        '<g font-family="Arial" fill="#11334d" text-anchor="middle"><text x="' + (x + 54) + '" y="292" font-size="14">.075</text><text x="' + (x + 127) + '" y="245" font-size="14">.75</text><text x="' + (x + 257) + '" y="245" font-size="14">7.5</text><text x="' + (x + 330) + '" y="292" font-size="14">75</text><text x="' + cx + '" y="211" font-size="11" letter-spacing="3">WATTS</text><text x="' + cx + '" y="321" font-size="12" letter-spacing="3">DECIBELS</text><text x="' + cx + '" y="344" font-size="14" letter-spacing="2">POWER OUTPUT</text></g>' +
+        '<line id="' + needleId + '" data-cx="' + cx + '" data-cy="' + cy + '" x1="' + cx + '" y1="' + cy + '" x2="' + cx + '" y2="224" stroke="#071019" stroke-width="4" transform="rotate(-42 ' + cx + ' ' + cy + ')"/>' +
+        '<circle cx="' + cx + '" cy="' + cy + '" r="10" fill="#101820" stroke="#5c829c" stroke-width="2"/>' +
+        '<path d="M' + (x + 24) + ' 199 H' + (x + 360) + '" stroke="#fff" stroke-width="3" opacity=".23"/>' +
         '</g>';
 }
 
@@ -251,14 +252,14 @@ function mfaMa2375Tube(cx, baseY, scale, cage) {
 }
 
 function mfaMa2375Svg() {
-    const driverTubes = [770, 850, 930, 1070, 1150, 1230].map((x) => mfaMa2375Tube(x, 618, .46, false)).join("");
-    const powerTubes = [390, 620, 1380, 1610].map((x) => mfaMa2375Tube(x, 650, 1, true)).join("");
-    const eqKnobs = [720, 860, 1000, 1140, 1280].map((x) => mfaSvgKnob(x, 826, 45, null, 'url(#ma2375Knob)', null)).join("");
-    return `<svg class="amp-svg ma2375-svg" viewBox="0 0 2000 1040" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="McIntosh MA2375 KT88 진공관 인티그레이티드 앰프">
+    const powerTubes = [380, 620, 1380, 1620].map((x) => mfaMa2375Tube(x, 642, 1.12, true)).join("");
+    const eqKnobs = [760, 880, 1000, 1120, 1240].map((x) => mfaSvgKnob(x, 736, 39, null, 'url(#ma2375Knob)', null)).join("");
+    return `<svg class="amp-svg ma2375-svg" viewBox="0 0 2000 1000" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="McIntosh MA2375 KT88 진공관 인티그레이티드 앰프 정면">
     <defs>
-        <linearGradient id="ma2375Backdrop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#171a1e"/><stop offset=".55" stop-color="#090b0e"/><stop offset="1" stop-color="#030405"/></linearGradient>
+        <linearGradient id="ma2375Backdrop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14171b"/><stop offset=".68" stop-color="#07090c"/><stop offset="1" stop-color="#020304"/></linearGradient>
         <linearGradient id="ma2375Glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#03070b"/><stop offset=".35" stop-color="#111820"/><stop offset=".55" stop-color="#020406"/><stop offset="1" stop-color="#0b0e12"/></linearGradient>
-        <linearGradient id="ma2375Steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2f2ef"/><stop offset=".12" stop-color="#c9c9c6"/><stop offset=".48" stop-color="#8e9092"/><stop offset=".72" stop-color="#d9d9d5"/><stop offset="1" stop-color="#74777a"/></linearGradient>
+        <linearGradient id="ma2375Steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6f6f3"/><stop offset=".08" stop-color="#d7d7d4"/><stop offset=".36" stop-color="#a7a8a8"/><stop offset=".58" stop-color="#ecece8"/><stop offset=".82" stop-color="#babbb9"/><stop offset="1" stop-color="#777a7c"/></linearGradient>
+        <linearGradient id="ma2375SteelBand" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#66696c"/><stop offset=".12" stop-color="#ecece9"/><stop offset=".5" stop-color="#a9aaa9"/><stop offset=".82" stop-color="#f5f5f1"/><stop offset="1" stop-color="#5e6265"/></linearGradient>
         <linearGradient id="ma2375Edge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#63666a"/><stop offset=".35" stop-color="#f0f0ed"/><stop offset=".62" stop-color="#96999c"/><stop offset="1" stop-color="#3d4044"/></linearGradient>
         <linearGradient id="ma2375Cage" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#34383b"/><stop offset=".2" stop-color="#f1f2ef"/><stop offset=".45" stop-color="#85898b"/><stop offset=".72" stop-color="#f7f7f3"/><stop offset="1" stop-color="#4b4f52"/></linearGradient>
         <radialGradient id="ma2375Chrome"><stop offset="0" stop-color="#f5f5f1"/><stop offset=".42" stop-color="#a4a7aa"/><stop offset=".75" stop-color="#3b3f43"/><stop offset="1" stop-color="#e1e2df"/></radialGradient>
@@ -270,45 +271,43 @@ function mfaMa2375Svg() {
         <filter id="ma2375TubeGlow" x="-80%" y="-60%" width="260%" height="240%"><feGaussianBlur stdDeviation="24"/></filter>
         <filter id="lzSoft" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="12"/></filter>
     </defs>
-    <rect width="2000" height="1040" rx="18" fill="url(#ma2375Backdrop)"/>
-    <ellipse cx="1010" cy="938" rx="900" ry="74" fill="#000" opacity=".8" filter="url(#ma2375Shadow)"/>
-    <path d="M220 104 L1690 104 L1845 174 L375 174 Z" fill="#22262b" stroke="#6f7478" stroke-width="3"/>
-    <path d="M252 83 L1650 83 L1690 104 L220 104 Z" fill="#090b0e" stroke="#555b61" stroke-width="3"/>
-    <g fill="#171a1e" stroke="#60656a" stroke-width="2"><rect x="300" y="89" width="340" height="58" rx="5"/><rect x="830" y="89" width="340" height="58" rx="5"/><rect x="1360" y="89" width="250" height="58" rx="5"/></g>
-    <g fill="#b28a3c" opacity=".84"><rect x="350" y="105" width="240" height="22" rx="2"/><rect x="880" y="105" width="240" height="22" rx="2"/><rect x="1400" y="105" width="170" height="22" rx="2"/></g>
-    <rect x="198" y="145" width="1604" height="500" rx="10" fill="#05070a" stroke="url(#ma2375Edge)" stroke-width="14"/>
-    <rect x="224" y="164" width="1552" height="455" rx="4" fill="url(#ma2375Glass)" stroke="#28323a" stroke-width="4"/>
-    <path d="M245 180 H1755" stroke="#fff" stroke-width="4" opacity=".13"/>
-    ${mfaMa2375Meter(270, "ampVuL")}${mfaMa2375Meter(1280, "ampVuR")}
-    <g text-anchor="middle"><text x="1000" y="275" font-family="Georgia" font-size="67" font-style="italic" fill="#66ef89" filter="url(#ma2375TubeGlow)">McIntosh</text><text x="1000" y="318" font-family="Arial" font-size="20" font-weight="700" letter-spacing="8" fill="#54c97b">MA2375</text><text x="1000" y="348" font-family="Arial" font-size="12" letter-spacing="4" fill="#50bd72">TUBE INTEGRATED AMPLIFIER</text></g>
-    <rect x="754" y="385" width="492" height="137" rx="7" fill="#020607" stroke="#164b55" stroke-width="3"/>
-    <g font-family="monospace" fill="#71e7ef"><text x="790" y="428" font-size="28">PHONO</text><text x="790" y="468" font-size="24">50pF</text><text x="1112" y="428" font-size="28">40%</text><text x="1080" y="468" font-size="24">47kΩ</text></g>
-    <g fill="#0b1317" stroke="#59818a" stroke-width="2">${Array.from({length:18},(_,i)=>'<rect x="'+(787+i*24)+'" y="486" width="14" height="9" rx="2"/>').join("")}</g>
-    <path d="M120 635 L1880 635 L1950 706 L50 706 Z" fill="#090b0e" stroke="#6c7074" stroke-width="4"/>
-    ${driverTubes}${powerTubes}
-    <path d="M52 700 L1948 700 L1852 970 L148 970 Z" fill="url(#ma2375Steel)" stroke="#202327" stroke-width="8"/>
-    <path d="M76 719 L1924 719" stroke="#fff" stroke-width="5" opacity=".6"/>
-    <path d="M148 970 L1852 970 L1814 1012 L184 1012 Z" fill="#111418" stroke="#555a5e" stroke-width="3"/>
-    <path d="M147 970 L184 1012 H110 L70 970 Z M1852 970 L1814 1012 H1890 L1930 970 Z" fill="#030405"/>
-    ${mfaSvgKnob(220, 807, 104, null, 'url(#ma2375Knob)', null)}
-    <circle cx="425" cy="814" r="23" fill="#080a0c" stroke="#5b5e61" stroke-width="6"/><circle cx="425" cy="814" r="10" fill="#020304"/>
+    <rect width="2000" height="1000" rx="18" fill="url(#ma2375Backdrop)"/>
+    <ellipse cx="1000" cy="922" rx="870" ry="54" fill="#000" opacity=".82" filter="url(#ma2375Shadow)"/>
+    <rect x="128" y="92" width="1744" height="830" rx="7" fill="#090b0e" stroke="#34383c" stroke-width="7"/>
+    <rect x="158" y="112" width="1684" height="536" rx="4" fill="#05070a" stroke="url(#ma2375Edge)" stroke-width="12"/>
+    <rect x="192" y="126" width="1616" height="508" rx="2" fill="url(#ma2375Glass)" stroke="#1c242b" stroke-width="4"/>
+    <rect x="158" y="112" width="36" height="536" fill="url(#ma2375SteelBand)" opacity=".92"/>
+    <rect x="1806" y="112" width="36" height="536" fill="url(#ma2375SteelBand)" opacity=".92"/>
+    <path d="M204 139 H1796" stroke="#fff" stroke-width="4" opacity=".11"/>
+    ${mfaMa2375Meter(250, "ampVuL")}${mfaMa2375Meter(1366, "ampVuR")}
+    <g text-anchor="middle"><text x="1000" y="252" font-family="Georgia" font-size="58" font-style="italic" fill="#62ef86" opacity=".55" filter="url(#ma2375TubeGlow)">McIntosh</text><text x="1000" y="252" font-family="Georgia" font-size="58" font-style="italic" fill="#62ef86" stroke="#235e38" stroke-width="1">McIntosh</text><text x="1000" y="291" font-family="Arial" font-size="18" font-weight="700" letter-spacing="8" fill="#54d477">MA2375</text><text x="1000" y="319" font-family="Arial" font-size="12" letter-spacing="4" fill="#50c771">TUBE INTEGRATED AMPLIFIER</text><circle cx="1000" cy="344" r="4" fill="#b52c27"/></g>
+    <rect x="700" y="405" width="600" height="125" rx="5" fill="#020607" stroke="#0c2026" stroke-width="4"/>
+    <g fill="#08262d" opacity=".7">${Array.from({length:22},(_,i)=>'<rect x="'+(720+i*25)+'" y="458" width="13" height="47" rx="2"/>').join("")}</g>
+    <g font-family="monospace" fill="#63e2e8" filter="url(#lzSoft)"><text x="732" y="450" font-size="27">BAL 2</text><text x="1218" y="450" font-size="27" text-anchor="end">40%</text></g>
+    <g font-family="monospace" fill="#76f1f3"><text x="732" y="450" font-size="27">BAL 2</text><text x="1218" y="450" font-size="27" text-anchor="end">40%</text></g>
+    ${powerTubes}
+    <rect x="108" y="632" width="1784" height="292" rx="5" fill="url(#ma2375Steel)" stroke="#202326" stroke-width="8"/>
+    <path d="M119 650 H1881" stroke="#fff" stroke-width="5" opacity=".68"/>
+    <path d="M113 808 H1887" stroke="#55585a" stroke-width="5" opacity=".9"/><path d="M120 815 H1880" stroke="#f7f7f4" stroke-width="3" opacity=".42"/>
+    <rect x="124" y="821" width="1752" height="88" rx="2" fill="url(#ma2375SteelBand)" opacity=".32"/>
+    ${mfaSvgKnob(250, 724, 88, null, 'url(#ma2375Knob)', null)}
+    <circle cx="490" cy="738" r="22" fill="#080a0c" stroke="#777a7c" stroke-width="6"/><circle cx="490" cy="738" r="10" fill="#010203"/>
     ${eqKnobs}
-    ${mfaSvgKnob(1780, 807, 112, "ma2375Volume", 'url(#ma2375Knob)', 'ampVolMark')}
-    <g font-family="Arial" text-anchor="middle" fill="#35383b"><text x="220" y="940" font-size="15" letter-spacing="4">INPUT</text><text x="425" y="865" font-size="12" letter-spacing="2">HEADPHONES</text><text x="720" y="900" font-size="12">30Hz</text><text x="860" y="900" font-size="12">250Hz</text><text x="1000" y="900" font-size="12">1kHz</text><text x="1140" y="900" font-size="12">4kHz</text><text x="1280" y="900" font-size="12">10kHz</text><text x="1000" y="936" font-size="13" letter-spacing="5">5 BAND EQUALIZER</text><text x="1780" y="940" font-size="15" letter-spacing="4">VOLUME</text></g>
-    <circle cx="1640" cy="874" r="13" fill="#372410" stroke="#8a754c" stroke-width="3"/><circle id="ampPwrLed" cx="1640" cy="874" r="8" fill="#3a2012"/>
-    <g pointer-events="none"><circle cx="95" cy="752" r="10" fill="#2a2d30" stroke="#e7e7e3"/><circle cx="1905" cy="752" r="10" fill="#2a2d30" stroke="#e7e7e3"/><circle cx="160" cy="944" r="9" fill="#24272a" stroke="#ddd"/><circle cx="1840" cy="944" r="9" fill="#24272a" stroke="#ddd"/></g>
-    <text x="1000" y="996" font-family="Georgia" font-size="28" font-style="italic" letter-spacing="3" fill="#dfe2df" text-anchor="middle">McIntosh MA2375 · 75 WATTS PER CHANNEL · UNITY COUPLED</text>
+    ${mfaSvgKnob(1750, 724, 94, "ma2375Volume", 'url(#ma2375Knob)', 'ampVolMark')}
+    <g font-family="Arial" text-anchor="middle" fill="#3c3f41"><text x="250" y="797" font-size="13" letter-spacing="4">PUSH · TRIM</text><text x="490" y="705" font-size="10" letter-spacing="2">HEADPHONES</text><text x="760" y="799" font-size="11">30Hz</text><text x="880" y="799" font-size="11">250Hz</text><text x="1000" y="799" font-size="11">1kHz</text><text x="1120" y="799" font-size="11">4kHz</text><text x="1240" y="799" font-size="11">10kHz</text><text x="1750" y="797" font-size="13" letter-spacing="4">PUSH · POWER</text></g>
+    <circle cx="1510" cy="743" r="12" fill="#372410" stroke="#8a754c" stroke-width="3"/><circle id="ampPwrLed" cx="1510" cy="743" r="7" fill="#3a2012"/>
+    <path d="M145 922 V952 H265 V922 M1735 922 V952 H1855 V922" fill="#111417" stroke="#44494d" stroke-width="4"/>
+    <g pointer-events="none"><circle cx="132" cy="670" r="9" fill="#292c2f" stroke="#ecece8"/><circle cx="1868" cy="670" r="9" fill="#292c2f" stroke="#ecece8"/><circle cx="132" cy="890" r="8" fill="#232629" stroke="#dadbd8"/><circle cx="1868" cy="890" r="8" fill="#232629" stroke="#dadbd8"/></g>
 </svg>`;
 }
 
 AMP_MODELS.ma2375 = {
     pill: "KT88 · MA2375",
     desc: "올튜브 KT88 유니티 커플드 — 0.5% 이하 저왜율, 10Hz–50kHz 광대역과 DF 22의 강한 제동",
-    vol: { cx: 1780, cy: 807, r: 128 },
+    vol: { cx: 1750, cy: 724, r: 108 },
     drive: 1, k: 0, asym: 0,
     bass: [65, .08], lowMid: [280, 0, .8], mid: [1000, 0, 1], presence: [3600, .08, .9], treble: [10000, .1], out: .97,
     circuit: AMP_CIRCUITS.ma2375UnityCoupled,
-    tall: true,
     svg: mfaMa2375Svg()
 };
 AMP_ORDER.push("ma2375");

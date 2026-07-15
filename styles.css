@@ -847,22 +847,6 @@ body.mode-simple #stationMain.collapsed {
         0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-/* MA2375는 전면 패널 위의 진공관과 트랜스 하우징까지 한 몸인 인티앰프다.
-   낮은 2U 프레임에 압축하지 않고 원래의 높은 비례를 그대로 펼친다. */
-#ampStage.amp-stage-tall {
-    margin-top: 16px;
-    margin-bottom: 18px;
-}
-
-#ampStage.amp-stage-tall svg {
-    border-radius: 13px;
-    box-shadow:
-        0 44px 74px rgba(0, 0, 0, 0.68),
-        0 16px 28px rgba(0, 0, 0, 0.58),
-        0 2px 5px rgba(0, 0, 0, 0.5),
-        0 1px 0 rgba(255, 255, 255, 0.08);
-}
-
 .list-toggle-wrap {
     display: flex;
     justify-content: center;

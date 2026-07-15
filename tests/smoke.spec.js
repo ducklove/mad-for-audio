@@ -111,8 +111,8 @@ test.describe("데스크톱", () => {
         await expect(page.locator('#ampStage svg[aria-label*="LUXMAN L-550"]')).toHaveCount(1);
         await page.locator('#ampPicker .skin-btn', { hasText: "KT88 · MA2375" }).click();
         await expect(page.locator('#ampStage svg[aria-label*="McIntosh MA2375"]')).toHaveCount(1);
-        await expect(page.locator("#ampStage")).toHaveClass(/amp-stage-tall/);
-        expect(await page.locator("#ampStage svg").getAttribute("viewBox")).toBe("0 0 2000 1040");
+        await expect(page.locator("#ampStage")).not.toHaveClass(/amp-stage-tall/);
+        expect(await page.locator("#ampStage svg").getAttribute("viewBox")).toBe("0 0 2000 1000");
         await page.locator('#deckPicker .skin-btn', { hasText: "REVOX B215" }).click();
         await expect(page.locator('#deckStage svg[aria-label*="REVOX B215"]')).toHaveCount(1);
         await page.locator('#ttPicker .skin-btn', { hasText: "TECHNICS SL-1200MK2" }).click();
