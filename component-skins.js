@@ -218,7 +218,7 @@ MFA_AMPS.forEach((spec) => {
 });
 
 function mfaMa2375Meter(x, needleId) {
-    const cx = x + 192, cy = 354, arcCy = 335;
+    const cx = x + 192, cy = 354, arcCy = 305;
     const ticks = Array.from({ length: 13 }, (_, i) => {
         const deg = -70 + i * (140 / 12);
         const a = deg * Math.PI / 180;
@@ -233,9 +233,9 @@ function mfaMa2375Meter(x, needleId) {
         '<rect x="' + x + '" y="174" width="384" height="202" rx="4" fill="#05080b" stroke="#161a1f" stroke-width="14"/>' +
         '<rect x="' + (x + 15) + '" y="189" width="354" height="172" rx="2" fill="url(#ma2375MeterBlue)" opacity=".34"/>' +
         '<rect class="ampLamp ma2375-meter-light" x="' + (x + 15) + '" y="189" width="354" height="172" rx="2" fill="url(#ma2375MeterBlue)" opacity=".03" filter="url(#ma2375BlueGlow)"/>' +
-        '<path class="ma2375-meter-arc" d="M' + (x + 51) + ' 318 A150 50 0 0 1 ' + (x + 333) + ' 318" fill="none" stroke="#153e5b" stroke-width="2"/>' + ticks +
-        '<g font-family="Arial" fill="#11334d" text-anchor="middle"><text x="' + (x + 57) + '" y="312" font-size="13">.075</text><text x="' + (x + 126) + '" y="282" font-size="13">.75</text><text x="' + (x + 258) + '" y="282" font-size="13">7.5</text><text x="' + (x + 327) + '" y="312" font-size="13">75</text><text x="' + cx + '" y="211" font-size="11" letter-spacing="3">WATTS</text><text x="' + cx + '" y="326" font-size="11" letter-spacing="3">DECIBELS</text><text x="' + cx + '" y="346" font-size="14" letter-spacing="2">POWER OUTPUT</text></g>' +
-        '<line id="' + needleId + '" data-cx="' + cx + '" data-cy="' + cy + '" x1="' + cx + '" y1="' + cy + '" x2="' + cx + '" y2="282" stroke="#071019" stroke-width="4" transform="rotate(-42 ' + cx + ' ' + cy + ')"/>' +
+        '<path class="ma2375-meter-arc" d="M' + (x + 51) + ' 288 A150 50 0 0 1 ' + (x + 333) + ' 288" fill="none" stroke="#153e5b" stroke-width="2"/>' + ticks +
+        '<g font-family="Arial" fill="#11334d" text-anchor="middle"><text x="' + (x + 57) + '" y="282" font-size="13">.075</text><text x="' + (x + 126) + '" y="252" font-size="13">.75</text><text x="' + (x + 258) + '" y="252" font-size="13">7.5</text><text x="' + (x + 327) + '" y="282" font-size="13">75</text><text x="' + cx + '" y="211" font-size="11" letter-spacing="3">WATTS</text><text x="' + cx + '" y="316" font-size="11" letter-spacing="3">DECIBELS</text><text x="' + cx + '" y="339" font-size="14" letter-spacing="2">POWER OUTPUT</text></g>' +
+        '<line id="' + needleId + '" data-cx="' + cx + '" data-cy="' + cy + '" x1="' + cx + '" y1="' + cy + '" x2="' + cx + '" y2="248" stroke="#071019" stroke-width="4" transform="rotate(-42 ' + cx + ' ' + cy + ')"/>' +
         '<circle cx="' + cx + '" cy="' + cy + '" r="10" fill="#101820" stroke="#5c829c" stroke-width="2"/>' +
         '<rect class="meterDark" x="' + (x + 15) + '" y="189" width="354" height="172" rx="2" fill="#02070c" opacity=".55" pointer-events="none"/>' +
         '<path d="M' + (x + 24) + ' 199 H' + (x + 360) + '" stroke="#fff" stroke-width="3" opacity=".23"/>' +
@@ -333,9 +333,10 @@ function mfaMa2375Svg() {
         <text x="1000" y="252" font-family="Georgia" font-size="58" font-style="italic" fill="#62ef86" stroke="#235e38" stroke-width="1">McIntosh</text><text x="1000" y="291" font-family="Arial" font-size="18" font-weight="700" letter-spacing="8" fill="#54d477">MA2375</text><text x="1000" y="319" font-family="Arial" font-size="12" letter-spacing="4" fill="#50c771">TUBE INTEGRATED AMPLIFIER</text>
     </g><circle cx="1000" cy="344" r="4" fill="#b52c27"/>
     <rect x="700" y="405" width="600" height="125" rx="5" fill="#020607" stroke="#0c2026" stroke-width="4"/>
-    <g fill="#08262d" opacity=".7">${Array.from({length:22},(_,i)=>'<rect x="'+(720+i*25)+'" y="458" width="13" height="47" rx="2"/>').join("")}</g>
-    <g font-family="monospace" fill="#63e2e8" filter="url(#lzSoft)"><text x="732" y="450" font-size="27">BAL 2</text><text x="1218" y="450" font-size="27" text-anchor="end">40%</text></g>
-    <g font-family="monospace" fill="#76f1f3"><text x="732" y="450" font-size="27">BAL 2</text><text x="1218" y="450" font-size="27" text-anchor="end">40%</text></g>
+    <g class="ampLegend ma2375-display-readout" font-family="monospace" font-size="34">
+        <g fill="#63e2e8" opacity=".78" filter="url(#lzSoft)"><text id="ma2375SourceGlow" x="760" y="480">Tuner</text><text id="ma2375VolumeGlow" x="1240" y="480" text-anchor="end">100%</text></g>
+        <g fill="#76f1f3"><text id="ma2375SourceText" x="760" y="480">Tuner</text><text id="ma2375VolumeText" x="1240" y="480" text-anchor="end">100%</text></g>
+    </g>
     ${powerTubes}
     <path d="M103 632 H1897 L1920 812 H80 Z" fill="url(#ma2375Steel)" stroke="#202326" stroke-width="8"/>
     <path d="M113 650 H1887" stroke="#fff" stroke-width="5" opacity=".66"/>

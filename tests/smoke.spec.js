@@ -120,10 +120,16 @@ test.describe("데스크톱", () => {
         await expect(page.locator("#ampStage .ma2375-lower-chassis")).toHaveAttribute("x", "80");
         await expect(page.locator("#ampStage .ma2375-lower-chassis")).toHaveAttribute("width", "1840");
         await expect(page.locator("#ampStage .ma2375-meter-arc")).toHaveCount(2);
-        await expect(page.locator("#ampStage .ma2375-meter-arc").first()).toHaveAttribute("d", "M301 318 A150 50 0 0 1 583 318");
+        await expect(page.locator("#ampStage .ma2375-meter-arc").first()).toHaveAttribute("d", "M301 288 A150 50 0 0 1 583 288");
+        await expect(page.locator("#ampVuL")).toHaveAttribute("y2", "248");
         await expect(page.locator("#ampStage .ma2375-meter-light")).toHaveCount(2);
         await expect(page.locator("#ampStage .meterDark")).toHaveCount(2);
         await expect(page.locator("#ampStage .ma2375-lettering")).toHaveCount(1);
+        await expect(page.locator("#ampStage .ma2375-display-readout")).toHaveCount(1);
+        await expect(page.locator("#ma2375SourceText")).toHaveText("Tuner");
+        await expect(page.locator("#ma2375VolumeText")).toHaveText("100%");
+        expect(await page.locator("#ampStage").evaluate((stage) =>
+            [...stage.querySelectorAll("rect")].filter((el) => el.getAttribute("y") === "458" && el.getAttribute("width") === "13").length)).toBe(0);
         const knobDimensions = await page.locator("#ampStage .ma2375-cylinder-knob").first().evaluate((el) => ({
             body: Number(el.dataset.bodyRx),
             face: Number(el.dataset.faceRx),
@@ -191,6 +197,24 @@ test.describe("데스크톱", () => {
         expect(cooled.meter).toBeLessThan(.22);
         expect(cooled.lettering).toBeLessThan(.36);
         expect(cooled.dark).toBeGreaterThan(.45);
+    });
+
+    test("MA2375 표시창: 입력 소스와 볼륨 노브를 실시간 반영", async ({ page }) => {
+        await page.click('button:has-text("오디오 구성")');
+        await page.locator('#ampPicker .skin-btn', { hasText: "KT88 · MA2375" }).click();
+        await page.locator('.settings-close').click();
+
+        await page.evaluate(() => setVolume(37));
+        await expect(page.locator("#ma2375VolumeText")).toHaveText("37%");
+        await expect(page.locator("#ma2375VolumeGlow")).toHaveText("37%");
+
+        await page.evaluate(() => playPhonoTrack(0));
+        await expect(page.locator("#ma2375SourceText")).toHaveText("Phone");
+        await expect(page.locator("#ma2375SourceGlow")).toHaveText("Phone");
+
+        await page.evaluate(() => deckPlay());
+        await expect(page.locator("#ma2375SourceText")).toHaveText("CAS");
+        await expect(page.locator("#ma2375SourceGlow")).toHaveText("CAS");
     });
 
     test("설명서에 신규 기기별 소개와 음색·동작 차이가 기록됨", async ({ page }) => {

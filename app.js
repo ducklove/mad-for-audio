@@ -839,6 +839,17 @@ function updateVolKnob() {
         const ang = -135 + volumeLevel * 270;
         mark.setAttribute("transform", "rotate(" + ang.toFixed(1) + " " + vol.cx + " " + vol.cy + ")");
     }
+    updateMa2375Display();
+}
+
+function updateMa2375Display() {
+    const source = phonoActive ? "Phone" : deckMode === "play" ? "CAS" : "Tuner";
+    const volume = Math.round(volumeLevel * 100) + "%";
+    [["ma2375SourceText", source], ["ma2375SourceGlow", source],
+        ["ma2375VolumeText", volume], ["ma2375VolumeGlow", volume]].forEach(([id, value]) => {
+        const el = document.getElementById(id);
+        if (el && el.textContent !== value) el.textContent = value;
+    });
 }
 
 function bindAmpVolume() {
@@ -1474,6 +1485,7 @@ function ttFrame(now) {
     const warmTarget = (isPlaying || deckMode === "play" || !!recorder) ? 1 : 0;
     const warmRate = warmTarget > tubeWarm ? dt / 2.0 : dt / 3.5;
     tubeWarm = Math.max(0, Math.min(1, tubeWarm + (warmTarget > tubeWarm ? 1 : -1) * warmRate));
+    updateMa2375Display();
 
     // 튜너 램프: 라디오 수신 중에만 (백열등이라 진공관보다 빠르게 켜지고 꺼진다)
     const tnTarget = (isPlaying && currentStation) ? 1 : 0;
