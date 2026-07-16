@@ -237,7 +237,14 @@ test.describe("데스크톱", () => {
                 { ymd: "t", startTs: Date.now(), endTs: Date.now() + 12000 }, "990:t");
         });
         await page.waitForFunction(() => !!recorder && deckMode === "rec", null, { timeout: 15000 });
-        await page.waitForTimeout(2200);
+        // CI 헤드리스(특히 WebKit)는 rAF가 심하게 스로틀된다 — 조명 웜업·릴 회전은
+        // 프레임 루프를 합성 타임스탬프로 직접 돌려 기계 속도와 무관하게 검증한다
+        await page.evaluate(() => {
+            // 과거→현재 창으로 펌프 — 미래 타임스탬프는 실제 rAF와 만나 음수 dt를 만든다
+            const t0 = performance.now() - 4000;
+            ttLastTs = t0;
+            for (let i = 1; i <= 80; i++) ttFrame(t0 + i * 50);
+        });
         const mid = await page.evaluate(() => ({
             mainPaused: document.getElementById("audioPlayer").paused,
             playing: isPlaying,
@@ -254,9 +261,12 @@ test.describe("데스크톱", () => {
         expect(mid.ampWarm, "앰프 소등").toBeLessThan(0.05);
         expect(mid.tunerWarm, "튜너 점등").toBeGreaterThan(0.8);
         expect(mid.deckShown, "녹음 중 데크 노출").toBe(true);
-        await page.waitForTimeout(400);
-        expect(await page.evaluate((r1) => document.getElementById("deckReelL").getAttribute("transform") !== r1, mid.reel1),
-            "릴이 돌아간다").toBe(true);
+        expect(await page.evaluate((r1) => {
+            const t0 = performance.now() - 600;
+            ttLastTs = t0;
+            for (let i = 1; i <= 10; i++) ttFrame(t0 + i * 50);
+            return document.getElementById("deckReelL").getAttribute("transform") !== r1;
+        }, mid.reel1), "릴이 돌아간다").toBe(true);
         await page.waitForFunction(() => !recorder && !activeResRec && !isPlaying && deckMode === "stop", null, { timeout: 15000 });
         // 완료되면 프로그램명이 붙은 카세트가 되감긴 채 테이프 랙에 보관된다
         await page.waitForFunction(() =>
