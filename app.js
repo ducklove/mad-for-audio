@@ -2394,8 +2394,11 @@ function stopRecording() {
 }
 
 function recFileExtension(mimeType) {
+    if (mimeType.includes("mpeg") || mimeType.includes("mp3")) return "mp3";
     if (mimeType.includes("mp4")) return "m4a";
     if (mimeType.includes("ogg")) return "ogg";
+    if (mimeType.includes("wav")) return "wav";
+    if (mimeType.includes("flac")) return "flac";
     return "webm";
 }
 

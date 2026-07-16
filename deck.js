@@ -566,6 +566,7 @@ function tapeCaseItem(t) {
     };
     if (t !== deckTape) actions.appendChild(btn("장착", () => tapeCaseInsert(t.id)));
     actions.appendChild(btn("라벨", () => tapeCaseRename(t.id)));
+    if (t.segments.length) actions.appendChild(btn("내보내기", () => tapeCaseExport(t.id)));
     actions.appendChild(btn("삭제", () => tapeCaseDelete(t.id), true));
 
     head.append(shell, info, actions);
@@ -702,4 +703,111 @@ document.getElementById("tapeCaseOverlay").addEventListener("click", (e) => {
 });
 document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !document.getElementById("tapeCaseOverlay").hidden) closeTapeCase();
+});
+
+// ----- 테이프 가져오기 / 내보내기 -----
+// 가져오기: 오디오 파일을 길이에 맞는 규격의 테이프에 담는다 (여러 파일 = 믹스테이프).
+// 원본 blob을 IndexedDB '녹음'으로 저장하므로 리로드 후에도 남는다.
+// 내보내기: 수록곡을 원본 형식 그대로 내려받는다 — 재인코딩 없음, 원본 음질.
+
+function audioFileDuration(file) {
+    return new Promise((resolve) => {
+        const url = URL.createObjectURL(file);
+        const probe = document.createElement("audio");
+        probe.preload = "metadata";
+        let settled = false;
+        const done = () => {
+            if (settled) return;
+            settled = true;
+            const d = isFinite(probe.duration) && probe.duration > 0 ? probe.duration : 0;
+            URL.revokeObjectURL(url);
+            resolve(d);
+        };
+        probe.onloadedmetadata = done;
+        probe.onerror = done;
+        setTimeout(done, 8000);
+        probe.src = url;
+    });
+}
+
+async function tapeCaseImportFiles(fileList) {
+    const files = [...(fileList || [])].filter((f) => f && f.size);
+    if (!files.length) return;
+    playerSubtext.textContent = "가져오는 중… 파일 길이를 재고 있습니다.";
+    tapeCaseMirrorMsg();
+    const items = [];
+    for (const f of files) {
+        const dur = await audioFileDuration(f);
+        if (!dur) {
+            playerSubtext.textContent = '"' + f.name + '" — 길이를 읽지 못해 건너뜁니다 (브라우저가 재생할 수 없는 형식).';
+            tapeCaseMirrorMsg();
+            continue;
+        }
+        items.push({ file: f, dur });
+    }
+    if (!items.length) return;
+    // 전체 길이(트랙 사이 2초 리더 포함)에 맞는 규격을 고른다
+    const total = items.reduce((a, x) => a + x.dur, 0) + 2 * items.length;
+    const len = [1800, 3600, 5400, 7200].find((s) => s >= total) || Math.ceil(total / 1800) * 1800;
+    const tape = newBlankTape(len);
+    let pos = 0;
+    for (const x of items) {
+        const record = {
+            stationId: "import",
+            stationName: x.file.name.replace(/\.[a-z0-9]+$/i, ""),
+            startedAt: new Date().toISOString(),
+            durationMs: Math.round(x.dur * 1000),
+            type: x.file.type || "audio/mpeg",
+            tapeId: tape.id,
+            tapeStart: pos,
+            tapeLen: len,
+            blob: x.file
+        };
+        record.dbId = await persistRecording(record);
+        addRecordingItem(record);
+        pos += x.dur + 2;
+    }
+    // 믹스테이프 라벨 — 첫 곡 이름에 나머지 곡 수를 붙인다 (직접 쓴 라벨은 존중)
+    if (items.length > 1 && !tape.named) {
+        tape.label = items[0].file.name.replace(/\.[a-z0-9]+$/i, "") + " 외 " + (items.length - 1) + "곡";
+        tapeMetaSave();
+        deckRefreshShelf();
+    }
+    renderTapeCase();
+    playerSubtext.textContent = '"' + tape.label + '" — ' + tapeSizeName(len) + " 테이프로 가져왔습니다 (" + items.length + "곡).";
+    tapeCaseMirrorMsg();
+    gtag('event', 'tape_import', { tracks: items.length });
+}
+
+function tapeCaseExport(id) {
+    const t = tapes.find((x) => x.id === id);
+    if (!t) return;
+    const segs = t.segments.filter((s) => s.url);
+    if (!segs.length) {
+        playerSubtext.textContent = "빈 테이프입니다 — 내보낼 수록곡이 없어요.";
+        tapeCaseMirrorMsg();
+        return;
+    }
+    const clean = (s) => (s || "tape").replace(/[\\/:*?"<>|]/g, "").replace(/\s+/g, "-");
+    const base = clean(t.label);
+    segs.forEach((seg, i) => {
+        setTimeout(() => {
+            const a = document.createElement("a");
+            a.href = seg.url;
+            a.download = base + (segs.length > 1 ? "_" + String(i + 1).padStart(2, "0") : "")
+                + (clean(seg.name) !== base ? "-" + clean(seg.name) : "")
+                + "." + recFileExtension(seg.type || "");
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }, i * 400);
+    });
+    playerSubtext.textContent = '"' + t.label + '" 수록곡 ' + segs.length + "개를 원본 형식으로 내려받습니다.";
+    tapeCaseMirrorMsg();
+    gtag('event', 'tape_export', { tracks: segs.length });
+}
+
+document.getElementById("tapeImportInput").addEventListener("change", (e) => {
+    tapeCaseImportFiles(e.target.files);
+    e.target.value = "";
 });

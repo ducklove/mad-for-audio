@@ -266,6 +266,13 @@ body.kbd-nav svg circle:focus {
     transform: scale(0.98);
 }
 
+/* 긴 제목(LP 트랙명 등)이 옆의 버튼 영역으로 넘치지 않도록 — flex 아이템의
+   min-width:auto 기본값을 끊어야 nowrap 자식들이 말줄임으로 수렴한다 */
+.now-playing {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
 .now-label {
     color: #dfb287;
     font-size: 0.68rem;

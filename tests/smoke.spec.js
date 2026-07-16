@@ -348,6 +348,38 @@ test.describe("데스크톱", () => {
         expect(await page.evaluate(() => document.querySelectorAll("#recordingList .recording").length), "녹음 목록 정리").toBe(0);
     });
 
+    test("테이프 가져오기/내보내기: mp3급 파일 → 믹스테이프, 원본 형식 다운로드", async ({ page }) => {
+        await page.evaluate(() => openTapeCase());
+        await page.setInputFiles("#tapeImportInput", [
+            { name: "월광 소나타.wav", mimeType: "audio/wav", buffer: makeWav(12) },
+            { name: "녹턴 2번.wav", mimeType: "audio/wav", buffer: makeWav(8) },
+        ]);
+        // 두 파일이 한 테이프에 순서대로 (트랙 사이 2초 리더)
+        await page.waitForFunction(() => tapes.some((t) => t.segments.length === 2), null, { timeout: 15000 });
+        const t = await page.evaluate(() => {
+            const x = tapes.find((v) => v.segments.length === 2);
+            return { label: x.label, size: tapeSizeName(tapeLenOf(x)), starts: x.segments.map((s) => Math.round(s.start)) };
+        });
+        expect(t.label, "믹스테이프 라벨").toContain("월광 소나타 외 1곡");
+        expect(t.size).toBe("C-30");
+        expect(t.starts, "트랙 배치").toEqual([0, 14]);
+        // J-카드에서 두 번째 트랙 점프 재생
+        await page.locator(".tapecase-item", { hasText: "월광 소나타" }).locator(".tapecase-track").nth(1).click();
+        await page.waitForFunction(() => deckMode === "play" && Math.round(tapePos) >= 14, null, { timeout: 10000 });
+        await page.evaluate(() => deckStopTransport());
+        // 리로드 후에도 남는다 (IndexedDB)
+        await page.reload();
+        await page.waitForFunction(() => typeof openTapeCase === "function" && tapes.some((v) => v.segments.length === 2), null, { timeout: 10000 });
+        // 내보내기: 원본 형식 그대로 트랙별 다운로드
+        await page.evaluate(() => openTapeCase());
+        const downloads = [];
+        page.on("download", (d) => downloads.push(d.suggestedFilename()));
+        await page.locator(".tapecase-item", { hasText: "월광 소나타" }).locator("button", { hasText: "내보내기" }).click();
+        await page.waitForTimeout(1400);
+        expect(downloads.length, "트랙 수만큼 다운로드").toBe(2);
+        expect(downloads[0]).toMatch(/\.wav$/);
+    });
+
     test("설명서에 신규 기기별 소개와 음색·동작 차이가 기록됨", async ({ page }) => {
         await page.goto("/manual.html");
         for (const name of ["TX-9500 II", "T-110", "T-100", "B760", "SA-9900", "AU-111", "L-550", "E-303", "MA2375", "B215", "TCD 3014A", "TC-KA7ES", "CT-F1250", "SL-1200MK2", "TD 124", "GARRARD", "Sondek LP12", "GE-10S / GE-10C"]) {
