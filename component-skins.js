@@ -265,31 +265,81 @@ function mfaMa2375Knob(cx, faceY, r, options) {
     const faceRy = r * .7;
     const bodyRx = r;
     const faceRx = r * .96;
-    const ridgeCount = Math.max(9, Math.round(r / 4));
-    const ridges = Array.from({ length: ridgeCount }, (_, i) => {
-        const x = cx - bodyRx * .78 + i * (bodyRx * 1.56 / (ridgeCount - 1));
-        return '<line x1="' + x.toFixed(1) + '" y1="' + (faceY + faceRy * .42).toFixed(1) + '" x2="' + x.toFixed(1) + '" y2="' + (faceY + depth - r * .12).toFixed(1) + '"/>';
-    }).join("");
+    // 원기둥의 모든 단면은 페이스와 같은 이심률로 투영된다 — 아래 테두리·경계골도 동일한 타원호
+    const bulgeRy = faceRy;
+    const sideBottom = faceY + depth - r * .46;   // 직선 실루엣 하단 (최저점 = sideBottom + bulgeRy)
+    const lowest = sideBottom + bulgeRy;
+    const grooveY = faceY + (sideBottom - faceY) * .72;  // 널링 드럼 ↔ 폴리시드 스커트 경계 (실루엣 기준)
+    const capRx = r * .84;                  // 블랙 글로시 캡 — 얇은 크롬 림만 남긴다
+    const capRy = faceRy * .86;
+    const key = Math.round(cx) + "x" + Math.round(faceY);
+    const rimY = (u, base, ry) => base + ry * Math.sqrt(Math.max(0, 1 - u * u));
+    // 널링 — 실린더 각도 등간격 배치라 가장자리로 갈수록 촘촘해지고,
+    // 좌측 35% 지점의 스펙큘러 밴드에서는 어두운 골이 밝은 능선으로 반전된다
+    const knurlN = Math.max(24, Math.round(r * .62));
+    let knurl = "";
+    for (let i = 0; i < knurlN; i++) {
+        const t = -1 + 2 * i / (knurlN - 1);
+        const u = Math.sin(t * 1.38) * .985;
+        const x = cx + bodyRx * u;
+        const fu = u * bodyRx / faceRx;
+        const topY = Math.abs(fu) < 1 ? rimY(fu, faceY, faceRy) + 1.5 : faceY + 2;
+        const botY = rimY(u, grooveY, bulgeRy) - Math.max(1, r * .02);
+        if (botY - topY < 3) continue;
+        const spec = Math.exp(-Math.pow((t + .42) / .17, 2)) + .55 * Math.exp(-Math.pow((t - .66) / .22, 2));
+        const lit = spec > .5;
+        knurl += '<line x1="' + x.toFixed(1) + '" y1="' + topY.toFixed(1) + '" x2="' + x.toFixed(1) + '" y2="' + botY.toFixed(1) + '" stroke="' + (lit ? '#fbfbf8' : '#141618') + '" stroke-width="' + Math.max(1.1, r * (lit ? .022 : .027)).toFixed(1) + '" opacity="' + (lit ? Math.min(.92, spec) : .3 + .42 * Math.abs(u)).toFixed(2) + '"/>';
+    }
+    const specU = -.54, spec2U = .58;
+    const specX = cx + bodyRx * specU;
+    const specTop = rimY(specU * bodyRx / faceRx, faceY, faceRy) + 2;
+    const specBot = rimY(specU, grooveY, bulgeRy) - 2;
+    const spec2Top = rimY(spec2U * bodyRx / faceRx, faceY, faceRy) + 2;
+    const spec2Bot = rimY(spec2U, grooveY, bulgeRy) - 2;
     const id = opt.id ? ' id="' + opt.id + '"' : '';
     const mark = opt.mark
-        ? '<path id="' + opt.mark + '" d="M' + cx + ' ' + (faceY - faceRy * .83).toFixed(1) + ' L' + cx + ' ' + (faceY - faceRy * .54).toFixed(1) + '" fill="none" stroke="#f3f0db" stroke-width="' + Math.max(3, r * .07).toFixed(1) + '" stroke-linecap="round"/>'
+        ? '<path id="' + opt.mark + '" d="M' + cx + ' ' + (faceY - faceRy * .83).toFixed(1) + ' L' + cx + ' ' + (faceY - faceRy * .54).toFixed(1) + '" fill="none" stroke="#f6f3de" stroke-width="' + Math.max(3, r * .07).toFixed(1) + '" stroke-linecap="round"/>'
         : '';
+    const lx = (cx - bodyRx).toFixed(1), rx = (cx + bodyRx).toFixed(1);
+    const arcDown = ' A' + bodyRx.toFixed(1) + ' ' + bulgeRy.toFixed(1) + ' 0 0 0 ';
+    const arcUp = ' A' + bodyRx.toFixed(1) + ' ' + bulgeRy.toFixed(1) + ' 0 0 1 ';
     return '<g' + id + ' class="ma2375-cylinder-knob" data-body-rx="' + bodyRx.toFixed(1) + '" data-face-rx="' + faceRx.toFixed(1) + '">' +
-        '<ellipse cx="' + (cx + r * .08).toFixed(1) + '" cy="' + (faceY + depth + r * .18).toFixed(1) + '" rx="' + (bodyRx * 1.02).toFixed(1) + '" ry="' + (r * .26).toFixed(1) + '" fill="#000" opacity=".62" filter="url(#ma2375KnobShadow)"/>' +
-        '<ellipse class="ma2375-knob-body" cx="' + cx + '" cy="' + (faceY + depth).toFixed(1) + '" rx="' + bodyRx.toFixed(1) + '" ry="' + (r * .22).toFixed(1) + '" fill="#33373a" stroke="#17191b" stroke-width="2"/>' +
-        '<path d="M' + (cx - bodyRx).toFixed(1) + ' ' + faceY + ' L' + (cx - bodyRx).toFixed(1) + ' ' + (faceY + depth).toFixed(1) + ' Q' + cx + ' ' + (faceY + depth + r * .23).toFixed(1) + ' ' + (cx + bodyRx).toFixed(1) + ' ' + (faceY + depth).toFixed(1) + ' L' + (cx + bodyRx).toFixed(1) + ' ' + faceY + ' Z" fill="url(#ma2375KnobSide)" stroke="#4a4e51" stroke-width="2"/>' +
-        '<g stroke="#45494c" stroke-width="' + Math.max(1.2, r * .025).toFixed(1) + '" opacity=".72">' + ridges + '</g>' +
-        '<path d="M' + (cx - bodyRx * .9).toFixed(1) + ' ' + (faceY + depth * .68).toFixed(1) + ' Q' + cx + ' ' + (faceY + depth * .79).toFixed(1) + ' ' + (cx + bodyRx * .9).toFixed(1) + ' ' + (faceY + depth * .68).toFixed(1) + '" fill="none" stroke="#f5f5f1" stroke-width="2" opacity=".38"/>' +
-        '<path d="M' + (cx - bodyRx * .92).toFixed(1) + ' ' + (faceY + r * .2).toFixed(1) + ' V' + (faceY + depth * .82).toFixed(1) + '" stroke="#fff" stroke-width="2" opacity=".2"/>' +
-        '<path d="M' + (cx + bodyRx * .92).toFixed(1) + ' ' + (faceY + r * .2).toFixed(1) + ' V' + (faceY + depth * .82).toFixed(1) + '" stroke="#050607" stroke-width="3" opacity=".42"/>' +
-        '<ellipse class="ma2375-knob-bezel" cx="' + cx + '" cy="' + faceY + '" rx="' + faceRx.toFixed(1) + '" ry="' + faceRy.toFixed(1) + '" fill="url(#ma2375KnobBezel)" stroke="#272a2d" stroke-width="3"/>' +
-        '<ellipse cx="' + cx + '" cy="' + (faceY - r * .02).toFixed(1) + '" rx="' + (r * .72).toFixed(1) + '" ry="' + (faceRy * .7).toFixed(1) + '" fill="url(#ma2375KnobCap)" stroke="#9ca0a2" stroke-width="2"/>' +
-        '<path d="M' + (cx - r * .57).toFixed(1) + ' ' + (faceY - faceRy * .18).toFixed(1) + ' Q' + (cx - r * .12).toFixed(1) + ' ' + (faceY - faceRy * .76).toFixed(1) + ' ' + (cx + r * .42).toFixed(1) + ' ' + (faceY - faceRy * .48).toFixed(1) + '" fill="none" stroke="#fff" stroke-width="' + Math.max(1.5, r * .035).toFixed(1) + '" opacity=".25" stroke-linecap="round"/>' + mark +
+        '<clipPath id="maCap' + key + '"><ellipse cx="' + cx + '" cy="' + faceY + '" rx="' + capRx.toFixed(1) + '" ry="' + capRy.toFixed(1) + '"/></clipPath>' +
+        '<ellipse cx="' + cx + '" cy="' + (lowest + r * .34).toFixed(1) + '" rx="' + (bodyRx * .68).toFixed(1) + '" ry="' + (r * .3).toFixed(1) + '" fill="#171a1d" opacity=".16" filter="url(#ma2375Smudge)"/>' +
+        '<ellipse cx="' + (cx + r * .07).toFixed(1) + '" cy="' + (lowest + r * .04).toFixed(1) + '" rx="' + (bodyRx * 1.05).toFixed(1) + '" ry="' + (r * .28).toFixed(1) + '" fill="#000" opacity=".58" filter="url(#ma2375KnobShadow)"/>' +
+        '<ellipse cx="' + cx + '" cy="' + (lowest - r * .05).toFixed(1) + '" rx="' + (bodyRx * .9).toFixed(1) + '" ry="' + (r * .16).toFixed(1) + '" fill="#000" opacity=".5" filter="url(#ma2375Sheen)"/>' +
+        '<ellipse class="ma2375-knob-body" cx="' + cx + '" cy="' + sideBottom.toFixed(1) + '" rx="' + bodyRx.toFixed(1) + '" ry="' + bulgeRy.toFixed(1) + '" fill="#26292c" stroke="#0e1012" stroke-width="2"/>' +
+        '<path d="M' + lx + ' ' + grooveY.toFixed(1) + ' L' + lx + ' ' + sideBottom.toFixed(1) + arcDown + rx + ' ' + sideBottom.toFixed(1) + ' L' + rx + ' ' + grooveY.toFixed(1) + arcUp + lx + ' ' + grooveY.toFixed(1) + ' Z" fill="url(#ma2375KnobSkirt)" stroke="#1d2023" stroke-width="1.5"/>' +
+        '<path d="M' + (cx - bodyRx * .8).toFixed(1) + ' ' + (sideBottom + bulgeRy * .6).toFixed(1) + arcDown + (cx + bodyRx * .8).toFixed(1) + ' ' + (sideBottom + bulgeRy * .6).toFixed(1) + '" fill="none" stroke="#fff" stroke-width="' + Math.max(1.4, r * .026).toFixed(1) + '" opacity=".4"/>' +
+        '<path d="M' + lx + ' ' + faceY + ' L' + lx + ' ' + grooveY.toFixed(1) + arcDown + rx + ' ' + grooveY.toFixed(1) + ' L' + rx + ' ' + faceY + ' Z" fill="url(#ma2375KnobSide)" stroke="#33373a" stroke-width="1.5"/>' +
+        knurl +
+        '<rect x="' + (specX - r * .07).toFixed(1) + '" y="' + specTop.toFixed(1) + '" width="' + (r * .14).toFixed(1) + '" height="' + Math.max(4, specBot - specTop).toFixed(1) + '" fill="#fff" opacity=".34" filter="url(#ma2375Sheen)"/>' +
+        '<rect x="' + (cx + bodyRx * spec2U).toFixed(1) + '" y="' + spec2Top.toFixed(1) + '" width="' + (r * .09).toFixed(1) + '" height="' + Math.max(4, spec2Bot - spec2Top).toFixed(1) + '" fill="#fff" opacity=".14" filter="url(#ma2375Sheen)"/>' +
+        '<path d="M' + lx + ' ' + grooveY.toFixed(1) + arcDown + rx + ' ' + grooveY.toFixed(1) + '" fill="none" stroke="#08090a" stroke-width="' + Math.max(1.6, r * .032).toFixed(1) + '" opacity=".72"/>' +
+        '<path d="M' + lx + ' ' + (grooveY + 2.5).toFixed(1) + arcDown + rx + ' ' + (grooveY + 2.5).toFixed(1) + '" fill="none" stroke="#fff" stroke-width="1.4" opacity=".26"/>' +
+        '<path d="M' + (cx - bodyRx * .985).toFixed(1) + ' ' + (faceY + 2) + ' V' + (sideBottom - 1).toFixed(1) + '" stroke="#060708" stroke-width="' + Math.max(2, r * .045).toFixed(1) + '" opacity=".46"/>' +
+        '<path d="M' + (cx + bodyRx * .985).toFixed(1) + ' ' + (faceY + 2) + ' V' + (sideBottom - 1).toFixed(1) + '" stroke="#040506" stroke-width="' + Math.max(2.4, r * .055).toFixed(1) + '" opacity=".56"/>' +
+        '<ellipse class="ma2375-knob-bezel" cx="' + cx + '" cy="' + faceY + '" rx="' + faceRx.toFixed(1) + '" ry="' + faceRy.toFixed(1) + '" fill="url(#ma2375KnobBezel)" stroke="#191c1e" stroke-width="2"/>' +
+        '<ellipse cx="' + cx + '" cy="' + faceY + '" rx="' + (faceRx * .93).toFixed(1) + '" ry="' + (faceRy * .91).toFixed(1) + '" fill="none" stroke="#fff" stroke-width="1.2" opacity=".5"/>' +
+        '<ellipse cx="' + cx + '" cy="' + faceY + '" rx="' + capRx.toFixed(1) + '" ry="' + capRy.toFixed(1) + '" fill="url(#ma2375KnobCap)" stroke="#3f4347" stroke-width="1.5"/>' +
+        '<g fill="none" stroke="#aeb4b9"><ellipse cx="' + cx + '" cy="' + faceY + '" rx="' + (capRx * .76).toFixed(1) + '" ry="' + (capRy * .76).toFixed(1) + '" opacity=".07"/><ellipse cx="' + cx + '" cy="' + faceY + '" rx="' + (capRx * .54).toFixed(1) + '" ry="' + (capRy * .54).toFixed(1) + '" opacity=".06"/><ellipse cx="' + cx + '" cy="' + faceY + '" rx="' + (capRx * .32).toFixed(1) + '" ry="' + (capRy * .32).toFixed(1) + '" opacity=".05"/></g>' +
+        '<g clip-path="url(#maCap' + key + ')"><g transform="rotate(-28 ' + cx + ' ' + faceY + ')">' +
+        '<ellipse cx="' + cx + '" cy="' + faceY + '" rx="' + (capRx * 1.06).toFixed(1) + '" ry="' + (r * .13).toFixed(1) + '" fill="#fff" opacity=".3" filter="url(#ma2375Smudge)"/>' +
+        '<ellipse cx="' + cx + '" cy="' + faceY + '" rx="' + (capRx * .96).toFixed(1) + '" ry="' + (r * .05).toFixed(1) + '" fill="#fff" opacity=".5" filter="url(#ma2375Sheen)"/>' +
+        '<ellipse cx="' + cx + '" cy="' + (faceY + r * .34).toFixed(1) + '" rx="' + (capRx * .8).toFixed(1) + '" ry="' + (r * .08).toFixed(1) + '" fill="#fff" opacity=".08" filter="url(#ma2375Smudge)"/>' +
+        '</g></g>' + mark +
         '</g>';
 }
 
 function mfaMa2375Svg() {
     const powerTubes = [380, 620, 1380, 1620].map((x) => mfaMa2375Tube(x, 642, 1.12, true)).join("");
+    // 미러 폴리시 상판에 비친 진공관 실루엣 + 점등 시 은은한 그린 글로우 반사
+    const tubeRefl = [380, 620, 1380, 1620].map((x) =>
+        '<path d="M' + (x - 40) + ' 654 L' + (x + 40) + ' 654 L' + (x + 56) + ' 806 L' + (x - 56) + ' 806 Z" fill="#171b1f" opacity=".28" filter="url(#ma2375Smudge)"/>' +
+        '<path d="M' + (x - 18) + ' 656 L' + (x + 18) + ' 656 L' + (x + 26) + ' 800 L' + (x - 26) + ' 800 Z" fill="#0b0e11" opacity=".22" filter="url(#ma2375Smudge)"/>' +
+        '<g opacity=".45"><ellipse class="ampGlow" cx="' + x + '" cy="724" rx="52" ry="58" fill="#55ff87" opacity=".03" filter="url(#ma2375TubeGlow)"/></g>'
+    ).join("") +
+        '<g opacity=".12"><ellipse class="ampLamp" cx="442" cy="706" rx="160" ry="44" fill="url(#ma2375MeterBlue)" opacity=".03" filter="url(#ma2375Smudge)"/><ellipse class="ampLamp" cx="1558" cy="706" rx="160" ry="44" fill="url(#ma2375MeterBlue)" opacity=".03" filter="url(#ma2375Smudge)"/></g>';
     const eqKnobs = [720, 860, 1000, 1140, 1280].map((x) => mfaMa2375Knob(x, 690, 34, { depth: 64 })).join("");
     const scale = 1.076, offsetX = -76;
     const volumeX = offsetX + 1700 * scale;
@@ -300,15 +350,17 @@ function mfaMa2375Svg() {
     <defs>
         <linearGradient id="ma2375Backdrop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14171b"/><stop offset=".68" stop-color="#07090c"/><stop offset="1" stop-color="#020304"/></linearGradient>
         <linearGradient id="ma2375Glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#03070b"/><stop offset=".35" stop-color="#111820"/><stop offset=".55" stop-color="#020406"/><stop offset="1" stop-color="#0b0e12"/></linearGradient>
-        <linearGradient id="ma2375Steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6f6f3"/><stop offset=".08" stop-color="#d7d7d4"/><stop offset=".36" stop-color="#a7a8a8"/><stop offset=".58" stop-color="#ecece8"/><stop offset=".82" stop-color="#babbb9"/><stop offset="1" stop-color="#777a7c"/></linearGradient>
+        <linearGradient id="ma2375Steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5f6468"/><stop offset=".05" stop-color="#9ba0a3"/><stop offset=".14" stop-color="#f0f1ef"/><stop offset=".3" stop-color="#c9cccb"/><stop offset=".46" stop-color="#f8f8f5"/><stop offset=".62" stop-color="#aeb2b3"/><stop offset=".76" stop-color="#e6e7e4"/><stop offset=".9" stop-color="#c2c5c4"/><stop offset="1" stop-color="#84898c"/></linearGradient>
         <linearGradient id="ma2375SteelBand" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#66696c"/><stop offset=".12" stop-color="#ecece9"/><stop offset=".5" stop-color="#a9aaa9"/><stop offset=".82" stop-color="#f5f5f1"/><stop offset="1" stop-color="#5e6265"/></linearGradient>
-        <linearGradient id="ma2375LowerFace" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9dad7"/><stop offset=".12" stop-color="#b8bab9"/><stop offset=".58" stop-color="#aaabaa"/><stop offset=".9" stop-color="#858789"/><stop offset="1" stop-color="#5b5e61"/></linearGradient>
+        <linearGradient id="ma2375LowerFace" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".07" stop-color="#e9ebe9"/><stop offset=".22" stop-color="#c3c8ca"/><stop offset=".4" stop-color="#8f969b"/><stop offset=".54" stop-color="#596066"/><stop offset=".62" stop-color="#788087"/><stop offset=".74" stop-color="#d9dcdb"/><stop offset=".88" stop-color="#aeb3b4"/><stop offset="1" stop-color="#3f4549"/></linearGradient>
+        <linearGradient id="ma2375GlassRefl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14181c" stop-opacity=".62"/><stop offset="1" stop-color="#14181c" stop-opacity="0"/></linearGradient>
         <linearGradient id="ma2375Edge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#63666a"/><stop offset=".35" stop-color="#f0f0ed"/><stop offset=".62" stop-color="#96999c"/><stop offset="1" stop-color="#3d4044"/></linearGradient>
         <linearGradient id="ma2375Cage" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#34383b"/><stop offset=".2" stop-color="#f1f2ef"/><stop offset=".45" stop-color="#85898b"/><stop offset=".72" stop-color="#f7f7f3"/><stop offset="1" stop-color="#4b4f52"/></linearGradient>
         <radialGradient id="ma2375Chrome"><stop offset="0" stop-color="#f5f5f1"/><stop offset=".42" stop-color="#a4a7aa"/><stop offset=".75" stop-color="#3b3f43"/><stop offset="1" stop-color="#e1e2df"/></radialGradient>
-        <linearGradient id="ma2375KnobSide" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3a3d40"/><stop offset=".12" stop-color="#d9dad7"/><stop offset=".28" stop-color="#73777a"/><stop offset=".5" stop-color="#f2f2ee"/><stop offset=".68" stop-color="#686c6f"/><stop offset=".88" stop-color="#d3d4d1"/><stop offset="1" stop-color="#2b2e31"/></linearGradient>
-        <linearGradient id="ma2375KnobBezel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f5f5f1"/><stop offset=".34" stop-color="#aeb0b1"/><stop offset=".72" stop-color="#4b4f52"/><stop offset="1" stop-color="#d9dad7"/></linearGradient>
-        <radialGradient id="ma2375KnobCap" cx="38%" cy="30%" r="76%"><stop offset="0" stop-color="#51565a"/><stop offset=".26" stop-color="#272b2e"/><stop offset=".72" stop-color="#111315"/><stop offset="1" stop-color="#030405"/></radialGradient>
+        <linearGradient id="ma2375KnobSide" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#101214"/><stop offset=".08" stop-color="#5d6164"/><stop offset=".17" stop-color="#f1f2f0"/><stop offset=".25" stop-color="#fdfdfb"/><stop offset=".36" stop-color="#8d9296"/><stop offset=".5" stop-color="#43474b"/><stop offset=".63" stop-color="#c6c9c9"/><stop offset=".78" stop-color="#f2f2ef"/><stop offset=".9" stop-color="#787d81"/><stop offset="1" stop-color="#0c0e10"/></linearGradient>
+        <linearGradient id="ma2375KnobSkirt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#191b1d"/><stop offset=".1" stop-color="#8d9194"/><stop offset=".2" stop-color="#f7f7f4"/><stop offset=".34" stop-color="#b1b5b8"/><stop offset=".5" stop-color="#585d61"/><stop offset=".66" stop-color="#d4d6d5"/><stop offset=".8" stop-color="#fafaf7"/><stop offset=".92" stop-color="#84888c"/><stop offset="1" stop-color="#121416"/></linearGradient>
+        <linearGradient id="ma2375KnobBezel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".3" stop-color="#c8cbcc"/><stop offset=".62" stop-color="#5d6266"/><stop offset=".85" stop-color="#9ea3a6"/><stop offset="1" stop-color="#e8e9e7"/></linearGradient>
+        <radialGradient id="ma2375KnobCap" cx="34%" cy="26%" r="82%"><stop offset="0" stop-color="#484d52"/><stop offset=".3" stop-color="#212529"/><stop offset=".62" stop-color="#0d0f12"/><stop offset="1" stop-color="#010203"/></radialGradient>
         <linearGradient id="ma2375MeterBlue" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#44d2ff"/><stop offset=".32" stop-color="#29aee9"/><stop offset=".72" stop-color="#1682c2"/><stop offset="1" stop-color="#0a487e"/></linearGradient>
         <linearGradient id="ma2375TubeGlass" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#101519"/><stop offset=".25" stop-color="#e8f1ef" stop-opacity=".34"/><stop offset=".48" stop-color="#252b2f" stop-opacity=".82"/><stop offset=".75" stop-color="#dfe8e7" stop-opacity=".28"/><stop offset="1" stop-color="#090d10"/></linearGradient>
         <filter id="ma2375Shadow" x="-30%" y="-30%" width="160%" height="180%"><feGaussianBlur stdDeviation="24"/></filter>
@@ -316,6 +368,8 @@ function mfaMa2375Svg() {
         <filter id="ma2375TubeGlow" x="-80%" y="-60%" width="260%" height="240%"><feGaussianBlur stdDeviation="24"/></filter>
         <filter id="ma2375LetterGlow" x="-80%" y="-120%" width="260%" height="340%"><feGaussianBlur stdDeviation="10"/></filter>
         <filter id="ma2375KnobShadow" x="-50%" y="-50%" width="200%" height="220%"><feGaussianBlur stdDeviation="8"/></filter>
+        <filter id="ma2375Sheen" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.6"/></filter>
+        <filter id="ma2375Smudge" x="-70%" y="-70%" width="240%" height="240%"><feGaussianBlur stdDeviation="7"/></filter>
         <filter id="lzSoft" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="12"/></filter>
     </defs>
     <rect width="2000" height="1080" rx="18" fill="url(#ma2375Backdrop)"/>
@@ -339,14 +393,17 @@ function mfaMa2375Svg() {
     </g>
     ${powerTubes}
     <path d="M103 632 H1897 L1920 812 H80 Z" fill="url(#ma2375Steel)" stroke="#202326" stroke-width="8"/>
-    <path d="M113 650 H1887" stroke="#fff" stroke-width="5" opacity=".66"/>
+    <path d="M104 634 H1896 L1903 700 H97 Z" fill="url(#ma2375GlassRefl)"/>
+    ${tubeRefl}
+    <path d="M113 649 H1887" stroke="#fff" stroke-width="4" opacity=".8"/>
+    <path d="M113 654 H1887" stroke="#4a4f53" stroke-width="2" opacity=".5"/>
     <rect class="ma2375-lower-chassis" x="80" y="812" width="1840" height="153" fill="url(#ma2375LowerFace)" stroke="#24272a" stroke-width="7"/>
-    <path d="M80 808 H1920" stroke="#655c49" stroke-width="5" opacity=".96"/><path d="M84 816 H1916" stroke="#fbfbf7" stroke-width="3" opacity=".52"/><path d="M84 958 H1916" stroke="#24272a" stroke-width="7" opacity=".72"/>
+    <path d="M80 808 H1920" stroke="#4d5357" stroke-width="4" opacity=".9"/><path d="M84 815 H1916" stroke="#ffffff" stroke-width="3" opacity=".75"/><path d="M84 958 H1916" stroke="#1b1e21" stroke-width="7" opacity=".8"/>
     ${mfaMa2375Knob(300, 690, 70, { depth: 78 })}
-    <circle cx="540" cy="707" r="24" fill="#090b0d" stroke="#777b7e" stroke-width="7"/><circle cx="540" cy="707" r="11" fill="#010203"/><ellipse cx="533" cy="699" rx="7" ry="5" fill="#fff" opacity=".14"/>
+    <circle cx="540" cy="707" r="26" fill="url(#ma2375KnobSkirt)" stroke="#212427" stroke-width="2"/><circle cx="540" cy="707" r="17" fill="#0b0d0e"/><circle cx="540" cy="707" r="10" fill="#010203"/><ellipse cx="534" cy="700" rx="6" ry="4" fill="#fff" opacity=".2"/>
     ${eqKnobs}
-    <g font-family="Arial" text-anchor="middle" fill="#3c3f41"><text x="300" y="792" font-size="13" letter-spacing="4">PUSH · TRIM</text><text x="540" y="674" font-size="10" letter-spacing="2">HEADPHONES</text><text x="720" y="790" font-size="11">30Hz</text><text x="860" y="790" font-size="11">250Hz</text><text x="1000" y="790" font-size="11">1kHz</text><text x="1140" y="790" font-size="11">4kHz</text><text x="1280" y="790" font-size="11">10kHz</text><text x="1700" y="792" font-size="13" letter-spacing="4">PUSH · POWER</text></g>
-    <circle cx="1490" cy="711" r="12" fill="#372410" stroke="#8a754c" stroke-width="3"/><circle id="ampPwrLed" cx="1490" cy="711" r="7" fill="#3a2012"/>
+    <g font-family="Arial" text-anchor="middle" fill="#3c3f41"><text x="300" y="806" font-size="13" letter-spacing="4">PUSH · TRIM</text><text x="540" y="674" font-size="10" letter-spacing="2">HEADPHONES</text><text x="720" y="790" font-size="11">30Hz</text><text x="860" y="790" font-size="11">250Hz</text><text x="1000" y="790" font-size="11">1kHz</text><text x="1140" y="790" font-size="11">4kHz</text><text x="1280" y="790" font-size="11">10kHz</text><text x="1700" y="806" font-size="13" letter-spacing="4">PUSH · POWER</text></g>
+    <circle cx="1490" cy="711" r="14" fill="url(#ma2375KnobSkirt)" stroke="#26292c" stroke-width="2"/><circle cx="1490" cy="711" r="9" fill="#2a1108"/><circle id="ampPwrLed" cx="1490" cy="711" r="7" fill="#3a2012"/><ellipse cx="1487" cy="707" rx="3" ry="2" fill="#fff" opacity=".35"/>
     <g pointer-events="none"><circle cx="125" cy="670" r="9" fill="#292c2f" stroke="#ecece8"/><circle cx="1875" cy="670" r="9" fill="#292c2f" stroke="#ecece8"/><circle cx="105" cy="930" r="8" fill="#232629" stroke="#dadbd8"/><circle cx="1895" cy="930" r="8" fill="#232629" stroke="#dadbd8"/></g>
     </g>
     ${mfaMa2375Knob(volumeX, volumeY, volumeR, { id: "ma2375Volume", mark: "ampVolMark", depth: volumeDepth })}
@@ -415,12 +472,126 @@ function mfaDeckSvg(spec) {
         mfaTransportButtons(430, 'url(#' + uid + 'Btn)') + '<g id="deckShelf"></g></svg>';
 }
 
+// PIONEER CT-F1250 전용 스킨 — 릴(610/850,260)·미터·트랜스포트 등 기능 좌표는 공용 레이아웃
+// 그대로 두고, 우드 캐비닛·브러시드 알루미늄 페이스·플렉시 도어를 사진 기준 명암으로 다시 그린다.
+function mfaCtf1250Svg() {
+    // 브러시드 알루미늄 헤어라인 — 가로 결
+    let hair = "";
+    for (let y = 34; y <= 506; y += 8) {
+        const dark = y % 16 === 2;
+        hair += '<path d="M44 ' + y + ' H1956" stroke="' + (dark ? '#000' : '#fff') + '" stroke-width="1" opacity="' + (dark ? '.03' : '.028') + '"/>';
+    }
+    // 월넛 결 — 위상·굵기를 달리한 유선
+    const grain = [[46, .5], [104, .38], [168, .3], [214, .46], [258, .3], [318, .42], [366, .3], [412, .5], [462, .36], [504, .44]].map(([y, o], i) =>
+        '<path d="M0 ' + y + ' Q' + (360 + i * 130) + ' ' + (y + (i % 2 ? 9 : -8)) + ' ' + (900 + i * 90) + ' ' + (y + (i % 3 ? -5 : 7)) + ' T2000 ' + (y + (i % 2 ? 6 : -4)) + '" fill="none" stroke="#2e1a0d" stroke-width="' + (1.2 + (i % 3)) + '" opacity="' + o + '"/>'
+    ).join("");
+    const screw = (x, y, a) => '<g transform="translate(' + x + ' ' + y + ') rotate(' + a + ')" pointer-events="none"><circle r="7.5" fill="url(#ctfScrew)" stroke="#4e5052" stroke-width="1"/><path d="M-4.6 0 H4.6" stroke="#1e2022" stroke-width="1.8"/><path d="M-4.2 1.4 H4.2" stroke="#e9eae8" stroke-width=".8" opacity=".5"/></g>';
+    const knobs = ["DOLBY NR", "BIAS", "REC LEVEL", "OUTPUT"].map((lb, i) => {
+        const x = 104 + i * 78;
+        return mfaSvgKnob(x, 232, 27, null, "url(#ctfKnob)", null) +
+            '<line x1="' + x + '" y1="209" x2="' + x + '" y2="219" stroke="#d8d4c8" stroke-width="2.4"/>' +
+            '<text x="' + x + '" y="292" font-family="Arial" font-size="9" letter-spacing="1" fill="#4c4f52" text-anchor="middle">' + lb + '</text>';
+    }).join("");
+    const meterFrame = (x) => '<rect x="' + (x - 14) + '" y="94" width="312" height="202" rx="10" fill="#101114" stroke="url(#ctfChrome)" stroke-width="3"/>' +
+        '<rect x="' + (x - 10) + '" y="98" width="304" height="194" rx="8" fill="none" stroke="#000" stroke-width="2" opacity=".6"/>';
+    const meterGlass = (cx) => '<ellipse cx="' + cx + '" cy="146" rx="122" ry="28" fill="#fff" opacity=".06" pointer-events="none"/>';
+    return `<svg class="deck-svg" viewBox="0 0 2000 540" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="PIONEER CT-F1250 카세트 데크">
+    <defs>
+        <linearGradient id="ctfWood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#31190c"/><stop offset=".07" stop-color="#65381d"/><stop offset=".3" stop-color="#7a4826"/><stop offset=".55" stop-color="#5f3418"/><stop offset=".85" stop-color="#6d4021"/><stop offset="1" stop-color="#241208"/></linearGradient>
+        <linearGradient id="ctfFace" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6f4ec"/><stop offset=".05" stop-color="#dedcd3"/><stop offset=".3" stop-color="#c9c7be"/><stop offset=".62" stop-color="#b1afa6"/><stop offset=".9" stop-color="#8f8e88"/><stop offset="1" stop-color="#63635f"/></linearGradient>
+        <linearGradient id="ctfWell" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#010203"/><stop offset=".16" stop-color="#0a0c0f"/><stop offset=".72" stop-color="#15181c"/><stop offset="1" stop-color="#20242a"/></linearGradient>
+        <linearGradient id="ctfShell" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#23262d"/><stop offset=".5" stop-color="#15171c"/><stop offset="1" stop-color="#0b0c10"/></linearGradient>
+        <linearGradient id="ctfGlass" x1="0" y1="0" x2=".6" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".17"/><stop offset=".3" stop-color="#fff" stop-opacity=".05"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/></linearGradient>
+        <linearGradient id="ctfBtn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#53565d"/><stop offset=".12" stop-color="#3a3d44"/><stop offset=".55" stop-color="#24272c"/><stop offset="1" stop-color="#0e1013"/></linearGradient>
+        <linearGradient id="ctfTray" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d0f12"/><stop offset=".12" stop-color="#181b1f"/><stop offset=".88" stop-color="#22252b"/><stop offset="1" stop-color="#2c3037"/></linearGradient>
+        <linearGradient id="ctfChrome" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5e6266"/><stop offset=".28" stop-color="#eff0ee"/><stop offset=".55" stop-color="#94989b"/><stop offset=".8" stop-color="#e4e5e2"/><stop offset="1" stop-color="#4a4e52"/></linearGradient>
+        <linearGradient id="ctfCounter" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#010407"/><stop offset=".6" stop-color="#041019"/><stop offset="1" stop-color="#08202f"/></linearGradient>
+        <linearGradient id="ctfLabel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f5efdc"/><stop offset=".55" stop-color="#e8e0c8"/><stop offset="1" stop-color="#cbc0a1"/></linearGradient>
+        <radialGradient id="ctfKnob"><stop offset="0" stop-color="#f4f2ea"/><stop offset=".55" stop-color="#a8a7a1"/><stop offset="1" stop-color="#191b1e"/></radialGradient>
+        <radialGradient id="ctfScrew"><stop offset="0" stop-color="#e6e7e5"/><stop offset=".6" stop-color="#9a9c9e"/><stop offset="1" stop-color="#43464a"/></radialGradient>
+        <radialGradient id="ctfPack"><stop offset="0" stop-color="#332619"/><stop offset=".68" stop-color="#271d12"/><stop offset=".9" stop-color="#181109"/><stop offset="1" stop-color="#0a0704"/></radialGradient>
+        <filter id="ctfBlur2" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2"/></filter>
+    </defs>
+    <rect width="2000" height="540" rx="12" fill="url(#ctfWood)"/>
+    ${grain}
+    <path d="M10 24 Q520 6 1030 22 T1990 18" fill="none" stroke="#c98d54" stroke-width="3" opacity=".4"/>
+    <path d="M2 30 H1998" stroke="#fff" stroke-width="2" opacity=".12"/>
+    <rect x="2" y="2" width="1996" height="536" rx="11" fill="none" stroke="#000" stroke-width="3" opacity=".45"/>
+    <rect x="30" y="20" width="1940" height="504" rx="7" fill="#0c0805" opacity=".8"/>
+    <rect x="36" y="16" width="1928" height="500" rx="6" fill="url(#ctfFace)"/>
+    ${hair}
+    <path d="M40 21 H1960" stroke="#fff" stroke-width="3" opacity=".65"/>
+    <path d="M40 26 H1960" stroke="#5c5c58" stroke-width="1.5" opacity=".5"/>
+    <path d="M40 512 H1960" stroke="#2f2f2c" stroke-width="4" opacity=".55"/>
+    ${screw(58, 40, 20)}${screw(1942, 40, -14)}${screw(58, 494, 66)}${screw(1942, 494, 8)}
+    <text x="76" y="83.5" font-family="Arial" font-size="31" font-weight="700" letter-spacing="2" fill="#ffffff" opacity=".5">PIONEER</text>
+    <text x="76" y="82" font-family="Arial" font-size="31" font-weight="700" letter-spacing="2" fill="#26282a">PIONEER</text>
+    <text x="76" y="115" font-family="Arial" font-size="14" letter-spacing="3" fill="#ffffff" opacity=".4">CT-F1250 · 3 HEAD CASSETTE DECK</text>
+    <text x="76" y="114" font-family="Arial" font-size="14" letter-spacing="3" fill="#505356">CT-F1250 · 3 HEAD CASSETTE DECK</text>
+    <rect x="62" y="172" width="316" height="136" rx="8" fill="#0d0d0f" opacity=".22" filter="url(#ctfBlur2)"/>
+    <rect x="66" y="176" width="308" height="128" rx="7" fill="url(#ctfFace)" stroke="#7c7c77" stroke-width="1.4"/>
+    <rect x="66" y="176" width="308" height="12" rx="6" fill="url(#lzInset)" opacity=".55"/>
+    ${knobs}
+    <text x="76" y="336" font-family="Arial" font-size="10" letter-spacing="2" fill="#6e6f6a">CLOSED LOOP DUAL CAPSTAN · DC SERVO</text>
+    <rect x="76" y="350" width="110" height="26" rx="4" fill="#1c1e22" stroke="#54575c" stroke-width="1.2"/>
+    <text x="131" y="368" font-family="Arial" font-size="11" letter-spacing="1.5" fill="#c8c5ba" text-anchor="middle">DOLBY NR</text>
+    <rect x="424" y="102" width="612" height="290" rx="11" fill="#0a0a0c" opacity=".4" filter="url(#ctfBlur2)"/>
+    <rect x="432" y="96" width="596" height="288" rx="10" fill="url(#ctfShell)" stroke="#585b61" stroke-width="2"/>
+    <path d="M438 100 H1022" stroke="#8b8e93" stroke-width="1.5" opacity=".6"/>
+    ${screw(452, 116, 40)}${screw(1008, 116, -30)}${screw(452, 364, 10)}${screw(1008, 364, 75)}
+    <rect x="446" y="120" width="568" height="246" rx="8" fill="url(#ctfWell)" stroke="#000" stroke-width="2"/>
+    <rect x="450" y="122" width="560" height="26" rx="6" fill="#000" opacity=".55" filter="url(#ctfBlur2)"/>
+    <rect x="468" y="132" width="524" height="212" rx="9" fill="#181a1f" stroke="#31343a" stroke-width="2"/>
+    <rect x="470" y="134" width="520" height="10" rx="5" fill="#fff" opacity=".05"/>
+    <rect x="480" y="142" width="500" height="68" rx="4" fill="url(#ctfLabel)"/>
+    <rect x="480" y="142" width="500" height="16" fill="#fff" opacity=".22"/>
+    <text id="deckLabel" x="730" y="171" font-family="Arial" font-size="17" font-weight="700" fill="#3a2b1e" text-anchor="middle">C-30 공테이프</text>
+    <text id="deckLabelSub" x="730" y="196" font-family="Arial" font-size="11" fill="#6b5d4a" text-anchor="middle">사용 0:00 / 30:00</text>
+    <rect x="520" y="216" width="420" height="92" rx="46" fill="#08090b" stroke="#3f4248" stroke-width="2"/>
+    <rect x="524" y="218" width="412" height="16" rx="8" fill="url(#lzInset)" opacity=".8"/>
+    <circle id="deckPackL" cx="610" cy="260" r="40" fill="url(#ctfPack)" stroke="#070707" stroke-width="2"/>
+    <circle id="deckPackR" cx="850" cy="260" r="24" fill="url(#ctfPack)" stroke="#070707" stroke-width="2"/>
+    <circle cx="610" cy="260" r="21.5" fill="none" stroke="#000" stroke-width="1.5" opacity=".4"/>
+    <circle cx="850" cy="260" r="21.5" fill="none" stroke="#000" stroke-width="1.5" opacity=".4"/>
+    <g id="deckReelL"><circle cx="610" cy="260" r="19" fill="#e4e5e6" stroke="#55585d"/><path d="M610 244 V276 M594 260 H626 M599 249 L621 271 M621 249 L599 271" stroke="#55585d" stroke-width="4"/><circle cx="610" cy="260" r="5" fill="#111317"/></g>
+    <g id="deckReelR"><circle cx="850" cy="260" r="19" fill="#e4e5e6" stroke="#55585d"/><path d="M850 244 V276 M834 260 H866 M839 249 L861 271 M861 249 L839 271" stroke="#55585d" stroke-width="4"/><circle cx="850" cy="260" r="5" fill="#111317"/></g>
+    <rect x="640" y="330" width="180" height="26" rx="6" fill="#101216" stroke="#43464c"/>
+    <rect x="700" y="336" width="60" height="14" rx="3" fill="#31353b"/>
+    <circle cx="664" cy="343" r="6" fill="#22252a" stroke="#565a60"/><circle cx="796" cy="343" r="6" fill="#22252a" stroke="#565a60"/>
+    <polygon points="446,120 726,120 566,366 446,366" fill="url(#ctfGlass)" pointer-events="none"/>
+    <path d="M760 122 L636 364" stroke="#fff" stroke-width="7" opacity=".05" pointer-events="none"/>
+    <path d="M786 122 L662 364" stroke="#fff" stroke-width="2.5" opacity=".1" pointer-events="none"/>
+    <rect x="446" y="348" width="568" height="18" rx="4" fill="#000" opacity=".35"/>
+    <text x="1000" y="361" font-family="Arial" font-size="11" letter-spacing="2" fill="#9fa3a8" text-anchor="end" opacity=".85">CT-F1250</text>
+    ${meterFrame(1120)}${meterFrame(1430)}
+    ${mfaMeter(1120, 110, 284, 172, "deckVuL", "LEVEL L", "#efe3b8", false)}${mfaMeter(1430, 110, 284, 172, "deckVuR", "LEVEL R", "#efe3b8", false)}
+    ${meterGlass(1262)}${meterGlass(1572)}
+    <text x="1120" y="330" font-family="Arial" font-size="10" letter-spacing="2" fill="#55585b">TAPE COUNTER</text>
+    <rect x="1114" y="334" width="212" height="70" rx="8" fill="#0b0c0f" stroke="url(#ctfChrome)" stroke-width="2"/>
+    <rect x="1120" y="340" width="200" height="58" rx="6" fill="url(#ctfCounter)" stroke="#0a2333" stroke-width="2"/>
+    <rect x="1122" y="342" width="196" height="16" rx="5" fill="#fff" opacity=".06"/>
+    <text id="deckCounter" x="1245" y="381" font-family="Courier New" font-size="30" font-weight="700" fill="#58b8ff" text-anchor="end">00:00</text>
+    <text id="deckCounterMax" x="1254" y="381" font-family="Arial" font-size="11" fill="#5d7f96">/ 30:00</text>
+    <circle cx="1420" cy="369" r="13" fill="url(#ctfChrome)"/><circle cx="1420" cy="369" r="10" fill="#12080a"/><circle id="deckRecLed" cx="1420" cy="369" r="9" fill="#3a1210"/><ellipse cx="1417" cy="365" rx="3.4" ry="2.2" fill="#fff" opacity=".3"/>
+    <text x="1420" y="404" font-family="Arial" font-size="10" letter-spacing="1.5" fill="#55585b" text-anchor="middle">REC</text>
+    <circle cx="1366" cy="369" r="9" fill="url(#ctfChrome)"/><circle cx="1366" cy="369" r="7" fill="#12080a"/><circle id="deckTimerLed" cx="1366" cy="369" r="6" fill="#3a1210"/>
+    <text x="1366" y="404" font-family="Arial" font-size="10" letter-spacing="1.5" fill="#55585b" text-anchor="middle">TIMER</text>
+    <rect x="404" y="416" width="668" height="104" rx="12" fill="#0b0805" opacity=".5" filter="url(#ctfBlur2)"/>
+    <rect x="408" y="412" width="660" height="104" rx="10" fill="url(#ctfTray)" stroke="#3c4046" stroke-width="2"/>
+    <rect x="410" y="413" width="656" height="14" rx="7" fill="#000" opacity=".5"/>
+    ${mfaTransportButtons(430, "url(#ctfBtn)")}
+    <rect x="1102" y="420" width="862" height="96" rx="10" fill="#0b0805" opacity=".35" filter="url(#ctfBlur2)"/>
+    <rect x="1106" y="424" width="854" height="88" rx="8" fill="url(#ctfTray)" opacity=".85" stroke="#3a3e44" stroke-width="1.5"/>
+    <text x="1120" y="443" font-family="Arial" font-size="9" letter-spacing="2" fill="#7c8085">TAPE RACK</text>
+    <g id="deckShelf"></g></svg>`;
+}
+
 const DECK_MODELS = {
     dragon: { label: "Nakamichi DRAGON", windRate: 16, hissFloor: .004, blankHiss: .010, reelRate: 1 },
     b215: { label: "REVOX B215", windRate: 18, hissFloor: .003, blankHiss: .008, reelRate: 1.08, svg: mfaDeckSvg({ id: "b215", brand: "REVOX", model: "B215", face: "black", signature: "revox", openTransport: true, ledMeters: true, display: "#8ce9b6" }) },
     tcd3014: { label: "TANDBERG TCD 3014A", windRate: 14, hissFloor: .005, blankHiss: .012, reelRate: .92, svg: mfaDeckSvg({ id: "tcd3014", brand: "TANDBERG", model: "TCD 3014A", face: "black", wood: true, signature: "tandberg", openTransport: true, ledMeters: false, display: "#f0a348" }) },
     tcka7es: { label: "SONY TC-KA7ES", windRate: 16, hissFloor: .0025, blankHiss: .007, reelRate: 1.02, svg: mfaDeckSvg({ id: "tcka7es", brand: "SONY", model: "TC-KA7ES", face: "champagne", signature: "sony", openTransport: false, ledMeters: true, display: "#84e4ae" }) },
-    ctf1250: { label: "PIONEER CT-F1250", windRate: 12, hissFloor: .006, blankHiss: .014, reelRate: .86, svg: mfaDeckSvg({ id: "ctf1250", brand: "PIONEER", model: "CT-F1250", face: "silver", wood: true, signature: "pioneer", openTransport: true, ledMeters: false, display: "#58b8ff" }) }
+    ctf1250: { label: "PIONEER CT-F1250", windRate: 12, hissFloor: .006, blankHiss: .014, reelRate: .86, svg: mfaCtf1250Svg() }
 };
 const DECK_ORDER = ["dragon", "b215", "tcd3014", "tcka7es", "ctf1250"];
 
