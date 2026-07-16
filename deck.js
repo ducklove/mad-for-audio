@@ -328,15 +328,15 @@ function deckRefreshShelf() {
     const shelf = document.getElementById("deckShelf");
     if (!shelf) return;
     const others = tapes.filter((t) => t !== deckTape);
-    // 보관함 열기 — 랙 우상단, 5개 넘게 쌓이면 전체 개수를 보여준다
+    // 보관함 입구 — 마지막 슬롯 자리에 카세트 크기의 '서랍' 카드로 상시 노출
     let html = '<g id="deckCaseBtn" role="button" tabindex="0" aria-label="테이프 보관함 열기" style="cursor:pointer">' +
-        '<rect x="1790" y="428" width="170" height="24" rx="5" fill="#000" opacity="0"/>' +
-        '<text x="1952" y="445" font-family="Arial" font-size="11" letter-spacing="1.5" fill="#8a8e94" text-anchor="end">' +
-        (others.length > 5 ? "전체 " + tapes.length + "개 &#9656; 보관함" : "&#9656; 보관함") + '</text></g>';
+        '<rect x="1792" y="430" width="156" height="72" rx="6" fill="#26292f" stroke="#5f646d" stroke-width="1.6" stroke-dasharray="6 3"/>' +
+        '<text x="1870" y="461" font-family="Arial" font-size="13" font-weight="700" fill="#ccd0d6" text-anchor="middle">&#9656; 테이프 보관함</text>' +
+        '<text x="1870" y="482" font-family="Arial" font-size="10" fill="#8a8e94" text-anchor="middle">' + tapes.length + '개 &#183; 라벨/삭제/가져오기</text></g>';
     if (!others.length) {
-        html += '<text x="1540" y="472" font-family="Arial" font-size="12" letter-spacing="1" fill="#55555c" text-anchor="middle">TAPE RACK &#183; EJECT하면 테이프가 이곳에 보관됩니다</text>';
+        html += '<text x="1440" y="472" font-family="Arial" font-size="12" letter-spacing="1" fill="#55555c" text-anchor="middle">TAPE RACK &#183; EJECT하면 테이프가 이곳에 보관됩니다</text>';
     } else {
-        others.slice(0, 5).forEach((t, i) => {
+        others.slice(0, 4).forEach((t, i) => {
             const x = 1120 + i * 168;
             html += '<g style="cursor:pointer" data-id="' + t.id + '">' +
                 '<rect x="' + x + '" y="430" width="156" height="72" rx="6" fill="#22222a" stroke="#3a3a40" stroke-width="1.2"/>' +
@@ -570,10 +570,45 @@ function tapeCaseItem(t) {
         b.addEventListener("click", fn);
         return b;
     };
+    // 라벨 개명 — 인라인 입력. prompt()는 WKWebView 앱·일부 PWA에서 조용히 무시된다.
+    const startRename = () => {
+        if (info.querySelector(".tapecase-label-input")) return;
+        const input = document.createElement("input");
+        input.type = "text";
+        input.className = "tapecase-label-input";
+        input.value = t.label;
+        input.maxLength = 40;
+        input.setAttribute("aria-label", "테이프 라벨");
+        label.replaceWith(input);
+        input.focus();
+        input.select();
+        let done = false;
+        const commit = () => {
+            if (done) return;
+            done = true;
+            const clean = input.value.trim().slice(0, 40);
+            if (clean && clean !== t.label) {
+                t.label = clean;
+                t.named = true;
+                t.blank = false;
+                tapeMetaSave();
+                deckRefreshShelf();
+                gtag('event', 'tape_rename', {});
+            }
+            renderTapeCase();
+        };
+        input.addEventListener("keydown", (e) => {
+            e.stopPropagation();
+            if (e.key === "Enter") { e.preventDefault(); commit(); }
+            else if (e.key === "Escape") { done = true; renderTapeCase(); }
+        });
+        input.addEventListener("blur", commit);
+        input.addEventListener("click", (e) => e.stopPropagation());
+    };
     if (t !== deckTape) actions.appendChild(btn("장착", () => tapeCaseInsert(t.id)));
-    actions.appendChild(btn("라벨", () => tapeCaseRename(t.id)));
+    actions.appendChild(btn("라벨", startRename));
     if (t.segments.length) actions.appendChild(btn("내보내기", () => tapeCaseExport(t.id)));
-    actions.appendChild(btn("삭제", () => tapeCaseDelete(t.id), true));
+    actions.appendChild(btn("삭제", (e) => tapeCaseDelete(t.id, e.currentTarget), true));
 
     head.append(shell, info, actions);
     item.appendChild(head);
@@ -625,23 +660,7 @@ function tapeCaseInsert(id) {
     else { renderTapeCase(); tapeCaseMirrorMsg(); }
 }
 
-function tapeCaseRename(id) {
-    const t = tapes.find((x) => x.id === id);
-    if (!t) return;
-    const name = prompt("테이프 라벨 — 케이스에 이름을 써 주세요", t.label);
-    if (name == null) return;
-    const clean = name.trim().slice(0, 40);
-    if (!clean) return;
-    t.label = clean;
-    t.named = true;
-    t.blank = false;
-    tapeMetaSave();
-    deckRefreshShelf();
-    renderTapeCase();
-    gtag('event', 'tape_rename', {});
-}
-
-function tapeCaseDelete(id) {
+function tapeCaseDelete(id, btn) {
     const t = tapes.find((x) => x.id === id);
     if (!t) return;
     if (recorder && deckTape === t) {
@@ -649,8 +668,20 @@ function tapeCaseDelete(id) {
         tapeCaseMirrorMsg();
         return;
     }
-    const n = t.segments.length;
-    if (!confirm('테이프 "' + t.label + '"' + (n ? "와 수록 녹음 " + n + "개를" : "를") + " 지울까요?")) return;
+    // 2단계 확인 — confirm()은 WKWebView 앱·일부 PWA에서 조용히 false를 돌려준다
+    if (btn && btn.dataset.arm !== "1") {
+        btn.dataset.arm = "1";
+        btn.textContent = "정말 삭제?";
+        btn.classList.add("armed-danger");
+        setTimeout(() => {
+            if (btn.isConnected && btn.dataset.arm === "1") {
+                btn.dataset.arm = "";
+                btn.textContent = "삭제";
+                btn.classList.remove("armed-danger");
+            }
+        }, 4000);
+        return;
+    }
     if (deckTape === t && deckMode === "play") {
         audio.pause();
         deckSegPlaying = null;

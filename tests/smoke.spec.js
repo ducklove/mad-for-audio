@@ -334,7 +334,6 @@ test.describe("데스크톱", () => {
     });
 
     test("테이프 보관함: 라벨 개명 영속·트랙 점프 재생·삭제 연동", async ({ page }) => {
-        page.on("dialog", (d) => d.accept(d.type() === "prompt" ? "명반 모음" : undefined));
         // 짧은 예약 녹음으로 수록곡 있는 테이프를 만든다
         await page.evaluate(() => {
             const st = window.FMRadio.stations[0];
@@ -346,8 +345,12 @@ test.describe("데스크톱", () => {
         await page.waitForFunction(() => tapes.some((t) => t.segments.length), null, { timeout: 10000 });
         await page.evaluate(() => openTapeCase());
         await expect(page.locator("#tapeCaseOverlay")).toBeVisible();
-        // 라벨 개명 → localStorage 메타 영속
+        // 라벨 개명(인라인 입력 — prompt는 WKWebView에서 무시된다) → localStorage 메타 영속
         await page.locator(".tapecase-item", { hasText: "보관함 테스트" }).locator("button", { hasText: "라벨" }).click();
+        const labelInput = page.locator(".tapecase-label-input");
+        await expect(labelInput).toBeVisible();
+        await labelInput.fill("명반 모음");
+        await labelInput.press("Enter");
         await expect(page.locator(".tapecase-label", { hasText: "명반 모음" })).toHaveCount(1);
         expect(await page.evaluate(() =>
             Object.values(JSON.parse(localStorage.getItem("fmRadio.tapeMeta"))).some((m) => m.label === "명반 모음" && m.named)),
@@ -357,9 +360,13 @@ test.describe("데스크톱", () => {
         await page.waitForFunction(() => deckMode === "play", null, { timeout: 8000 });
         await expect(page.locator("#tapeCaseOverlay")).toBeHidden();
         await page.evaluate(() => deckStopTransport());
-        // 삭제 → 테이프·녹음 파일 목록 함께 정리
+        // 삭제(2단계 확인 — confirm은 WKWebView에서 무시된다) → 테이프·녹음 파일 목록 함께 정리
         await page.evaluate(() => openTapeCase());
-        await page.locator(".tapecase-item", { hasText: "명반 모음" }).locator("button", { hasText: "삭제" }).click();
+        const delBtn = page.locator(".tapecase-item", { hasText: "명반 모음" }).locator("button", { hasText: "삭제" });
+        await delBtn.click();
+        await expect(delBtn, "1차: 확인 대기").toHaveText("정말 삭제?");
+        expect(await page.evaluate(() => tapes.some((t) => t.label === "명반 모음")), "1차에는 안 지워짐").toBe(true);
+        await delBtn.click();
         expect(await page.evaluate(() => tapes.some((t) => t.label === "명반 모음")), "테이프 제거").toBe(false);
         expect(await page.evaluate(() => document.querySelectorAll("#recordingList .recording").length), "녹음 목록 정리").toBe(0);
     });

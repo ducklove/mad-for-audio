@@ -2324,3 +2324,23 @@ body.mode-focus .focus-exit {
     color: #ffd9da;
     animation: recPulse 2.4s ease-out infinite;
 }
+
+/* 테이프 라벨 인라인 편집 — prompt() 없는 개명 */
+.tapecase-label-input {
+    width: 100%;
+    max-width: 320px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    border: 1px solid var(--accent);
+    background: rgba(0, 0, 0, 0.35);
+    color: #f2e9db;
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+/* 삭제 2단계 확인 상태 */
+.rec-btn.armed-danger {
+    border-color: rgba(229, 72, 77, 0.85);
+    background: rgba(229, 72, 77, 0.25);
+    color: #ffe2e2;
+}
