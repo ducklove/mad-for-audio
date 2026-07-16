@@ -3148,20 +3148,30 @@ async function renderSched() {
             if (existing) {
                 row.classList.add("reserved");
                 btn.classList.add("armed");
-                // 이 회차를 지금 녹음 중이면 '예약됨' 대신 진행 상태를 보여준다
-                const recNow = activeResRec && activeResRec.res.id === existing.id && activeResRec.started && recorder;
-                if (recNow) {
+                // 이 회차가 지금 진행 중이면 '예약됨' 대신 실제 상태를 보여준다
+                const mine = activeResRec && activeResRec.res.id === existing.id;
+                if (mine && activeResRec.started && recorder) {
                     btn.classList.add("rec-live");
                     btn.textContent = "● 녹음 중 — 중단";
                     btn.title = "백그라운드에서 녹음하고 있습니다 — 누르면 중단하고 여기까지 저장합니다";
+                    btn.addEventListener("click", () => {
+                        removeReservation(existing.id);
+                        renderSched();
+                    });
+                } else if (mine) {
+                    // 발화됐지만 아직 시작 전 (선국·버퍼링, 또는 자동재생 차단 대기)
+                    btn.classList.add("rec-live");
+                    btn.textContent = "● 시작 대기 — 시동";
+                    btn.title = "수신을 준비 중입니다 — 브라우저가 자동 시작을 막았다면 눌러서 바로 시작하세요";
+                    btn.addEventListener("click", () => bgRecKick());
                 } else {
                     btn.textContent = "● 예약됨";
                     btn.title = "누르면 예약을 취소합니다";
+                    btn.addEventListener("click", () => {
+                        removeReservation(existing.id);
+                        renderSched();
+                    });
                 }
-                btn.addEventListener("click", () => {
-                    removeReservation(existing.id);
-                    renderSched();
-                });
             } else {
                 btn.textContent = onair ? "● 지금부터 녹음" : "● 예약";
                 btn.title = onair ? "지금부터 프로그램 종료까지 녹음합니다" : "이 프로그램을 예약 녹음합니다";
@@ -3209,6 +3219,11 @@ function addReservation(data) {
     updateSchedTabs();
     const nowTs = Date.now();
     const occ = resOccurrence(res, nowTs);
+    // '지금부터 녹음'인데 시작도 못 한 채 자리만 차지한 이전 회차(pending)가 있으면
+    // 비켜 준다 — 사용자가 방금 명시적으로 누른 쪽이 우선이다
+    if (occ && nowTs >= occ.startTs && activeResRec && !activeResRec.started && activeResRec.res.id !== res.id) {
+        cancelReservedRecording("대기 중이던 예약을 내리고 새 녹음을 시작합니다 — " + res.title);
+    }
     playerSubtext.textContent = occ && nowTs >= occ.startTs
         ? "지금부터 녹음합니다 — " + res.title
         : "예약되었습니다 — " + res.title + " (" + resRepeatLabel(res) + " " + FMSchedule.fmtHM(res.startMin) + "). 앱만 켜 두면 됩니다 — 편성표 창은 닫아도 돼요.";
