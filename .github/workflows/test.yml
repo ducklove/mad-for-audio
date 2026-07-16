@@ -23,7 +23,7 @@ jobs:
 
       - name: Playwright 브라우저 설치
         working-directory: tests
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium webkit
 
       - name: 스모크 테스트
         working-directory: tests
