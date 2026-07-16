@@ -51,13 +51,12 @@ final class Probe: NSObject, WKNavigationDelegate {
         let boot = """
         (() => {
           if (typeof playPhonoTrack !== 'function') return 'no-app';
-          try { setRecord(0); } catch (e) {}
-          playPhonoTrack(0);
+          window.__focusSrc = (typeof toggleFocusMode === 'function' && toggleFocusMode.toString().includes('messageHandlers')) ? 'v63-bridge' : 'old';
           window.__fetchStat = 'pending';
           fetch('https://upload.wikimedia.org/wikipedia/commons/transcoded/4/43/JOHN_MICHEL_CELLO-J_S_BACH_CELLO_SUITE_1_in_G_Prelude.ogg/JOHN_MICHEL_CELLO-J_S_BACH_CELLO_SUITE_1_in_G_Prelude.ogg.mp3', {method:'HEAD'})
             .then(r => { window.__fetchStat = 'HTTP ' + r.status; })
             .catch(e => { window.__fetchStat = 'ERR ' + e; });
-          return 'started CAN_OGG=' + (typeof CAN_OGG !== 'undefined' ? CAN_OGG : '?')
+          return 'focus=' + window.__focusSrc + ' CAN_OGG=' + (typeof CAN_OGG !== 'undefined' ? CAN_OGG : '?')
             + ' canOggType="' + audio.canPlayType('audio/ogg; codecs="vorbis"') + '"'
             + ' SAFARI_LIKE=' + (typeof SAFARI_LIKE !== 'undefined' ? SAFARI_LIKE : '?');
         })()

@@ -206,7 +206,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
                 if self.frameBeforeFocus == nil { self.frameBeforeFocus = self.panel.frame }
                 let screen = self.panel.screen ?? NSScreen.main
                 if let v = screen?.visibleFrame {
-                    self.panel.setFrame(v, display: true, animate: true)
+                    try? "focus on: before=\(self.panel.frame) target=\(v)\n".write(toFile: "/tmp/mad-focus.log", atomically: true, encoding: .utf8)
+                    self.panel.setFrame(v, display: true)
+                    let after = "after=\(self.panel.frame) screen=\(String(describing: self.panel.screen?.visibleFrame))\n"
+                    if let h = FileHandle(forWritingAtPath: "/tmp/mad-focus.log") { h.seekToEndOfFile(); h.write(after.data(using: .utf8)!); h.closeFile() }
                 }
             } else {
                 let back = self.frameBeforeFocus ?? self.anchoredFrame(size: FULL_SIZE)
