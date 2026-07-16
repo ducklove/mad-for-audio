@@ -1,63 +1,147 @@
-<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mad for Audio FM 튜너 아이콘">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#241d18"/>
-      <stop offset="0.42" stop-color="#161311"/>
-      <stop offset="1" stop-color="#0c0b0a"/>
+    <linearGradient id="iconBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#271710"/>
+      <stop offset=".5" stop-color="#100d0c"/>
+      <stop offset="1" stop-color="#050506"/>
     </linearGradient>
-    <radialGradient id="glow" cx="0.5" cy="0.28" r="0.7">
-      <stop offset="0" stop-color="#d36a42" stop-opacity="0.34"/>
-      <stop offset="0.55" stop-color="#d36a42" stop-opacity="0.05"/>
-      <stop offset="1" stop-color="#d36a42" stop-opacity="0"/>
+    <radialGradient id="iconAura" cx=".5" cy=".22" r=".78">
+      <stop offset="0" stop-color="#e77a46" stop-opacity=".4"/>
+      <stop offset=".42" stop-color="#a94125" stop-opacity=".1"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="needle" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#ffd9a8"/>
-      <stop offset="0.5" stop-color="#ec8255"/>
-      <stop offset="1" stop-color="#d36a42"/>
+    <linearGradient id="wood" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#2c140b"/>
+      <stop offset=".28" stop-color="#8d4b28"/>
+      <stop offset=".56" stop-color="#4e2414"/>
+      <stop offset=".82" stop-color="#a45d32"/>
+      <stop offset="1" stop-color="#251109"/>
     </linearGradient>
-    <linearGradient id="fm" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#fff6ee"/>
-      <stop offset="1" stop-color="#f0d8c4"/>
+    <pattern id="woodGrain" width="84" height="44" patternUnits="userSpaceOnUse">
+      <path d="M-18 10C8-2 30 20 56 8S91 5 110 16M-10 31C18 18 38 42 69 28S101 25 118 35" fill="none" stroke="#f0b379" stroke-width="3" opacity=".16"/>
+      <path d="M-8 20C18 8 43 30 72 17S102 15 122 25" fill="none" stroke="#160803" stroke-width="2" opacity=".42"/>
+    </pattern>
+    <linearGradient id="face" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#31343b"/>
+      <stop offset=".07" stop-color="#1a1c21"/>
+      <stop offset=".55" stop-color="#101115"/>
+      <stop offset="1" stop-color="#07080a"/>
     </linearGradient>
-    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
-      <feGaussianBlur stdDeviation="10"/>
+    <linearGradient id="edge" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f5f6f8"/>
+      <stop offset=".12" stop-color="#8f949e"/>
+      <stop offset=".72" stop-color="#2f333a"/>
+      <stop offset="1" stop-color="#aeb2ba"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#13232a"/>
+      <stop offset=".18" stop-color="#071217"/>
+      <stop offset=".7" stop-color="#030708"/>
+      <stop offset="1" stop-color="#010203"/>
+    </linearGradient>
+    <linearGradient id="glassSweep" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".3"/>
+      <stop offset=".18" stop-color="#ffffff" stop-opacity=".07"/>
+      <stop offset=".45" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset="1" stop-color="#7fd9ff" stop-opacity=".04"/>
+    </linearGradient>
+    <linearGradient id="amber" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff4c6"/>
+      <stop offset=".33" stop-color="#ffc36d"/>
+      <stop offset="1" stop-color="#e34f2d"/>
+    </linearGradient>
+    <radialGradient id="knob" cx=".32" cy=".24" r=".92">
+      <stop offset="0" stop-color="#fafbfd"/>
+      <stop offset=".17" stop-color="#bcc1ca"/>
+      <stop offset=".5" stop-color="#5f646d"/>
+      <stop offset=".78" stop-color="#2b2e34"/>
+      <stop offset="1" stop-color="#0c0d10"/>
+    </radialGradient>
+    <radialGradient id="led" cx=".34" cy=".3" r=".72">
+      <stop offset="0" stop-color="#fff4d0"/>
+      <stop offset=".24" stop-color="#ffb452"/>
+      <stop offset=".62" stop-color="#e14d2c"/>
+      <stop offset="1" stop-color="#6b160f"/>
+    </radialGradient>
+    <pattern id="knurl" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(27)">
+      <path d="M2 0V14M9 0V14" stroke="#ffffff" stroke-width="2" opacity=".23"/>
+      <path d="M5.5 0V14M12.5 0V14" stroke="#000000" stroke-width="2.5" opacity=".52"/>
+    </pattern>
+    <filter id="outerShadow" x="-30%" y="-30%" width="160%" height="180%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="24" result="b"/>
+      <feOffset in="b" dy="24" result="o"/>
+      <feColorMatrix in="o" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .65 0" result="s"/>
+      <feMerge><feMergeNode in="s"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="18"/></filter>
+    <filter id="fineGrain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency=".7" numOctaves="2" seed="21" result="n"/>
+      <feColorMatrix in="n" type="saturate" values="0" result="g"/>
+      <feComponentTransfer in="g"><feFuncA type="table" tableValues="0 .075"/></feComponentTransfer>
     </filter>
   </defs>
 
-  <!-- full-bleed background (platform applies its own mask/rounding) -->
-  <rect width="1024" height="1024" fill="url(#bg)"/>
-  <rect width="1024" height="1024" fill="url(#glow)"/>
+  <rect width="1024" height="1024" fill="url(#iconBg)"/>
+  <rect width="1024" height="1024" fill="url(#iconAura)"/>
+  <rect width="1024" height="1024" filter="url(#fineGrain)" opacity=".45"/>
 
-  <!-- FM wordmark -->
-  <text x="512" y="404" text-anchor="middle" fill="url(#fm)"
-        font-family="Helvetica, Arial, sans-serif" font-weight="700"
-        font-size="286" letter-spacing="-8">FM</text>
+  <g filter="url(#outerShadow)">
+    <rect x="52" y="68" width="920" height="888" rx="154" fill="#080709"/>
+    <path d="M52 222Q52 68 206 68H818Q972 68 972 222V302H52Z" fill="#421f13" opacity=".5"/>
 
-  <!-- tuner scale panel -->
-  <g>
-    <!-- baseline -->
-    <rect x="212" y="612" width="600" height="6" rx="3" fill="#5b4d43"/>
-    <!-- major + minor ticks -->
-    <g fill="#8a7666">
-      <rect x="230" y="588" width="7" height="34" rx="2"/>
-      <rect x="326" y="596" width="5" height="26" rx="2"/>
-      <rect x="422" y="588" width="7" height="34" rx="2"/>
-      <rect x="518" y="596" width="5" height="26" rx="2"/>
-      <rect x="614" y="588" width="7" height="34" rx="2"/>
-      <rect x="710" y="596" width="5" height="26" rx="2"/>
-      <rect x="787" y="588" width="7" height="34" rx="2"/>
+    <path d="M74 172Q74 104 142 104H166V920H142Q74 920 74 852Z" fill="url(#wood)"/>
+    <path d="M858 104H882Q950 104 950 172V852Q950 920 882 920H858Z" fill="url(#wood)"/>
+    <path d="M74 172Q74 104 142 104H166V920H142Q74 920 74 852Z" fill="url(#woodGrain)"/>
+    <path d="M858 104H882Q950 104 950 172V852Q950 920 882 920H858Z" fill="url(#woodGrain)"/>
+
+    <rect x="150" y="104" width="724" height="816" rx="76" fill="url(#face)" stroke="url(#edge)" stroke-width="8"/>
+    <rect x="167" y="121" width="690" height="782" rx="61" fill="none" stroke="#07080a" stroke-width="5"/>
+    <path d="M188 134H836" stroke="#ffffff" stroke-width="4" opacity=".22"/>
+    <path d="M188 889H836" stroke="#000000" stroke-width="7" opacity=".6"/>
+
+    <g fill="#121318" stroke="#d6d9df" stroke-width="3">
+      <circle cx="194" cy="151" r="10"/><circle cx="830" cy="151" r="10"/>
+      <circle cx="194" cy="873" r="10"/><circle cx="830" cy="873" r="10"/>
     </g>
 
-    <!-- glowing needle -->
-    <rect x="600" y="556" width="10" height="118" rx="5" fill="#ec8255" filter="url(#soft)" opacity="0.85"/>
-    <rect x="601" y="560" width="8" height="110" rx="4" fill="url(#needle)"/>
-    <circle cx="605" cy="556" r="20" fill="#ec8255" filter="url(#soft)" opacity="0.7"/>
-    <circle cx="605" cy="556" r="13" fill="#ffd9a8"/>
-    <circle cx="605" cy="556" r="6" fill="#c85a34"/>
-  </g>
+    <text x="512" y="361" text-anchor="middle" fill="#fff1df" font-family="Helvetica, Arial, sans-serif" font-size="238" font-weight="800" letter-spacing="-14">FM</text>
+    <text x="512" y="407" text-anchor="middle" fill="#bcb7b1" font-family="Helvetica, Arial, sans-serif" font-size="28" font-weight="700" letter-spacing="10">MAD FOR AUDIO</text>
 
-  <!-- frequency band label -->
-  <text x="512" y="742" text-anchor="middle" fill="#b9aea1"
-        font-family="Helvetica, Arial, sans-serif" font-weight="600"
-        font-size="60" letter-spacing="8">88 · 108</text>
+    <rect x="214" y="446" width="596" height="230" rx="38" fill="#010203" stroke="url(#edge)" stroke-width="7"/>
+    <rect x="229" y="461" width="566" height="200" rx="26" fill="url(#glass)" stroke="#18333d" stroke-width="3"/>
+    <ellipse cx="512" cy="572" rx="254" ry="108" fill="#e85831" opacity=".08" filter="url(#glow)"/>
+    <path d="M232 464H486L380 658H232Z" fill="url(#glassSweep)" opacity=".68"/>
+
+    <g fill="#dbd4be" font-family="Helvetica, Arial, sans-serif" font-size="30" font-weight="800" text-anchor="middle">
+      <text x="272" y="505">88</text><text x="512" y="505">98</text><text x="752" y="505">108</text>
+    </g>
+    <g stroke="#b9b39e" stroke-linecap="round">
+      <path d="M274 536V571M334 545V571M394 536V571M454 545V571M514 536V571M574 545V571M634 536V571M694 545V571M754 536V571" stroke-width="8"/>
+      <path d="M304 553V571M364 553V571M424 553V571M484 553V571M544 553V571M604 553V571M664 553V571M724 553V571" stroke-width="4" opacity=".72"/>
+    </g>
+    <rect x="244" y="584" width="536" height="9" rx="4.5" fill="#51483e"/>
+    <rect x="618" y="513" width="20" height="130" rx="10" fill="#ff6a3b" opacity=".72" filter="url(#glow)"/>
+    <rect x="623" y="514" width="10" height="130" rx="5" fill="url(#amber)"/>
+    <circle cx="628" cy="514" r="17" fill="#fff1bd"/><circle cx="628" cy="514" r="7" fill="#cf4a2d"/>
+    <text x="512" y="636" text-anchor="middle" fill="#7aa9a8" font-family="Helvetica, Arial, sans-serif" font-size="22" font-weight="700" letter-spacing="7">STEREO TUNER</text>
+
+    <g>
+      <circle cx="316" cy="780" r="48" fill="#050608" stroke="#5e626a" stroke-width="5"/>
+      <circle cx="316" cy="780" r="28" fill="url(#led)"/>
+      <circle cx="306" cy="770" r="9" fill="#fff3cc" opacity=".75"/>
+      <path d="M316 746V772" stroke="#21120d" stroke-width="7" stroke-linecap="round"/>
+      <text x="316" y="850" text-anchor="middle" fill="#a7a5a3" font-family="Helvetica, Arial, sans-serif" font-size="24" font-weight="800" letter-spacing="4">ON</text>
+    </g>
+
+    <g>
+      <ellipse cx="704" cy="838" rx="132" ry="40" fill="#000000" opacity=".55" filter="url(#glow)"/>
+      <circle cx="704" cy="780" r="128" fill="#090a0d" stroke="url(#edge)" stroke-width="9"/>
+      <circle cx="704" cy="780" r="113" fill="url(#knob)"/>
+      <circle cx="704" cy="780" r="100" fill="url(#knurl)" opacity=".72"/>
+      <circle cx="704" cy="780" r="74" fill="url(#knob)" stroke="#6e737c" stroke-width="3"/>
+      <path d="M642 717A88 88 0 0 1 720 685" fill="none" stroke="#ffffff" stroke-width="12" stroke-linecap="round" opacity=".36"/>
+      <rect x="698" y="675" width="12" height="42" rx="6" fill="#17191d"/>
+      <text x="704" y="850" text-anchor="middle" fill="#e3e1dd" font-family="Helvetica, Arial, sans-serif" font-size="24" font-weight="800" letter-spacing="5">TUNE</text>
+    </g>
+  </g>
 </svg>

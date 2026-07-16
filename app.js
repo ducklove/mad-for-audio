@@ -542,24 +542,24 @@ function svgButtonize(id, label) {
 
 // ----- 그래픽 이퀄라이저 -----
 const EQ_THEMES = {
-    black: { top: "#1b1b1f", mid: "#121215", bot: "#0b0b0d", ear: "#101013", fieldA: "#0e0e11", fieldB: "#141419", edge: "#3c3c44", ink: "#f0f0f2", sub: "#8a8a94", slot: "#050506", cap: "#26262c", capTop: "#3c3c44", mark: "#f2f2f4", ledOff: "#16221c" },
-    silver: { top: "#f2f1ec", mid: "#c8c8c5", bot: "#85878a", ear: "#a5a7a8", fieldA: "#484b4e", fieldB: "#56595c", edge: "#6d7073", ink: "#202225", sub: "#4f5255", slot: "#1b1d1f", cap: "#bfc1c2", capTop: "#f4f4f1", mark: "#2c2e31", ledOff: "#213129" },
-    chrome: { top: "#fff8e6", mid: "#b9a475", bot: "#655638", ear: "#756342", fieldA: "#191712", fieldB: "#252117", edge: "#efdfb5", ink: "#2a2418", sub: "#5a4d34", slot: "#0a0805", cap: "#d9c596", capTop: "#fff4d3", mark: "#514321", ledOff: "#29261b" }
+    black: { top: "#292a30", mid: "#15161b", bot: "#08090c", ear: "#0b0c10", fieldA: "#0b0c10", fieldB: "#181a20", edge: "#555962", grid: "#777c86", fieldInk: "#ecece8", fieldMuted: "#a4a7ad", ink: "#f5f3ed", sub: "#c7c7c4", muted: "#8e9198", slot: "#020305", cap: "url(#eqCapBlack)", capTop: "#696d76", mark: "#f7f5ef", ledOff: "#11231b" },
+    silver: { top: "#faf9f4", mid: "#d3d4d2", bot: "#8d9093", ear: "#aeb1b2", fieldA: "#25282c", fieldB: "#3c4045", edge: "#777b80", grid: "#959aa0", fieldInk: "#f1f2ee", fieldMuted: "#b8bdc0", ink: "#181a1d", sub: "#34373a", muted: "#565b60", slot: "#090b0d", cap: "url(#eqCapSilver)", capTop: "#ffffff", mark: "#25282c", ledOff: "#183027" },
+    chrome: { top: "#fff9e9", mid: "#ccb985", bot: "#6d5a38", ear: "#796640", fieldA: "#17140e", fieldB: "#2a2418", edge: "#ead8a5", grid: "#897b5d", fieldInk: "#f8e9be", fieldMuted: "#bba978", ink: "#201b12", sub: "#423721", muted: "#615336", slot: "#070604", cap: "url(#eqCapGold)", capTop: "#fff5d4", mark: "#403318", ledOff: "#27251b" }
 };
 const EQ_MODELS = {
-    ge5: { pill: "GE-5 · 5밴드", name: "GE-5", theme: "black", q: 1.0, capW: 60,
+    ge5: { pill: "GE-5 · 5밴드", name: "GE-5", theme: "black", series: "WIDE RANGE", architecture: "wide", q: 1.0, capW: 64,
         freqs: [60, 250, 1000, 4000, 12000],
         labels: ["60", "250", "1k", "4k", "12k"],
         xs: [800, 1030, 1260, 1490, 1720] },
-    ge10: { pill: "GE-10 · 10밴드", name: "GE-10", theme: "black", q: 1.4, capW: 44,
+    ge10: { pill: "GE-10 · 10밴드", name: "GE-10", theme: "black", series: "STUDIO MONITOR", architecture: "studio", q: 1.4, capW: 46,
         freqs: [31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000],
         labels: ["31", "62", "125", "250", "500", "1k", "2k", "4k", "8k", "16k"],
         xs: [755, 880, 1005, 1130, 1255, 1380, 1505, 1630, 1755, 1880] },
-    ge10silver: { pill: "SILVER · 10밴드", name: "GE-10S", theme: "silver", q: 1.4, capW: 44,
+    ge10silver: { pill: "SILVER · 10밴드", name: "GE-10S", theme: "silver", series: "PRECISION SERIES", architecture: "precision", q: 1.4, capW: 46,
         freqs: [31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000],
         labels: ["31", "62", "125", "250", "500", "1k", "2k", "4k", "8k", "16k"],
         xs: [755, 880, 1005, 1130, 1255, 1380, 1505, 1630, 1755, 1880] },
-    ge10chrome: { pill: "CHAMPAGNE · 10밴드", name: "GE-10C", theme: "chrome", q: 1.4, capW: 44,
+    ge10chrome: { pill: "CHAMPAGNE · 10밴드", name: "GE-10C", theme: "chrome", series: "SIGNATURE SERIES", architecture: "signature", q: 1.4, capW: 46,
         freqs: [31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000],
         labels: ["31", "62", "125", "250", "500", "1k", "2k", "4k", "8k", "16k"],
         xs: [755, 880, 1005, 1130, 1255, 1380, 1505, 1630, 1755, 1880] }
@@ -755,77 +755,126 @@ function mountEq() {
     const model = EQ_MODELS[eqModelId];
     const theme = EQ_THEMES[model.theme] || EQ_THEMES.black;
     const chrome = model.theme === "chrome";
-    // 필드 배경: dB 그리드 라인
+    const silver = model.theme === "silver";
+    const isFive = model.architecture === "wide";
+    const fieldX = isFive ? 620 : 650;
+    const fieldW = isFive ? 1320 : 1290;
+    const fieldR = fieldX + fieldW;
+    const screw = (x, y) => '<g transform="translate(' + x + ' ' + y + ')" pointer-events="none"><circle r="8" fill="url(#eqScrew)" stroke="#111319" stroke-width="1.4"/><path d="M-4 -1 L4 1" stroke="#1b1d21" stroke-width="1.4"/></g>';
+
+    // 눈금은 실제 랙 폭에서도 읽히도록 주요 값의 대비와 굵기를 높인다.
     let grid = "";
     [-12, -9, -6, -3, 0, 3, 6, 9, 12].forEach((g) => {
         const y = eqGainToY(g);
-        grid += '<line x1="700" y1="' + y + '" x2="1900" y2="' + y + '" stroke="' + theme.edge + '" stroke-width="' + (g === 0 ? 2 : 0.8) + '" opacity="' + (g === 0 ? 0.9 : 0.5) + '"/>';
+        grid += '<line x1="' + (fieldX + 58) + '" y1="' + y + '" x2="' + (fieldR - 24) + '" y2="' + y + '" stroke="' + (g === 0 ? theme.fieldInk : theme.grid) + '" stroke-width="' + (g === 0 ? 2.4 : 1) + '" opacity="' + (g === 0 ? 0.78 : 0.34) + '"/>';
     });
+    const bandW = isFive ? 170 : 92;
+    const wideBandNames = ["SUB BASS", "LOW", "MID", "PRESENCE", "AIR"];
+    const wideBandRanges = ["20–120", "120–500", "0.5–2k", "2–8k", "8–20k"];
+    const bandFrames = EQ_X.map((x, i) => {
+        const frame = '<rect x="' + (x - bandW / 2) + '" y="88" width="' + bandW + '" height="248" rx="8" fill="#000" opacity="' + (isFive ? '.2' : '.08') + '" stroke="' + theme.edge + '" stroke-opacity="' + (isFive ? '.46' : '.14') + '"/>';
+        if (!isFive) return frame;
+        return frame +
+            '<path d="M' + (x - 77) + ' 98 H' + (x + 77) + '" stroke="#fff" stroke-width="1.4" opacity=".12"/>' +
+            '<rect x="' + (x - 72) + '" y="101" width="144" height="24" rx="5" fill="#141820" stroke="' + theme.edge + '" stroke-opacity=".52"/>' +
+            '<text x="' + (x - 68) + '" y="117" font-family="Arial" font-size="10.5" font-weight="700" letter-spacing="1" fill="' + theme.fieldInk + '">' + wideBandNames[i] + '</text>' +
+            '<circle cx="' + (x + 59) + '" cy="113" r="3.8" fill="#54d18a" opacity=".82"/><circle cx="' + (x + 59) + '" cy="113" r="7" fill="#54d18a" opacity=".08"/>' +
+            '<path d="M' + (x - 68) + ' 143 h18 M' + (x - 68) + ' 171 h12 M' + (x - 68) + ' 199 h18 M' + (x - 68) + ' 227 h12 M' + (x - 68) + ' 255 h18 M' + (x - 68) + ' 283 h12" stroke="' + theme.grid + '" stroke-width="1.2" opacity=".42"/>' +
+            '<text x="' + (x - 68) + '" y="324" font-family="Arial" font-size="12" font-weight="700" letter-spacing=".8" fill="' + theme.muted + '">' + wideBandRanges[i] + ' Hz</text>';
+    }).join("");
     const hw = EQ_CAPW / 2;
     const hitHw = Math.min(58, Math.floor((EQ_X[1] - EQ_X[0]) / 2) - 3);
     const sliders = EQ_FREQS.map((f, i) => {
         const x = EQ_X[i];
+        const ledW = isFive ? 11 : 8;
         const spectrum = Array.from({ length: 8 }, (_, j) => {
             const on = j >= 6 ? "#f05a3a" : j >= 4 ? "#e4b33f" : "#54d18a";
-            return '<rect id="eqBandLvl' + i + '_' + j + '" data-on="' + on + '" data-off="' + theme.ledOff + '" x="' + (x + hw + 8) + '" y="' + (292 - j * 23) + '" width="7" height="15" rx="2" fill="' + theme.ledOff + '"/>';
+            return '<rect id="eqBandLvl' + i + '_' + j + '" data-on="' + on + '" data-off="' + theme.ledOff + '" x="' + (x + hw + 10) + '" y="' + (292 - j * 23) + '" width="' + ledW + '" height="15" rx="2.5" fill="' + theme.ledOff + '" stroke="#000" stroke-opacity=".38"/>';
         }).join("");
-        return '<rect x="' + (x - 5) + '" y="' + (EQ_TOP - 8) + '" width="10" height="' + (EQ_BOT - EQ_TOP + 16) + '" rx="5" fill="' + theme.slot + '" stroke="' + theme.edge + '" stroke-width="1.2"/>' +
-            '<rect x="' + (x - 5) + '" y="' + (EQ_TOP - 8) + '" width="10" height="14" rx="5" fill="#000000" opacity="0.6"/>' +
+        return '<rect x="' + (x - 13) + '" y="' + (EQ_TOP - 11) + '" width="26" height="' + (EQ_BOT - EQ_TOP + 22) + '" rx="13" fill="#000" opacity=".42" filter="url(#eqSlotShadow)"/>' +
+            '<rect x="' + (x - 7) + '" y="' + (EQ_TOP - 8) + '" width="14" height="' + (EQ_BOT - EQ_TOP + 16) + '" rx="7" fill="url(#eqSlot)" stroke="' + theme.edge + '" stroke-width="1.3"/>' +
+            '<line x1="' + x + '" y1="' + (EQ_TOP - 2) + '" x2="' + x + '" y2="' + (EQ_BOT + 2) + '" stroke="#000" stroke-width="2" opacity=".75"/>' +
             spectrum +
-            '<g id="eqH' + i + '">' +
-            '<rect x="' + (x - hw + 2) + '" y="-11" width="' + EQ_CAPW + '" height="30" rx="4" fill="#000000" opacity="0.42" filter="url(#lzSoft)"/>' +
-            '<rect x="' + (x - hw) + '" y="-15" width="' + EQ_CAPW + '" height="30" rx="4" fill="' + (chrome ? 'url(#eqChromeCap)' : theme.cap) + '" stroke="#0a0a0c" stroke-width="1.5"/>' +
-            '<rect x="' + (x - hw) + '" y="-15" width="' + EQ_CAPW + '" height="6" rx="3" fill="' + theme.capTop + '"/>' +
-            '<rect x="' + (x - hw) + '" y="-2.5" width="' + EQ_CAPW + '" height="5" fill="' + theme.mark + '"/>' +
+            '<g id="eqH' + i + '" filter="url(#eqHandleShadow)">' +
+            '<rect x="' + (x - hw) + '" y="-19" width="' + EQ_CAPW + '" height="38" rx="6" fill="' + theme.cap + '" stroke="' + (chrome ? '#5f4e2e' : '#08090b') + '" stroke-width="1.8"/>' +
+            '<rect x="' + (x - hw + 3) + '" y="-16" width="' + (EQ_CAPW - 6) + '" height="9" rx="3" fill="' + theme.capTop + '" opacity=".72"/>' +
+            '<path d="M' + (x - hw + 5) + ' -12 H' + (x + hw - 5) + '" stroke="#fff" stroke-width="1.4" opacity=".35"/>' +
+            '<rect x="' + (x - hw + 3) + '" y="-3" width="' + (EQ_CAPW - 6) + '" height="6" rx="2" fill="' + theme.mark + '"/>' +
+            '<rect x="' + (x - hw + 4) + '" y="11" width="' + (EQ_CAPW - 8) + '" height="4" rx="2" fill="#000" opacity=".35"/>' +
             '</g>' +
-            '<text id="eqV' + i + '" x="' + x + '" y="78" font-family="Arial" font-size="13" font-weight="700" fill="' + theme.sub + '" text-anchor="middle">0</text>' +
-            '<text x="' + x + '" y="354" font-family="Arial" font-size="14" font-weight="600" letter-spacing="0.5" fill="' + theme.sub + '" text-anchor="middle">' + EQ_LABELS[i] + '</text>' +
+            '<text id="eqV' + i + '" x="' + x + '" y="80" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="' + theme.fieldInk + '" text-anchor="middle">0</text>' +
+            '<text x="' + x + '" y="358" font-family="Arial, sans-serif" font-size="18" font-weight="700" letter-spacing=".4" fill="' + theme.fieldInk + '" text-anchor="middle">' + EQ_LABELS[i] + '</text>' +
             '<rect id="eqHit' + i + '" x="' + (x - hitHw) + '" y="66" width="' + (hitHw * 2) + '" height="300" fill="#000" fill-opacity="0" style="cursor:ns-resize;touch-action:none" tabindex="0" role="slider" aria-label="' + EQ_LABELS[i] + 'Hz 게인" aria-valuemin="-12" aria-valuemax="12"><title>' + EQ_LABELS[i] + 'Hz &#177;12dB</title></rect>';
     }).join("");
     let lvl = "";
     for (let i = 0; i < 12; i++) {
-        lvl += '<rect id="eqLvl' + i + '" x="530" y="' + (300 - i * 19) + '" width="46" height="12" rx="2" fill="#33251a"/>';
+        lvl += '<rect id="eqLvl' + i + '" x="518" y="' + (300 - i * 19) + '" width="54" height="12" rx="2.5" fill="#1e1610" stroke="#050607" stroke-width="1"/>';
+    }
+    let modelTrim = "";
+    if (model.architecture === "wide") {
+        modelTrim = '<rect x="336" y="78" width="44" height="244" rx="8" fill="#090a0d" stroke="#434750"/><path d="M358 98 V302" stroke="#b9bdc5" stroke-width="2" opacity=".45"/><text x="358" y="344" font-family="Arial" font-size="11" font-weight="700" letter-spacing="2" fill="' + theme.muted + '" text-anchor="middle">WIDE</text>';
+    } else if (model.architecture === "precision") {
+        modelTrim = '<path d="M62 34 H1938 M62 374 H1938" stroke="#fff" stroke-width="2" opacity=".5"/><rect x="344" y="38" width="250" height="25" rx="3" fill="#9b9d9e" stroke="#f7f7f3"/><text x="469" y="55" font-family="Arial" font-size="11" font-weight="700" letter-spacing="2.4" fill="#282b2e" text-anchor="middle">LABORATORY CALIBRATED</text>';
+    } else if (model.architecture === "signature") {
+        modelTrim = '<rect x="344" y="36" width="250" height="28" rx="14" fill="#4f422b" stroke="#f1deb0"/><text x="469" y="55" font-family="Georgia, serif" font-style="italic" font-size="13" fill="#fff0c5" text-anchor="middle">Signature Reference</text><path d="M62 29 H330 M608 29 H1938" stroke="#fff6db" stroke-width="2" opacity=".42"/>';
+    } else {
+        modelTrim = '<rect x="344" y="38" width="250" height="24" rx="3" fill="#0a0b0e" stroke="#494d55"/><text x="469" y="55" font-family="Arial" font-size="10" font-weight="700" letter-spacing="2.2" fill="#bfc2c8" text-anchor="middle">DISCRETE ANALOG FILTERS</text>';
     }
     document.getElementById("eqStage").innerHTML =
         '<svg class="eq-svg" viewBox="0 0 2000 400" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="YAMAHA ' + model.name + ' 스테레오 그래픽 이퀄라이저">' +
         '<defs>' +
-        '<linearGradient id="eqPanel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + theme.top + '"/><stop offset="0.5" stop-color="' + theme.mid + '"/><stop offset="1" stop-color="' + theme.bot + '"/></linearGradient>' +
-        (chrome ? '<linearGradient id="eqChromeBands" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff9e8"/><stop offset=".08" stop-color="#c5b184"/><stop offset=".18" stop-color="#f2e4c2"/><stop offset=".34" stop-color="#bda978"/><stop offset=".48" stop-color="#f8edcf"/><stop offset=".62" stop-color="#958155"/><stop offset=".76" stop-color="#ddc99f"/><stop offset=".9" stop-color="#aa976d"/><stop offset="1" stop-color="#67583a"/></linearGradient><linearGradient id="eqChromeSweep" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e7c986" stop-opacity=".1"/><stop offset=".18" stop-color="#fff8e3" stop-opacity="0"/><stop offset=".46" stop-color="#fff5d8" stop-opacity=".24"/><stop offset=".49" stop-color="#fffdf2" stop-opacity=".52"/><stop offset=".52" stop-color="#d7bb78" stop-opacity=".08"/><stop offset=".82" stop-color="#bfa464" stop-opacity="0"/><stop offset="1" stop-color="#dbc07d" stop-opacity=".14"/></linearGradient><linearGradient id="eqChromeCap" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#786641"/><stop offset=".18" stop-color="#fff2c9"/><stop offset=".42" stop-color="#bda774"/><stop offset=".68" stop-color="#f4e4bd"/><stop offset="1" stop-color="#665536"/></linearGradient>' : '') +
-        '<pattern id="eqRidge" width="14" height="8" patternUnits="userSpaceOnUse"><rect width="7" height="8" fill="' + theme.fieldA + '"/><rect x="7" width="7" height="8" fill="' + theme.fieldB + '"/></pattern>' +
+        '<linearGradient id="eqFace" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + theme.top + '"/><stop offset=".18" stop-color="' + theme.mid + '"/><stop offset=".68" stop-color="' + theme.mid + '"/><stop offset="1" stop-color="' + theme.bot + '"/></linearGradient>' +
+        '<linearGradient id="eqField" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + theme.fieldA + '"/><stop offset=".12" stop-color="' + theme.fieldB + '"/><stop offset=".82" stop-color="' + theme.fieldA + '"/><stop offset="1" stop-color="#050608"/></linearGradient>' +
+        '<linearGradient id="eqSlot" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000"/><stop offset=".35" stop-color="' + theme.slot + '"/><stop offset=".62" stop-color="#252830"/><stop offset="1" stop-color="#000"/></linearGradient>' +
+        '<linearGradient id="eqCapBlack" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#777b84"/><stop offset=".18" stop-color="#383b42"/><stop offset=".62" stop-color="#17191e"/><stop offset="1" stop-color="#050608"/></linearGradient>' +
+        '<linearGradient id="eqCapSilver" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".2" stop-color="#b6b9bb"/><stop offset=".52" stop-color="#f0f0ed"/><stop offset=".78" stop-color="#8d9093"/><stop offset="1" stop-color="#55585c"/></linearGradient>' +
+        '<linearGradient id="eqCapGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#705d37"/><stop offset=".18" stop-color="#fff1c3"/><stop offset=".42" stop-color="#b69c63"/><stop offset=".68" stop-color="#f7e7b9"/><stop offset="1" stop-color="#5c4a2a"/></linearGradient>' +
+        '<linearGradient id="eqScrew" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4f4f0"/><stop offset=".45" stop-color="#8b8e92"/><stop offset="1" stop-color="#34363a"/></linearGradient>' +
+        '<pattern id="eqBrush" width="10" height="6" patternUnits="userSpaceOnUse"><path d="M0 1 H10 M0 4 H10" stroke="#fff" stroke-width=".45" opacity=".16"/><path d="M0 2.5 H10" stroke="#000" stroke-width=".4" opacity=".12"/></pattern>' +
+        '<filter id="eqSlotShadow" x="-80%" y="-10%" width="260%" height="120%"><feGaussianBlur stdDeviation="4"/></filter>' +
+        '<filter id="eqHandleShadow" x="-45%" y="-60%" width="200%" height="230%"><feDropShadow dx="2.5" dy="5" stdDeviation="3" flood-color="#000" flood-opacity=".72"/></filter>' +
         '</defs>' +
-        '<rect width="2000" height="400" rx="8" fill="' + (chrome ? 'url(#eqChromeBands)' : 'url(#eqPanel)') + '"/>' +
-        (chrome ? '<rect x="45" y="8" width="1910" height="380" rx="7" fill="url(#eqChromeSweep)"/><rect x="52" y="14" width="1896" height="368" rx="6" fill="none" stroke="#f2dfad" stroke-width="3" opacity=".72"/><path d="M58 24 H1942 M58 376 H1942" stroke="#fff8df" stroke-width="2" opacity=".58"/>' : '') +
-        '<rect width="2000" height="6" fill="#ffffff" opacity="0.06"/>' +
-        '<rect y="388" width="2000" height="12" fill="#000" opacity="0.4"/>' +
+        '<rect width="2000" height="400" rx="9" fill="url(#eqFace)"/>' +
+        '<rect x="44" y="7" width="1912" height="380" rx="7" fill="url(#eqBrush)" opacity="' + (silver || chrome ? '.72' : '.22') + '"/>' +
+        (chrome ? '<path d="M58 22 H1942 M58 377 H1942" stroke="#fff5d4" stroke-width="3" opacity=".55"/><path d="M120 0 L720 0 L430 400 H0 Z" fill="#fff" opacity=".07"/>' : '') +
+        '<rect x="48" y="10" width="1904" height="378" rx="7" fill="none" stroke="' + (silver ? '#fdfdf9' : chrome ? '#f3dfad' : '#42454d') + '" stroke-width="2.5" opacity=".8"/>' +
+        '<rect y="390" width="2000" height="10" fill="#000" opacity=".55"/>' +
         // 랙 이어
-        '<rect x="0" y="0" width="44" height="400" rx="8" fill="' + theme.ear + '"/><circle cx="22" cy="52" r="9" fill="#26262c" stroke="' + theme.edge + '"/><circle cx="22" cy="348" r="9" fill="#26262c" stroke="' + theme.edge + '"/>' +
-        '<rect x="1956" y="0" width="44" height="400" rx="8" fill="' + theme.ear + '"/><circle cx="1978" cy="52" r="9" fill="#26262c" stroke="' + theme.edge + '"/><circle cx="1978" cy="348" r="9" fill="#26262c" stroke="' + theme.edge + '"/>' +
+        '<rect x="0" y="0" width="44" height="400" rx="8" fill="' + theme.ear + '"/><rect x="1956" y="0" width="44" height="400" rx="8" fill="' + theme.ear + '"/>' +
+        screw(22, 52) + screw(22, 348) + screw(1978, 52) + screw(1978, 348) + modelTrim +
         // 좌측 컨트롤 블록
-        '<text x="90" y="96" font-family="Arial" font-size="30" font-weight="700" letter-spacing="1.5" fill="' + theme.ink + '">YAMAHA</text>' +
-        '<text x="90" y="126" font-family="Arial" font-size="14" letter-spacing="1.5" fill="' + theme.sub + '">Stereo Graphic Equalizer ' + model.name + '</text>' +
-        (chrome ? '<rect x="88" y="142" width="244" height="30" rx="15" fill="#54472f" stroke="#ead8a8"/><text x="210" y="162" font-family="Arial" font-size="11" font-weight="700" letter-spacing="2" fill="#fff1c9" text-anchor="middle">CHAMPAGNE GOLD</text>' : '') +
-        '<text x="92" y="196" font-family="Arial" font-size="11" letter-spacing="1" fill="#8a8a94">power</text>' +
-        '<rect x="90" y="206" width="34" height="64" rx="3" fill="#e8e8ec" stroke="#0a0a0c" stroke-width="1.5"/>' +
-        '<text x="92" y="304" font-family="Arial" font-size="11" letter-spacing="1" fill="#8a8a94">tape monitor</text>' +
-        '<rect x="90" y="314" width="34" height="40" rx="3" fill="#3c3c44" stroke="#0a0a0c"/>' +
-        '<circle id="eqLed" cx="206" cy="216" r="6" fill="#3a2012"/>' +
-        '<text x="222" y="221" font-family="Arial" font-size="11" letter-spacing="1" fill="#8a8a94">EQ on</text>' +
-        '<rect id="eqDefeatBtn" x="200" y="234" width="96" height="44" rx="4" fill="#26262c" stroke="#3c3c44" style="cursor:pointer" tabindex="0" role="button" aria-label="EQ 켜기/끄기"><title>EQ 켜기/끄기 (DEFEAT)</title></rect>' +
-        '<rect x="206" y="240" width="84" height="10" rx="2" fill="#3c3c44" pointer-events="none"/>' +
-        '<text x="248" y="268" font-family="Arial" font-size="13" font-weight="700" letter-spacing="1.5" fill="#d8d8dc" text-anchor="middle" pointer-events="none">DEFEAT</text>' +
+        '<text x="78" y="82" font-family="Arial, sans-serif" font-size="32" font-weight="800" letter-spacing="2" fill="' + theme.ink + '">YAMAHA</text>' +
+        '<text x="80" y="111" font-family="Arial, sans-serif" font-size="14" font-weight="700" letter-spacing="2.1" fill="' + theme.sub + '">' + model.name + ' · ' + model.series + '</text>' +
+        '<text x="80" y="137" font-family="Arial, sans-serif" font-size="11" letter-spacing="1.7" fill="' + theme.muted + '">NATURAL SOUND GRAPHIC EQUALIZER</text>' +
+        '<text x="82" y="183" font-family="Arial" font-size="13" font-weight="700" letter-spacing="1.5" fill="' + theme.sub + '">POWER</text>' +
+        '<rect x="80" y="194" width="50" height="74" rx="5" fill="#07080a" stroke="' + theme.edge + '" stroke-width="1.7"/>' +
+        '<rect x="87" y="201" width="36" height="54" rx="4" fill="url(#eqCapSilver)" stroke="#111319"/><path d="M91 207 H119" stroke="#fff" stroke-width="3" opacity=".6"/>' +
+        '<circle id="eqLed" cx="177" cy="210" r="8" fill="#3a2012" stroke="#160c08" stroke-width="2"/>' +
+        '<text x="196" y="215" font-family="Arial" font-size="13" font-weight="700" letter-spacing="1.2" fill="' + theme.sub + '">EQ ACTIVE</text>' +
+        '<text x="80" y="305" font-family="Arial" font-size="12" font-weight="700" letter-spacing="1.3" fill="' + theme.sub + '">SIGNAL PATH</text>' +
+        '<rect id="eqDefeatBtn" x="80" y="316" width="218" height="50" rx="6" fill="#202229" stroke="' + theme.edge + '" stroke-width="1.7" style="cursor:pointer" tabindex="0" role="button" aria-label="EQ 켜기/끄기"><title>EQ 켜기/끄기 (DEFEAT)</title></rect>' +
+        '<rect x="87" y="322" width="204" height="11" rx="3" fill="#555962" opacity=".7" pointer-events="none"/>' +
+        '<text x="189" y="354" font-family="Arial" font-size="15" font-weight="800" letter-spacing="2.2" fill="#f2f2ee" text-anchor="middle" pointer-events="none">DEFEAT / ACTIVE</text>' +
         // 레벨 LED 컬럼
-        '<text x="553" y="78" font-family="Arial" font-size="11" letter-spacing="1.5" fill="#8a8a94" text-anchor="middle">level</text>' +
-        '<text x="512" y="98" font-family="Arial" font-size="10" fill="#5a5a62" text-anchor="end">+dB</text>' +
-        '<text x="512" y="310" font-family="Arial" font-size="10" fill="#5a5a62" text-anchor="end">-dB</text>' +
+        '<rect x="392" y="70" width="202" height="276" rx="10" fill="#07090b" stroke="' + theme.edge + '" stroke-width="2"/>' +
+        '<rect x="402" y="80" width="182" height="256" rx="6" fill="url(#eqField)" stroke="#000"/>' +
+        '<text x="545" y="101" font-family="Arial" font-size="13" font-weight="700" letter-spacing="1.8" fill="#d4d7da" text-anchor="middle">OUTPUT LEVEL</text>' +
+        '<text x="503" y="113" font-family="Arial" font-size="11" fill="#9ca0a5" text-anchor="end">+12</text>' +
+        '<text x="503" y="310" font-family="Arial" font-size="11" fill="#9ca0a5" text-anchor="end">-12</text>' +
         lvl +
         // 슬라이더 필드
-        '<rect x="680" y="60" width="1240" height="310" rx="6" fill="url(#eqRidge)" stroke="' + theme.edge + '" stroke-width="1.5"/>' +
+        '<rect x="' + (fieldX + 5) + '" y="58" width="' + fieldW + '" height="320" rx="10" fill="#000" opacity=".55" filter="url(#eqSlotShadow)"/>' +
+        '<rect x="' + fieldX + '" y="52" width="' + fieldW + '" height="320" rx="9" fill="url(#eqField)" stroke="' + theme.edge + '" stroke-width="2.4"/>' +
+        '<path d="M' + (fieldX + 10) + ' 64 H' + (fieldR - 10) + '" stroke="#fff" stroke-width="2" opacity=".15"/>' +
+        bandFrames +
         grid +
-        '<text x="694" y="' + (EQ_TOP + 5) + '" font-family="Arial" font-size="12" fill="#8a8a94">+12</text>' +
-        '<text x="694" y="' + (eqGainToY(0) + 4) + '" font-family="Arial" font-size="12" fill="#8a8a94">0</text>' +
-        '<text x="694" y="' + (EQ_BOT + 5) + '" font-family="Arial" font-size="12" fill="#8a8a94">-12</text>' +
-        sliders + '<text x="1900" y="82" font-family="Arial" font-size="10" letter-spacing="1.5" fill="' + theme.sub + '" text-anchor="end">REAL-TIME SPECTRUM</text>' +
-        '<text x="1900" y="354" font-family="Arial" font-size="12" letter-spacing="1" fill="#5a5a62" text-anchor="end">Hz</text>' +
+        '<text x="' + (fieldX + 15) + '" y="' + (EQ_TOP + 6) + '" font-family="Arial" font-size="15" font-weight="700" fill="' + theme.fieldInk + '">+12</text>' +
+        '<text x="' + (fieldX + 24) + '" y="' + (eqGainToY(6) + 5) + '" font-family="Arial" font-size="12" fill="' + theme.fieldMuted + '">+6</text>' +
+        '<text x="' + (fieldX + 30) + '" y="' + (eqGainToY(0) + 5) + '" font-family="Arial" font-size="15" font-weight="700" fill="' + theme.fieldInk + '">0</text>' +
+        '<text x="' + (fieldX + 28) + '" y="' + (eqGainToY(-6) + 5) + '" font-family="Arial" font-size="12" fill="' + theme.fieldMuted + '">-6</text>' +
+        '<text x="' + (fieldX + 14) + '" y="' + (EQ_BOT + 6) + '" font-family="Arial" font-size="15" font-weight="700" fill="' + theme.fieldInk + '">-12</text>' +
+        sliders + '<text x="' + (fieldR - 20) + '" y="79" font-family="Arial" font-size="12" font-weight="700" letter-spacing="1.8" fill="' + theme.fieldInk + '" text-anchor="end">REAL-TIME SPECTRUM</text>' +
+        '<text x="' + (fieldR - 20) + '" y="359" font-family="Arial" font-size="14" font-weight="700" letter-spacing="1.5" fill="' + theme.fieldInk + '" text-anchor="end">Hz</text>' +
         '</svg>';
 
     const svg = document.querySelector("#eqStage svg");
@@ -1177,8 +1226,71 @@ function phonoPower() {
     }
 }
 
+// 레코드/재킷 기능은 공통으로 유지하되, 본체 하드웨어는 모델마다 별도 조형한다.
+// 회전과 톤암 드래그 계산이 의존하는 중심(560,330), 피벗(1065,120), 바늘(768,428)은 고정한다.
+function ttVisualSpec(id, skin) {
+    const strobe = [0, 1, 2].map((row) => Array.from({ length: 54 }, (_, i) => {
+        const a = i / 54 * Math.PI * 2;
+        const r = 264 + row * 5.5;
+        const x = (560 + Math.cos(a) * r).toFixed(1);
+        const y = (330 + Math.sin(a) * r).toFixed(1);
+        return '<circle cx="' + x + '" cy="' + y + '" r="' + (row === 1 ? 2.4 : 1.7) + '" fill="#e4e5e2" opacity="' + (row === 1 ? '.9' : '.65') + '"/>';
+    }).join("")).join("");
+    const modelScrew = (x, y, light) => '<g transform="translate(' + x + ' ' + y + ')" pointer-events="none"><circle r="9" fill="' + (light ? 'url(#ttChrome)' : '#202126') + '" stroke="' + (light ? '#4e5054' : '#666970') + '" stroke-width="1.5"/><path d="M-4 -1 L4 1" stroke="' + (light ? '#323438' : '#c8c9cc') + '" stroke-width="1.5"/></g>';
+    const hit = '<circle id="ttArmHit" cx="768" cy="428" r="58" fill="#000" fill-opacity="0" style="cursor:grab"><title>톤암 — 잡아서 원하는 트랙 위에 내려놓으세요</title></circle>';
+    const specs = {
+        pl12: {
+            body: '<rect x="34" y="-10" width="1126" height="654" rx="14" fill="url(#ttWalnut)" stroke="#21150e" stroke-width="5"/><rect x="58" y="16" width="1078" height="602" rx="8" fill="url(#ttBlackPlate)" stroke="#706252" stroke-width="2"/><path d="M48 4 H1144 M48 630 H1144" stroke="#bd8657" stroke-width="3" opacity=".35"/><rect x="48" y="-2" width="1096" height="638" rx="11" fill="url(#ttWoodLines)" opacity=".55" pointer-events="none"/>',
+            brand: '<text x="72" y="72" font-family="Arial" font-size="28" font-weight="800" letter-spacing="2.5" fill="#e5ddd0">YAHAMA</text><text x="72" y="101" font-family="Arial" font-size="15" font-weight="700" letter-spacing="3" fill="#a99d8d">PL-12 · BELT DRIVE</text>',
+            platterBase: '<ellipse cx="570" cy="348" rx="289" ry="282" fill="#000" opacity=".58" filter="url(#ttShadow)"/><circle cx="560" cy="330" r="281" fill="#111216" stroke="#707179" stroke-width="3"/><circle cx="560" cy="330" r="273" fill="url(#ttRubber)"/><circle cx="560" cy="330" r="266" fill="#17181c" stroke="#050607" stroke-width="2"/>',
+            spinTrim: '<circle cx="560" cy="330" r="263" fill="none" stroke="#a8a9ad" stroke-width="3" stroke-dasharray="2 10" opacity=".6"/>',
+            armBase: '<ellipse cx="1070" cy="130" rx="58" ry="54" fill="#000" opacity=".55" filter="url(#ttShadow)"/><circle cx="1065" cy="120" r="49" fill="#17181c" stroke="#777982" stroke-width="2"/><circle cx="1065" cy="120" r="35" fill="url(#ttMetal)"/><circle cx="1065" cy="120" r="17" fill="#22242a" stroke="#c4c5c8"/><rect x="916" y="478" width="29" height="47" rx="6" fill="#18191d" stroke="#5b5e64"/><rect x="911" y="477" width="39" height="11" rx="4" fill="url(#ttChrome)"/>',
+            arm: '<g id="ttArmG"><circle cx="1134" cy="77" r="27" fill="url(#ttDarkMetal)" stroke="#8b8d94" stroke-width="2"/><rect x="1124" y="61" width="46" height="31" rx="13" fill="url(#ttDarkMetal)"/><line x1="1122" y1="89" x2="1065" y2="120" stroke="#45474d" stroke-width="13" stroke-linecap="round"/><line x1="1065" y1="120" x2="768" y2="428" stroke="#33353a" stroke-width="12" stroke-linecap="round"/><line x1="1065" y1="120" x2="768" y2="428" stroke="url(#ttArmSilver)" stroke-width="7" stroke-linecap="round"/><g transform="rotate(-46 762 434)"><rect x="732" y="418" width="62" height="28" rx="5" fill="#17191e" stroke="#7b7e84"/><rect x="740" y="444" width="16" height="9" rx="2" fill="#b33128"/></g>' + hit + '</g>',
+            detail: '<g pointer-events="none"><text x="72" y="294" font-family="Arial" font-size="11" font-weight="700" letter-spacing="2" fill="#988d7e">SPEED SELECTOR</text><circle cx="118" cy="342" r="37" fill="#090a0c" stroke="#777982" stroke-width="2"/><circle cx="118" cy="342" r="27" fill="url(#ttDarkMetal)"/><path d="M118 342 L104 320" stroke="#e8e5dc" stroke-width="4" stroke-linecap="round"/><text x="75" y="398" font-family="Arial" font-size="12" fill="#b6aa99">33</text><text x="143" y="398" font-family="Arial" font-size="12" fill="#b6aa99">45</text><rect x="60" y="430" width="174" height="46" rx="6" fill="#0c0d10" stroke="#454851"/><text x="147" y="459" font-family="Arial" font-size="11" font-weight="700" letter-spacing="1.8" fill="#c4baab" text-anchor="middle">BELT / MANUAL</text></g>' + modelScrew(76, 568, false) + modelScrew(1114, 568, false)
+        },
+        sl1200: {
+            body: '<path d="M48 18 Q48 0 68 0 H1118 Q1144 0 1144 28 V596 Q1144 622 1118 622 H68 Q44 622 44 596 Z" fill="url(#ttCastSilver)" stroke="#5a5d61" stroke-width="4"/><path d="M68 28 H1118 V590 H68 Z" fill="none" stroke="#fff" stroke-width="2" opacity=".45"/><path d="M84 44 H1098" stroke="#fff" stroke-width="4" opacity=".28"/><rect x="48" y="2" width="1094" height="618" rx="18" fill="url(#ttMetalGrain)" opacity=".46" pointer-events="none"/>',
+            brand: '<text x="70" y="68" font-family="Arial" font-size="28" font-style="italic" font-weight="800" letter-spacing="-1" fill="#25272a">Technics</text><text x="72" y="98" font-family="Arial" font-size="13" font-weight="700" letter-spacing="2.3" fill="#45484c">SL-1200MK2 · QUARTZ DIRECT DRIVE</text>',
+            platterBase: '<ellipse cx="570" cy="348" rx="294" ry="286" fill="#000" opacity=".42" filter="url(#ttShadow)"/><circle cx="560" cy="330" r="288" fill="url(#ttChrome)" stroke="#33353a" stroke-width="3"/><circle cx="560" cy="330" r="278" fill="#1c1e21"/><circle cx="560" cy="330" r="273" fill="url(#ttRubber)"/>',
+            spinTrim: '<g>' + strobe + '</g><circle cx="560" cy="330" r="257" fill="none" stroke="#090a0c" stroke-width="6"/>',
+            armBase: '<ellipse cx="1070" cy="132" rx="64" ry="60" fill="#000" opacity=".4" filter="url(#ttShadow)"/><circle cx="1065" cy="120" r="55" fill="url(#ttChrome)" stroke="#42454a" stroke-width="3"/><circle cx="1065" cy="120" r="40" fill="#303338" stroke="#f2f2ee" stroke-width="2"/><path d="M1027 120 H1103 M1065 82 V158" stroke="#9ea1a5" stroke-width="4"/><circle cx="1065" cy="120" r="19" fill="url(#ttDarkMetal)"/><rect x="916" y="476" width="30" height="51" rx="7" fill="#292c30" stroke="#6f7277"/><rect x="908" y="474" width="46" height="13" rx="5" fill="url(#ttChrome)"/>',
+            arm: '<g id="ttArmG"><rect x="1118" y="59" width="72" height="36" rx="16" fill="url(#ttDarkMetal)" stroke="#777a80" stroke-width="2"/><circle cx="1127" cy="77" r="18" fill="#15171a"/><path d="M1125 88 L1070 115" stroke="#4b4e53" stroke-width="13" stroke-linecap="round"/><path d="M1065 120 C1018 145 1020 204 966 240 S850 337 768 428" fill="none" stroke="#3d4045" stroke-width="13" stroke-linecap="round"/><path d="M1065 120 C1018 145 1020 204 966 240 S850 337 768 428" fill="none" stroke="url(#ttArmSilver)" stroke-width="7" stroke-linecap="round"/><g transform="rotate(-46 762 434)"><rect x="730" y="416" width="66" height="30" rx="4" fill="#292b30" stroke="#e1e2e0"/><rect x="740" y="444" width="17" height="9" rx="2" fill="#d4402f"/></g>' + hit + '</g>',
+            detail: '<g pointer-events="none"><circle cx="190" cy="330" r="45" fill="#24262a" stroke="#63666b" stroke-width="3"/><circle cx="190" cy="330" r="32" fill="#111214"/><path d="M190 330 L190 303" stroke="#f1f1ed" stroke-width="5" stroke-linecap="round"/><text x="190" y="394" font-family="Arial" font-size="12" font-weight="700" fill="#35383c" text-anchor="middle">START · STOP</text><rect x="936" y="272" width="62" height="252" rx="9" fill="#27292d" stroke="#74777b" stroke-width="2"/><rect x="946" y="300" width="42" height="192" rx="7" fill="#151619"/><rect x="950" y="347" width="34" height="65" rx="6" fill="url(#ttChrome)" stroke="#34363a"/><path d="M959 365 H975 M959 375 H975 M959 385 H975" stroke="#44474b"/><text x="967" y="545" font-family="Arial" font-size="11" font-weight="700" letter-spacing="1.4" fill="#383b3f" text-anchor="middle">PITCH ADJ.</text><circle cx="1028" cy="544" r="18" fill="#17191c" stroke="#6f7277"/><circle cx="1028" cy="544" r="7" fill="#e94e35"/><path d="M1018 516 Q1028 500 1038 516" fill="none" stroke="#313439" stroke-width="5"/></g>' + modelScrew(86, 566, true) + modelScrew(1100, 566, true)
+        },
+        td124: {
+            body: '<rect x="30" y="-12" width="1136" height="658" rx="12" fill="url(#ttWalnutDark)" stroke="#27160d" stroke-width="5"/><path d="M58 20 H1110 Q1138 20 1138 48 V574 Q1138 614 1098 614 H58 Z" fill="url(#ttIvoryCast)" stroke="#6b665b" stroke-width="3"/><path d="M76 40 H1096 M76 594 H1082" stroke="#fffdf4" stroke-width="3" opacity=".65"/>',
+            brand: '<rect x="66" y="43" width="234" height="59" rx="4" fill="#e7e1d3" stroke="#5e594f"/><text x="183" y="72" font-family="Arial" font-size="24" font-weight="800" letter-spacing="3" fill="#3f3b34" text-anchor="middle">THORENS</text><text x="183" y="92" font-family="Arial" font-size="10" font-weight="700" letter-spacing="2.2" fill="#625c52" text-anchor="middle">TD 124 · SWISS MADE</text>',
+            platterBase: '<ellipse cx="570" cy="350" rx="297" ry="289" fill="#000" opacity=".48" filter="url(#ttShadow)"/><circle cx="560" cy="330" r="291" fill="url(#ttChrome)" stroke="#4b4d50" stroke-width="3"/><circle cx="560" cy="330" r="282" fill="#7d7b74"/><circle cx="560" cy="330" r="275" fill="#242529"/><circle cx="560" cy="330" r="268" fill="url(#ttRubber)"/>',
+            spinTrim: '<circle cx="560" cy="330" r="267" fill="none" stroke="#c9c5ba" stroke-width="5" stroke-dasharray="1 7"/><circle cx="560" cy="330" r="259" fill="none" stroke="#4c4b47" stroke-width="3"/>',
+            armBase: '<ellipse cx="1070" cy="132" rx="58" ry="58" fill="#000" opacity=".42" filter="url(#ttShadow)"/><circle cx="1065" cy="120" r="52" fill="#d7d1c3" stroke="#58544c" stroke-width="3"/><circle cx="1065" cy="120" r="34" fill="url(#ttChrome)"/><circle cx="1065" cy="120" r="14" fill="#2b2c30"/><rect x="916" y="480" width="28" height="46" rx="4" fill="#393a3d" stroke="#77756f"/><path d="M910 481 H950" stroke="#d8d2c5" stroke-width="12" stroke-linecap="round"/>',
+            arm: '<g id="ttArmG"><circle cx="1134" cy="77" r="27" fill="#25262a" stroke="#aba79d" stroke-width="3"/><rect x="1126" y="62" width="54" height="30" rx="13" fill="url(#ttDarkMetal)"/><line x1="1122" y1="89" x2="1065" y2="120" stroke="#4d4f52" stroke-width="12" stroke-linecap="round"/><path d="M1065 120 C1000 166 938 252 880 324 S808 400 768 428" fill="none" stroke="#494b50" stroke-width="12" stroke-linecap="round"/><path d="M1065 120 C1000 166 938 252 880 324 S808 400 768 428" fill="none" stroke="url(#ttArmSilver)" stroke-width="6.5" stroke-linecap="round"/><g transform="rotate(-46 762 434)"><path d="M731 418 H793 L788 447 H736 Z" fill="#3a3b3e" stroke="#d5d0c4"/><rect x="741" y="444" width="16" height="9" rx="2" fill="#7f2d24"/></g>' + hit + '</g>',
+            detail: '<g pointer-events="none"><path d="M67 292 A73 73 0 0 1 213 292" fill="none" stroke="#5d584e" stroke-width="4"/><path d="M91 287 L75 266 M113 268 L105 240 M140 260 V228 M167 268 L177 240 M190 287 L207 266" stroke="#5d584e" stroke-width="3"/><circle cx="140" cy="292" r="43" fill="#e2dccf" stroke="#58544c" stroke-width="3"/><circle cx="140" cy="292" r="28" fill="url(#ttDarkMetal)"/><path d="M140 292 L118 276" stroke="#eee9de" stroke-width="5" stroke-linecap="round"/><text x="140" y="354" font-family="Arial" font-size="12" font-weight="700" fill="#4f4a42" text-anchor="middle">16 · 33 · 45 · 78</text><rect x="66" y="392" width="205" height="78" rx="8" fill="#c8c1b3" stroke="#5b564d" stroke-width="2"/><circle cx="108" cy="431" r="22" fill="#3a3938"/><path d="M108 431 L123 418" stroke="#f2ede3" stroke-width="4"/><text x="178" y="424" font-family="Arial" font-size="10" font-weight="700" letter-spacing="1.3" fill="#4e4941" text-anchor="middle">FINE SPEED</text><text x="178" y="445" font-family="Arial" font-size="9" fill="#665f55" text-anchor="middle">IDLER ENGAGED</text></g>' + modelScrew(76, 560, true) + modelScrew(1092, 560, true)
+        },
+        g301: {
+            body: '<rect x="28" y="-14" width="1140" height="660" rx="9" fill="url(#ttWalnutDark)" stroke="#24140c" stroke-width="6"/><path d="M58 20 H812 Q854 20 884 50 L920 86 H1128 V594 H58 Z" fill="url(#ttHammerCream)" stroke="#5d584e" stroke-width="3"/><path d="M78 42 H804 Q842 42 870 70" fill="none" stroke="#fffdf3" stroke-width="3" opacity=".55"/>',
+            brand: '<path d="M65 40 H288 Q305 40 305 57 V102 H65 Z" fill="#c7c0ae" stroke="#5c574d" stroke-width="2"/><text x="185" y="77" font-family="Georgia, serif" font-size="31" font-style="italic" font-weight="700" fill="#3c3933" text-anchor="middle">Garrard</text><text x="185" y="96" font-family="Arial" font-size="10" font-weight="700" letter-spacing="2" fill="#5b564d" text-anchor="middle">MODEL 301 · TRANSCRIPTION</text>',
+            platterBase: '<ellipse cx="570" cy="350" rx="298" ry="291" fill="#000" opacity=".5" filter="url(#ttShadow)"/><circle cx="560" cy="330" r="292" fill="#8d8b84" stroke="#37383a" stroke-width="4"/><circle cx="560" cy="330" r="284" fill="url(#ttChrome)"/><circle cx="560" cy="330" r="274" fill="#1c1d20"/><circle cx="560" cy="330" r="268" fill="url(#ttRubber)"/>',
+            spinTrim: '<circle cx="560" cy="330" r="267" fill="none" stroke="#dedbd2" stroke-width="4" stroke-dasharray="3 5"/><circle cx="560" cy="330" r="260" fill="none" stroke="#4a4a47" stroke-width="4"/>',
+            armBase: '<ellipse cx="1070" cy="134" rx="61" ry="62" fill="#000" opacity=".48" filter="url(#ttShadow)"/><rect x="1018" y="69" width="94" height="104" rx="36" fill="#28292d" stroke="#77756e" stroke-width="3"/><circle cx="1065" cy="120" r="38" fill="#17181b" stroke="#b7b2a7" stroke-width="2"/><circle cx="1065" cy="120" r="17" fill="url(#ttGoldMetal)"/><rect x="916" y="479" width="28" height="49" rx="4" fill="#28292c" stroke="#807b70"/><path d="M910 481 H950" stroke="#b5aa92" stroke-width="11" stroke-linecap="round"/>',
+            arm: '<g id="ttArmG"><rect x="1118" y="59" width="76" height="38" rx="15" fill="#1d1e21" stroke="#9b9485" stroke-width="2"/><circle cx="1127" cy="78" r="18" fill="url(#ttGoldMetal)"/><line x1="1122" y1="90" x2="1065" y2="120" stroke="#2b2d31" stroke-width="14" stroke-linecap="round"/><line x1="1065" y1="120" x2="768" y2="428" stroke="#1e2024" stroke-width="13" stroke-linecap="round"/><line x1="1065" y1="120" x2="768" y2="428" stroke="#8b806d" stroke-width="7" stroke-linecap="round"/><line x1="1065" y1="120" x2="768" y2="428" stroke="#d7ceb9" stroke-width="2" stroke-linecap="round" opacity=".7"/><g transform="rotate(-46 762 434)"><rect x="728" y="416" width="69" height="31" rx="3" fill="#242529" stroke="#b3aa98"/><rect x="740" y="444" width="18" height="10" rx="2" fill="#8e2e21"/></g>' + hit + '</g>',
+            detail: '<g pointer-events="none"><rect x="62" y="278" width="214" height="218" rx="16" fill="#bcb5a4" stroke="#555047" stroke-width="3"/><rect x="78" y="295" width="182" height="184" rx="11" fill="url(#ttHammerCream)" stroke="#eae5da"/><text x="169" y="320" font-family="Arial" font-size="11" font-weight="700" letter-spacing="2" fill="#4a463f" text-anchor="middle">SPEED CONTROL</text><circle cx="122" cy="370" r="33" fill="#2b2d30" stroke="#77756e" stroke-width="2"/><path d="M122 370 L106 345" stroke="#e6e0d5" stroke-width="5" stroke-linecap="round"/><text x="122" y="421" font-family="Arial" font-size="10" fill="#514d45" text-anchor="middle">33 · 45 · 78</text><path d="M198 348 L226 410" stroke="#303236" stroke-width="15" stroke-linecap="round"/><circle cx="198" cy="348" r="15" fill="#25272a" stroke="#8c887f"/><text x="211" y="438" font-family="Arial" font-size="10" font-weight="700" fill="#514d45" text-anchor="middle">BRAKE</text></g>' + modelScrew(84, 562, true) + modelScrew(1094, 562, true)
+        },
+        lp12: {
+            body: '<rect x="30" y="-14" width="1138" height="662" rx="8" fill="url(#ttRosewood)" stroke="#21120b" stroke-width="6"/><rect x="58" y="18" width="1080" height="598" rx="3" fill="#121316" stroke="#666970" stroke-width="2"/><path d="M44 4 H1152 M44 630 H1152" stroke="#df9561" stroke-width="3" opacity=".38"/><rect x="42" y="-2" width="1112" height="638" rx="6" fill="url(#ttWoodLines)" opacity=".5" pointer-events="none"/>',
+            brand: '<text x="72" y="75" font-family="Arial" font-size="31" font-weight="300" letter-spacing="7" fill="#efede6">LINN</text><text x="74" y="103" font-family="Arial" font-size="12" font-weight="700" letter-spacing="3.2" fill="#9b9c9c">SONDEK LP12 · SUSPENDED SUBCHASSIS</text>',
+            platterBase: '<ellipse cx="570" cy="348" rx="286" ry="280" fill="#000" opacity=".62" filter="url(#ttShadow)"/><circle cx="560" cy="330" r="279" fill="#08090b" stroke="#5c5e62" stroke-width="2"/><circle cx="560" cy="330" r="273" fill="#202125"/><circle cx="560" cy="330" r="266" fill="url(#ttRubber)"/>',
+            spinTrim: '<circle cx="560" cy="330" r="263" fill="none" stroke="#55575c" stroke-width="2"/><circle cx="560" cy="330" r="258" fill="none" stroke="#0a0b0d" stroke-width="5"/>',
+            armBase: '<ellipse cx="1070" cy="130" rx="52" ry="51" fill="#000" opacity=".6" filter="url(#ttShadow)"/><circle cx="1065" cy="120" r="45" fill="#111216" stroke="#666970" stroke-width="2"/><circle cx="1065" cy="120" r="28" fill="#25272c"/><circle cx="1065" cy="120" r="11" fill="url(#ttChrome)"/><rect x="919" y="480" width="24" height="46" rx="4" fill="#111216" stroke="#55585d"/><path d="M913 482 H949" stroke="#383a3f" stroke-width="10" stroke-linecap="round"/>',
+            arm: '<g id="ttArmG"><rect x="1121" y="61" width="66" height="32" rx="14" fill="#101115" stroke="#5d6066" stroke-width="2"/><circle cx="1128" cy="77" r="15" fill="#25272c"/><line x1="1122" y1="89" x2="1065" y2="120" stroke="#18191d" stroke-width="12" stroke-linecap="round"/><line x1="1065" y1="120" x2="768" y2="428" stroke="#08090b" stroke-width="11" stroke-linecap="round"/><line x1="1065" y1="120" x2="768" y2="428" stroke="#a8aaad" stroke-width="4.5" stroke-linecap="round"/><g transform="rotate(-46 762 434)"><path d="M733 419 H794 L787 446 H738 Z" fill="#0c0d0f" stroke="#74777d"/><rect x="742" y="444" width="15" height="8" rx="2" fill="#c53a2b"/></g>' + hit + '</g>',
+            detail: '<g pointer-events="none"><circle cx="196" cy="550" r="24" fill="url(#ttChrome)" stroke="#282a2e" stroke-width="2"/><circle cx="196" cy="550" r="8" fill="#111216"/><text x="240" y="556" font-family="Arial" font-size="12" font-weight="700" letter-spacing="2.4" fill="#c8c5bc">33 / 45</text><path d="M71 282 H239" stroke="#47494e" stroke-width="1"/><text x="72" y="310" font-family="Arial" font-size="11" letter-spacing="2" fill="#787a7e">SINGLE POINT BEARING</text><text x="72" y="334" font-family="Arial" font-size="10" letter-spacing="1.6" fill="#65676b">LOW NOISE · HIGH TORQUE</text></g>' + modelScrew(78, 572, false) + modelScrew(1104, 572, false)
+        }
+    };
+    return specs[id] || specs.pl12;
+}
+
 function mountTurntable() {
     const ttSkin = TT_MODELS[ttModelId];
+    const ttVisual = ttVisualSpec(ttModelId, ttSkin);
     let grooves = "";
     for (let r = 108; r <= 246; r += 7) {
         grooves += '<circle cx="560" cy="330" r="' + r + '" fill="none" stroke="#000" stroke-width="0.8" opacity="0.5"/>';
@@ -1231,9 +1343,24 @@ function mountTurntable() {
         '<svg class="tt-svg" viewBox="0 -40 2000 720" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="' + ttSkin.label + ' 턴테이블">' +
         '<defs>' +
         '<linearGradient id="ttWood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5d4430"/><stop offset="0.5" stop-color="#4a3524"/><stop offset="1" stop-color="#33241a"/></linearGradient>' +
+        '<linearGradient id="ttWalnut" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a5b38"/><stop offset=".18" stop-color="#5b3822"/><stop offset=".55" stop-color="#75482b"/><stop offset="1" stop-color="#2b190f"/></linearGradient>' +
+        '<linearGradient id="ttWalnutDark" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#724326"/><stop offset=".32" stop-color="#3e2416"/><stop offset=".67" stop-color="#5a321c"/><stop offset="1" stop-color="#211109"/></linearGradient>' +
+        '<linearGradient id="ttRosewood" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8d482e"/><stop offset=".22" stop-color="#3e2018"/><stop offset=".48" stop-color="#773a28"/><stop offset=".76" stop-color="#291513"/><stop offset="1" stop-color="#6b321f"/></linearGradient>' +
+        '<linearGradient id="ttBlackPlate" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2d2e34"/><stop offset=".2" stop-color="#17181d"/><stop offset=".78" stop-color="#111216"/><stop offset="1" stop-color="#050608"/></linearGradient>' +
+        '<linearGradient id="ttCastSilver" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f1f2ef"/><stop offset=".12" stop-color="#c8cac9"/><stop offset=".55" stop-color="#a5a8aa"/><stop offset="1" stop-color="#686b6f"/></linearGradient>' +
+        '<linearGradient id="ttIvoryCast" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3eee2"/><stop offset=".2" stop-color="#d8d1c3"/><stop offset=".75" stop-color="#bbb4a7"/><stop offset="1" stop-color="#817b70"/></linearGradient>' +
+        '<linearGradient id="ttHammerCream" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e4decf"/><stop offset=".18" stop-color="#c9c2b2"/><stop offset=".7" stop-color="#aaa493"/><stop offset="1" stop-color="#777166"/></linearGradient>' +
         '<radialGradient id="ttVinyl" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#1c1c1f"/><stop offset="0.35" stop-color="#141416"/><stop offset="0.85" stop-color="#0d0d0f"/><stop offset="1" stop-color="#131316"/></radialGradient>' +
+        '<radialGradient id="ttRubber" cx=".42" cy=".36" r=".75"><stop offset="0" stop-color="#303237"/><stop offset=".62" stop-color="#17181b"/><stop offset="1" stop-color="#07080a"/></radialGradient>' +
         '<linearGradient id="ttSheen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity="0.14"/><stop offset="0.5" stop-color="#ffffff" stop-opacity="0"/></linearGradient>' +
         '<radialGradient id="ttMetal" cx="0.4" cy="0.35" r="0.9"><stop offset="0" stop-color="#d8d8dc"/><stop offset="0.6" stop-color="#9a9aa2"/><stop offset="1" stop-color="#5c5c64"/></radialGradient>' +
+        '<linearGradient id="ttChrome" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4f5257"/><stop offset=".16" stop-color="#f4f4f0"/><stop offset=".36" stop-color="#8d9094"/><stop offset=".58" stop-color="#e9e9e5"/><stop offset=".82" stop-color="#62656a"/><stop offset="1" stop-color="#25272b"/></linearGradient>' +
+        '<linearGradient id="ttDarkMetal" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#74777e"/><stop offset=".25" stop-color="#303238"/><stop offset=".68" stop-color="#121318"/><stop offset="1" stop-color="#4e5157"/></linearGradient>' +
+        '<linearGradient id="ttGoldMetal" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#54452b"/><stop offset=".22" stop-color="#ead8a5"/><stop offset=".48" stop-color="#90784a"/><stop offset=".72" stop-color="#d7c28c"/><stop offset="1" stop-color="#453820"/></linearGradient>' +
+        '<linearGradient id="ttArmSilver" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4d5055"/><stop offset=".24" stop-color="#f5f5f1"/><stop offset=".5" stop-color="#92959a"/><stop offset=".72" stop-color="#dededb"/><stop offset="1" stop-color="#55585e"/></linearGradient>' +
+        '<pattern id="ttWoodLines" width="180" height="22" patternUnits="userSpaceOnUse"><path d="M0 4 C34 0 68 10 112 4 S158 1 180 7 M0 16 C42 10 76 22 130 15 S164 13 180 18" fill="none" stroke="#f2b879" stroke-width="1.2" opacity=".22"/><path d="M0 9 C38 14 72 3 122 10 S164 14 180 10" fill="none" stroke="#170b07" stroke-width="1" opacity=".35"/></pattern>' +
+        '<pattern id="ttMetalGrain" width="16" height="7" patternUnits="userSpaceOnUse"><path d="M0 1 H16 M0 3.5 H16 M0 6 H16" stroke="#fff" stroke-width=".5" opacity=".22"/><path d="M0 2.2 H16 M0 5 H16" stroke="#202226" stroke-width=".35" opacity=".16"/></pattern>' +
+        '<filter id="ttShadow" x="-35%" y="-35%" width="190%" height="200%"><feGaussianBlur stdDeviation="8"/></filter>' +
         '<clipPath id="ttLabelClip"><circle cx="560" cy="330" r="83"/></clipPath>' +
         '<path id="ttLabelArc" d="M 488 330 A 72 72 0 0 1 632 330" fill="none"/>' +
         '<clipPath id="ttJacketClip"><rect x="1170" y="76" width="508" height="508" rx="4"/></clipPath>' +
@@ -1241,9 +1368,8 @@ function mountTurntable() {
         '</defs>' +
         '<rect x="0" y="-40" width="2000" height="720" rx="10" fill="' + ttSkin.plinth + '"/>' +
         '<rect x="24" y="-16" width="1952" height="672" rx="8" fill="' + ttSkin.deck + '" stroke="#0a0a0c" stroke-width="2"/>' +
-        ttSkin.detail +
-        '<text x="60" y="72" font-family="Arial" font-size="26" font-weight="700" letter-spacing="1.5" fill="' + ttSkin.accent + '">' + ttSkin.brand + '</text>' +
-        '<text x="60" y="98" font-family="Arial" font-size="12" letter-spacing="2.5" fill="' + ttSkin.accent + '">' + ttSkin.subtitle + '</text>' +
+        '<rect x="1147" y="-16" width="7" height="672" fill="#000" opacity=".36"/><path d="M1155 -8 V648" stroke="#fff" stroke-width="1" opacity=".13"/>' +
+        ttVisual.body + ttVisual.brand +
         // 레코드 브러시 — 쌓인 먼지를 닦아낸다. 게이지는 현재 먼지량.
         '<rect id="ttCleanBtn" x="44" y="150" width="200" height="56" rx="8" fill="#26262b" stroke="#4a4a52" stroke-width="2" style="cursor:pointer"><title>레코드 브러시 — 판의 먼지를 닦아냅니다</title></rect>' +
         '<rect x="60" y="170" width="44" height="16" rx="4" fill="#4a3524" pointer-events="none"/>' +
@@ -1253,11 +1379,9 @@ function mountTurntable() {
         '<rect x="88" y="229" width="156" height="10" rx="5" fill="#101013" stroke="#3a3a40"/>' +
         '<rect id="ttDustBar" x="88" y="229" width="0" height="10" rx="5" fill="#b06a2a"/>' +
         // 플래터
-        '<ellipse cx="566" cy="342" rx="282" ry="280" fill="#000" opacity="0.5"/>' +
-        '<circle cx="560" cy="330" r="278" fill="' + ttSkin.platter + '"/>' +
-        '<circle cx="560" cy="330" r="272" fill="#0c0c0e" stroke="#3a3a40" stroke-width="2"/>' +
+        ttVisual.platterBase +
         '<g id="ttSpinG">' +
-        '<circle cx="560" cy="330" r="264" fill="none" stroke="#3c3c44" stroke-width="4" stroke-dasharray="3 9"/>' +
+        ttVisual.spinTrim +
         '<circle cx="560" cy="330" r="252" fill="url(#ttVinyl)"/>' +
         grooves +
         '<path d="M 560 330 L 560 78 A 252 252 0 0 1 738 156 Z" fill="url(#ttSheen)"/>' +
@@ -1283,20 +1407,10 @@ function mountTurntable() {
         '<rect x="380" y="132" width="120" height="10" rx="4" fill="#6b5138"/>' +
         '<rect x="418" y="108" width="44" height="26" rx="6" fill="#26262b" stroke="#0a0a0c"/>' +
         '</g>' +
+        // 모델별 조작부는 플래터 위 레이어에서, 플래터 바깥쪽에 배치한다.
+        ttVisual.detail +
         // 톤암
-        '<circle cx="1065" cy="120" r="46" fill="#1f1f24" stroke="#0a0a0c" stroke-width="2"/>' +
-        '<circle cx="1065" cy="120" r="34" fill="url(#ttMetal)"/>' +
-        '<rect x="920" y="486" width="10" height="34" rx="3" fill="#26262b"/>' +
-        '<rect x="912" y="480" width="26" height="10" rx="4" fill="#3a3a40"/>' +
-        '<g id="ttArmG">' +
-        '<circle cx="1132" cy="78" r="24" fill="#26262b" stroke="#4a4a52" stroke-width="2"/>' +
-        '<line x1="1122" y1="88" x2="1065" y2="120" stroke="#55555c" stroke-width="12" stroke-linecap="round"/>' +
-        '<line x1="1065" y1="120" x2="768" y2="428" stroke="#3c3c44" stroke-width="11" stroke-linecap="round"/>' +
-        '<line x1="1065" y1="120" x2="768" y2="428" stroke="#b8b8c0" stroke-width="7" stroke-linecap="round"/>' +
-        '<g transform="rotate(-46 762 434)"><rect x="734" y="420" width="58" height="26" rx="5" fill="#1c1c22" stroke="#4a4a52"/><rect x="742" y="444" width="14" height="8" rx="2" fill="#8a2020"/></g>' +
-        '<circle id="ttArmHit" cx="768" cy="428" r="58" fill="#000000" fill-opacity="0" style="cursor:grab"><title>톤암 — 잡아서 원하는 트랙 위에 내려놓으세요</title></circle>' +
-        '</g>' +
-        '<circle cx="1065" cy="120" r="8" fill="#0d0d10"/>' +
+        ttVisual.armBase + ttVisual.arm +
         // 앨범 재킷 — 바이닐 지름(504)급 508×508. 수납장 버튼은 위, 컨트롤·화살표는 아래 한 줄로.
         '<g id="ttCrateBtn" style="cursor:pointer"><title>음반 수납장 열기</title>' +
         '<rect x="1280" y="28" width="288" height="32" rx="7" fill="#26262b" stroke="#4a4a52" stroke-width="1.5"/>' +

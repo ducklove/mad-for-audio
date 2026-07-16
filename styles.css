@@ -82,7 +82,10 @@ body.kbd-nav svg circle:focus {
 }
 
 .page-shell {
-    width: min(1040px, calc(100% - 28px));
+    /* 2000-unit 장비 전면의 9–14px 각인이 1040px 랙에서는 5–7px로 뭉개졌다.
+       데스크톱에서는 실제 하이파이 랙처럼 한 단계 넓게 펼쳐 미터 눈금과 보조 라벨을
+       읽을 수 있게 하고, 작은 화면에서는 기존처럼 가용 폭에 맞춰 줄인다. */
+    width: min(1200px, calc(100% - 28px));
     margin: 0 auto;
     padding: 18px 0 40px;
 }
@@ -200,6 +203,8 @@ body.kbd-nav svg circle:focus {
     display: block;
     width: 100%;
     height: auto;
+    text-rendering: geometricPrecision;
+    shape-rendering: geometricPrecision;
     border-radius: 7px;
     box-shadow:
         0 30px 56px rgba(0, 0, 0, 0.55),
@@ -872,6 +877,8 @@ body.mode-simple #stationMain.collapsed {
     display: block;
     width: 100%;
     height: auto;
+    text-rendering: geometricPrecision;
+    shape-rendering: geometricPrecision;
     border-radius: 7px;
     box-shadow:
         0 30px 56px rgba(0, 0, 0, 0.55),

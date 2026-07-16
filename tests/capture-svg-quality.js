@@ -53,6 +53,7 @@ async function forcePoweredAppearance(page, selector) {
         deviceScaleFactor: 1,
         colorScheme: "dark",
         reducedMotion: "reduce",
+        serviceWorkers: "block",
     });
     const page = await context.newPage();
     page.on("pageerror", (error) => console.error("PAGEERROR", error.message));
@@ -65,6 +66,8 @@ async function forcePoweredAppearance(page, selector) {
         localStorage.setItem("fmRadio.record", JSON.stringify(0));
     });
     await page.goto(BASE + "index.html", { waitUntil: "domcontentloaded", timeout: 30000 });
+    await page.evaluate(() => window.MFA_READY);
+    await page.evaluate(() => document.fonts && document.fonts.ready);
     await page.waitForSelector("#tunerStage svg", { timeout: 30000 });
     await page.evaluate((widePreview) => {
         document.body.className = "mode-rack";
@@ -90,7 +93,7 @@ async function forcePoweredAppearance(page, selector) {
                     button.click();
                 }, { picker: pickers[group], itemIndex: index });
             }
-            await page.waitForTimeout(120);
+            await page.waitForTimeout(240);
             await forcePoweredAppearance(page, selectors[group]);
             const target = page.locator(selectors[group]);
             await target.waitFor({ state: "visible" });

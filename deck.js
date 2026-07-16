@@ -138,39 +138,69 @@ function mountDeck() {
     document.getElementById("deckStage").innerHTML = deckModelId === "dragon" ?
         `<svg class="deck-svg" viewBox="0 0 2000 540" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="Nakamichy DRAGON 카세트 데크">
         <defs>
-            <linearGradient id="dkFace" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d1d21"/><stop offset="0.5" stop-color="#131316"/><stop offset="1" stop-color="#0b0b0d"/></linearGradient>
-            <linearGradient id="dkShell" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2e2e34"/><stop offset="1" stop-color="#1a1a1f"/></linearGradient>
+            <linearGradient id="dkFace" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#292a30"/><stop offset="0.055" stop-color="#1b1c21"/><stop offset="0.5" stop-color="#121318"/><stop offset="0.86" stop-color="#090a0d"/><stop offset="1" stop-color="#050608"/></linearGradient>
+            <linearGradient id="dkShell" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#414249"/><stop offset="0.14" stop-color="#303138"/><stop offset="1" stop-color="#15161b"/></linearGradient>
             <radialGradient id="dkMeterFace" cx="0.5" cy="0.35" r="0.9"><stop offset="0" stop-color="#fdf4d8"/><stop offset="0.65" stop-color="#f0e3ba"/><stop offset="1" stop-color="#d8ca9c"/></radialGradient>
-            <linearGradient id="dkBtn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2c2c33"/><stop offset="0.5" stop-color="#1e1e24"/><stop offset="1" stop-color="#141419"/></linearGradient>
+            <linearGradient id="dkBtn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#454750"/><stop offset="0.12" stop-color="#30323a"/><stop offset="0.54" stop-color="#1d1f25"/><stop offset="1" stop-color="#0d0e12"/></linearGradient>
             <radialGradient id="dkShadow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#000000" stop-opacity="0.45"/><stop offset="1" stop-color="#000000" stop-opacity="0"/></radialGradient>
+            <linearGradient id="dkEdge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9dce3"/><stop offset=".12" stop-color="#626771"/><stop offset=".78" stop-color="#181a20"/><stop offset="1" stop-color="#7d828d"/></linearGradient>
+            <linearGradient id="dkCassette" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eee8d5"/><stop offset=".45" stop-color="#d7ceb7"/><stop offset="1" stop-color="#a9a08d"/></linearGradient>
+            <linearGradient id="dkTape" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#392317"/><stop offset=".48" stop-color="#8a5c39"/><stop offset="1" stop-color="#2c1a11"/></linearGradient>
+            <pattern id="dkFine" width="10" height="7" patternUnits="userSpaceOnUse"><path d="M0 .5H10 M0 3.5H10 M0 6.5H10" stroke="#ffffff" stroke-width=".55" opacity=".025"/><path d="M0 2H10 M0 5H10" stroke="#000000" stroke-width=".6" opacity=".18"/></pattern>
+            <pattern id="dkReelTeeth" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(24)"><path d="M1 0V9 M5.5 0V9" stroke="#ffffff" stroke-width="1" opacity=".2"/><path d="M3 0V9 M7.5 0V9" stroke="#15161b" stroke-width="1.1" opacity=".55"/></pattern>
+            <filter id="dkRedBloom" x="-50%" y="-80%" width="200%" height="260%"><feGaussianBlur stdDeviation="4"/></filter>
         </defs>
         <rect width="2000" height="540" rx="8" fill="url(#dkFace)"/>
+        <rect width="2000" height="540" rx="8" fill="url(#dkFine)" opacity=".86"/>
         <rect x="0" y="2" width="2000" height="3" fill="#ffffff" opacity="0.35"/>
-        <text x="90" y="82" font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-size="30" font-weight="700" fill="#f0f0f2">Nakamichy</text>
-        <text x="330" y="82" font-family="Arial" font-size="23" font-weight="700" letter-spacing="6" fill="#c8a860">DRAGON</text>
-        <text x="90" y="110" font-family="Arial" font-size="12" letter-spacing="2" fill="#8a8a94">3 HEAD &#183; DISCRETE HEAD CASSETTE DECK</text>
+        <rect x="24" y="22" width="1952" height="496" rx="5" fill="none" stroke="#34373f" stroke-width="2"/><rect x="29" y="27" width="1942" height="486" rx="4" fill="none" stroke="#050608" stroke-width="1.5"/>
+        <g fill="#111217" stroke="#bfc3cc" stroke-width="1"><circle cx="42" cy="42" r="6"/><circle cx="1958" cy="42" r="6"/><circle cx="42" cy="498" r="6"/><circle cx="1958" cy="498" r="6"/></g>
+        <text x="90" y="80" font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-size="34" font-weight="700" fill="#f0f0f2">Nakamichy</text>
+        <text x="330" y="80" font-family="Arial" font-size="26" font-weight="700" letter-spacing="6" fill="#d4b76b">DRAGON</text>
+        <text x="90" y="109" font-family="Arial" font-size="14" font-weight="600" letter-spacing="2" fill="#a3a5ad">3 HEAD &#183; DISCRETE HEAD CASSETTE DECK</text>
+        <g transform="translate(88 150)">
+            <rect width="282" height="226" rx="8" fill="#0a0b0e" stroke="#343740" stroke-width="2"/>
+            <rect x="8" y="8" width="266" height="210" rx="5" fill="none" stroke="#161920"/>
+            <text x="20" y="34" font-family="Arial" font-size="15" font-weight="700" letter-spacing="2.4" fill="#d4b76b">NAAC</text>
+            <text x="20" y="58" font-family="Arial" font-size="12" font-weight="650" letter-spacing="1.3" fill="#a2a5ad">AUTO AZIMUTH CONTROL</text>
+            <path d="M26 92H78L102 72L136 112L172 78L204 96H254" fill="none" stroke="#58c8d8" stroke-width="3" opacity=".9"/>
+            <path d="M26 92H78L102 72L136 112L172 78L204 96H254" fill="none" stroke="#bff8ff" stroke-width="1"/>
+            <path d="M26 132H254 M26 160H254" stroke="#343842" stroke-width="1.2"/>
+            <g font-family="Arial" font-size="11.5" font-weight="600" fill="#858993"><text x="26" y="151">BIAS CAL</text><text x="125" y="151">EQ</text><text x="202" y="151">AZIMUTH</text><text x="26" y="190">AUTO REVERSE · 3 MOTOR · DUAL CAPSTAN</text></g>
+            <circle cx="254" cy="31" r="6" fill="#24372a" stroke="#596a5d"/><circle cx="254" cy="31" r="2.5" fill="#6ee58b"/>
+        </g>
         <rect x="420" y="90" width="620" height="310" rx="10" fill="#08080a" stroke="#2e2e34" stroke-width="2"/>
+        <rect x="412" y="82" width="636" height="326" rx="14" fill="none" stroke="url(#dkEdge)" stroke-width="5"/>
         <rect x="420" y="90" width="620" height="22" fill="url(#lzInset)" opacity="0.9"/>
         <rect x="450" y="115" width="560" height="260" rx="8" fill="url(#dkShell)" stroke="#3a3a40" stroke-width="1.6"/>
+        <polygon points="454,119 698,119 586,371 454,371" fill="url(#lzGlassSweep)" opacity=".42"/>
         <circle cx="466" cy="131" r="4" fill="#101014"/><circle cx="994" cy="131" r="4" fill="#101014"/><circle cx="466" cy="359" r="4" fill="#101014"/><circle cx="994" cy="359" r="4" fill="#101014"/>
-        <rect x="480" y="135" width="500" height="70" rx="4" fill="#e8e0c8"/>
+        <rect x="480" y="135" width="500" height="70" rx="4" fill="url(#dkCassette)"/>
         <rect x="480" y="135" width="500" height="12" fill="url(#lzInset)" opacity="0.3"/>
         <text id="deckLabel" x="730" y="165" font-family="Arial" font-size="17" font-weight="700" fill="#3a2b1e" text-anchor="middle">C-30 공테이프</text>
-        <text id="deckLabelSub" x="730" y="190" font-family="Arial" font-size="11" fill="#6b5d4a" text-anchor="middle">사용 0:00 / 30:00</text>
+        <text id="deckLabelSub" x="730" y="190" font-family="Arial" font-size="13" font-weight="600" fill="#6b5d4a" text-anchor="middle">사용 0:00 / 30:00</text>
         <rect x="520" y="215" width="420" height="92" rx="46" fill="#0e0e12" stroke="#3a3a40" stroke-width="1.4"/>
         <circle id="deckPackL" cx="610" cy="260" r="40" fill="#1b1914" stroke="#0a0a0a" stroke-width="2"/>
         <circle id="deckPackR" cx="850" cy="260" r="24" fill="#1b1914" stroke="#0a0a0a" stroke-width="2"/>
+        <path d="M610 220 C685 205 775 224 850 236 M610 300 C685 315 775 296 850 284" fill="none" stroke="url(#dkTape)" stroke-width="7" opacity=".82"/>
         <g id="deckReelL">
+            <circle cx="610" cy="260" r="31" fill="url(#dkReelTeeth)" opacity=".7"/>
             <circle cx="610" cy="260" r="17" fill="#e8e8ec"/>
             <rect x="608" y="244" width="4" height="10" rx="1" fill="#55555c"/><rect x="608" y="266" width="4" height="10" rx="1" fill="#55555c" transform="rotate(180 610 271)"/>
             <rect x="594" y="258" width="10" height="4" rx="1" fill="#55555c"/><rect x="616" y="258" width="10" height="4" rx="1" fill="#55555c"/>
             <circle cx="610" cy="260" r="5" fill="#101014"/>
         </g>
         <g id="deckReelR">
+            <circle cx="850" cy="260" r="28" fill="url(#dkReelTeeth)" opacity=".7"/>
             <circle cx="850" cy="260" r="17" fill="#e8e8ec"/>
             <rect x="848" y="244" width="4" height="10" rx="1" fill="#55555c"/><rect x="848" y="266" width="4" height="10" rx="1" fill="#55555c" transform="rotate(180 850 271)"/>
             <rect x="834" y="258" width="10" height="4" rx="1" fill="#55555c"/><rect x="856" y="258" width="10" height="4" rx="1" fill="#55555c"/>
             <circle cx="850" cy="260" r="5" fill="#101014"/>
+        </g>
+        <g>
+            <path d="M648 314H812L790 350H670Z" fill="#2a2b31" stroke="#4a4b53" stroke-width="1.4"/>
+            <circle cx="680" cy="326" r="9" fill="#111217" stroke="#a2a4aa" stroke-width="2"/><circle cx="780" cy="326" r="9" fill="#111217" stroke="#a2a4aa" stroke-width="2"/>
+            <rect x="718" y="316" width="24" height="28" rx="4" fill="#98999d"/><rect x="723" y="320" width="14" height="20" rx="2" fill="#28292e"/>
         </g>
         <rect x="640" y="330" width="180" height="26" rx="6" fill="#16161a" stroke="#2e2e34"/>
         <rect x="700" y="336" width="60" height="14" rx="3" fill="#26262c"/>
@@ -193,9 +223,9 @@ function mountDeck() {
                 <line x1="1286.7" y1="163.0" x2="1288.4" y2="156.2"/><line x1="1309.9" y1="171.9" x2="1313.1" y2="165.7"/>
                 <line x1="1330.2" y1="186.2" x2="1334.9" y2="181.0"/>
             </g>
-            <text x="1183" y="177" font-family="Arial" font-size="9" fill="#4a3a28" text-anchor="middle">-20</text>
-            <text x="1287" y="149" font-family="Arial" font-size="9" fill="#4a3a28" text-anchor="middle">0</text>
-            <text x="1341" y="177" font-family="Arial" font-size="9" fill="#8a2020" text-anchor="middle">+3</text>
+            <text x="1183" y="177" font-family="Arial" font-size="11" font-weight="650" fill="#4a3a28" text-anchor="middle">-20</text>
+            <text x="1287" y="149" font-family="Arial" font-size="11" font-weight="650" fill="#4a3a28" text-anchor="middle">0</text>
+            <text x="1341" y="177" font-family="Arial" font-size="11" font-weight="650" fill="#8a2020" text-anchor="middle">+3</text>
             <text x="1262" y="236" font-family="Georgia, serif" font-size="16" font-weight="700" letter-spacing="2" fill="#6b5a40" text-anchor="middle">VU</text>
             <line id="deckVuL" data-cx="1262" data-cy="262" x1="1262" y1="262" x2="1262" y2="150" stroke="#d4501e" stroke-width="3" transform="rotate(-42 1262 262)"/>
             <circle cx="1262" cy="262" r="7" fill="#1a1610"/>
@@ -207,7 +237,7 @@ function mountDeck() {
             <rect x="1128" y="117" width="268" height="3" fill="#04050a" opacity="0.55"/>
             <rect x="1128" y="273" width="268" height="2.5" fill="#ffffff" opacity="0.09"/>
             <rect class="meterDark" x="1130" y="120" width="264" height="152" rx="5" fill="#0d0a06" opacity="0.55"/>
-            <text x="1262" y="302" font-family="Arial" font-size="11" letter-spacing="2" fill="#8a8a94" text-anchor="middle">L</text>
+            <text x="1262" y="302" font-family="Arial" font-size="13" font-weight="700" letter-spacing="2" fill="#a4a6ae" text-anchor="middle">LEFT</text>
         </g>
         <g>
             <ellipse cx="1572" cy="292" rx="150" ry="18" fill="url(#dkShadow)"/>
@@ -228,9 +258,9 @@ function mountDeck() {
                 <line x1="1596.7" y1="163.0" x2="1598.4" y2="156.2"/><line x1="1619.9" y1="171.9" x2="1623.1" y2="165.7"/>
                 <line x1="1640.2" y1="186.2" x2="1644.9" y2="181.0"/>
             </g>
-            <text x="1493" y="177" font-family="Arial" font-size="9" fill="#4a3a28" text-anchor="middle">-20</text>
-            <text x="1597" y="149" font-family="Arial" font-size="9" fill="#4a3a28" text-anchor="middle">0</text>
-            <text x="1651" y="177" font-family="Arial" font-size="9" fill="#8a2020" text-anchor="middle">+3</text>
+            <text x="1493" y="177" font-family="Arial" font-size="11" font-weight="650" fill="#4a3a28" text-anchor="middle">-20</text>
+            <text x="1597" y="149" font-family="Arial" font-size="11" font-weight="650" fill="#4a3a28" text-anchor="middle">0</text>
+            <text x="1651" y="177" font-family="Arial" font-size="11" font-weight="650" fill="#8a2020" text-anchor="middle">+3</text>
             <text x="1572" y="236" font-family="Georgia, serif" font-size="16" font-weight="700" letter-spacing="2" fill="#6b5a40" text-anchor="middle">VU</text>
             <line id="deckVuR" data-cx="1572" data-cy="262" x1="1572" y1="262" x2="1572" y2="150" stroke="#d4501e" stroke-width="3" transform="rotate(-42 1572 262)"/>
             <circle cx="1572" cy="262" r="7" fill="#1a1610"/>
@@ -242,17 +272,19 @@ function mountDeck() {
             <rect x="1438" y="117" width="268" height="3" fill="#04050a" opacity="0.55"/>
             <rect x="1438" y="273" width="268" height="2.5" fill="#ffffff" opacity="0.09"/>
             <rect class="meterDark" x="1440" y="120" width="264" height="152" rx="5" fill="#0d0a06" opacity="0.55"/>
-            <text x="1572" y="302" font-family="Arial" font-size="11" letter-spacing="2" fill="#8a8a94" text-anchor="middle">R</text>
+            <text x="1572" y="302" font-family="Arial" font-size="13" font-weight="700" letter-spacing="2" fill="#a4a6ae" text-anchor="middle">RIGHT</text>
         </g>
-        <text x="1120" y="332" font-family="Arial" font-size="10" letter-spacing="2" fill="#8a8a94">TAPE COUNTER</text>
+        <text x="1120" y="332" font-family="Arial" font-size="13" font-weight="650" letter-spacing="2" fill="#a0a3ac">TAPE COUNTER</text>
         <rect x="1120" y="340" width="200" height="58" rx="6" fill="#050505" stroke="#26262c" stroke-width="1.5"/>
+        <rect x="1114" y="334" width="212" height="70" rx="9" fill="none" stroke="url(#dkEdge)" stroke-width="2.5"/>
+        <rect x="1156" y="350" width="146" height="38" rx="9" fill="#ff3a26" opacity=".07" filter="url(#dkRedBloom)"/>
         <text id="deckCounter" x="1245" y="381" font-family="'Courier New', monospace" font-size="30" font-weight="700" fill="#ff3a26" text-anchor="end">00:00</text>
         <text id="deckCounterMax" x="1254" y="381" font-family="Arial" font-size="11" fill="#55555c">/ 30:00</text>
         <circle id="deckRecLed" cx="1420" cy="369" r="9" fill="#3a1210"/>
         <text x="1420" y="404" font-family="Arial" font-size="10" letter-spacing="1.5" fill="#8a8a94" text-anchor="middle">REC</text>
         <circle id="deckTimerLed" cx="1366" cy="369" r="6" fill="#3a1210"><title>TIMER — 예약 녹음 대기</title></circle>
         <text x="1366" y="404" font-family="Arial" font-size="10" letter-spacing="1.5" fill="#8a8a94" text-anchor="middle">TIMER</text>
-        <g font-family="Arial" font-size="10" letter-spacing="1" fill="#8a8a94">
+        <g font-family="Arial" font-size="13" font-weight="650" letter-spacing="1.2" fill="#a1a4ad">
             <text x="1490" y="332">DOLBY NR</text><text x="1620" y="332">TAPE</text>
         </g>
         <rect x="1490" y="342" width="26" height="52" rx="6" fill="#26262c"/><rect x="1494" y="346" width="18" height="22" rx="3" fill="#55555c"/>
@@ -272,6 +304,7 @@ function mountDeck() {
             <rect id="deckBtnRec" x="960" y="430" width="96" height="72" rx="8" fill="url(#dkBtn)" stroke="#6b2a22" stroke-width="1.6" style="cursor:pointer"><title>REC — 지금 나오는 소리를 현재 위치에 녹음 (덮어쓰기)</title></rect>
             <circle cx="1008" cy="466" r="14" fill="#d03a2a" pointer-events="none"/>
         </g>
+        <g font-family="Arial" font-size="11.5" font-weight="650" letter-spacing="1.2" fill="#777b84" text-anchor="middle"><text x="468" y="525">EJECT</text><text x="572" y="525">REW</text><text x="688" y="525">PLAY</text><text x="800" y="525">FF</text><text x="904" y="525">STOP</text><text x="1008" y="525" fill="#9b554a">REC</text></g>
         <g id="deckShelf"></g>
         </svg>` : DECK_MODELS[deckModelId].svg;
     applyPanelLighting(document.querySelector("#deckStage svg"));
