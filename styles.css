@@ -1753,8 +1753,17 @@ body.mode-focus .focus-exit {
 
 .sched-chips[hidden],
 .sched-list[hidden],
-.sched-res[hidden] {
+.sched-res[hidden],
+.res-form[hidden] {
     display: none !important;
+}
+
+/* 패널이 화면보다 길어질 때 줄어드는 것은 스크롤되는 목록뿐이어야 한다.
+   WebKit은 min-height:auto 계산이 달라 칩 줄을 짜부라뜨린다(캡슐+글자 삐짐의 원인) */
+.sched-panel .crate-head,
+.sched-chips,
+.sched-note {
+    flex: none;
 }
 
 .sched-chips {
@@ -2061,4 +2070,21 @@ body.mode-focus .focus-exit {
 /* 예약 대기 칩 — 데크 TIMER 램프의 플레이어 바 버전 */
 #btnRes .rec-dot {
     animation: recPulse 2.4s ease-out infinite;
+}
+
+.res-form-toggle {
+    margin-top: 12px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px dashed var(--line);
+    background: none;
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.res-form-toggle:hover {
+    color: var(--text);
+    border-color: rgba(255, 255, 255, 0.25);
 }

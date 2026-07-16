@@ -2996,7 +2996,10 @@ function schedMsg(text, withResLink) {
         btn.className = "sp-rec";
         btn.style.marginLeft = "8px";
         btn.textContent = "● 직접 입력 예약";
-        btn.addEventListener("click", () => schedSetView("res"));
+        btn.addEventListener("click", () => {
+            schedSetView("res");
+            toggleResForm(true);
+        });
         div.appendChild(document.createElement("br"));
         div.appendChild(btn);
     }
@@ -3250,6 +3253,21 @@ function renderResList() {
     });
 }
 
+// 직접 입력 폼은 평소 접어 둔다 — 예약 목록 옆에 늘 펼쳐져 있으면
+// 폼의 기본 시간이 선택된 예약의 녹음 시간처럼 잘못 읽힌다
+function toggleResForm(show) {
+    const form = document.getElementById("resForm");
+    const open = show != null ? show : form.hidden;
+    form.hidden = !open;
+    document.getElementById("resFormToggle").textContent = open ? "－ 직접 입력 접기" : "＋ 직접 입력 예약";
+    if (open) {
+        // 기본값: 다음 정시부터 1시간
+        const startH = (new Date().getHours() + 1) % 24;
+        document.getElementById("resFormStart").value = String(startH).padStart(2, "0") + ":00";
+        document.getElementById("resFormEnd").value = String((startH + 1) % 24).padStart(2, "0") + ":00";
+    }
+}
+
 function populateResForm() {
     if (resFormReady) return;
     resFormReady = true;
@@ -3277,6 +3295,7 @@ function populateResForm() {
             startMin, endMin, repeat,
             ymd: FMSchedule.ymdOf(d)
         });
+        toggleResForm(false);
     });
 }
 

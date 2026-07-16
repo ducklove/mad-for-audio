@@ -32,7 +32,7 @@
     </script>
     <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-    <link rel="stylesheet" href="styles.css?v=66">
+    <link rel="stylesheet" href="styles.css?v=67">
 </head>
 <body>
     <div class="page-shell">
@@ -194,8 +194,9 @@
             <div class="sched-list" id="schedList"></div>
             <div class="sched-res" id="schedResPane" hidden>
                 <div class="res-list" id="resList"></div>
-                <form class="res-form" id="resForm">
-                    <div class="res-form-title">직접 입력 예약 — 편성표가 없는 채널도 시간을 지정하면 녹음됩니다.</div>
+                <button class="res-form-toggle" id="resFormToggle" type="button" onclick="toggleResForm()">＋ 직접 입력 예약</button>
+                <form class="res-form" id="resForm" hidden>
+                    <div class="res-form-title">편성표가 없는 채널도 시간을 지정하면 녹음됩니다.</div>
                     <div class="res-form-row">
                         <label>채널 <select id="resFormStation"></select></label>
                         <label>시작 <input type="time" id="resFormStart" required value="20:00"></label>
@@ -229,15 +230,15 @@
 
     <audio id="audioPlayer" crossorigin="anonymous"></audio>
 
-    <script src="stations.js?v=66"></script>
-    <script src="player-core.js?v=66"></script>
-    <script src="store.js?v=66"></script>
-    <script src="schedule.js?v=66"></script>
-    <script src="skins.js?v=66"></script>
-    <script src="component-skins.js?v=66"></script>
-    <script src="engine.js?v=66"></script>
-    <script src="deck.js?v=66"></script>
-    <script src="bootstrap.js?v=66"></script>
+    <script src="stations.js?v=67"></script>
+    <script src="player-core.js?v=67"></script>
+    <script src="store.js?v=67"></script>
+    <script src="schedule.js?v=67"></script>
+    <script src="skins.js?v=67"></script>
+    <script src="component-skins.js?v=67"></script>
+    <script src="engine.js?v=67"></script>
+    <script src="deck.js?v=67"></script>
+    <script src="bootstrap.js?v=67"></script>
     <script>
         // PWA 서비스워커 등록 — 앱 셸 캐싱으로 오프라인 실행/즉시 시작 지원.
         if ("serviceWorker" in navigator) {
