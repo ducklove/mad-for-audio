@@ -121,6 +121,7 @@ function toggleViewMode() {
     viewMode = viewMode === "simple" ? "rack" : "simple";
     saveJson("fmRadio.viewMode", viewMode);
     applyViewMode();
+    applyUnitVisibility();
     gtag('event', 'view_mode', { mode: viewMode });
 }
 
@@ -622,6 +623,13 @@ function applyUnitVisibility() {
         const el = document.getElementById(id);
         if (el) el.hidden = !unitShow[key] && !(key === "deck" && deckStageLive);
     });
+    // 정체성: 편성표는 튜너에서(REC/CAL 스위치), 보관함은 데크에서(랙 서랍) 들어간다.
+    // 헤더 버튼은 해당 기기가 화면에 없을 때(간편 모드·기기 숨김)만 나타나는 비상구다.
+    const unitsOnScreen = viewMode !== "simple";
+    const schedBtn = document.getElementById("headerSchedBtn");
+    if (schedBtn) schedBtn.hidden = unitsOnScreen && unitShow.tuner;
+    const tapeBtn = document.getElementById("headerTapeBtn");
+    if (tapeBtn) tapeBtn.hidden = unitsOnScreen && unitShow.deck;
 }
 
 function syncDeckStageLive() {
