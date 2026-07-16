@@ -2444,8 +2444,9 @@ function addRecordingItem(record) {
         tapeSeq += 1;
         tapes.push(tape);
     }
-    tapeAddSegment(tape, { start: record.tapeStart || 0, dur: record.durationMs / 1000, url, name: record.stationName });
+    tapeAddSegment(tape, { start: record.tapeStart || 0, dur: record.durationMs / 1000, url, name: record.stationName, dbId: record.dbId, type: record.type });
     if (!deckTape) deckTape = tape;
+    tapeMetaSave();
     deckRefreshShelf();
 
     const item = document.createElement("div");
@@ -2494,6 +2495,7 @@ function addRecordingItem(record) {
             audio.pause();
             deckSegPlaying = null;
         }
+        tapeMetaSave();
         deckRefreshShelf();
         URL.revokeObjectURL(url);
         deleteRecording(record.dbId);

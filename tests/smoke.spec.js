@@ -317,6 +317,37 @@ test.describe("데스크톱", () => {
         expect(second.mode, "요청한 조작(PLAY) 실행").toBe("play");
     });
 
+    test("테이프 보관함: 라벨 개명 영속·트랙 점프 재생·삭제 연동", async ({ page }) => {
+        page.on("dialog", (d) => d.accept(d.type() === "prompt" ? "명반 모음" : undefined));
+        // 짧은 예약 녹음으로 수록곡 있는 테이프를 만든다
+        await page.evaluate(() => {
+            const st = window.FMRadio.stations[0];
+            fireReservation({ id: 989, stationId: st.id, title: "보관함 테스트", repeat: "once", enabled: true },
+                { ymd: "tc", startTs: Date.now(), endTs: Date.now() + 6000 }, "989:tc");
+        });
+        await page.waitForFunction(() => !!recorder, null, { timeout: 15000 });
+        await page.waitForFunction(() => !recorder && !activeResRec, null, { timeout: 20000 });
+        await page.waitForFunction(() => tapes.some((t) => t.segments.length), null, { timeout: 10000 });
+        await page.evaluate(() => openTapeCase());
+        await expect(page.locator("#tapeCaseOverlay")).toBeVisible();
+        // 라벨 개명 → localStorage 메타 영속
+        await page.locator(".tapecase-item", { hasText: "보관함 테스트" }).locator("button", { hasText: "라벨" }).click();
+        await expect(page.locator(".tapecase-label", { hasText: "명반 모음" })).toHaveCount(1);
+        expect(await page.evaluate(() =>
+            Object.values(JSON.parse(localStorage.getItem("fmRadio.tapeMeta"))).some((m) => m.label === "명반 모음" && m.named)),
+            "개명 라벨이 메타에 영속").toBe(true);
+        // J-카드 트랙 점프 재생 — 케이스가 닫히고 그 위치부터 재생된다
+        await page.locator(".tapecase-item", { hasText: "명반 모음" }).locator(".tapecase-track").first().click();
+        await page.waitForFunction(() => deckMode === "play", null, { timeout: 8000 });
+        await expect(page.locator("#tapeCaseOverlay")).toBeHidden();
+        await page.evaluate(() => deckStopTransport());
+        // 삭제 → 테이프·녹음 파일 목록 함께 정리
+        await page.evaluate(() => openTapeCase());
+        await page.locator(".tapecase-item", { hasText: "명반 모음" }).locator("button", { hasText: "삭제" }).click();
+        expect(await page.evaluate(() => tapes.some((t) => t.label === "명반 모음")), "테이프 제거").toBe(false);
+        expect(await page.evaluate(() => document.querySelectorAll("#recordingList .recording").length), "녹음 목록 정리").toBe(0);
+    });
+
     test("설명서에 신규 기기별 소개와 음색·동작 차이가 기록됨", async ({ page }) => {
         await page.goto("/manual.html");
         for (const name of ["TX-9500 II", "T-110", "T-100", "B760", "SA-9900", "AU-111", "L-550", "E-303", "MA2375", "B215", "TCD 3014A", "TC-KA7ES", "CT-F1250", "SL-1200MK2", "TD 124", "GARRARD", "Sondek LP12", "GE-10S / GE-10C"]) {

@@ -21,6 +21,26 @@ let hissSrc = null;
 let deckModelId = loadJson("fmRadio.deck", "dragon");
 if (!DECK_MODELS[deckModelId]) deckModelId = "dragon";
 
+// ----- 테이프 메타 영속화 -----
+// 녹음(IndexedDB)이 테이프 본문이라면, 라벨·규격은 케이스에 쓴 글씨다.
+// 세그먼트가 있거나 이름을 써 준(named) 테이프만 남긴다 — 빈 무명 공테이프는 휘발.
+let tapeMeta = loadJson("fmRadio.tapeMeta", {});
+
+function tapeMetaSave() {
+    const out = {};
+    tapes.forEach((t) => {
+        if (t.segments.length || t.named) out[t.id] = { label: t.label, len: tapeLenOf(t), named: !!t.named };
+    });
+    tapeMeta = out;
+    saveJson("fmRadio.tapeMeta", out);
+}
+
+// 시작 시 메타에 있는 테이프를 빈 껍데기로 복원 — 녹음이 복원되면 세그먼트가 채워진다
+Object.entries(tapeMeta).forEach(([id, m]) => {
+    if (!m || !m.label) return;
+    tapes.push({ id, label: m.label, segments: [], pos: 0, len: m.len || TAPE_LEN, blank: !m.named, named: !!m.named });
+});
+
 // 테이프 길이는 규격별로 다르다 — 예약 녹음은 프로그램 길이에 맞는 규격을 자동으로 고른다
 function tapeLenOf(t) {
     return (t && t.len) || TAPE_LEN;
@@ -67,13 +87,14 @@ function tapeAddSegment(tape, seg) {
         const os = o.start;
         const oe = o.start + o.dur;
         if (oe <= s + 0.05 || os >= e - 0.05) { out.push(o); return; }
-        if (os < s) out.push({ start: os, dur: s - os, url: o.url, name: o.name, offset: (o.offset || 0) });
-        if (oe > e) out.push({ start: e, dur: oe - e, url: o.url, name: o.name, offset: (o.offset || 0) + (e - os) });
+        if (os < s) out.push({ start: os, dur: s - os, url: o.url, name: o.name, offset: (o.offset || 0), dbId: o.dbId, type: o.type });
+        if (oe > e) out.push({ start: e, dur: oe - e, url: o.url, name: o.name, offset: (o.offset || 0) + (e - os), dbId: o.dbId, type: o.type });
     });
     out.push(seg);
     out.sort((a, b) => a.start - b.start);
     tape.segments = out;
-    if (tape.segments.length && tape.blank) {
+    // 직접 이름을 써 준 테이프(named)는 자동 라벨로 덮지 않는다
+    if (tape.segments.length && tape.blank && !tape.named) {
         tape.label = tape.segments.length === 1 ? seg.name : seg.name + " 외";
         tape.blank = false;
     }
@@ -307,9 +328,13 @@ function deckRefreshShelf() {
     const shelf = document.getElementById("deckShelf");
     if (!shelf) return;
     const others = tapes.filter((t) => t !== deckTape);
-    let html = "";
+    // 보관함 열기 — 랙 우상단, 5개 넘게 쌓이면 전체 개수를 보여준다
+    let html = '<g id="deckCaseBtn" role="button" tabindex="0" aria-label="테이프 보관함 열기" style="cursor:pointer">' +
+        '<rect x="1790" y="428" width="170" height="24" rx="5" fill="#000" opacity="0"/>' +
+        '<text x="1952" y="445" font-family="Arial" font-size="11" letter-spacing="1.5" fill="#8a8e94" text-anchor="end">' +
+        (others.length > 5 ? "전체 " + tapes.length + "개 &#9656; 보관함" : "&#9656; 보관함") + '</text></g>';
     if (!others.length) {
-        html = '<text x="1540" y="472" font-family="Arial" font-size="12" letter-spacing="1" fill="#55555c" text-anchor="middle">TAPE RACK &#183; EJECT하면 테이프가 이곳에 보관됩니다</text>';
+        html += '<text x="1540" y="472" font-family="Arial" font-size="12" letter-spacing="1" fill="#55555c" text-anchor="middle">TAPE RACK &#183; EJECT하면 테이프가 이곳에 보관됩니다</text>';
     } else {
         others.slice(0, 5).forEach((t, i) => {
             const x = 1120 + i * 168;
@@ -327,6 +352,13 @@ function deckRefreshShelf() {
     shelf.querySelectorAll("g[data-id]").forEach((g) => {
         g.addEventListener("click", () => deckInsertTape(g.getAttribute("data-id")));
     });
+    const caseBtn = shelf.querySelector("#deckCaseBtn");
+    if (caseBtn) {
+        caseBtn.addEventListener("click", openTapeCase);
+        caseBtn.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openTapeCase(); }
+        });
+    }
     updateDeckLabel();
 }
 
@@ -461,3 +493,213 @@ function stopDeck() {
     windDir = 0;
     if (hissGain) hissGain.gain.value = 0;
 }
+
+// ----- 테이프 보관함 -----
+// 음반 수납장의 카세트판. 테이프는 "하나의 연속 매체"라는 모델을 유지하고,
+// 케이스의 J-카드(수록곡 목록)로 곡 단위 접근을 제공한다 — 트랙을 누르면
+// 그 위치로 감아서 재생한다. 라벨 개명은 케이스에 이름을 써 두는 것(영속).
+
+function tapeCaseMirrorMsg() {
+    // 오버레이가 플레이어바를 가리므로, 차단 안내는 보관함 안에도 비춘다
+    const el = document.getElementById("tapeCaseMsg");
+    if (el) {
+        el.textContent = playerSubtext.textContent;
+        el.hidden = !el.textContent;
+    }
+}
+
+function openTapeCase() {
+    renderTapeCase();
+    const msg = document.getElementById("tapeCaseMsg");
+    if (msg) { msg.textContent = ""; msg.hidden = true; }
+    document.getElementById("tapeCaseOverlay").hidden = false;
+    gtag('event', 'open_tapecase', {});
+}
+
+function closeTapeCase() {
+    document.getElementById("tapeCaseOverlay").hidden = true;
+}
+
+function renderTapeCase() {
+    const list = document.getElementById("tapeCaseList");
+    const empty = document.getElementById("tapeCaseEmpty");
+    if (!list) return;
+    list.innerHTML = "";
+    const ordered = [deckTape, ...tapes.filter((t) => t !== deckTape)].filter(Boolean);
+    ordered.forEach((t) => list.appendChild(tapeCaseItem(t)));
+    empty.hidden = ordered.length > 0;
+    document.getElementById("tapeCaseCount").textContent = tapes.length + "개";
+}
+
+function tapeCaseItem(t) {
+    const item = document.createElement("div");
+    item.className = "tapecase-item" + (t === deckTape ? " is-current" : "");
+    item.setAttribute("role", "listitem");
+
+    const head = document.createElement("div");
+    head.className = "tapecase-head";
+    const shell = document.createElement("div");
+    shell.className = "tapecase-shell";
+    shell.innerHTML = '<span class="tapecase-hub"></span><span class="tapecase-hub"></span>';
+
+    const info = document.createElement("div");
+    info.className = "tapecase-info";
+    const label = document.createElement("div");
+    label.className = "tapecase-label";
+    label.textContent = t.label;
+    const meta = document.createElement("div");
+    meta.className = "tapecase-meta";
+    meta.textContent = tapeSizeName(tapeLenOf(t)) + " · 사용 " + formatDuration(tapeUsedSec(t) * 1000)
+        + " / " + formatDuration(tapeLenOf(t) * 1000) + " · 수록 " + t.segments.length + "곡"
+        + (t === deckTape ? " · 장착됨" : "");
+    info.append(label, meta);
+
+    const actions = document.createElement("div");
+    actions.className = "tapecase-actions";
+    const btn = (text, fn, danger) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "rec-btn" + (danger ? " danger" : "");
+        b.textContent = text;
+        b.addEventListener("click", fn);
+        return b;
+    };
+    if (t !== deckTape) actions.appendChild(btn("장착", () => tapeCaseInsert(t.id)));
+    actions.appendChild(btn("라벨", () => tapeCaseRename(t.id)));
+    actions.appendChild(btn("삭제", () => tapeCaseDelete(t.id), true));
+
+    head.append(shell, info, actions);
+    item.appendChild(head);
+
+    if (t.segments.length) {
+        const tracks = document.createElement("div");
+        tracks.className = "tapecase-tracks";
+        t.segments.forEach((seg) => {
+            const row = document.createElement("div");
+            row.className = "tapecase-track";
+            row.setAttribute("role", "button");
+            row.tabIndex = 0;
+            row.title = "이 위치로 감아서 재생";
+            const pos = document.createElement("span");
+            pos.className = "tapecase-track-pos";
+            pos.textContent = "▶ " + formatDuration(seg.start * 1000);
+            const name = document.createElement("span");
+            name.className = "tapecase-track-name";
+            name.textContent = seg.name || "무제 녹음";
+            const dur = document.createElement("span");
+            dur.className = "tapecase-track-dur";
+            dur.textContent = formatDuration(seg.dur * 1000);
+            row.append(pos, name, dur);
+            if (seg.url) {
+                const save = document.createElement("a");
+                save.className = "rec-btn";
+                save.href = seg.url;
+                save.download = (seg.name || "tape").replace(/[\\/:*?"<>|]/g, "").replace(/\s+/g, "-")
+                    + "." + recFileExtension(seg.type || "");
+                save.textContent = "저장";
+                save.addEventListener("click", (e) => e.stopPropagation());
+                row.appendChild(save);
+            }
+            const go = () => tapeCasePlayTrack(t.id, seg.start);
+            row.addEventListener("click", go);
+            row.addEventListener("keydown", (e) => {
+                if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); }
+            });
+            tracks.appendChild(row);
+        });
+        item.appendChild(tracks);
+    }
+    return item;
+}
+
+function tapeCaseInsert(id) {
+    deckInsertTape(id);
+    if (deckTape && deckTape.id === id) closeTapeCase();
+    else { renderTapeCase(); tapeCaseMirrorMsg(); }
+}
+
+function tapeCaseRename(id) {
+    const t = tapes.find((x) => x.id === id);
+    if (!t) return;
+    const name = prompt("테이프 라벨 — 케이스에 이름을 써 주세요", t.label);
+    if (name == null) return;
+    const clean = name.trim().slice(0, 40);
+    if (!clean) return;
+    t.label = clean;
+    t.named = true;
+    t.blank = false;
+    tapeMetaSave();
+    deckRefreshShelf();
+    renderTapeCase();
+    gtag('event', 'tape_rename', {});
+}
+
+function tapeCaseDelete(id) {
+    const t = tapes.find((x) => x.id === id);
+    if (!t) return;
+    if (recorder && deckTape === t) {
+        playerSubtext.textContent = "녹음 중인 테이프는 지울 수 없습니다 — 먼저 정지하세요.";
+        tapeCaseMirrorMsg();
+        return;
+    }
+    const n = t.segments.length;
+    if (!confirm('테이프 "' + t.label + '"' + (n ? "와 수록 녹음 " + n + "개를" : "를") + " 지울까요?")) return;
+    if (deckTape === t && deckMode === "play") {
+        audio.pause();
+        deckSegPlaying = null;
+        deckPlaying = false;
+        deckMode = "stop";
+        windDir = 0;
+    }
+    // 수록 녹음을 IndexedDB와 녹음 파일 목록에서도 제거한다 (미리듣기 src로 대조)
+    const urls = new Set();
+    t.segments.forEach((seg) => {
+        if (seg.dbId != null) deleteRecording(seg.dbId);
+        if (seg.url) urls.add(seg.url);
+    });
+    urls.forEach((u) => {
+        document.querySelectorAll("#recordingList .recording audio").forEach((a) => {
+            if (a.getAttribute("src") === u) {
+                a.closest(".recording").remove();
+                recordingCount -= 1;
+            }
+        });
+        try { URL.revokeObjectURL(u); } catch (e) {}
+    });
+    updateRecordingsNote();
+    tapes = tapes.filter((x) => x !== t);
+    if (deckTape === t) {
+        deckTape = newBlankTape();
+        tapePos = 0;
+    }
+    tapeMetaSave();
+    deckRefreshShelf();
+    renderTapeCase();
+    playerSubtext.textContent = '테이프 "' + t.label + '"를 정리했습니다.';
+    gtag('event', 'tape_delete', {});
+}
+
+// 트랙 점프: 테이프를 장착하고 그 위치로 감아서 재생 — J-카드 보고 카운터 감기
+function tapeCasePlayTrack(tapeId, startSec) {
+    const t = tapes.find((x) => x.id === tapeId);
+    if (!t) return;
+    if (deckTape !== t) {
+        deckInsertTape(tapeId);
+        if (deckTape !== t) { tapeCaseMirrorMsg(); return; }   // 녹음 가드 등에 막힘
+    } else if (deckMode === "play" || deckMode === "wind") {
+        if (deckMode === "play") { audio.pause(); deckSegPlaying = null; deckPlaying = false; }
+        deckMode = "stop";
+        windDir = 0;
+    }
+    tapePos = Math.max(0, Math.min(tapeLenOf(t) - 1, startSec + 0.01));
+    deckPlay();
+    if (deckMode === "play") closeTapeCase();
+    else tapeCaseMirrorMsg();
+}
+
+document.getElementById("tapeCaseOverlay").addEventListener("click", (e) => {
+    if (e.target === e.currentTarget) closeTapeCase();
+});
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !document.getElementById("tapeCaseOverlay").hidden) closeTapeCase();
+});
