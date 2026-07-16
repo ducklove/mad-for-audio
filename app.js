@@ -1661,8 +1661,10 @@ function ttFrame(now) {
         const tled = document.getElementById("deckTimerLed");
         if (tled) {
             const recActive = activeResRec && activeResRec.started;
-            const armed = reservations.some((r) => r.enabled);
-            tled.style.fill = recActive ? ((now % 1000) < 550 ? "#ff2a1a" : "#7a1a10") : armed ? "#c24530" : "#3a1210";
+            const recPending = activeResRec && !activeResRec.started;   // 발화됐지만 아직 시작 전 (튠·차단 대기)
+            tled.style.fill = recActive ? ((now % 1000) < 550 ? "#ff2a1a" : "#7a1a10")
+                : recPending ? ((now % 460) < 250 ? "#ff2a1a" : "#5a1a10")
+                : reservations.some((r) => r.enabled) ? "#c24530" : "#3a1210";
         }
     }
     const pled = document.getElementById("ampPwrLed");
@@ -2274,7 +2276,14 @@ function toggleRecording(opts) {
 
     // 예약 녹음은 백그라운드 수신기에서 녹음한다 — 본체가 꺼져 있어도 무방
     const bgRec = !!(opts && opts.source === "bg" && bgRecDest);
-    if (!bgRec && !isPlaying) return;
+    if (!bgRec && !isPlaying) {
+        // 예약 시각인데 아직 시작 전이면 REC 누름(제스처)이 곧 시동이다
+        if (activeResRec && !activeResRec.started) {
+            playerSubtext.textContent = "예약 녹음을 시작합니다 — " + activeResRec.res.title;
+            bgRecKick();
+        }
+        return;
+    }
 
     // 녹음은 항상 장착된 테이프의 현재 위치에 기록된다 (덮어쓰기)
     if (deckMode === "play") {
@@ -2425,7 +2434,8 @@ function updateRecTime() {
 }
 
 function updateRecButton() {
-    btnRec.disabled = !recorder && !isPlaying;
+    // 예약 회차가 대기 중(자동재생 차단 등으로 시작 전)이면 REC가 시동 버튼이 된다
+    btnRec.disabled = !recorder && !isPlaying && !activeResRec;
 }
 
 function addRecordingItem(record) {
@@ -3362,6 +3372,7 @@ function populateResForm() {
 }
 
 function updateResChip() {
+    updateRecButton();
     const n = reservations.filter((r) => r.enabled).length;
     const recording = activeResRec && activeResRec.started && recorder;
     btnResChip.hidden = !n && !recording;
@@ -3433,6 +3444,25 @@ function bgRecReady() {
     return !!(bgRecAudio && !bgRecAudio.paused && bgRecAudio.readyState >= 2);
 }
 
+// 자동재생 차단 대응 — 페이지를 새로 연 뒤 조작이 없으면 백그라운드 수신기의
+// play()가 거부될 수 있다. 사용자 제스처(탭·클릭) 안에서 다시 시동을 건다.
+let bgRecGestureArmed = false;
+
+function bgRecKick() {
+    if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+    if (bgRecAudio && bgRecAudio.paused && bgRecPlayer) bgRecAudio.play().catch(() => {});
+    serviceReservationRecording(Date.now());
+}
+
+function bgRecArmGestureRetry() {
+    if (bgRecGestureArmed) return;
+    bgRecGestureArmed = true;
+    document.addEventListener("pointerdown", () => {
+        bgRecGestureArmed = false;
+        bgRecKick();
+    }, { once: true, capture: true });
+}
+
 async function bgRecTune(station) {
     if (!ensureAudioGraph()) throw new Error("이 브라우저에서는 녹음을 지원하지 않습니다.");
     if (!bgRecAudio) {
@@ -3450,9 +3480,10 @@ async function bgRecTune(station) {
     const url = await getStreamUrl(station);
     bgRecStop();
     bgRecPlayer = PlayerCore.attach(bgRecAudio, url, {
-        onFatal: () => bgRecStop()   // 다음 재시도 주기가 다시 튠한다
+        onBlocked: bgRecArmGestureRetry,   // 자동재생 차단 — 다음 제스처에서 재시동
+        onFatal: () => bgRecStop()         // 다음 재시도 주기가 다시 튠한다
     });
-    try { await bgRecAudio.play(); } catch (e) { /* MSE 경로는 manifest 후 자동 재생 */ }
+    try { await bgRecAudio.play(); } catch (e) { bgRecArmGestureRetry(); }
 }
 
 // 매 틱: 예약 녹음을 굴린다. 백그라운드 수신기를 튠하고, 스트림이 열리면 REC.

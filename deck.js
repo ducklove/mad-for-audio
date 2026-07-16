@@ -467,6 +467,12 @@ function deckRec() {
         playerSubtext.textContent = "녹음을 정지했습니다 — 테이프에 기록되었습니다.";
         return;
     }
+    // 예약 시각인데 아직 시작 전(자동재생 차단·튠 대기) — REC 누름이 곧 시동이다
+    if (typeof activeResRec !== "undefined" && activeResRec && !activeResRec.started) {
+        playerSubtext.textContent = "예약 녹음을 시작합니다 — " + activeResRec.res.title;
+        bgRecKick();
+        return;
+    }
     if (deckMode === "play" || deckMode === "wind") { playerSubtext.textContent = "정지 상태에서 REC를 누르세요."; return; }
     if (!isPlaying) { playerSubtext.textContent = "녹음할 소스가 없습니다 — 방송이나 음반을 먼저 재생하세요."; return; }
     if (tapePos >= tapeLenOf(deckTape) - 1) { playerSubtext.textContent = "테이프 끝입니다 — 되감거나 EJECT로 새 테이프를 넣으세요."; return; }
