@@ -143,6 +143,10 @@ body.kbd-nav svg circle:focus {
 
 .live-clock,
 .mini-open {
+    /* a와 button이 섞여 있다 — 엔진별 기본 세로 정렬 차이가 없도록 flex로 중앙 고정 */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     font-size: 0.92rem;
     font-weight: 600;
     color: #e2d7ca;
@@ -161,6 +165,11 @@ body.kbd-nav svg circle:focus {
     font-size: 0.84rem;
     cursor: pointer;
     transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+/* display를 직접 지정했으므로 hidden 속성(트레이 전용 '미니 플레이어' 링크)이 밀리지 않게 */
+.mini-open[hidden] {
+    display: none !important;
 }
 
 .mini-open:hover {
