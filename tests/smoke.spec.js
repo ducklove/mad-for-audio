@@ -16,6 +16,13 @@ function makeWav(seconds) {
     return buf;
 }
 
+async function waitForMainApp(page) {
+    await page.waitForFunction(() => typeof window.Hls !== "undefined");
+    await page.waitForFunction(() => Array.isArray(window.MFA_RECORDS));
+    await page.evaluate(() => window.MFA_READY);
+    await page.waitForSelector("#tsKnobHit");
+}
+
 test.describe("데스크톱", () => {
     test.use({ viewport: { width: 1440, height: 2200 } });
 
@@ -24,8 +31,7 @@ test.describe("데스크톱", () => {
         await mockExternal(context);
         errors = collectErrors(page);
         await page.goto("/");
-        await page.waitForFunction(() => typeof window.Hls !== "undefined");
-        await page.waitForFunction(() => Array.isArray(window.MFA_RECORDS));
+        await waitForMainApp(page);
     });
 
     test.afterEach(() => {
@@ -581,8 +587,7 @@ test.describe("모바일 390px", () => {
     test.beforeEach(async ({ context, page }) => {
         await mockExternal(context);
         await page.goto("/");
-        await page.waitForFunction(() => typeof window.Hls !== "undefined");
-        await page.waitForFunction(() => Array.isArray(window.MFA_RECORDS));
+        await waitForMainApp(page);
     });
 
     test("가로 오버플로 없음 + 선국·재생", async ({ page }) => {
@@ -640,8 +645,7 @@ test.describe("키보드 조작", () => {
     test.beforeEach(async ({ context, page }) => {
         await mockExternal(context);
         await page.goto("/");
-        await page.waitForFunction(() => typeof window.Hls !== "undefined");
-        await page.waitForFunction(() => Array.isArray(window.MFA_RECORDS));
+        await waitForMainApp(page);
     });
 
     test("튜너 RF 스위치: 포커스 + Enter로 채널 목록 토글", async ({ page }) => {
