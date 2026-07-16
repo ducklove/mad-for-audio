@@ -71,16 +71,30 @@ function applyFocusMode(on) {
 function toggleFocusMode() {
     const on = !document.body.classList.contains("mode-focus");
     applyFocusMode(on);
-    const el = document.documentElement;
-    try {
-        if (on && !document.fullscreenElement) {
-            (el.requestFullscreen || el.webkitRequestFullscreen || function () {}).call(el);
-        } else if (!on && document.fullscreenElement) {
-            (document.exitFullscreen || document.webkitExitFullscreen || function () {}).call(document);
-        }
-    } catch (e) {}
+    // 맥 앱 안에서는 WebKit의 엘리먼트 전체 화면 UI(회색 안내 박스)가 떠 버리므로
+    // 네이티브 브리지로 패널 자체를 화면 크기로 키운다. 브라우저에서는 Fullscreen API.
+    const bridge = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.focus;
+    if (bridge) {
+        try { bridge.postMessage(on); } catch (e) {}
+    } else {
+        const el = document.documentElement;
+        try {
+            if (on && !document.fullscreenElement) {
+                (el.requestFullscreen || el.webkitRequestFullscreen || function () {}).call(el);
+            } else if (!on && document.fullscreenElement) {
+                (document.exitFullscreen || document.webkitExitFullscreen || function () {}).call(document);
+            }
+        } catch (e) {}
+    }
     gtag('event', 'focus_mode', { on: on });
 }
+
+// 네이티브 전체 화면이 아닌 환경(맥 앱 등)에서는 ESC로 몰입 모드를 닫는다
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && document.body.classList.contains("mode-focus") && !document.fullscreenElement) {
+        toggleFocusMode();
+    }
+});
 
 // ESC 등으로 네이티브 전체 화면이 풀리면 몰입 모드도 함께 해제
 ["fullscreenchange", "webkitfullscreenchange"].forEach((ev) => {

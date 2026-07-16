@@ -3,24 +3,24 @@
  * 라이브 스트림(.m3u8/.ts/.aac)과 방송사 API, 애널리틱스는 절대 가로채지 않고
  * 네트워크로 그대로 통과시킨다 — 오디오 range 요청과 실시간성을 깨지 않기 위함.
  */
-const CACHE = "fm-radio-v62";
+const CACHE = "fm-radio-v63";
 
 // 같은 출처 필수 셸 — 설치가 실패하면 앱이 안 뜨므로 반드시 캐싱한다.
 const CORE = [
     "./",
     "index.html",
     "manual.html",
-    "styles.css?v=62",
-    "stations.js?v=62",
-    "player-core.js?v=62",
-    "store.js?v=62",
-    "skins.js?v=62",
-    "component-skins.js?v=62",
-    "engine.js?v=62",
-    "deck.js?v=62",
-    "records.json?v=62",
-    "bootstrap.js?v=62",
-    "app.js?v=62",
+    "styles.css?v=63",
+    "stations.js?v=63",
+    "player-core.js?v=63",
+    "store.js?v=63",
+    "skins.js?v=63",
+    "component-skins.js?v=63",
+    "engine.js?v=63",
+    "deck.js?v=63",
+    "records.json?v=63",
+    "bootstrap.js?v=63",
+    "app.js?v=63",
     "manifest.webmanifest",
     "icons/icon.svg",
     "icons/icon-192.png",

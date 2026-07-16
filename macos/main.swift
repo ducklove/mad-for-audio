@@ -13,18 +13,19 @@ let APP_URL = URL(string: "https://ducklove.github.io/mad-for-audio/?view=rack")
 let FULL_SIZE = NSSize(width: 440, height: 780)
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNavigationDelegate, WKUIDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler {
     var statusItem: NSStatusItem!
     var titleItem: NSStatusItem!    // 메뉴바 스트립: [▶/⏸ 채널·곡명]
     var panel: NSPanel!
     var webView: WKWebView!
+    var frameBeforeFocus: NSRect?   // 몰입 모드 진입 전 패널 프레임
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // 웹뷰 — 앱이 사는 동안 유지된다 (오디오의 심장)
         let cfg = WKWebViewConfiguration()
         cfg.mediaTypesRequiringUserActionForPlayback = []   // 대기 선국 자동 연결 등 프로그램적 재생 허용
         cfg.allowsAirPlayForMediaPlayback = true
-        cfg.preferences.isElementFullscreenEnabled = true   // 몰입(전체 화면) 모드 허용
+        cfg.userContentController.add(self, name: "focus")   // 몰입 모드: 페이지 → 앱 브리지
         webView = WKWebView(frame: NSRect(origin: .zero, size: FULL_SIZE), configuration: cfg)
         webView.navigationDelegate = self
         webView.uiDelegate = self
@@ -191,6 +192,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNa
             }
         } catch {
             NSSound.beep()
+        }
+    }
+
+    // ----- 몰입(전체 화면) 모드: 패널을 화면 크기로 -----
+    // WebKit 엘리먼트 전체 화면은 자체 안내 박스를 띄우므로 쓰지 않는다.
+    nonisolated func userContentController(_ userContentController: WKUserContentController,
+                                           didReceive message: WKScriptMessage) {
+        let on = (message.body as? Bool) ?? ((message.body as? Int) == 1)
+        Task { @MainActor in
+            guard message.name == "focus" else { return }
+            if on {
+                if self.frameBeforeFocus == nil { self.frameBeforeFocus = self.panel.frame }
+                let screen = self.panel.screen ?? NSScreen.main
+                if let v = screen?.visibleFrame {
+                    self.panel.setFrame(v, display: true, animate: true)
+                }
+            } else {
+                let back = self.frameBeforeFocus ?? self.anchoredFrame(size: FULL_SIZE)
+                self.frameBeforeFocus = nil
+                self.panel.setFrame(back, display: true, animate: true)
+            }
+            self.panel.makeKeyAndOrderFront(nil)
         }
     }
 
