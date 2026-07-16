@@ -4,6 +4,18 @@
 const { test, expect } = require("@playwright/test");
 const { mockExternal, collectErrors } = require("./fixtures");
 
+// 포노 트랙(위키미디어) 대역 — 재생이 지속되어야 하는 테스트용 합성 WAV (220Hz 사인)
+function makeWav(seconds) {
+    const rate = 8000, n = rate * seconds;
+    const buf = Buffer.alloc(44 + n * 2);
+    buf.write("RIFF", 0); buf.writeUInt32LE(36 + n * 2, 4); buf.write("WAVEfmt ", 8);
+    buf.writeUInt32LE(16, 16); buf.writeUInt16LE(1, 20); buf.writeUInt16LE(1, 22);
+    buf.writeUInt32LE(rate, 24); buf.writeUInt32LE(rate * 2, 28); buf.writeUInt16LE(2, 32); buf.writeUInt16LE(16, 34);
+    buf.write("data", 36); buf.writeUInt32LE(n * 2, 40);
+    for (let i = 0; i < n; i++) buf.writeInt16LE(Math.round(Math.sin(i / rate * 2 * Math.PI * 220) * 8000), 44 + i * 2);
+    return buf;
+}
+
 test.describe("데스크톱", () => {
     test.use({ viewport: { width: 1440, height: 2200 } });
 
@@ -217,26 +229,28 @@ test.describe("데스크톱", () => {
         await expect(page.locator("#ma2375SourceGlow")).toHaveText("CAS");
     });
 
-    test("타이머 예약 녹음: 정지 중 발화 → 튜너·데크만 점등·무음 녹음, 종료 후 자동 정지", async ({ page }) => {
+    test("예약 녹음: 정지 중 발화 → 백그라운드 무음 녹음, 튜너·데크만 점등, 종료 후 카세트 보관", async ({ page }) => {
         await page.evaluate(() => {
             const st = window.FMRadio.stations[0];
             fireReservation(
                 { id: 990, stationId: st.id, title: "타이머 테스트", repeat: "once", enabled: true },
-                { ymd: "t", startTs: Date.now(), endTs: Date.now() + 7000 }, "990:t");
+                { ymd: "t", startTs: Date.now(), endTs: Date.now() + 12000 }, "990:t");
         });
         await page.waitForFunction(() => !!recorder && deckMode === "rec", null, { timeout: 15000 });
         await page.waitForTimeout(2200);
         const mid = await page.evaluate(() => ({
-            standby: timerRecStandby,
-            gain: +gainNode.gain.value.toFixed(2),
+            mainPaused: document.getElementById("audioPlayer").paused,
+            playing: isPlaying,
+            bgOn: !!(bgRecAudio && !bgRecAudio.paused),
             ampWarm: +ampWarm.toFixed(2),
             tunerWarm: +tunerWarm.toFixed(2),
             reel1: document.getElementById("deckReelL").getAttribute("transform"),
             deckShown: !document.getElementById("deckStage").hidden
                 && document.getElementById("deckStage").classList.contains("transport-live"),
         }));
-        expect(mid.standby, "타이머 스탠바이 진입").toBe(true);
-        expect(mid.gain, "스피커 무음").toBe(0);
+        expect(mid.mainPaused, "본체 오디오는 건드리지 않는다").toBe(true);
+        expect(mid.playing, "본체 재생 상태 없음").toBe(false);
+        expect(mid.bgOn, "백그라운드 수신기 작동").toBe(true);
         expect(mid.ampWarm, "앰프 소등").toBeLessThan(0.05);
         expect(mid.tunerWarm, "튜너 점등").toBeGreaterThan(0.8);
         expect(mid.deckShown, "녹음 중 데크 노출").toBe(true);
@@ -244,7 +258,6 @@ test.describe("데스크톱", () => {
         expect(await page.evaluate((r1) => document.getElementById("deckReelL").getAttribute("transform") !== r1, mid.reel1),
             "릴이 돌아간다").toBe(true);
         await page.waitForFunction(() => !recorder && !activeResRec && !isPlaying && deckMode === "stop", null, { timeout: 15000 });
-        expect(await page.evaluate(() => timerRecStandby), "종료 후 스탠바이 해제").toBe(false);
         // 완료되면 프로그램명이 붙은 카세트가 되감긴 채 테이프 랙에 보관된다
         await page.waitForFunction(() =>
             [...document.querySelectorAll("#deckShelf g[data-id] text")].some((t) => t.textContent.includes("타이머 테스트")),
@@ -259,7 +272,10 @@ test.describe("데스크톱", () => {
         expect(await page.evaluate(() => playerSubtext.textContent), "카세트 보관 안내").toContain("테이프 랙에 보관");
     });
 
-    test("예약 발화가 턴테이블 재생을 인계받아 녹음 — 대기 선국 무한 루프(프리징) 회귀 방지", async ({ page }) => {
+    test("예약 발화 중에도 턴테이블 재생 유지 — 백그라운드 녹음 (프리징 회귀 방지)", async ({ context, page }) => {
+        // 포노 트랙을 로컬 합성 WAV로 — 외부(위키미디어)는 모킹에서 차단되어 재생이 곧 죽는다
+        await context.route("https://upload.wikimedia.org/**", (route) =>
+            route.fulfill({ body: makeWav(40), contentType: "audio/wav", headers: { "Access-Control-Allow-Origin": "*" } }));
         await page.evaluate(() => playPhonoTrack(0));
         await page.waitForFunction(() => phonoActive && isPlaying, null, { timeout: 15000 });
         await page.evaluate(() => {
@@ -267,15 +283,38 @@ test.describe("데스크톱", () => {
             const orig = selectStation;
             selectStation = function (...a) { window.__selCount++; return orig.apply(this, a); };
             const st = window.FMRadio.stations[0];
-            fireReservation({ id: 991, stationId: st.id, title: "인계 테스트", repeat: "once", enabled: true },
+            fireReservation({ id: 991, stationId: st.id, title: "동시 녹음", repeat: "once", enabled: true },
                 { ymd: "tk", startTs: Date.now(), endTs: Date.now() + 8000 }, "991:tk");
         });
         // 프리징(마이크로태스크 루프)이 재발하면 여기서 타임아웃으로 실패한다
         await page.waitForFunction(() => !!recorder && deckMode === "rec", null, { timeout: 15000 });
-        const s = await page.evaluate(() => ({ sel: window.__selCount, phono: phonoActive, cur: currentStation && currentStation.id }));
-        expect(s.sel, "선국 1회로 인계 — 재시도 폭주 없음").toBeLessThanOrEqual(2);
-        expect(s.phono, "턴테이블 정지").toBe(false);
+        const s = await page.evaluate(() => ({
+            sel: window.__selCount,
+            phono: phonoActive,
+            playing: isPlaying,
+            mainPaused: document.getElementById("audioPlayer").paused
+        }));
+        expect(s.sel, "본체 선국 없음 — 백그라운드 수신").toBe(0);
+        expect(s.phono && s.playing, "턴테이블은 계속 재생").toBe(true);
+        expect(s.mainPaused, "본체 오디오 재생 유지").toBe(false);
         await page.waitForFunction(() => !recorder && !activeResRec, null, { timeout: 15000 });
+        expect(await page.evaluate(() => phonoActive && isPlaying), "종료 후에도 턴테이블 유지").toBe(true);
+    });
+
+    test("예약 녹음 중 데크 조작: 경고 후 재조작 시 녹음 중단", async ({ page }) => {
+        await page.evaluate(() => {
+            const st = window.FMRadio.stations[0];
+            fireReservation({ id: 992, stationId: st.id, title: "가드 테스트", repeat: "once", enabled: true },
+                { ymd: "tg", startTs: Date.now(), endTs: Date.now() + 30000 }, "992:tg");
+        });
+        await page.waitForFunction(() => !!recorder && deckMode === "rec", null, { timeout: 15000 });
+        const first = await page.evaluate(() => { deckPlay(); return { rec: !!recorder, msg: playerSubtext.textContent }; });
+        expect(first.rec, "1차 조작: 녹음 유지").toBe(true);
+        expect(first.msg, "경고 문구").toContain("한 번 더");
+        const second = await page.evaluate(() => { deckPlay(); return { rec: !!recorder, active: !!activeResRec, mode: deckMode }; });
+        expect(second.rec, "2차 조작: 녹음 중단").toBe(false);
+        expect(second.active, "예약 회차 종료").toBe(false);
+        expect(second.mode, "요청한 조작(PLAY) 실행").toBe("play");
     });
 
     test("설명서에 신규 기기별 소개와 음색·동작 차이가 기록됨", async ({ page }) => {

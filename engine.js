@@ -5,9 +5,14 @@
 // 청취 볼륨과 출력관 구동을 분리해 작은 음량에서도 모델 고유의 배음·댐핑이 유지된다.
 let audioCtx = null;
 let gainNode = null;
-// 타이머 예약 녹음(시스템 정지 중 발화) — 튜너·데크만 켜고 앰프는 끈 채 무음으로 녹음한다.
-// 녹음 탭(recDest)은 source 직결이라 master gain을 0으로 내려도 녹음에는 영향이 없다.
-let timerRecStandby = false;
+// 예약 녹음 전용 백그라운드 수신기 — 본체 <audio>(청취)와 완전히 분리된 히든 체인.
+// bgRecAudio → MediaElementSource → 녹음 탭/분석기만 연결, 스피커에는 연결하지 않는다.
+// 따라서 현재 재생(라디오·음반·테이프)과 무관하게 무음으로 녹음된다.
+let bgRecAudio = null;
+let bgRecPlayer = null;
+let bgRecSource = null;
+let bgRecDest = null;
+let bgRecAnalyser = null;
 let ampInputTrim = null;
 let recDest = null;
 let analyser = null;
@@ -288,8 +293,7 @@ function applyGainStaging() {
     // 포노 보정은 앰프 입력에, 사용자의 청취 볼륨은 모든 회로 뒤에 적용한다.
     // 따라서 작은 청취 음량에서도 출력관 구동과 스피커 댐핑 특성이 사라지지 않는다.
     if (ampInputTrim) setAudioParam(ampInputTrim.gain, phonoActive ? PHONO_GAIN : 1, .02);
-    // 타이머 예약 녹음 중엔 앰프가 꺼진 것 — 스피커로는 무음, 녹음 탭에는 원신호 그대로
-    setAudioParam(gainNode.gain, timerRecStandby ? 0 : volumeLevel, .012);
+    setAudioParam(gainNode.gain, volumeLevel, .012);
 }
 
 function setVolumeLevel(v) {

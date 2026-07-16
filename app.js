@@ -1042,7 +1042,8 @@ let ttScratchEnergy = 0;  // 바이닐 문지름 세기 — 드래그 속도로 
 let ttRubLast = null;     // 문지름 드래그의 직전 포인터 좌표
 let tubeWarm = 0;    // 진공관 웜업 상태 0..1 (켜면 서서히 달아오르고, 꺼지면 더 천천히 식는다)
 let tunerWarm = 0;   // 튜너 조명 상태 0..1 — 라디오 수신 중에만 점등 (포노/테이프 중엔 튜너는 꺼진 것)
-let ampWarm = 0;     // 앰프·EQ·턴테이블 조명 0..1 — 타이머 예약 녹음 중엔 튜너·데크만 켜고 이쪽은 끈다
+let ampWarm = 0;     // 앰프·EQ·턴테이블 조명 0..1 — 실제 청취 중일 때만 점등
+let bgRecSignal = 0; // 백그라운드 수신기 레벨 (예약 녹음 중 데크 VU 구동)
 let tsPreviewUntil = 0;   // 다이얼 조작 중 디스플레이 웨이크 시각
 
 // 톤암 각도 → 트랙 번호 (-5° 미만 = 거치대)
@@ -1542,14 +1543,14 @@ function ttFrame(now) {
     const warmTarget = (isPlaying || deckMode === "play" || !!recorder) ? 1 : 0;
     const warmRate = warmTarget > tubeWarm ? dt / 2.0 : dt / 3.5;
     tubeWarm = Math.max(0, Math.min(1, tubeWarm + (warmTarget > tubeWarm ? 1 : -1) * warmRate));
-    // 앰프·EQ·턴테이블은 타이머 예약 녹음(스탠바이) 중엔 꺼진 채로 둔다 — 튜너·데크만 작동
-    const ampTarget = timerRecStandby ? 0 : warmTarget;
+    // 앰프·EQ·턴테이블은 실제로 듣고 있을 때만 점등 — 백그라운드 예약 녹음은 앰프를 쓰지 않는다
+    const ampTarget = (isPlaying || deckMode === "play") ? 1 : 0;
     const ampRate = ampTarget > ampWarm ? dt / 2.0 : dt / 3.5;
     ampWarm = Math.max(0, Math.min(1, ampWarm + (ampTarget > ampWarm ? 1 : -1) * ampRate));
     updateMa2375Display();
 
     // 튜너 램프: 라디오 수신 중에만 (백열등이라 진공관보다 빠르게 켜지고 꺼진다)
-    const tnTarget = (isPlaying && currentStation) ? 1 : 0;
+    const tnTarget = ((isPlaying && currentStation) || (recorder && activeResRec)) ? 1 : 0;
     const tnRate = tnTarget > tunerWarm ? dt / 0.9 : dt / 1.4;
     tunerWarm = Math.max(0, Math.min(1, tunerWarm + (tnTarget > tunerWarm ? 1 : -1) * tnRate));
 
@@ -1577,12 +1578,27 @@ function ttFrame(now) {
     document.querySelectorAll(".tubeDark").forEach((el) => {
         el.style.opacity = (0.76 - ampWarm * 0.7).toFixed(3);
     });
-    // VU 바늘: 앰프 미터는 앰프 전원(ampWarm)을 따라 잦아들고, 데크 미터는 늘 신호를 따른다
+    // VU 바늘: 앰프 미터는 앰프 전원(ampWarm)을 따르고, 데크 미터는 녹음 소스 신호를 따른다.
+    // 예약 녹음(백그라운드 수신) 중에는 데크 미터가 백그라운드 수신기의 레벨을 보여준다.
     const vuSig = Math.max(0, Math.min(1, tsSignal));
+    if (recorder && activeResRec && bgRecAnalyser) {
+        if (!ttFrame.bgTime || ttFrame.bgTime.length !== bgRecAnalyser.fftSize) ttFrame.bgTime = new Uint8Array(bgRecAnalyser.fftSize);
+        bgRecAnalyser.getByteTimeDomainData(ttFrame.bgTime);
+        let sum2 = 0;
+        for (let i = 0; i < ttFrame.bgTime.length; i++) {
+            const dv = (ttFrame.bgTime[i] - 128) / 128;
+            sum2 += dv * dv;
+        }
+        const target = Math.min(1, Math.sqrt(sum2 / ttFrame.bgTime.length) * 2.6);
+        bgRecSignal += (target - bgRecSignal) * Math.min(1, dt * 8);
+    } else if (bgRecSignal > 0) {
+        bgRecSignal = Math.max(0, bgRecSignal - dt * 1.5);
+    }
+    const deckSig = (recorder && activeResRec) ? bgRecSignal : vuSig;
     ["ampVuL", "ampVuR", "deckVuL", "deckVuR"].forEach((id, idx) => {
         const n = document.getElementById(id);
         if (!n) return;
-        const sig = id.startsWith("amp") ? vuSig * ampWarm : vuSig;
+        const sig = id.startsWith("amp") ? vuSig * ampWarm : deckSig;
         const ang = -42 + sig * 84;
         n.setAttribute("transform", "rotate(" + (ang * (idx % 2 ? 0.96 : 1)).toFixed(1) + " " + n.getAttribute("data-cx") + " " + n.getAttribute("data-cy") + ")");
     });
@@ -1650,20 +1666,20 @@ function ttFrame(now) {
         }
     }
     const pled = document.getElementById("ampPwrLed");
-    if (pled) pled.style.fill = (isPlaying && !timerRecStandby) ? "#ff7a3a" : "#3a2012";
+    if (pled) pled.style.fill = isPlaying ? "#ff7a3a" : "#3a2012";
 
     // EQ 레벨 LED 컬럼 — 점등 시 발광(블룸), 소등 시 거의 꺼진 상태
     for (let i = 0; i < 12; i++) {
         const el = document.getElementById("eqLvl" + i);
         if (!el) break;
-        const on = eqState.on && isPlaying && !timerRecStandby && (i / 12) < tsPeak;
+        const on = eqState.on && isPlaying && (i / 12) < tsPeak;
         const color = i >= 10 ? "#ff5a3a" : "#ffb03a";
         el.style.fill = on ? color : "#1e1610";
         el.style.filter = on ? "drop-shadow(0 0 5px " + color + ") drop-shadow(0 0 12px " + color + "66)" : "none";
     }
 
     // 밴드별 실시간 스펙트럼 — 분석기 FFT bin을 현재 EQ 중심 주파수에 대응시킨다.
-    if (analyser && eqState.on && isPlaying && !timerRecStandby) {
+    if (analyser && eqState.on && isPlaying) {
         if (!ttFrame.eqSpectrum || ttFrame.eqSpectrum.length !== analyser.frequencyBinCount) {
             ttFrame.eqSpectrum = new Uint8Array(analyser.frequencyBinCount);
         }
@@ -1671,7 +1687,7 @@ function ttFrame(now) {
     }
     EQ_FREQS.forEach((freq, i) => {
         let level = 0;
-        if (analyser && ttFrame.eqSpectrum && eqState.on && isPlaying && !timerRecStandby) {
+        if (analyser && ttFrame.eqSpectrum && eqState.on && isPlaying) {
             const nyquist = (audioCtx ? audioCtx.sampleRate : 48000) / 2;
             const center = Math.max(0, Math.min(ttFrame.eqSpectrum.length - 1, Math.round(freq / nyquist * ttFrame.eqSpectrum.length)));
             const raw = Math.max(ttFrame.eqSpectrum[Math.max(0, center - 1)] || 0, ttFrame.eqSpectrum[center] || 0, ttFrame.eqSpectrum[Math.min(ttFrame.eqSpectrum.length - 1, center + 1)] || 0);
@@ -2056,13 +2072,12 @@ function playStream(url) {
 
 let selectSeq = 0;
 
-async function selectStation(id, opts) {
+async function selectStation(id) {
     const station = stations.find((item) => item.id === id);
     if (!station) return;
 
-    // 미디어 우선: 음반/테이프가 도는 동안 튜너는 소스를 빼앗지 않고 대기 선국만 한다.
-    // 예약 녹음(force)은 예외 — 약속된 시각이므로 재생을 멈추고 소스를 가져온다.
-    if (!(opts && opts.force) && ((phonoActive && isPlaying) || deckMode === "play")) {
+    // 미디어 우선: 음반/테이프가 도는 동안 튜너는 소스를 빼앗지 않고 대기 선국만 한다
+    if ((phonoActive && isPlaying) || deckMode === "play") {
         radioStandby = station;
         tunerSetStation(station);
         playerSubtext.textContent = phonoActive
@@ -2135,15 +2150,6 @@ async function selectStation(id, opts) {
 function togglePlay() {
     if (!currentStation && !phonoActive) return;
     const sourceName = currentStation ? currentStation.name : "레코드";
-
-    // 타이머 예약 녹음 중 전원 조작 = 앰프를 켜서 함께 듣기 (녹음은 그대로 계속)
-    if (timerRecStandby && isPlaying) {
-        timerRecStandby = false;
-        if (gainNode) applyGainStaging();
-        else try { audio.volume = volumeLevel; } catch (e) {}
-        playerSubtext.textContent = "앰프를 켰습니다 — 예약 녹음은 계속 진행됩니다.";
-        return;
-    }
 
     if (isPlaying) {
         audio.pause();
@@ -2256,7 +2262,7 @@ function setVolume(value) {
 // ----- 녹음 -----
 
 
-function toggleRecording() {
+function toggleRecording(opts) {
     if (recorder) {
         stopRecording();
         // 손으로 정지한 것 — 진행 중이던 예약 회차는 되살리지 않는다
@@ -2266,7 +2272,9 @@ function toggleRecording() {
         return;
     }
 
-    if (!isPlaying) return;
+    // 예약 녹음은 백그라운드 수신기에서 녹음한다 — 본체가 꺼져 있어도 무방
+    const bgRec = !!(opts && opts.source === "bg" && bgRecDest);
+    if (!bgRec && !isPlaying) return;
 
     // 녹음은 항상 장착된 테이프의 현재 위치에 기록된다 (덮어쓰기)
     if (deckMode === "play") {
@@ -2291,7 +2299,7 @@ function toggleRecording() {
     const mime = pickRecMime();
     let rec;
     try {
-        rec = new MediaRecorder(recDest.stream, mime ? { mimeType: mime, audioBitsPerSecond: 128000 } : undefined);
+        rec = new MediaRecorder((bgRec ? bgRecDest : recDest).stream, mime ? { mimeType: mime, audioBitsPerSecond: 128000 } : undefined);
     } catch (error) {
         console.error(error);
         playerSubtext.textContent = "녹음을 시작할 수 없습니다.";
@@ -2299,10 +2307,12 @@ function toggleRecording() {
     }
 
     const chunks = [];
-    const base = currentStation || {
-        id: "phono",
-        name: (phonoActive && phonoTrack >= 0) ? RECORD.tracks[phonoTrack].t : "레코드"
-    };
+    const base = bgRec && activeResRec
+        ? (stations.find((st) => st.id === activeResRec.res.stationId) || { id: activeResRec.res.stationId, name: activeResRec.res.title })
+        : currentStation || {
+            id: "phono",
+            name: (phonoActive && phonoTrack >= 0) ? RECORD.tracks[phonoTrack].t : "레코드"
+        };
     // 예약 녹음이면 파일·테이프 이름을 방송 프로그램명으로 (채널 id는 그대로)
     const station = { id: base.id, name: pendingRecName || base.name };
     pendingRecName = null;
@@ -3361,16 +3371,7 @@ function fireReservation(res, occ, key) {
     pruneFired();
     saveJson("fmRadio.resFired", resFiredOcc);
     activeResRec = { res, occ, key, endTs: occ.endTs, tapeId: null, started: false };
-    // 시스템이 정지 상태였다면 타이머 녹음 — 튜너·데크만 켜고 앰프는 끈 채 무음으로 녹음한다.
-    // 스피커 게인을 선국(스트림 재생)보다 먼저 내려 두어야 새벽 발화 때 소리가 새지 않는다.
-    timerRecStandby = !isPlaying && !recorder && deckMode === "stop";
-    if (timerRecStandby) {
-        if (ensureAudioGraph()) applyGainStaging();
-        else try { audio.volume = 0; } catch (e) {}
-        playerSubtext.textContent = "타이머 예약 녹음 — 튜너와 데크만 켜서 무음으로 녹음합니다: " + res.title;
-    } else {
-        playerSubtext.textContent = "예약 녹음을 시작합니다 — " + res.title;
-    }
+    playerSubtext.textContent = "예약 녹음을 시작합니다 — 지금 재생과는 별개로 백그라운드에서 녹음됩니다: " + res.title;
     notifyRes("예약 녹음 시작", res.title);
     gtag('event', 'reserve_fire', { station_id: res.stationId });
     updateResChip();
@@ -3400,7 +3401,49 @@ function prepareReservedTape(active) {
     deckRefreshShelf();
 }
 
-// 매 틱: 예약 녹음을 굴린다. 아직 시작 전이면 선국→REC, 끊겼으면 재시작, 끝났으면 정지.
+// ----- 예약 전용 백그라운드 수신기 -----
+// 본체 <audio>(청취)와 분리된 히든 수신 체인. 스피커에 연결하지 않으므로
+// 현재 재생(라디오·음반·테이프)과 무관하게 무음으로 녹음된다.
+function bgRecStop() {
+    if (bgRecPlayer) {
+        bgRecPlayer.destroy();
+        bgRecPlayer = null;
+    }
+    if (bgRecAudio) {
+        bgRecAudio.pause();
+        bgRecAudio.removeAttribute("src");
+        try { bgRecAudio.load(); } catch (e) {}
+    }
+}
+
+function bgRecReady() {
+    return !!(bgRecAudio && !bgRecAudio.paused && bgRecAudio.readyState >= 2);
+}
+
+async function bgRecTune(station) {
+    if (!ensureAudioGraph()) throw new Error("이 브라우저에서는 녹음을 지원하지 않습니다.");
+    if (!bgRecAudio) {
+        bgRecAudio = document.createElement("audio");
+        bgRecAudio.crossOrigin = "anonymous";
+        bgRecAudio.preload = "auto";
+        bgRecSource = audioCtx.createMediaElementSource(bgRecAudio);
+        bgRecDest = audioCtx.createMediaStreamDestination();
+        bgRecAnalyser = audioCtx.createAnalyser();
+        bgRecAnalyser.fftSize = 512;
+        bgRecSource.connect(bgRecDest);
+        bgRecSource.connect(bgRecAnalyser);
+    }
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    const url = await getStreamUrl(station);
+    bgRecStop();
+    bgRecPlayer = PlayerCore.attach(bgRecAudio, url, {
+        onFatal: () => bgRecStop()   // 다음 재시도 주기가 다시 튠한다
+    });
+    try { await bgRecAudio.play(); } catch (e) { /* MSE 경로는 manifest 후 자동 재생 */ }
+}
+
+// 매 틱: 예약 녹음을 굴린다. 백그라운드 수신기를 튠하고, 스트림이 열리면 REC.
+// 데크가 재생·감기 중이면 점유하지 않고 기다린다 (정지하면 다음 재시도에 시작).
 function serviceReservationRecording(nowTs) {
     if (!activeResRec) return;
     if (nowTs >= activeResRec.endTs) {
@@ -3409,33 +3452,43 @@ function serviceReservationRecording(nowTs) {
     }
     if (recorder) return;
     const res = activeResRec.res;
-    // 녹음이 시작된 뒤 사용자가 다른 채널·소스로 옮겼다면 이 회차는 사용자의 뜻 — 중단한다
-    if (activeResRec.started && (!currentStation || currentStation.id !== res.stationId)) {
-        cancelReservedRecording("채널이 바뀌어 예약 녹음을 중단했습니다 — " + res.title);
+    if (deckMode === "play" || deckMode === "wind") {
+        if (!activeResRec.deckBusyWarned) {
+            activeResRec.deckBusyWarned = true;
+            playerSubtext.textContent = "예약 녹음 대기 — 데크가 사용 중입니다. 정지(\u25a0)하면 시작됩니다: " + res.title;
+        }
         return;
     }
-    if (currentStation && currentStation.id === res.stationId && isPlaying) {
+    if (bgRecReady()) {
         prepareReservedTape(activeResRec);
         pendingRecName = res.title;
-        toggleRecording();
+        toggleRecording({ source: "bg" });
         if (recorder) {
             activeResRec.started = true;
+            // 본체가 놀고 있으면 튜너 다이얼도 예약 채널을 가리킨다 — 수신기는 튜너다
+            const st = stations.find((s) => s.id === res.stationId);
+            if (st && !isPlaying && !currentStation) tunerSetStation(st);
             updateResChip();
         }
-    } else if (!activeResRec.tuning) {
+        return;
+    }
+    if (!activeResRec.tuning && (!bgRecPlayer || nowTs - (activeResRec.tunedAt || 0) > 15000)) {
         activeResRec.tuning = true;
-        // 음반·테이프가 재생 중이어도 예약은 약속대로 선국한다(force).
-        // 주의: 재시도는 반드시 매크로태스크(setTimeout)로 — 예전처럼 .finally에서
-        // 곧바로 재귀하면 selectStation이 동기 반환하는 상태(대기 선국 등)에서
-        // 마이크로태스크 무한 루프가 되어 UI 전체가 얼어붙는다.
-        const attempt = (activeResRec.attempts = (activeResRec.attempts || 0) + 1);
-        Promise.resolve(selectStation(res.stationId, { force: true })).finally(() => {
+        activeResRec.tunedAt = nowTs;
+        // 주의: 재시도는 반드시 매크로태스크(setTimeout)로 — .finally에서 곧바로 재귀하면
+        // 동기 반환 경로에서 마이크로태스크 무한 루프가 되어 UI 전체가 얼어붙는다.
+        const st = stations.find((s) => s.id === res.stationId);
+        Promise.resolve(st ? bgRecTune(st) : null).catch((e) => console.warn("예약 튠 실패, 재시도 예정:", e)).finally(() => {
             if (!activeResRec) return;
             activeResRec.tuning = false;
-            // 선국 직후 녹음 시작을 한 박자 빠르게 — 몇 번만 짧게 재시도하고,
-            // 그 뒤로는 10초 주기 reservationTick이 이어받는다
-            if (attempt <= 5) setTimeout(() => serviceReservationRecording(Date.now()), 800);
+            setTimeout(() => serviceReservationRecording(Date.now()), 800);
         });
+        return;
+    }
+    // 튠은 걸려 있고 스트림이 열리길 기다린다 — 완만한 매크로태스크 재시도
+    if (!activeResRec.tuning && (!activeResRec.nudgeAt || nowTs - activeResRec.nudgeAt > 700)) {
+        activeResRec.nudgeAt = nowTs;
+        setTimeout(() => serviceReservationRecording(Date.now()), 800);
     }
 }
 
@@ -3443,12 +3496,7 @@ function finishReservedRecording() {
     const done = activeResRec;
     activeResRec = null;
     if (recorder) stopRecording();
-    // 타이머 녹음이었다면(정지 상태에서 자동 기동) 끝나고 나서 다시 정지 상태로 돌아간다
-    const wasTimer = timerRecStandby;
-    timerRecStandby = false;
-    if (gainNode) applyGainStaging();
-    else try { audio.volume = volumeLevel; } catch (e) {}
-    if (wasTimer) stopPlay();
+    bgRecStop();
     if (!done) return;
     resFiredOcc[done.key] = 3;
     saveJson("fmRadio.resFired", resFiredOcc);
@@ -3457,6 +3505,9 @@ function finishReservedRecording() {
         res.enabled = false;
         res.done = true;
         resSave();
+    }
+    if (!done.started && done.deckBusyWarned) {
+        playerSubtext.textContent = "예약 시간이 끝나 녹음하지 못했습니다 — 데크가 계속 사용 중이었어요: " + res.title;
     }
     if (done.started) {
         // 녹음된 카세트는 되감아 테이프 랙에 보관한다 — 랙에서 누르면 장착되고, PLAY로 바로 재생
@@ -3486,13 +3537,7 @@ function cancelReservedRecording(msg) {
     resFiredOcc[activeResRec.key] = 2;
     saveJson("fmRadio.resFired", resFiredOcc);
     activeResRec = null;
-    // 타이머 녹음 중단: 사용자가 다른 채널로 옮겼다면 그대로 듣게 두고,
-    // 같은 채널에서 멈췄다면(데크 STOP 등) 자동 기동했던 시스템을 다시 정지한다
-    const wasTimer = timerRecStandby;
-    timerRecStandby = false;
-    if (gainNode) applyGainStaging();
-    else try { audio.volume = volumeLevel; } catch (e) {}
-    if (wasTimer && (!currentStation || currentStation.id === res.stationId)) stopPlay();
+    bgRecStop();
     if (res.repeat === "once") {
         res.enabled = false;
         res.done = true;

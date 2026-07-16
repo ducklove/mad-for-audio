@@ -261,6 +261,7 @@ function mountDeck() {
     const bindWind = (id, dir) => {
         const b = document.getElementById(id);
         const start = () => {
+            if (!deckGuardReservedRec()) return;
             if (recorder || deckMode === "rec") return;
             if (deckMode === "play") { audio.pause(); deckSegPlaying = null; deckPlaying = false; }
             deckMode = "wind";
@@ -340,9 +341,27 @@ function updateDeckLabel() {
     if (counterMax) counterMax.textContent = "/ " + maxLabel;
 }
 
+// 예약 녹음 중 데크 조작 가드 — 처음엔 경고만 하고, 8초 안에 다시 조작하면
+// 예약 녹음을 중단하고 요청한 조작을 실행한다. (수동 녹음에는 관여하지 않는다)
+let resRecDeckWarnedAt = 0;
+function deckGuardReservedRec() {
+    if (!(recorder && typeof activeResRec !== "undefined" && activeResRec && activeResRec.started)) return true;
+    const now = Date.now();
+    if (now - resRecDeckWarnedAt > 8000) {
+        resRecDeckWarnedAt = now;
+        playerSubtext.textContent = "예약 녹음이 진행 중입니다 — 그래도 조작하려면 8초 안에 한 번 더 누르세요 (녹음이 중단됩니다).";
+        return false;
+    }
+    resRecDeckWarnedAt = 0;
+    stopRecording();
+    cancelReservedRecording("예약 녹음을 중단했습니다 — 데크를 조작했습니다.");
+    return true;
+}
+
 function deckInsertTape(id) {
     const t = tapes.find((x) => x.id === id);
     if (!t || t === deckTape) return;
+    if (!deckGuardReservedRec()) return;
     if (recorder) { playerSubtext.textContent = "녹음 중에는 테이프를 바꿀 수 없습니다."; return; }
     if (deckMode === "play") { audio.pause(); deckSegPlaying = null; deckPlaying = false; }
     deckMode = "stop";
@@ -354,6 +373,7 @@ function deckInsertTape(id) {
 }
 
 function deckPlay() {
+    if (!deckGuardReservedRec()) return;
     if (recorder) { playerSubtext.textContent = "녹음 중입니다 — STOP으로 먼저 정지하세요."; return; }
     if (deckMode === "play") return;
     if (deckMode === "wind") { deckMode = "stop"; windDir = 0; }
@@ -361,7 +381,7 @@ function deckPlay() {
     stopPhono();
     if (player) { player.destroy(); player = null; }
     if (typeof Hls !== "undefined" && Hls.isSupported()) ensureAudioGraph();
-    if (gainNode) gainNode.gain.value = timerRecStandby ? 0 : volumeLevel;
+    if (gainNode) gainNode.gain.value = volumeLevel;
     ensureHiss();
     deckMode = "play";
     deckPlaying = true;
@@ -385,12 +405,13 @@ function deckPlay() {
 }
 
 function deckStopTransport() {
+    if (recorder && activeResRec && activeResRec.started) {
+        if (!deckGuardReservedRec()) return;   // 1차: 경고만
+        return;                                 // 2차: 가드가 녹음 중단까지 처리했다
+    }
     if (recorder) {
         stopRecording();
         playerSubtext.textContent = "녹음을 정지했습니다 — 테이프에 기록되었습니다.";
-        if (activeResRec && activeResRec.started) {
-            cancelReservedRecording("예약 녹음을 중단했습니다 — " + activeResRec.res.title);
-        }
         return;
     }
     if (deckMode === "play") {
@@ -405,12 +426,13 @@ function deckStopTransport() {
 }
 
 function deckRec() {
+    if (recorder && activeResRec && activeResRec.started) {
+        if (!deckGuardReservedRec()) return;   // 1차: 경고만
+        return;                                 // 2차: 가드가 녹음 중단까지 처리했다
+    }
     if (recorder) {
         stopRecording();
         playerSubtext.textContent = "녹음을 정지했습니다 — 테이프에 기록되었습니다.";
-        if (activeResRec && activeResRec.started) {
-            cancelReservedRecording("예약 녹음을 중단했습니다 — " + activeResRec.res.title);
-        }
         return;
     }
     if (deckMode === "play" || deckMode === "wind") { playerSubtext.textContent = "정지 상태에서 REC를 누르세요."; return; }
@@ -420,6 +442,7 @@ function deckRec() {
 }
 
 function deckEject() {
+    if (!deckGuardReservedRec()) return;
     if (recorder) { playerSubtext.textContent = "녹음 중에는 꺼낼 수 없습니다."; return; }
     if (deckMode === "play") { audio.pause(); deckSegPlaying = null; deckPlaying = false; }
     deckMode = "stop";
