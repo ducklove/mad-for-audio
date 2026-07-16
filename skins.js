@@ -131,6 +131,7 @@ function applyPanelLighting(svg) {
 const TS_HIT_META = {
     power: { title: "전원 — 재생/정지", cursor: "pointer" },
     dial: { title: "드래그하여 주파수를 맞추세요", cursor: "ew-resize" },
+    rec: { title: "편성표 — 프로그램 확인과 예약 녹음", cursor: "pointer" },
     blend: { title: "하이블렌드 — 고음 잡음 감쇠", cursor: "pointer" },
     mode: { title: "스테레오/모노 전환", cursor: "pointer" },
     mute: { title: "음소거", cursor: "pointer" },

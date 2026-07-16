@@ -392,7 +392,9 @@ function bindTunerControls() {
     knob.addEventListener("keydown", stepByKey);
 
     on("tsPowerHit", () => { if (currentStation) togglePlay(); });
-    // 녹음은 카세트 데크 전담 — 튜너의 REC 계열 스위치는 녹음 상태 표시등으로만 남는다
+    // 녹음 실행은 카세트 데크 전담 — 튜너의 REC 스위치는 편성표·예약 녹음 입구다
+    // (스위치 시각 상태는 tsSyncPanel이 녹음 중 표시로 계속 쓴다)
+    on("tsRecHit", () => openSchedule());
     on("tsBlendHit", () => {
         blendOn = !blendOn;
         applyBlend();
@@ -2740,6 +2742,7 @@ function mountCoach() {
     [
         { key: "power", label: "전원 — 재생/정지" },
         { key: "dial", label: "다이얼을 드래그해 선국" },
+        { key: "rec", label: "편성표·예약 녹음" },
         { key: "rf", label: "채널 목록 열기" }
     ].forEach(({ key, label }) => {
         const box = tunerCfg.hits[key];

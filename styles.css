@@ -754,6 +754,12 @@ main {
     body.mode-rack .list-toggle-wrap {
         display: none !important;
     }
+
+    /* 편성표는 랙에서 튜너 REC 스위치로 연다 — 헤더 버튼은 기기 조작이 어려운
+       모바일·간편 모드에서만 노출한다 */
+    body.mode-rack .sched-open {
+        display: none !important;
+    }
 }
 
 body.mode-simple .tuner-stage,

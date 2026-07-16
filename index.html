@@ -32,7 +32,7 @@
     </script>
     <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-    <link rel="stylesheet" href="styles.css?v=65">
+    <link rel="stylesheet" href="styles.css?v=66">
 </head>
 <body>
     <div class="page-shell">
@@ -48,7 +48,7 @@
                 <!-- 트레이 앱(chrome=tray)에서만 표시 — 하단 스크립트가 hidden을 푼다 -->
                 <a class="mini-open" id="miniPlayerLink" href="widget.html?skin=tuner" title="튜너 미니 플레이어로 전환" hidden>미니 플레이어</a>
                 <a class="mini-open" href="manual.html" title="기기별 리뷰와 조작 안내">소개</a>
-                <button class="mini-open" type="button" onclick="openSchedule()" title="채널 편성표 보기와 예약 녹음">▤ 편성표</button>
+                <button class="mini-open sched-open" type="button" onclick="openSchedule()" title="채널 편성표 보기와 예약 녹음">▤ 편성표</button>
                 <button class="mini-open" type="button" onclick="toggleSettings(true)" title="컴포넌트 표시와 모델을 고릅니다">⚙ 오디오 구성</button>
                 <button class="mini-open" type="button" onclick="toggleFocusMode()" title="컴포넌트만 남기는 몰입 모드 (ESC로 복귀)">⛶ 전체 화면</button>
                 <div class="live-clock" id="liveClock" aria-label="현재 시각">--:--:--</div>
@@ -229,15 +229,15 @@
 
     <audio id="audioPlayer" crossorigin="anonymous"></audio>
 
-    <script src="stations.js?v=65"></script>
-    <script src="player-core.js?v=65"></script>
-    <script src="store.js?v=65"></script>
-    <script src="schedule.js?v=65"></script>
-    <script src="skins.js?v=65"></script>
-    <script src="component-skins.js?v=65"></script>
-    <script src="engine.js?v=65"></script>
-    <script src="deck.js?v=65"></script>
-    <script src="bootstrap.js?v=65"></script>
+    <script src="stations.js?v=66"></script>
+    <script src="player-core.js?v=66"></script>
+    <script src="store.js?v=66"></script>
+    <script src="schedule.js?v=66"></script>
+    <script src="skins.js?v=66"></script>
+    <script src="component-skins.js?v=66"></script>
+    <script src="engine.js?v=66"></script>
+    <script src="deck.js?v=66"></script>
+    <script src="bootstrap.js?v=66"></script>
     <script>
         // PWA 서비스워커 등록 — 앱 셸 캐싱으로 오프라인 실행/즉시 시작 지원.
         if ("serviceWorker" in navigator) {
