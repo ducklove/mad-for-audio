@@ -1,4 +1,6 @@
-// FM 라디오 테스트 설정 — 저장소 루트를 정적 서빙하고 크로미움으로 검증한다.
+// FM 라디오 테스트 설정 — 저장소 루트를 정적 서빙하고 크로미움 전체 + WebKit 핵심 흐름을 검증한다.
+// WebKit 프로젝트를 두는 이유: 이 앱의 주 사용 환경이 Safari 계열(iPhone PWA·WKWebView)인데,
+// 크로미움에서만 통과하고 Safari에서 조용히 죽는 회귀(예: SAFARI_LIKE 그래프 가드)가 실제로 있었다.
 const { defineConfig } = require("@playwright/test");
 
 module.exports = defineConfig({
@@ -9,8 +11,22 @@ module.exports = defineConfig({
     reporter: [["list"]],
     use: {
         baseURL: "http://127.0.0.1:8123/",
-        launchOptions: { args: ["--autoplay-policy=no-user-gesture-required"] },
     },
+    projects: [
+        {
+            name: "chromium",
+            use: {
+                browserName: "chromium",
+                launchOptions: { args: ["--autoplay-policy=no-user-gesture-required"] },
+            },
+        },
+        {
+            // Safari 경로 회귀 방지 — 예약 녹음·테이프 흐름만 WebKit으로 한 번 더
+            name: "webkit",
+            use: { browserName: "webkit" },
+            grep: /예약 녹음|예약 발화|테이프 보관함|테이프 가져오기/,
+        },
+    ],
     webServer: {
         command: "npx http-server .. -p 8123 -s -c-1",
         url: "http://127.0.0.1:8123/index.html",

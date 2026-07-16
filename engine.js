@@ -10,6 +10,7 @@ let gainNode = null;
 // 따라서 현재 재생(라디오·음반·테이프)과 무관하게 무음으로 녹음된다.
 let bgRecAudio = null;
 let bgRecPlayer = null;
+let bgRecCtx = null;      // 전용 AudioContext — 본체 그래프(SAFARI_LIKE 차단)와 무관하게 동작
 let bgRecSource = null;
 let bgRecDest = null;
 let bgRecAnalyser = null;

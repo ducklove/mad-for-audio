@@ -40,21 +40,37 @@ function openRecordingDb() {
     }
 }
 
-function persistRecording(record) {
+function idbAddRecording(record) {
     return new Promise((resolve) => {
-        if (!recDb) return resolve(null);
         try {
             const request = recDb
                 .transaction("recordings", "readwrite")
                 .objectStore("recordings")
                 .add(record);
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => resolve(null);
+            request.onsuccess = () => resolve({ ok: true, id: request.result });
+            request.onerror = () => resolve({ ok: false, error: request.error });
         } catch (error) {
-            console.error(error);
-            resolve(null);
+            resolve({ ok: false, error });
         }
     });
+}
+
+async function persistRecording(record) {
+    if (!recDb) return null;
+    const direct = await idbAddRecording(record);
+    if (direct.ok) return direct.id;
+    // 일부 WebKit(사파리 사생활 보호·임시 세션)은 Blob/File을 IDB에 못 담는다.
+    // ArrayBuffer로 풀어 저장하고 복원 시 Blob으로 되살린다.
+    try {
+        const buf = await record.blob.arrayBuffer();
+        const flat = { ...record, blob: null, blobBuf: buf, blobType: record.blob.type || record.type || "" };
+        const retry = await idbAddRecording(flat);
+        if (!retry.ok) console.error("녹음 저장 실패:", retry.error);
+        return retry.ok ? retry.id : null;
+    } catch (error) {
+        console.error(error);
+        return null;
+    }
 }
 
 function deleteRecording(dbId) {
@@ -71,7 +87,10 @@ function restoreRecordings() {
         const request = recDb.transaction("recordings").objectStore("recordings").getAll();
         request.onsuccess = () => {
             for (const saved of request.result) {
-                addRecordingItem({ ...saved, dbId: saved.id });
+                const rec = { ...saved, dbId: saved.id };
+                // ArrayBuffer 폴백으로 저장된 녹음은 Blob으로 되살린다
+                if (!rec.blob && rec.blobBuf) rec.blob = new Blob([rec.blobBuf], { type: rec.blobType || rec.type || "audio/webm" });
+                addRecordingItem(rec);
             }
         };
     } catch (error) {

@@ -2296,13 +2296,16 @@ function toggleRecording(opts) {
     }
     if (!deckTape) deckTape = newBlankTape();
 
-    if (!ensureAudioGraph()) {
-        playerSubtext.textContent = "이 브라우저에서는 녹음을 지원하지 않습니다.";
-        return;
-    }
-
-    if (audioCtx.state === "suspended") {
-        audioCtx.resume();
+    // 백그라운드 녹음은 전용 체인(bgRecCtx)만 있으면 된다 — 본체 그래프는
+    // Safari 계열에서 의도적으로 꺼져 있으므로 여기서 요구하면 안 된다.
+    if (bgRec) {
+        if (bgRecCtx && bgRecCtx.state === "suspended") bgRecCtx.resume();
+    } else {
+        if (!ensureAudioGraph()) {
+            playerSubtext.textContent = "이 브라우저에서는 녹음을 지원하지 않습니다.";
+            return;
+        }
+        if (audioCtx.state === "suspended") audioCtx.resume();
     }
 
     const mime = pickRecMime();
@@ -3465,6 +3468,7 @@ let bgRecGestureArmed = false;
 
 function bgRecKick() {
     if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+    if (bgRecCtx && bgRecCtx.state === "suspended") bgRecCtx.resume();
     if (bgRecAudio && bgRecAudio.paused && bgRecPlayer) bgRecAudio.play().catch(() => {});
     serviceReservationRecording(Date.now());
 }
@@ -3478,20 +3482,40 @@ function bgRecArmGestureRetry() {
     }, { once: true, capture: true });
 }
 
-async function bgRecTune(station) {
-    if (!ensureAudioGraph()) throw new Error("이 브라우저에서는 녹음을 지원하지 않습니다.");
-    if (!bgRecAudio) {
+// 전용 녹음 체인 — 본체 그래프(ensureAudioGraph)는 Safari 계열에서 의도적으로 꺼져 있다
+// (본체 <audio>의 네이티브 HLS를 WebAudio에 묶으면 깨지는 WebKit 제약).
+// 백그라운드 수신기는 우리가 만든 엘리먼트를 hls.js(MSE/MMS)로 구동하므로 그 제약과
+// 무관하다 — 별도 AudioContext로 태핑해 Safari에서도 녹음이 동작하게 한다.
+function ensureBgRecChain() {
+    if (bgRecDest) return true;
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx || !window.MediaRecorder) return false;
+    try {
+        bgRecCtx = new Ctx();
         bgRecAudio = document.createElement("audio");
         bgRecAudio.crossOrigin = "anonymous";
         bgRecAudio.preload = "auto";
-        bgRecSource = audioCtx.createMediaElementSource(bgRecAudio);
-        bgRecDest = audioCtx.createMediaStreamDestination();
-        bgRecAnalyser = audioCtx.createAnalyser();
+        bgRecSource = bgRecCtx.createMediaElementSource(bgRecAudio);
+        bgRecDest = bgRecCtx.createMediaStreamDestination();
+        bgRecAnalyser = bgRecCtx.createAnalyser();
         bgRecAnalyser.fftSize = 512;
         bgRecSource.connect(bgRecDest);
         bgRecSource.connect(bgRecAnalyser);
+        return true;
+    } catch (error) {
+        console.error(error);
+        bgRecCtx = null;
+        bgRecAudio = null;
+        bgRecSource = null;
+        bgRecDest = null;
+        bgRecAnalyser = null;
+        return false;
     }
-    if (audioCtx.state === "suspended") audioCtx.resume();
+}
+
+async function bgRecTune(station) {
+    if (!ensureBgRecChain()) throw new Error("이 브라우저에서는 녹음을 지원하지 않습니다.");
+    if (bgRecCtx.state === "suspended") bgRecCtx.resume();
     const url = await getStreamUrl(station);
     bgRecStop();
     bgRecPlayer = PlayerCore.attach(bgRecAudio, url, {
