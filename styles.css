@@ -39,6 +39,10 @@ button {
     border: 0;
     background: none;
     color: inherit;
+    /* Safari 26 / WKWebView(맥 앱)의 새 기본 버튼(캡슐) 스타일이 커스텀
+       radius·padding을 덮어쓰지 않도록 UA 렌더링을 끈다 */
+    -webkit-appearance: none;
+    appearance: none;
 }
 
 button:focus-visible,
