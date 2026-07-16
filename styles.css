@@ -2289,3 +2289,16 @@ body.mode-focus .focus-exit {
         justify-content: flex-end;
     }
 }
+
+/* 실행 중인 앱 버전 — 푸터 오른쪽 작은 칩 */
+.app-version {
+    display: inline-block;
+    margin-left: 10px;
+    padding: 2px 9px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--panel-soft);
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-variant-numeric: tabular-nums;
+}

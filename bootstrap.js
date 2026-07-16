@@ -6,6 +6,10 @@
     const version = source ? new URL(source, location.href).searchParams.get("v") : "";
     const assetUrl = (name) => version ? `${name}?v=${encodeURIComponent(version)}` : name;
 
+    // 실행 중인 버전을 화면에 노출 — "고쳤다는데 왜 그대로지?"를 눈으로 확인할 수 있게
+    const versionEl = document.getElementById("appVersion");
+    if (versionEl) versionEl.textContent = version ? "v" + version : "dev";
+
     function validateCatalog(records) {
         if (!Array.isArray(records) || records.length === 0) return false;
         return records.every((record) =>
