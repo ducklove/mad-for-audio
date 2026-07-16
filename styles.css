@@ -777,6 +777,13 @@ body.mode-simple .list-toggle-wrap {
     display: none !important;
 }
 
+/* 예외: 트랜스포트가 도는 동안(테이프 재생·녹음)은 간편 모드에서도 데크를 보여준다 —
+   릴이 돌아가는 모습과 REC 램프가 곧 녹음 상태 표시다 */
+body.mode-simple #deckStage.transport-live {
+    display: block !important;
+    margin-bottom: 12px;
+}
+
 body.mode-simple #stationMain.collapsed {
     display: block;
 }

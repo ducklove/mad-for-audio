@@ -217,6 +217,48 @@ test.describe("데스크톱", () => {
         await expect(page.locator("#ma2375SourceGlow")).toHaveText("CAS");
     });
 
+    test("타이머 예약 녹음: 정지 중 발화 → 튜너·데크만 점등·무음 녹음, 종료 후 자동 정지", async ({ page }) => {
+        await page.evaluate(() => {
+            const st = window.FMRadio.stations[0];
+            fireReservation(
+                { id: 990, stationId: st.id, title: "타이머 테스트", repeat: "once", enabled: true },
+                { ymd: "t", startTs: Date.now(), endTs: Date.now() + 7000 }, "990:t");
+        });
+        await page.waitForFunction(() => !!recorder && deckMode === "rec", null, { timeout: 15000 });
+        await page.waitForTimeout(2200);
+        const mid = await page.evaluate(() => ({
+            standby: timerRecStandby,
+            gain: +gainNode.gain.value.toFixed(2),
+            ampWarm: +ampWarm.toFixed(2),
+            tunerWarm: +tunerWarm.toFixed(2),
+            reel1: document.getElementById("deckReelL").getAttribute("transform"),
+            deckShown: !document.getElementById("deckStage").hidden
+                && document.getElementById("deckStage").classList.contains("transport-live"),
+        }));
+        expect(mid.standby, "타이머 스탠바이 진입").toBe(true);
+        expect(mid.gain, "스피커 무음").toBe(0);
+        expect(mid.ampWarm, "앰프 소등").toBeLessThan(0.05);
+        expect(mid.tunerWarm, "튜너 점등").toBeGreaterThan(0.8);
+        expect(mid.deckShown, "녹음 중 데크 노출").toBe(true);
+        await page.waitForTimeout(400);
+        expect(await page.evaluate((r1) => document.getElementById("deckReelL").getAttribute("transform") !== r1, mid.reel1),
+            "릴이 돌아간다").toBe(true);
+        await page.waitForFunction(() => !recorder && !activeResRec && !isPlaying && deckMode === "stop", null, { timeout: 15000 });
+        expect(await page.evaluate(() => timerRecStandby), "종료 후 스탠바이 해제").toBe(false);
+        // 완료되면 프로그램명이 붙은 카세트가 되감긴 채 테이프 랙에 보관된다
+        await page.waitForFunction(() =>
+            [...document.querySelectorAll("#deckShelf g[data-id] text")].some((t) => t.textContent.includes("타이머 테스트")),
+            null, { timeout: 10000 });
+        const stored = await page.evaluate(() => {
+            const t = tapes.find((x) => x.label.includes("타이머 테스트"));
+            return t && { pos: t.pos, segs: t.segments.length, inserted: deckTape === t };
+        });
+        expect(stored.pos, "되감김").toBe(0);
+        expect(stored.segs, "녹음 세그먼트 존재").toBeGreaterThan(0);
+        expect(stored.inserted, "랙에 보관(데크에서 배출)").toBe(false);
+        expect(await page.evaluate(() => playerSubtext.textContent), "카세트 보관 안내").toContain("테이프 랙에 보관");
+    });
+
     test("설명서에 신규 기기별 소개와 음색·동작 차이가 기록됨", async ({ page }) => {
         await page.goto("/manual.html");
         for (const name of ["TX-9500 II", "T-110", "T-100", "B760", "SA-9900", "AU-111", "L-550", "E-303", "MA2375", "B215", "TCD 3014A", "TC-KA7ES", "CT-F1250", "SL-1200MK2", "TD 124", "GARRARD", "Sondek LP12", "GE-10S / GE-10C"]) {

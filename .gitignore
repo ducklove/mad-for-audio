@@ -12,3 +12,6 @@ tray/dist*/
 
 # macOS 앱 빌드 산출물
 macos/Mad for Audio.app/
+
+# Claude Code 로컬 설정 (dev server launch)
+.claude/

@@ -361,7 +361,7 @@ function deckPlay() {
     stopPhono();
     if (player) { player.destroy(); player = null; }
     if (typeof Hls !== "undefined" && Hls.isSupported()) ensureAudioGraph();
-    if (gainNode) gainNode.gain.value = volumeLevel;
+    if (gainNode) gainNode.gain.value = timerRecStandby ? 0 : volumeLevel;
     ensureHiss();
     deckMode = "play";
     deckPlaying = true;

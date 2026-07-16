@@ -614,11 +614,23 @@ if (!unitShow || typeof unitShow !== "object") {
 }
 Object.keys(UNIT_STAGES).forEach((k) => { if (typeof unitShow[k] !== "boolean") unitShow[k] = k !== "eq"; });
 
+// 트랜스포트가 도는 동안(재생·녹음)은 데크를 숨겨 두었어도 보여준다 — 돌아가는 릴이 보이도록
+let deckStageLive = false;
+
 function applyUnitVisibility() {
     Object.entries(UNIT_STAGES).forEach(([key, id]) => {
         const el = document.getElementById(id);
-        if (el) el.hidden = !unitShow[key];
+        if (el) el.hidden = !unitShow[key] && !(key === "deck" && deckStageLive);
     });
+}
+
+function syncDeckStageLive() {
+    const live = deckMode === "play" || (deckMode === "rec" && !!recorder);
+    if (live === deckStageLive) return;
+    deckStageLive = live;
+    const el = document.getElementById(UNIT_STAGES.deck);
+    if (el) el.classList.toggle("transport-live", live);
+    applyUnitVisibility();
 }
 
 function setUnitShow(key, show) {
@@ -1030,6 +1042,7 @@ let ttScratchEnergy = 0;  // 바이닐 문지름 세기 — 드래그 속도로 
 let ttRubLast = null;     // 문지름 드래그의 직전 포인터 좌표
 let tubeWarm = 0;    // 진공관 웜업 상태 0..1 (켜면 서서히 달아오르고, 꺼지면 더 천천히 식는다)
 let tunerWarm = 0;   // 튜너 조명 상태 0..1 — 라디오 수신 중에만 점등 (포노/테이프 중엔 튜너는 꺼진 것)
+let ampWarm = 0;     // 앰프·EQ·턴테이블 조명 0..1 — 타이머 예약 녹음 중엔 튜너·데크만 켜고 이쪽은 끈다
 let tsPreviewUntil = 0;   // 다이얼 조작 중 디스플레이 웨이크 시각
 
 // 톤암 각도 → 트랙 번호 (-5° 미만 = 거치대)
@@ -1529,6 +1542,10 @@ function ttFrame(now) {
     const warmTarget = (isPlaying || deckMode === "play" || !!recorder) ? 1 : 0;
     const warmRate = warmTarget > tubeWarm ? dt / 2.0 : dt / 3.5;
     tubeWarm = Math.max(0, Math.min(1, tubeWarm + (warmTarget > tubeWarm ? 1 : -1) * warmRate));
+    // 앰프·EQ·턴테이블은 타이머 예약 녹음(스탠바이) 중엔 꺼진 채로 둔다 — 튜너·데크만 작동
+    const ampTarget = timerRecStandby ? 0 : warmTarget;
+    const ampRate = ampTarget > ampWarm ? dt / 2.0 : dt / 3.5;
+    ampWarm = Math.max(0, Math.min(1, ampWarm + (ampTarget > ampWarm ? 1 : -1) * ampRate));
     updateMa2375Display();
 
     // 튜너 램프: 라디오 수신 중에만 (백열등이라 진공관보다 빠르게 켜지고 꺼진다)
@@ -1539,31 +1556,35 @@ function ttFrame(now) {
     // 앰프: 진공관 글로우(웜업 연동)·갤러리 어둠·VU 바늘·전원 LED
     // 유리 할로·주변광은 은은하게, 필라멘트는 백열로 뜨겁게 (실제 진공관의 빛 분포)
     document.querySelectorAll(".ampGlow").forEach((el) => {
-        el.style.opacity = (0.012 + tubeWarm * (0.32 + tsSignal * 0.34)).toFixed(3);
+        el.style.opacity = (0.012 + ampWarm * (0.32 + tsSignal * 0.34)).toFixed(3);
     });
-    const filBloom = tubeWarm > 0.04
-        ? "drop-shadow(0 0 5px rgba(255,150,50," + tubeWarm.toFixed(2) + ")) drop-shadow(0 0 14px rgba(255,110,35," + (0.6 * tubeWarm).toFixed(2) + "))"
+    const filBloom = ampWarm > 0.04
+        ? "drop-shadow(0 0 5px rgba(255,150,50," + ampWarm.toFixed(2) + ")) drop-shadow(0 0 14px rgba(255,110,35," + (0.6 * ampWarm).toFixed(2) + "))"
         : "none";
     document.querySelectorAll(".ampFil").forEach((el) => {
-        el.style.opacity = (0.02 + tubeWarm * (0.85 + tsSignal * 0.15)).toFixed(3);
+        el.style.opacity = (0.02 + ampWarm * (0.85 + tsSignal * 0.15)).toFixed(3);
         el.style.filter = filBloom;
     });
     // 필라멘트 핫코어 — 유리 안에서 작열하는 백열점. 큰 블룸으로 유리 전체에 번진다.
-    const hotBloom = tubeWarm > 0.04
-        ? "drop-shadow(0 0 10px rgba(255,170,70," + (0.85 * tubeWarm).toFixed(2) + ")) drop-shadow(0 0 26px rgba(255,120,40," + (0.45 * tubeWarm).toFixed(2) + "))"
+    const hotBloom = ampWarm > 0.04
+        ? "drop-shadow(0 0 10px rgba(255,170,70," + (0.85 * ampWarm).toFixed(2) + ")) drop-shadow(0 0 26px rgba(255,120,40," + (0.45 * ampWarm).toFixed(2) + "))"
         : "none";
     document.querySelectorAll(".ampFilHot").forEach((el) => {
-        el.style.opacity = (tubeWarm * (0.8 + tsSignal * 0.2)).toFixed(3);
+        el.style.opacity = (ampWarm * (0.8 + tsSignal * 0.2)).toFixed(3);
         el.style.filter = hotBloom;
     });
     // 켜지면 스모크 유리가 거의 걷힌다 — 달아오른 관은 노출된 유리처럼 보여야 한다
     document.querySelectorAll(".tubeDark").forEach((el) => {
-        el.style.opacity = (0.76 - tubeWarm * 0.7).toFixed(3);
+        el.style.opacity = (0.76 - ampWarm * 0.7).toFixed(3);
     });
-    const vuAng = -42 + Math.max(0, Math.min(1, tsSignal)) * 84;
+    // VU 바늘: 앰프 미터는 앰프 전원(ampWarm)을 따라 잦아들고, 데크 미터는 늘 신호를 따른다
+    const vuSig = Math.max(0, Math.min(1, tsSignal));
     ["ampVuL", "ampVuR", "deckVuL", "deckVuR"].forEach((id, idx) => {
         const n = document.getElementById(id);
-        if (n) n.setAttribute("transform", "rotate(" + (vuAng * (idx % 2 ? 0.96 : 1)).toFixed(1) + " " + n.getAttribute("data-cx") + " " + n.getAttribute("data-cy") + ")");
+        if (!n) return;
+        const sig = id.startsWith("amp") ? vuSig * ampWarm : vuSig;
+        const ang = -42 + sig * 84;
+        n.setAttribute("transform", "rotate(" + (ang * (idx % 2 ? 0.96 : 1)).toFixed(1) + " " + n.getAttribute("data-cx") + " " + n.getAttribute("data-cy") + ")");
     });
 
     // 카세트 데크: 테이프 트랜스포트 (위치·릴·감김량·카운터·히스·REC 램프)
@@ -1599,6 +1620,7 @@ function ttFrame(now) {
         if (tapePos <= 0 || tapePos >= tapeLenOf(deckTape)) { deckMode = "stop"; windDir = 0; }
     }
     const deckRolling = (deckMode === "play") || (deckMode === "rec" && recorder);
+    syncDeckStageLive();
     const deckSpec = DECK_MODELS[deckModelId] || DECK_MODELS.dragon;
     const spinRate = (deckMode === "wind" ? 900 * windDir : (deckRolling ? 210 : 0)) * deckSpec.reelRate;
     if (spinRate) deckReelAngle = (deckReelAngle + dt * spinRate + 360) % 360;
@@ -1628,20 +1650,20 @@ function ttFrame(now) {
         }
     }
     const pled = document.getElementById("ampPwrLed");
-    if (pled) pled.style.fill = isPlaying ? "#ff7a3a" : "#3a2012";
+    if (pled) pled.style.fill = (isPlaying && !timerRecStandby) ? "#ff7a3a" : "#3a2012";
 
     // EQ 레벨 LED 컬럼 — 점등 시 발광(블룸), 소등 시 거의 꺼진 상태
     for (let i = 0; i < 12; i++) {
         const el = document.getElementById("eqLvl" + i);
         if (!el) break;
-        const on = eqState.on && isPlaying && (i / 12) < tsPeak;
+        const on = eqState.on && isPlaying && !timerRecStandby && (i / 12) < tsPeak;
         const color = i >= 10 ? "#ff5a3a" : "#ffb03a";
         el.style.fill = on ? color : "#1e1610";
         el.style.filter = on ? "drop-shadow(0 0 5px " + color + ") drop-shadow(0 0 12px " + color + "66)" : "none";
     }
 
     // 밴드별 실시간 스펙트럼 — 분석기 FFT bin을 현재 EQ 중심 주파수에 대응시킨다.
-    if (analyser && eqState.on && isPlaying) {
+    if (analyser && eqState.on && isPlaying && !timerRecStandby) {
         if (!ttFrame.eqSpectrum || ttFrame.eqSpectrum.length !== analyser.frequencyBinCount) {
             ttFrame.eqSpectrum = new Uint8Array(analyser.frequencyBinCount);
         }
@@ -1649,7 +1671,7 @@ function ttFrame(now) {
     }
     EQ_FREQS.forEach((freq, i) => {
         let level = 0;
-        if (analyser && ttFrame.eqSpectrum && eqState.on && isPlaying) {
+        if (analyser && ttFrame.eqSpectrum && eqState.on && isPlaying && !timerRecStandby) {
             const nyquist = (audioCtx ? audioCtx.sampleRate : 48000) / 2;
             const center = Math.max(0, Math.min(ttFrame.eqSpectrum.length - 1, Math.round(freq / nyquist * ttFrame.eqSpectrum.length)));
             const raw = Math.max(ttFrame.eqSpectrum[Math.max(0, center - 1)] || 0, ttFrame.eqSpectrum[center] || 0, ttFrame.eqSpectrum[Math.min(ttFrame.eqSpectrum.length - 1, center + 1)] || 0);
@@ -1676,12 +1698,12 @@ function ttFrame(now) {
     // 미터 백라이트 라이트박스 — 켜지면 면 전체가 발광한다.
     // 튜너 유닛의 미터는 튜너 램프에, 나머지는 시스템 웜업에 연동된다.
     document.querySelectorAll(".ampLamp").forEach((el) => {
-        const w = el.closest("#tunerStage") ? tunerLight : tubeWarm;
+        const w = el.closest("#tunerStage") ? tunerLight : el.closest("#deckStage") ? tubeWarm : ampWarm;
         el.style.opacity = (0.03 + w * 0.97).toFixed(3);
     });
-    // 그린 레전드(맥킨토시 패널 문자) — 백라이트 연동
+    // 그린 레전드(맥킨토시 패널 문자) — 백라이트 연동 (앰프 전원 기준)
     document.querySelectorAll(".ampLegend").forEach((el) => {
-        el.style.opacity = (0.2 + tubeWarm * 0.8).toFixed(3);
+        el.style.opacity = (0.2 + ampWarm * 0.8).toFixed(3);
     });
     document.querySelectorAll(".dialScale").forEach((el) => {
         el.style.opacity = (0.32 + tunerLight * 0.68).toFixed(2);
@@ -1691,12 +1713,12 @@ function ttFrame(now) {
 
     // 전원 연동 조명: 튜너는 수신 램프를, 나머지 유닛은 시스템 웜업을 따른다
     document.querySelectorAll(".lzPowerDim").forEach((el) => {
-        const w = el.closest("#tunerStage") ? tunerLight : tubeWarm;
+        const w = el.closest("#tunerStage") ? tunerLight : el.closest("#deckStage") ? tubeWarm : ampWarm;
         el.style.opacity = (0.22 * (1 - w)).toFixed(3);
     });
     // 미터 백라이트: 꺼진 미터 면은 어둡다
     document.querySelectorAll(".meterDark").forEach((el) => {
-        const w = el.closest("#tunerStage") ? tunerLight : tubeWarm;
+        const w = el.closest("#tunerStage") ? tunerLight : el.closest("#deckStage") ? tubeWarm : ampWarm;
         el.style.opacity = (0.55 * (1 - w)).toFixed(3);
     });
 }
@@ -1860,6 +1882,7 @@ let resFiredOcc = loadJson("fmRadio.resFired", {});     // 회차별 기록 (key
                                                         // 1인데 진행 중인 녹음이 없으면 앱이 죽었다 살아난 것 — 남은 시간을 이어 녹음한다.
 const resAlerted = {};                                  // 5분 전 알림 중복 방지 (세션 한정)
 let pendingRecName = null;                              // 다음 toggleRecording()이 쓸 녹음 이름 (프로그램명)
+let recSavedMsgOverride = null;                         // 녹음 저장(onstop) 시 일반 문구 대신 보여줄 안내 (예약 완료용)
 let resFormReady = false;
 
 
@@ -2112,6 +2135,15 @@ function togglePlay() {
     if (!currentStation && !phonoActive) return;
     const sourceName = currentStation ? currentStation.name : "레코드";
 
+    // 타이머 예약 녹음 중 전원 조작 = 앰프를 켜서 함께 듣기 (녹음은 그대로 계속)
+    if (timerRecStandby && isPlaying) {
+        timerRecStandby = false;
+        if (gainNode) applyGainStaging();
+        else try { audio.volume = volumeLevel; } catch (e) {}
+        playerSubtext.textContent = "앰프를 켰습니다 — 예약 녹음은 계속 진행됩니다.";
+        return;
+    }
+
     if (isPlaying) {
         audio.pause();
         isPlaying = false;
@@ -2298,7 +2330,9 @@ function toggleRecording() {
         };
         record.dbId = await persistRecording(record);
         addRecordingItem(record);
-        playerSubtext.textContent = `${station.name} → 테이프 ${formatDuration(tapeStartPos * 1000)} 위치에 녹음되었습니다.`;
+        // 예약 녹음 완료 안내(카세트 보관 위치)가 방금 표시됐다면 일반 저장 문구로 덮지 않는다
+        playerSubtext.textContent = recSavedMsgOverride || `${station.name} → 테이프 ${formatDuration(tapeStartPos * 1000)} 위치에 녹음되었습니다.`;
+        recSavedMsgOverride = null;
         gtag('event', 'record_save', {
             station_id: station.id,
             station_name: station.name,
@@ -2307,6 +2341,7 @@ function toggleRecording() {
     };
 
     recorder = rec;
+    recSavedMsgOverride = null;
     recStartMs = startMs;
     deckRecStartPos = tapeStartPos;
     deckMode = "rec";
@@ -3142,7 +3177,7 @@ function addReservation(data) {
     const occ = resOccurrence(res, nowTs);
     playerSubtext.textContent = occ && nowTs >= occ.startTs
         ? "지금부터 녹음합니다 — " + res.title
-        : "예약되었습니다 — " + res.title + " (" + resRepeatLabel(res) + " " + FMSchedule.fmtHM(res.startMin) + "). 이 창을 열어 두세요.";
+        : "예약되었습니다 — " + res.title + " (" + resRepeatLabel(res) + " " + FMSchedule.fmtHM(res.startMin) + "). 앱만 켜 두면 됩니다 — 편성표 창은 닫아도 돼요.";
     gtag('event', 'reserve_add', { station_id: res.stationId, repeat: res.repeat });
     reservationTick();
     return res;
@@ -3240,6 +3275,9 @@ function renderResList() {
         btnToggle.type = "button";
         btnToggle.className = "res-btn";
         btnToggle.textContent = res.enabled ? "끄기" : "켜기";
+        btnToggle.title = res.enabled
+            ? "예약을 지우지 않고 잠시 쉬게 합니다 — 매일·매주 반복 예약을 이번엔 건너뛸 때"
+            : "쉬고 있는 예약을 다시 켭니다";
         btnToggle.addEventListener("click", () => toggleReservationEnabled(res.id));
 
         const btnDel = document.createElement("button");
@@ -3322,7 +3360,16 @@ function fireReservation(res, occ, key) {
     pruneFired();
     saveJson("fmRadio.resFired", resFiredOcc);
     activeResRec = { res, occ, key, endTs: occ.endTs, tapeId: null, started: false };
-    playerSubtext.textContent = "예약 녹음을 시작합니다 — " + res.title;
+    // 시스템이 정지 상태였다면 타이머 녹음 — 튜너·데크만 켜고 앰프는 끈 채 무음으로 녹음한다.
+    // 스피커 게인을 선국(스트림 재생)보다 먼저 내려 두어야 새벽 발화 때 소리가 새지 않는다.
+    timerRecStandby = !isPlaying && !recorder && deckMode === "stop";
+    if (timerRecStandby) {
+        if (ensureAudioGraph()) applyGainStaging();
+        else try { audio.volume = 0; } catch (e) {}
+        playerSubtext.textContent = "타이머 예약 녹음 — 튜너와 데크만 켜서 무음으로 녹음합니다: " + res.title;
+    } else {
+        playerSubtext.textContent = "예약 녹음을 시작합니다 — " + res.title;
+    }
     notifyRes("예약 녹음 시작", res.title);
     gtag('event', 'reserve_fire', { station_id: res.stationId });
     updateResChip();
@@ -3389,6 +3436,12 @@ function finishReservedRecording() {
     const done = activeResRec;
     activeResRec = null;
     if (recorder) stopRecording();
+    // 타이머 녹음이었다면(정지 상태에서 자동 기동) 끝나고 나서 다시 정지 상태로 돌아간다
+    const wasTimer = timerRecStandby;
+    timerRecStandby = false;
+    if (gainNode) applyGainStaging();
+    else try { audio.volume = volumeLevel; } catch (e) {}
+    if (wasTimer) stopPlay();
     if (!done) return;
     resFiredOcc[done.key] = 3;
     saveJson("fmRadio.resFired", resFiredOcc);
@@ -3399,8 +3452,19 @@ function finishReservedRecording() {
         resSave();
     }
     if (done.started) {
-        playerSubtext.textContent = "예약 녹음 완료 — " + res.title + ". 녹음 파일 목록에 저장되었습니다.";
-        notifyRes("예약 녹음 완료", res.title);
+        // 녹음된 카세트는 되감아 테이프 랙에 보관한다 — 랙에서 누르면 장착되고, PLAY로 바로 재생
+        const tape = done.tapeId ? tapes.find((t) => t.id === done.tapeId) : null;
+        if (tape) {
+            tape.pos = 0;
+            if (deckTape === tape) {
+                deckTape = newBlankTape();
+                tapePos = 0;
+            }
+            deckRefreshShelf();
+        }
+        recSavedMsgOverride = "예약 녹음 완료 — 카세트 「" + res.title + "」를 되감아 테이프 랙에 보관했습니다. 데크 TAPE RACK에서 눌러 장착한 뒤 PLAY를 누르세요.";
+        playerSubtext.textContent = recSavedMsgOverride;
+        notifyRes("예약 녹음 완료", res.title + " — 카세트가 테이프 랙에 보관되었습니다.");
         gtag('event', 'reserve_done', { station_id: res.stationId });
     }
     renderResList();
@@ -3415,6 +3479,13 @@ function cancelReservedRecording(msg) {
     resFiredOcc[activeResRec.key] = 2;
     saveJson("fmRadio.resFired", resFiredOcc);
     activeResRec = null;
+    // 타이머 녹음 중단: 사용자가 다른 채널로 옮겼다면 그대로 듣게 두고,
+    // 같은 채널에서 멈췄다면(데크 STOP 등) 자동 기동했던 시스템을 다시 정지한다
+    const wasTimer = timerRecStandby;
+    timerRecStandby = false;
+    if (gainNode) applyGainStaging();
+    else try { audio.volume = volumeLevel; } catch (e) {}
+    if (wasTimer && (!currentStation || currentStation.id === res.stationId)) stopPlay();
     if (res.repeat === "once") {
         res.enabled = false;
         res.done = true;
@@ -3452,7 +3523,7 @@ function reservationTick() {
         } else if (occ.startTs > nowTs && occ.startTs - nowTs <= 300000 && !resAlerted[key]) {
             resAlerted[key] = true;
             playerSubtext.textContent = "5분 뒤 예약 녹음이 시작됩니다 — " + res.title;
-            notifyRes("예약 녹음 예정", res.title + " — 5분 뒤 시작됩니다. 창을 열어 두세요.");
+            notifyRes("예약 녹음 예정", res.title + " — 5분 뒤 시작됩니다. 앱을 켜 두세요.");
         }
     });
     if (changed) {
