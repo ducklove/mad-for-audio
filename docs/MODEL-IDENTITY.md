@@ -194,6 +194,23 @@
 - TIMER는 예약 전체 대기/중지를, PROGRAM은 편성표를, SLEEP은 15·30·60·90분 순환을
   담당한다. 오디오 체인 밖에 있어 음색은 바꾸지 않는다.
 
+## 프런트패널 전면 소생 (v107)
+
+그려져 있던 모든 조작부에 기능을 배선했다 — 장식 오브젝트 제로가 목표.
+- **앰프**: E-303 BASS/TREBLE/BALANCE/INPUT/REC OUT/SPEAKERS/MUTING(-20dB)/TAPE MON/SUBSONIC,
+  MA2375 5밴드 톤+소스별 INPUT TRIM, MC2105 L·R GAIN(채널 트림)+SPEAKERS, QUAD 33
+  bass/treble/slope/balance+입력 셀렉터 7키(mono/stereo/disc/radio/tape 실전환), 91E 입력 5키.
+  전원 스위치류는 모두 시스템 재생/정지. DSP는 ampOut→gainNode 사이 fp 스테이지(Chromium).
+- **데크**: DRAGON BIAS/LEVEL/TAPE(I·II·IV)/DOLBY(OFF·B·C)/MPX, B215 12키 전부(수동 캘리브레이션
+  3키·MON·MPX·NR·REP·TIME), TCD 채널별 REC LEVEL+OUTPUT, CT-F1250 4노브, W-990RX
+  POWER/EJECT II/REC LEVEL/PAUSE/COUNTER/DOLBY B·C/SYNC/BLANK SCAN(빈 구간 건너뜀)/MONITOR.
+  NR·테이프 타입은 재생 히스 배율로, REC 계열은 녹음 경로(recMpx→recBias→recTrimL/R)로 실효.
+- **EQ**: GE-5·SE-9 POWER 로커(회로 차단+패널 소등), GE-5 SPATIAL(스테레오 폭, 캡이 실제로 움직임).
+- **TT**: SL-1200 플린스 START·STOP, TD124 FINE SPEED(±3%), LP12 33/45 노브.
+- **튜너**: MR78 우측 PANLOC → 몰입 모드.
+- 노브 값은 fmRadio.frontPanel 플랫 키로 영속, 무음 위험 스위치(SPEAKERS/MUTING/MON)는 세션 한정.
+  잭·단자류는 안내 툴팁만 단 의도적 장식으로 남긴다.
+
 ## 퇴역/마이그레이션
 
 이전 버전의 추가 튜너(TU-9900, TX-9500 II, T-110, T-100, B760), 10밴드 EQ 변형,

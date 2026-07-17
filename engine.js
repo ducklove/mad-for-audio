@@ -113,6 +113,22 @@ let ampSpeakerTone = null;
 let ampSpeakerFeedback = null;
 let ampSpeakerWet = null;
 let ampOut = null;
+// ----- 프런트패널 유저 컨트롤 스테이지 (ampOut → … → gainNode) -----
+// 앰프별 톤 노브·밸런스·서브소닉·감쇠와 GE-5 SPATIAL 폭을 하나의 스테이지로 통일한다.
+// 노브 값은 fmRadio.frontPanel(플랫 키)에 영속되고, 현재 장착된 모델의 컨트롤만 실효된다.
+let fp = null;                                          // { bass, treble, slope, bands[5], subsonic, att, split, merge, mLL, mLR, mRL, mRR }
+let frontPanel = loadJson("fmRadio.frontPanel", {});
+let speakersOff = false;                                // SPEAKERS 스위치 (세션 한정 — 무음 고착 방지)
+let ampMuting20 = false;                                // E-303 MUTING -20dB (세션 한정)
+let monitorMuted = false;                               // 데크 MON/MONITOR — 녹음 모니터 소거 (세션 한정)
+let eqPowerOn = loadJson("fmRadio.frontPanel", {})["eq.power"] !== false;
+// 녹음 경로 유저 컨트롤 — MPX 필터·BIAS 틸트·REC LEVEL L/R. 예약 녹음(원본 바이트 캡처)은 통과하지 않는다.
+let recMpx = null;
+let recBias = null;
+let recSplit = null;
+let recMerge = null;
+let recTrimL = null;
+let recTrimR = null;
 let crackleGain = null;
 let crackleSrc = null;
 let scratchGain = null;   // 바이닐 문지름(스크래치) 노이즈 — 드래그 세기에 비례해 게인이 올라간다
@@ -196,10 +212,10 @@ function eqBufferCurve() {
 
 function applyEq() {
     if (!eqNodes) return;
-    if (eqBufferShaper) eqBufferShaper.curve = eqState.on ? eqBufferCurve() : null;
+    if (eqBufferShaper) eqBufferShaper.curve = eqLive() ? eqBufferCurve() : null;
     const g = eqState.gains[eqModelId];
     eqNodes.forEach((b, i) => {
-        const v = eqState.on ? (g[i] || 0) : 0;
+        const v = eqLive() ? (g[i] || 0) : 0;
         // 짧은 타임 콘스턴트로 램프 — 프리셋 전환·A/B 비교 시 지퍼 노이즈 방지
         if (audioCtx) b.gain.setTargetAtTime(v, audioCtx.currentTime, 0.03);
         else b.gain.value = v;
@@ -430,8 +446,81 @@ function applyGainStaging() {
     if (!gainNode) return;
     // 포노 보정은 앰프 입력에, 사용자의 청취 볼륨은 모든 회로 뒤에 적용한다.
     // 따라서 작은 청취 음량에서도 출력관 구동과 스피커 댐핑 특성이 사라지지 않는다.
-    if (ampInputTrim) setAudioParam(ampInputTrim.gain, phonoActive ? PHONO_GAIN : 1, .02);
+    if (ampInputTrim) setAudioParam(ampInputTrim.gain, (phonoActive ? PHONO_GAIN : 1) * fpSourceTrim(), .02);
     setAudioParam(gainNode.gain, volumeLevel, .012);
+}
+
+// ----- 프런트패널 상태 (모델별 노브·스위치 영속) -----
+
+function fpGet(key, def) {
+    const v = frontPanel[key];
+    return v === undefined || v === null ? def : v;
+}
+
+function fpSet(key, val) {
+    frontPanel[key] = val;
+    saveJson("fmRadio.frontPanel", frontPanel);
+    applyFrontPanel();
+    applyRecPanel();
+    applyGainStaging();
+}
+
+// MA2375 INPUT TRIM(소스별 게인 기억)과 데크 OUTPUT 노브 — 앰프 입력단에 곱해진다
+function fpSourceTrim() {
+    let t = 1;
+    if (typeof ampModelId !== "undefined" && ampModelId === "ma2375") {
+        const src = typeof deckPlaying !== "undefined" && deckPlaying ? "tape"
+            : typeof phonoActive !== "undefined" && phonoActive ? "phono" : "radio";
+        t *= fpGet("ma2375.trim." + src, 1);
+    }
+    if (typeof deckPlaying !== "undefined" && deckPlaying) t *= fpGet("deck.out", 1);
+    return t;
+}
+
+// EQ 실효 상태 — DEFEAT(eqState.on)와 별개로 GE-5/SE-9의 POWER 로커가 회로 전체를 끊는다
+function eqLive() {
+    return eqState.on && eqPowerOn;
+}
+
+// 현재 장착된 모델의 컨트롤만 실효 — 모델을 바꾸면 그 모델의 저장값이 적용되고 나머지는 중립
+function applyFrontPanel() {
+    if (!fp || !audioCtx) return;
+    const m = typeof ampModelId !== "undefined" ? ampModelId : "";
+    const tc = 0.03;
+    fp.bass.gain.setTargetAtTime(m === "e303" ? fpGet("e303.bass", 0) : m === "quad303" ? fpGet("quad.bass", 0) : 0, audioCtx.currentTime, tc);
+    fp.treble.gain.setTargetAtTime(m === "e303" ? fpGet("e303.treble", 0) : m === "quad303" ? fpGet("quad.treble", 0) : 0, audioCtx.currentTime, tc);
+    // QUAD 33 SLOPE — 고역이 접히기 시작하는 모서리를 옮기는 틸트 (0=개방 … 1=3.8kHz)
+    const slope = m === "quad303" ? fpGet("quad.slope", 0) : 0;
+    fp.slope.frequency.setTargetAtTime(20000 * Math.pow(0.19, slope), audioCtx.currentTime, tc);
+    fp.bands.forEach((b, i) => {
+        b.gain.setTargetAtTime(m === "ma2375" ? fpGet("ma2375.tone" + i, 0) : 0, audioCtx.currentTime, tc);
+    });
+    fp.subsonic.frequency.setTargetAtTime(m === "e303" && fpGet("e303.subsonic", false) ? 30 : 12, audioCtx.currentTime, tc);
+    // 감쇠: SPEAKERS OFF(무음) × E-303 MUTING(-20dB) — 모두 세션 한정이라 무음 고착이 없다
+    fp.att.gain.setTargetAtTime((speakersOff ? 0 : 1) * (m === "e303" && ampMuting20 ? 0.1 : 1), audioCtx.currentTime, tc);
+    // 스테레오 매트릭스: 채널 트림(MC2105 L/R GAIN) × 밸런스(E-303·QUAD 33) × 폭(GE-5 SPATIAL)
+    const gl = m === "mc2105" ? fpGet("mc2105.gainL", 1) : 1;
+    const gr = m === "mc2105" ? fpGet("mc2105.gainR", 1) : 1;
+    const bal = m === "e303" ? fpGet("e303.balance", 0) : m === "quad303" ? fpGet("quad.balance", 0) : 0;
+    const width = typeof eqModelId !== "undefined" && eqModelId === "ge5" && eqLive() ? fpGet("ge5.spatial", 0) : 0;
+    const balL = Math.min(1, 1 - bal);
+    const balR = Math.min(1, 1 + bal);
+    const s = 1 + width * 0.9;   // 폭 0 = 원신호 (LL=1, LR=0)
+    fp.mLL.gain.setTargetAtTime(gl * balL * (1 + s) / 2, audioCtx.currentTime, tc);
+    fp.mRL.gain.setTargetAtTime(gl * balL * (1 - s) / 2, audioCtx.currentTime, tc);
+    fp.mRR.gain.setTargetAtTime(gr * balR * (1 + s) / 2, audioCtx.currentTime, tc);
+    fp.mLR.gain.setTargetAtTime(gr * balR * (1 - s) / 2, audioCtx.currentTime, tc);
+}
+
+// 녹음 유저 컨트롤 — MPX 필터·BIAS 틸트·REC LEVEL. 수동(더빙) 녹음에만 실효.
+function applyRecPanel() {
+    if (!recMpx || !audioCtx) return;
+    const tc = 0.03;
+    recMpx.frequency.setTargetAtTime(fpGet("rec.mpx", false) ? 16000 : 21000, audioCtx.currentTime, tc);
+    recBias.gain.setTargetAtTime(fpGet("rec.bias", 0) * 4, audioCtx.currentTime, tc);         // -1..1 → ±4dB
+    const lvl = fpGet("rec.level", 1);                                                        // 0.4..2.2
+    recTrimL.gain.setTargetAtTime(lvl * fpGet("rec.levelL", 1), audioCtx.currentTime, tc);
+    recTrimR.gain.setTargetAtTime(lvl * fpGet("rec.levelR", 1), audioCtx.currentTime, tc);
 }
 
 // E-303 LOUDNESS COMP — 저음량 등청감 보상. 볼륨이 낮을수록 저·고역 셸프를 올린다.
@@ -621,7 +710,48 @@ function ensureAudioGraph() {
         ampSpeakerResonance.connect(ampSpeakerDelay);
         ampSpeakerDelay.connect(ampSpeakerTone).connect(ampSpeakerWet).connect(ampOut);
         ampSpeakerDelay.connect(ampSpeakerFeedback).connect(ampSpeakerResonance);
-        ampOut.connect(gainNode).connect(audioCtx.destination);
+        // 프런트패널 스테이지: 톤 → 슬로프 → 5밴드 → 서브소닉 → 감쇠 → 스테레오 매트릭스
+        fp = { bands: [] };
+        fp.bass = audioCtx.createBiquadFilter();
+        fp.bass.type = "lowshelf";
+        fp.bass.frequency.value = 110;
+        fp.treble = audioCtx.createBiquadFilter();
+        fp.treble.type = "highshelf";
+        fp.treble.frequency.value = 8000;
+        fp.slope = audioCtx.createBiquadFilter();
+        fp.slope.type = "lowpass";
+        fp.slope.frequency.value = 20000;
+        fp.slope.Q.value = 0.5;
+        [30, 250, 1000, 4000, 10000].forEach((f, i) => {
+            const b = audioCtx.createBiquadFilter();
+            b.type = i === 0 ? "lowshelf" : i === 4 ? "highshelf" : "peaking";
+            b.frequency.value = f;
+            b.Q.value = 0.9;
+            fp.bands.push(b);
+        });
+        fp.subsonic = audioCtx.createBiquadFilter();
+        fp.subsonic.type = "highpass";
+        fp.subsonic.frequency.value = 12;
+        fp.att = audioCtx.createGain();
+        fp.split = audioCtx.createChannelSplitter(2);
+        fp.merge = audioCtx.createChannelMerger(2);
+        fp.mLL = audioCtx.createGain();
+        fp.mLR = audioCtx.createGain();
+        fp.mRL = audioCtx.createGain();
+        fp.mRR = audioCtx.createGain();
+        ampOut.connect(fp.bass).connect(fp.treble).connect(fp.slope);
+        let fpHead = fp.slope;
+        fp.bands.forEach((b) => { fpHead = fpHead.connect(b); });
+        fpHead.connect(fp.subsonic).connect(fp.att).connect(fp.split);
+        fp.split.connect(fp.mLL, 0);
+        fp.split.connect(fp.mLR, 0);
+        fp.split.connect(fp.mRL, 1);
+        fp.split.connect(fp.mRR, 1);
+        fp.mLL.connect(fp.merge, 0, 0);
+        fp.mRL.connect(fp.merge, 0, 0);
+        fp.mLR.connect(fp.merge, 0, 1);
+        fp.mRR.connect(fp.merge, 0, 1);
+        fp.merge.connect(gainNode).connect(audioCtx.destination);
         // 바이닐 크랙클 (포노 재생 시에만 게인이 올라간다) — EQ 앞에 섞어 앰프 음색까지 입힌다
         crackleGain = audioCtx.createGain();
         crackleGain.gain.value = 0;
@@ -631,8 +761,26 @@ function ensureAudioGraph() {
         buildEqChain();
         recSatShaper = audioCtx.createWaveShaper();
         recSatShaper.oversample = "2x";
-        source.connect(recSatShaper).connect(recDest);
+        // 녹음 유저 컨트롤: MPX 필터 → BIAS 틸트 → 채널별 REC LEVEL → 새추레이션 → recDest
+        recMpx = audioCtx.createBiquadFilter();
+        recMpx.type = "lowpass";
+        recMpx.frequency.value = 21000;
+        recBias = audioCtx.createBiquadFilter();
+        recBias.type = "highshelf";
+        recBias.frequency.value = 9000;
+        recSplit = audioCtx.createChannelSplitter(2);
+        recMerge = audioCtx.createChannelMerger(2);
+        recTrimL = audioCtx.createGain();
+        recTrimR = audioCtx.createGain();
+        source.connect(recMpx).connect(recBias).connect(recSplit);
+        recSplit.connect(recTrimL, 0);
+        recSplit.connect(recTrimR, 1);
+        recTrimL.connect(recMerge, 0, 0);
+        recTrimR.connect(recMerge, 0, 1);
+        recMerge.connect(recSatShaper).connect(recDest);
         applyRecHeadroom();
+        applyFrontPanel();
+        applyRecPanel();
         source.connect(analyser);
         applyBlend();
         applyMono();
@@ -674,6 +822,13 @@ function ensureAudioGraph() {
         ampSpeakerFeedback = null;
         ampSpeakerWet = null;
         ampOut = null;
+        fp = null;
+        recMpx = null;
+        recBias = null;
+        recSplit = null;
+        recMerge = null;
+        recTrimL = null;
+        recTrimR = null;
         crackleGain = null;
         scratchGain = null;
         return false;

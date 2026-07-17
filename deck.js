@@ -454,6 +454,7 @@ function mountDeck() {
     if (deckModelId === "b215") bindB215Keys();
     if (isDoubleDeck()) bindW990Dub();
     if (deckModelId === "dragon") bindDragonPanel();
+    bindDeckFrontPanel();
     if (!deckTape) deckTape = newBlankTape();
     deckRefreshShelf();
 }
@@ -511,6 +512,148 @@ function bindB215Keys() {
         }, 2000);
     });
     bind(11, "RST — 카운터 0으로 자동 와인딩 (ZERO LOC)", () => deckAutoWind(0, "ZERO LOC"));
+    // 나머지 8키 소생 — 실물 B215의 키 배치를 따른다
+    bind(0, "BIAS — 수동 캘리브레이션 1/3", () => b215ManualCal("bias", "BIAS — 400Hz 기준 톤으로 바이어스를 맞췄습니다"));
+    bind(1, "EQ — 수동 캘리브레이션 2/3", () => b215ManualCal("eq", "EQ — 10kHz 고역 응답을 맞췄습니다"));
+    bind(2, "CAL — 수동 캘리브레이션 3/3", () => b215ManualCal("cal", "CAL — 감도(레벨)를 맞췄습니다"));
+    bind(3, "MON — 모니터 소거/복귀", () => {
+        audio.muted = !audio.muted;
+        if (typeof tsSyncPanel === "function") tsSyncPanel();
+        playerSubtext.textContent = audio.muted ? "MONITOR CUT — 모니터를 소거했습니다 (녹음은 계속)." : "MONITOR ON";
+    });
+    bind(4, "MPX — FM 파일럿 톤 필터 (녹음)", () => {
+        fpSet("rec.mpx", !fpGet("rec.mpx", false));
+        fpNote(fpGet("rec.mpx", false) ? "MPX FILTER ON — FM 녹음의 19kHz 파일럿을 걸러냅니다." : "MPX FILTER OFF");
+    });
+    bind(5, "NR — 돌비 OFF/B/C 순환 (재생 히스)", () => deckCycleNr());
+    bind(8, "REP — 테이프가 끝나면 되감아 이어 재생", () => {
+        dragonRepeat = !dragonRepeat;
+        playerSubtext.textContent = dragonRepeat ? "REPEAT ON — 끝나면 되감아 처음부터 다시 재생합니다." : "REPEAT OFF";
+    });
+    bind(10, "TIME — 카운터 잔량/경과 전환", () => deckToggleTimeMode());
+}
+
+// ----- 프런트패널 소생 (데크 공통) — 그려져 있던 캘리브레이션·NR·레벨 조작 배선 -----
+let deckTimeRemaining = false;   // TIME/COUNTER — 카운터를 잔량(-) 표시로 (세션)
+let deckBlankScan = false;       // W-990RX BLANK SCAN — 재생 중 빈 구간 건너뜀 (세션)
+
+// 재생 히스 배율 — DOLBY NR(재생)과 테이프 타입(DRAGON I/II/IV)의 곱
+function deckHissMult() {
+    const nr = fpGet("deck." + deckModelId + ".nr", "off");
+    const tape = deckModelId === "dragon" ? fpGet("deck.tapeType", "II") : "II";
+    return (nr === "b" ? 0.55 : nr === "c" ? 0.3 : 1) * (tape === "I" ? 1.3 : tape === "IV" ? 0.7 : 1);
+}
+
+function deckCycleNr(order) {
+    const key = "deck." + deckModelId + ".nr";
+    const kinds = order || ["off", "b", "c"];
+    const next = kinds[(kinds.indexOf(fpGet(key, "off")) + 1) % kinds.length];
+    fpSet(key, next);
+    fpNote("DOLBY NR " + next.toUpperCase() + (next === "off" ? " — 히스 그대로" : next === "b" ? " — 재생 히스를 절반으로" : " — 재생 히스 최소"));
+}
+
+function deckToggleTimeMode() {
+    deckTimeRemaining = !deckTimeRemaining;
+    playerSubtext.textContent = deckTimeRemaining ? "TIME — 카운터가 남은 시간을 보여줍니다." : "COUNTER — 카운터가 경과 위치를 보여줍니다.";
+}
+
+// B215 수동 캘리브레이션 — BIAS→EQ→CAL 세 키를 다 누르면 AUTO CAL과 같은 결과
+function b215ManualCal(step, msg) {
+    if (!deckTape) { playerSubtext.textContent = "테이프를 먼저 장착하세요."; return; }
+    if (deckTape.cal) { playerSubtext.textContent = "이미 캘리브레이션된 테이프입니다."; return; }
+    deckTape.calSteps = deckTape.calSteps || {};
+    deckTape.calSteps[step] = true;
+    const done = ["bias", "eq", "cal"].filter((s) => deckTape.calSteps[s]).length;
+    if (done >= 3) {
+        deckTape.cal = true;
+        delete deckTape.calSteps;
+        tapeMetaSave();
+        playerSubtext.textContent = "수동 캘리브레이션 완료 — 「" + deckTape.label + "」의 히스 플로어가 내려갔습니다.";
+    } else {
+        playerSubtext.textContent = msg + " (" + done + "/3)";
+    }
+}
+
+function bindDeckFrontPanel() {
+    const svg = document.querySelector("#deckStage svg");
+    if (!svg || typeof fpKnob !== "function") return;
+    const pct = (v) => Math.round(v * 100) + "%";
+    const biasFmt = (v) => (v > 0 ? "+" : "") + Math.round(v * 100) + "% (고역 " + (v > 0 ? "밝게" : v < 0 ? "어둡게" : "평탄") + ")";
+    if (deckModelId === "dragon") {
+        fpKnob(svg, 1570, 300, 26, "rec.bias", { label: "BIAS — 녹음 고역 성향", min: -1, max: 1, def: 0, fmt: biasFmt, ink: "#d6c48f" });
+        fpKnob(svg, 1640, 300, 26, "rec.level", { label: "LEVEL — 녹음 레벨", min: 0.4, max: 2, def: 1, fmt: pct, ink: "#d6c48f" });
+        fpButton(svg, 1690, 278, 72, 54, "테이프 타입", "TAPE — I/II/IV 순환 (히스 바닥이 달라진다)", () => {
+            const order = ["I", "II", "IV"];
+            const next = order[(order.indexOf(fpGet("deck.tapeType", "II")) + 1) % 3];
+            fpSet("deck.tapeType", next);
+            fpNote("TAPE TYPE " + next + (next === "I" ? " — 노멀: 히스가 많다" : next === "II" ? " — 크롬: 기준" : " — 메탈: 가장 정숙"));
+        });
+        fpButton(svg, 1786, 278, 72, 54, "돌비 NR", "DOLBY NR — OFF/B/C 순환 (재생 히스)", () => deckCycleNr());
+        fpButton(svg, 1878, 278, 40, 54, "MPX 필터", "MPX — FM 파일럿 톤 필터 (녹음)", () => {
+            fpSet("rec.mpx", !fpGet("rec.mpx", false));
+            fpNote(fpGet("rec.mpx", false) ? "MPX FILTER ON" : "MPX FILTER OFF");
+        });
+    } else if (deckModelId === "tcd3014") {
+        fpKnob(svg, 106, 238, 32, "rec.bias", { label: "BIAS — 녹음 고역 성향", min: -1, max: 1, def: 0, fmt: biasFmt });
+        fpKnob(svg, 180, 238, 32, "rec.levelL", { label: "LEVEL L — 좌채널 녹음 레벨", min: 0.4, max: 2, def: 1, fmt: pct });
+        fpKnob(svg, 254, 238, 32, "rec.levelR", { label: "LEVEL R — 우채널 녹음 레벨", min: 0.4, max: 2, def: 1, fmt: pct });
+        fpKnob(svg, 328, 238, 32, "deck.out", { label: "OUTPUT — 데크 재생 출력", min: 0.4, max: 1.6, def: 1, fmt: pct, apply: () => applyGainStaging() });
+    } else if (deckModelId === "ctf1250") {
+        fpButton(svg, 76, 202, 58, 60, "돌비 NR", "DOLBY NR — OFF/B 전환 (재생 히스)", () => deckCycleNr(["off", "b"]));
+        fpKnob(svg, 182, 232, 30, "rec.bias", { label: "BIAS — 녹음 고역 성향", min: -1, max: 1, def: 0, fmt: biasFmt, ink: "#4b4e51" });
+        fpKnob(svg, 260, 232, 30, "rec.level", { label: "REC LEVEL — 녹음 레벨", min: 0.4, max: 2, def: 1, fmt: pct, ink: "#4b4e51" });
+        fpKnob(svg, 338, 232, 30, "deck.out", { label: "OUTPUT — 데크 재생 출력", min: 0.4, max: 1.6, def: 1, fmt: pct, ink: "#4b4e51", apply: () => applyGainStaging() });
+    } else if (isDoubleDeck()) {
+        fpButton(svg, 26, 190, 66, 76, "전원", "POWER — 시스템 재생/정지", () => togglePlay());
+        fpButton(svg, 1854, 82, 62, 58, "B웰 배출", "EJECT II — B웰 카세트를 랙으로 배출", () => {
+            if (recorder && recOnB) { playerSubtext.textContent = "녹음 중에는 배출할 수 없습니다 — REC를 먼저 멈추세요."; return; }
+            if (!deckBTape) { playerSubtext.textContent = "B웰이 비어 있습니다."; return; }
+            deckBTape = null;
+            deckRefreshShelf();
+            playerSubtext.textContent = "EJECT — B웰 카세트를 랙에 보관했습니다.";
+        });
+        fpKnob(svg, 1920, 218, 28, "rec.level", { label: "REC LEVEL — 녹음 레벨", min: 0.4, max: 2, def: 1, fmt: pct });
+        fpButton(svg, 1206, 248, 86, 52, "일시정지", "PAUSE — 카운터 위치를 지키며 멈춤", () => {
+            if (deckMode === "play" || deckMode === "wind") {
+                deckStopTransport();
+                playerSubtext.textContent = "PAUSE — 위치를 지킨 채 멈췄습니다. PLAY로 이어집니다.";
+            }
+        });
+        const key = (i, label, title, fn) => {
+            const el = document.getElementById("deckModeKey" + i);
+            if (!el) return;
+            el.setAttribute("style", "cursor:pointer");
+            el.addEventListener("click", fn);
+            svgButtonize(el, label);
+            const t = document.createElementNS(SVG_NS, "title");
+            t.textContent = title;
+            el.appendChild(t);
+        };
+        key(0, "카운터 모드", "COUNTER — 잔량/경과 표시 전환", () => deckToggleTimeMode());
+        key(1, "돌비 B", "DOLBY B — 재생 히스 절반", () => {
+            fpSet("deck.w990.nr", fpGet("deck.w990.nr", "off") === "b" ? "off" : "b");
+            fpNote("DOLBY " + (fpGet("deck.w990.nr", "off") === "b" ? "B ON" : "OFF"));
+        });
+        key(2, "돌비 C", "DOLBY C — 재생 히스 최소", () => {
+            fpSet("deck.w990.nr", fpGet("deck.w990.nr", "off") === "c" ? "off" : "c");
+            fpNote("DOLBY " + (fpGet("deck.w990.nr", "off") === "c" ? "C ON" : "OFF"));
+        });
+        key(5, "싱크 더빙", "SYNC — A→B 동조 더빙 시작", () => {
+            playerSubtext.textContent = "SYNC DUB — A웰과 B웰을 동조시켜 더빙을 시작합니다.";
+            w990StartDub();
+        });
+        key(6, "블랭크 스캔", "BLANK SCAN — 재생 중 빈 구간 건너뜀", () => {
+            deckBlankScan = !deckBlankScan;
+            playerSubtext.textContent = deckBlankScan ? "BLANK SCAN ON — 빈 구간을 만나면 다음 수록곡으로 건너뜁니다." : "BLANK SCAN OFF";
+        });
+        fpButton(svg, 862, 470, 90, 42, "더빙 모니터", "MONITOR — SOURCE/TAPE 모니터 소거 전환", () => {
+            audio.muted = !audio.muted;
+            if (typeof tsSyncPanel === "function") tsSyncPanel();
+            playerSubtext.textContent = audio.muted ? "MONITOR CUT — 더빙 소리를 소거합니다 (더빙은 계속)." : "MONITOR ON";
+        });
+        fpButton(svg, 1896, 280, 48, 44, "헤드폰 단자", "PHONES — 실물이라면 여기 꽂았을 단자", () =>
+            fpNote("PHONES — 브라우저에서는 시스템 볼륨이 헤드폰의 역할을 합니다."));
+    }
 }
 
 // ----- 카세트 뒤집기 히트 — 어느 스킨이든 라벨 판이 곧 손잡이다 -----

@@ -1549,6 +1549,9 @@ function mountAmp() {
     bindAmpBiasMeter();
     bindAmpLoudness();
     bindQuadFilters();
+    bindAmpFrontPanel();
+    applyFrontPanel();
+    applyGainStaging();
     renderAmpPicker();
 }
 
@@ -1590,6 +1593,304 @@ function bindQuadFilters() {
     });
     paintQuadFilters();
 }
+
+// ===== 프런트패널 소생 — 그려져 있던 조작부 전부에 실제 기능을 배선한다 =====
+// 노브는 세로 드래그(위 = 증가), 더블클릭 = 초깃값 복귀. 값은 fmRadio.frontPanel에 영속.
+// 표시침(인디케이터)을 주입해 저장된 상태가 눈에 보인다.
+// DSP는 Chromium 한정(엔진 fp 스테이지) — WebKit은 조작·표시·영속만 동작한다.
+
+function fpNote(msg) {
+    playerSubtext.textContent = msg + (typeof SAFARI_LIKE !== "undefined" && SAFARI_LIKE && !audioCtx ? " (음향 반영은 Chromium 계열에서)" : "");
+}
+
+// 회전 노브 소생 — 인디케이터 침 + 드래그/키보드 + 영속. keyFn으로 동적 키(소스별 트림)도 지원.
+function fpKnob(svg, cx, cy, r, keyOrFn, o) {
+    const keyOf = typeof keyOrFn === "function" ? keyOrFn : () => keyOrFn;
+    const ind = document.createElementNS(SVG_NS, "line");
+    ind.setAttribute("x1", cx);
+    ind.setAttribute("y1", cy - r * 0.4);
+    ind.setAttribute("x2", cx);
+    ind.setAttribute("y2", cy - r + 3);
+    ind.setAttribute("stroke", o.ink || "#f0ead9");
+    ind.setAttribute("stroke-width", Math.max(2.5, r * 0.08).toFixed(1));
+    ind.setAttribute("stroke-linecap", "round");
+    ind.setAttribute("pointer-events", "none");
+    svg.appendChild(ind);
+    const paint = () => {
+        const t = (fpGet(keyOf(), o.def) - o.min) / (o.max - o.min);
+        ind.setAttribute("transform", "rotate(" + (-135 + Math.max(0, Math.min(1, t)) * 270).toFixed(1) + " " + cx + " " + cy + ")");
+    };
+    const hit = document.createElementNS(SVG_NS, "circle");
+    hit.setAttribute("cx", cx);
+    hit.setAttribute("cy", cy);
+    hit.setAttribute("r", r + 8);
+    hit.setAttribute("fill", "#000");
+    hit.setAttribute("fill-opacity", "0");
+    hit.setAttribute("style", "cursor:ns-resize;touch-action:none");
+    hit.setAttribute("tabindex", "0");
+    hit.setAttribute("role", "slider");
+    hit.setAttribute("aria-label", o.label);
+    hit.setAttribute("aria-valuemin", "0");
+    hit.setAttribute("aria-valuemax", "100");
+    const ariaNow = () => hit.setAttribute("aria-valuenow", String(Math.round((fpGet(keyOf(), o.def) - o.min) / (o.max - o.min) * 100)));
+    ariaNow();
+    const tt = document.createElementNS(SVG_NS, "title");
+    tt.textContent = o.title || (o.label + " — 위아래로 드래그, 더블클릭 = 초기화");
+    hit.appendChild(tt);
+    svg.appendChild(hit);
+    const show = () => { ariaNow(); fpNote(o.label + " " + o.fmt(fpGet(keyOf(), o.def))); };
+    let drag = false, startY = 0, startV = 0, dragKey = null;
+    hit.addEventListener("pointerdown", (e) => {
+        drag = true;
+        startY = e.clientY;
+        dragKey = keyOf();
+        startV = fpGet(dragKey, o.def);
+        try { hit.setPointerCapture(e.pointerId); } catch (err) {}
+        e.preventDefault();
+    });
+    hit.addEventListener("pointermove", (e) => {
+        if (!drag) return;
+        const v = Math.max(o.min, Math.min(o.max, startV + (startY - e.clientY) / 140 * (o.max - o.min)));
+        fpSet(dragKey, v);
+        if (o.apply) o.apply(v);
+        paint();
+        show();
+    });
+    ["pointerup", "pointercancel"].forEach((n) => hit.addEventListener(n, () => { drag = false; }));
+    hit.addEventListener("dblclick", () => { fpSet(keyOf(), o.def); if (o.apply) o.apply(o.def); paint(); show(); });
+    hit.addEventListener("keydown", (e) => {
+        const s = (e.key === "ArrowUp" || e.key === "ArrowRight") ? 1 : (e.key === "ArrowDown" || e.key === "ArrowLeft") ? -1 : 0;
+        if (!s) return;
+        e.preventDefault();
+        fpSet(keyOf(), Math.max(o.min, Math.min(o.max, fpGet(keyOf(), o.def) + s * (o.max - o.min) / 20)));
+        if (o.apply) o.apply(fpGet(keyOf(), o.def));
+        paint();
+        show();
+    });
+    paint();
+    return paint;
+}
+
+// 버튼·스위치 소생 — 투명 히트 + 클릭/키보드
+function fpButton(svg, x, y, w, h, label, title, onClick) {
+    const hit = document.createElementNS(SVG_NS, "rect");
+    hit.setAttribute("x", x);
+    hit.setAttribute("y", y);
+    hit.setAttribute("width", w);
+    hit.setAttribute("height", h);
+    hit.setAttribute("fill", "#000");
+    hit.setAttribute("fill-opacity", "0");
+    hit.setAttribute("style", "cursor:pointer");
+    const tt = document.createElementNS(SVG_NS, "title");
+    tt.textContent = title;
+    hit.appendChild(tt);
+    svg.appendChild(hit);
+    hit.addEventListener("click", onClick);
+    svgButtonize(hit, label);
+    return hit;
+}
+
+// 입력 셀렉터 공통 — 실제 소스를 전환한다 (기존 조작 경로를 그대로 태운다)
+function fpSourceSelect(name) {
+    if (name === "phono") {
+        const b = document.getElementById("ttStartBtn");
+        if (b) b.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+        else fpNote("PHONO — 턴테이블이 없습니다.");
+    } else if (name === "tape") {
+        if (typeof deckPlay === "function") deckPlay();
+    } else if (name === "radio") {
+        if (currentStation) selectStation(currentStation.id);
+        else fpNote("TUNER — 채널을 먼저 선택하세요 (전체 채널 목록).");
+    } else if (name === "radio2") {
+        stepStation(1);
+    } else {
+        fpNote(name.toUpperCase() + " — 이 입력에 연결된 기기가 없습니다.");
+    }
+}
+
+function fpToggleSpeakers() {
+    speakersOff = !speakersOff;
+    applyFrontPanel();
+    fpNote(speakersOff ? "SPEAKERS OFF — 스피커 연결을 끊었습니다 (재생은 유지)." : "SPEAKERS ON");
+}
+
+function fpCycleInput() {
+    const cur = deckPlaying ? "tape" : phonoActive ? "phono" : "radio";
+    fpSourceSelect(cur === "radio" ? "phono" : cur === "phono" ? "tape" : "radio");
+}
+
+const FP_DB = (v) => (v > 0 ? "+" : "") + v.toFixed(1) + " dB";
+const FP_PCT = (v) => Math.round(v * 100) + "%";
+
+function bindAmpFrontPanel() {
+    const svg = document.querySelector("#ampStage svg");
+    if (!svg) return;
+    const power = (x, y, w, h) => fpButton(svg, x, y, w, h, "전원", "POWER — 시스템 재생/정지", () => togglePlay());
+    const phones = (cx, cy) => fpButton(svg, cx - 22, cy - 22, 44, 44, "헤드폰 단자", "PHONES — 단자는 장식이지만, 실물이라면 여기 꽂았을 겁니다", () =>
+        fpNote("PHONES — 헤드폰을 꽂으면 스피커가 죽는 단자입니다. 브라우저에서는 시스템 볼륨이 그 역할을 합니다."));
+    if (ampModelId === "mc2105") {
+        fpKnob(svg, 560, 442, 46, "mc2105.gainL", { label: "L GAIN — 좌채널 트림", min: 0, max: 1.4, def: 1, fmt: FP_PCT, ink: "#9fd8ff" });
+        fpKnob(svg, 1440, 442, 46, "mc2105.gainR", { label: "R GAIN — 우채널 트림", min: 0, max: 1.4, def: 1, fmt: FP_PCT, ink: "#9fd8ff" });
+        power(252, 398, 78, 78);
+        fpButton(svg, 1656, 384, 92, 60, "스피커 전환", "SPEAKERS — 스피커 연결 차단/복구 (세션 한정)", fpToggleSpeakers);
+    } else if (ampModelId === "el34") {
+        power(552, 342, 96, 76);
+    } else if (ampModelId === "300b") {
+        [["phono", "PHONO", 346], ["cd", "CD", 390], ["radio", "TUNER", 434], ["tape", "AUX", 478], ["bt", "BT", 522]].forEach(([act, label, cy]) => {
+            fpButton(svg, 108, cy - 18, 100, 36, "입력 " + label, label + " 입력 선택", () =>
+                fpSourceSelect(act === "cd" || act === "bt" ? label : act));
+        });
+        power(1088, 388, 64, 64);
+        phones(1230, 420);
+    } else if (ampModelId === "e303") {
+        fpKnob(svg, 420, 444, 42, "e303.bass", { label: "BASS", min: -8, max: 8, def: 0, fmt: FP_DB });
+        fpKnob(svg, 580, 444, 42, "e303.treble", { label: "TREBLE", min: -8, max: 8, def: 0, fmt: FP_DB });
+        fpKnob(svg, 740, 444, 42, "e303.balance", { label: "BALANCE", min: -1, max: 1, def: 0, fmt: (v) => Math.abs(v) < 0.03 ? "CENTER" : (v < 0 ? "L " : "R ") + Math.round(Math.abs(v) * 100) + "%" });
+        fpKnob(svg, 1060, 444, 42, "rec.level", { label: "REC OUT — 녹음 레벨", min: 0.4, max: 2, def: 1, fmt: FP_PCT });
+        fpButton(svg, 1178, 402, 84, 84, "입력 선택", "INPUT — 누를 때마다 TUNER → PHONO → TAPE 순환", fpCycleInput);
+        fpButton(svg, 812, 168, 76, 56, "스피커 전환", "SPEAKERS — 스피커 연결 차단/복구", fpToggleSpeakers);
+        fpButton(svg, 812, 230, 76, 56, "뮤팅", "MUTING — -20dB 감쇠 (심야 청취)", () => {
+            ampMuting20 = !ampMuting20;
+            applyFrontPanel();
+            fpNote(ampMuting20 ? "MUTING ON — 출력을 -20dB 낮춥니다 (심야 모드)." : "MUTING OFF");
+        });
+        fpButton(svg, 1057, 168, 76, 56, "테이프 모니터", "TAPE MONITOR — 데크 재생을 듣기/끊기", () => {
+            if (deckMode === "play") { deckStopTransport(); fpNote("TAPE MONITOR OFF"); }
+            else fpSourceSelect("tape");
+        });
+        fpButton(svg, 1057, 230, 76, 56, "서브소닉 필터", "SUBSONIC — 30Hz 이하 럼블 차단", () => {
+            fpSet("e303.subsonic", !fpGet("e303.subsonic", false));
+            fpNote(fpGet("e303.subsonic", false) ? "SUBSONIC ON — 초저역 럼블을 걸러냅니다." : "SUBSONIC OFF");
+        });
+        power(1208, 85, 64, 60);
+        power(70, 408, 66, 76);
+        phones(260, 444);
+    } else if (ampModelId === "ma2375") {
+        [720, 860, 1000, 1140, 1280].forEach((cx, i) => {
+            fpKnob(svg, cx, 690, 38, "ma2375.tone" + i, {
+                label: "TONE " + ["30Hz", "250Hz", "1kHz", "4kHz", "10kHz"][i], min: -8, max: 8, def: 0, fmt: FP_DB, ink: "#9fd8ff"
+            });
+        });
+        fpKnob(svg, 300, 690, 38, () => "ma2375.trim." + (deckPlaying ? "tape" : phonoActive ? "phono" : "radio"), {
+            label: "INPUT TRIM — 현재 소스 게인 기억", min: 0.5, max: 1.6, def: 1, fmt: FP_PCT, ink: "#9fd8ff"
+        });
+        power(1458, 680, 64, 62);
+        phones(540, 707);
+    } else if (ampModelId === "quad303") {
+        fpKnob(svg, 786, 327, 54, "quad.bass", { label: "BASS", min: -8, max: 8, def: 0, fmt: FP_DB, ink: "#4d3827" });
+        fpKnob(svg, 936, 327, 54, "quad.treble", { label: "TREBLE", min: -8, max: 8, def: 0, fmt: FP_DB, ink: "#4d3827" });
+        fpKnob(svg, 1086, 327, 54, "quad.slope", { label: "SLOPE — 고역 접힘 모서리", min: 0, max: 1, def: 0, fmt: FP_PCT, ink: "#4d3827" });
+        fpKnob(svg, 431, 415, 40, "quad.balance", { label: "BALANCE", min: -1, max: 1, def: 0, fmt: (v) => Math.abs(v) < 0.03 ? "CENTER" : (v < 0 ? "L" : "R") + Math.round(Math.abs(v) * 100) });
+        [[276, 76, "모노", "MONO — 모노 합성", () => { monoOn = true; applyMono(); fpNote("MONO — 두 채널을 합쳐 듣습니다."); }],
+         [354, 76, "모노", "MONO — 모노 합성", () => { monoOn = true; applyMono(); fpNote("MONO — 두 채널을 합쳐 듣습니다."); }],
+         [432, 82, "스테레오", "STEREO — 스테레오 복귀", () => { monoOn = false; applyMono(); fpNote("STEREO"); }],
+         [516, 68, "디스크 입력", "DISC — 턴테이블 재생", () => fpSourceSelect("phono")],
+         [586, 92, "라디오 1", "RADIO 1 — 마지막 채널 연결", () => fpSourceSelect("radio")],
+         [680, 92, "라디오 2", "RADIO 2 — 다음 채널", () => fpSourceSelect("radio2")],
+         [774, 80, "테이프 입력", "TAPE — 카세트 재생", () => fpSourceSelect("tape")]
+        ].forEach(([x, w, label, title, fn]) => fpButton(svg, x, 444, w, 31, label, title, fn));
+        fpButton(svg, 1480, 187, 48, 48, "전압 셀렉터", "MAINS — 전원 전압 셀렉터", () =>
+            fpNote("MAINS 240V — 1967년 런던의 벽 전압 그대로 두는 편이 좋겠습니다."));
+        fpButton(svg, 1603, 190, 40, 40, "퓨즈", "2A FUSE — 퓨즈 홀더", () =>
+            fpNote("2A 퓨즈 — 반세기 동안 한 번도 끊어진 적이 없습니다."));
+    }
+}
+
+// MR78 우측 PANLOC — 실물의 랙 패널록을 몰입 모드(전체 화면) 잠금으로 해석한다
+function bindTunerFrontPanel() {
+    const svg = document.querySelector("#tunerStage svg");
+    if (!svg) return;
+    if (loadJson("fmRadio.skin", "mr78") === "mr78" && typeof tunerCfg !== "undefined") {
+        fpButton(svg, 1862, 522, 68, 68, "패널록", "PANLOC — 패널을 잠그고 랙만 남깁니다 (몰입 모드, ESC 복귀)", () => toggleFocusMode());
+    }
+}
+
+// GE-5·SE-9 POWER 로커 — DEFEAT와 별개로 회로 전체를 끊고 패널을 재운다
+function eqTogglePower() {
+    eqPowerOn = !eqPowerOn;
+    fpSet("eq.power", eqPowerOn);
+    applyEq();
+    if (typeof updateEqVisuals === "function") updateEqVisuals();
+    eqPaintPower();
+    fpNote(eqPowerOn ? "EQ POWER ON" : "EQ POWER OFF — 회로를 끊고 패널을 재웠습니다 (신호는 그대로 통과)");
+}
+
+function eqPaintPower() {
+    const svg = document.querySelector("#eqStage svg");
+    if (svg) svg.style.filter = eqPowerOn ? "" : "brightness(0.55) saturate(0.6)";
+}
+
+function bindEqFrontPanel() {
+    const svg = document.querySelector("#eqStage svg");
+    if (!svg) return;
+    fpButton(svg, 56, 190, 54, 74, "이퀄라이저 전원", "POWER — EQ 회로 전원 (끄면 평탄 통과)", eqTogglePower);
+    eqPaintPower();
+    if (eqModelId !== "ge5") return;
+    // SPATIAL — 스테레오 폭 슬라이더 (그려진 캡을 실제로 움직인다)
+    const cap = svg.querySelector('rect[x="345"][width="28"]');
+    const paintCap = () => {
+        if (cap) cap.setAttribute("y", String(Math.round(266 - fpGet("ge5.spatial", 0) * 172)));
+    };
+    const hit = document.createElementNS(SVG_NS, "rect");
+    hit.setAttribute("x", "330");
+    hit.setAttribute("y", "64");
+    hit.setAttribute("width", "58");
+    hit.setAttribute("height", "270");
+    hit.setAttribute("fill", "#000");
+    hit.setAttribute("fill-opacity", "0");
+    hit.setAttribute("style", "cursor:ns-resize;touch-action:none");
+    const tt = document.createElementNS(SVG_NS, "title");
+    tt.textContent = "SPATIAL — 스테레오 폭 (위 = 넓게)";
+    hit.appendChild(tt);
+    svg.appendChild(hit);
+    const setFromY = (clientY) => {
+        const r = hit.getBoundingClientRect();
+        const t = Math.max(0, Math.min(1, 1 - (clientY - r.top - r.height * 0.12) / (r.height * 0.76)));
+        fpSet("ge5.spatial", t);
+        paintCap();
+        fpNote("SPATIAL " + Math.round(t * 100) + "% — 스테레오 폭");
+    };
+    let drag = false;
+    hit.addEventListener("pointerdown", (e) => { drag = true; setFromY(e.clientY); try { hit.setPointerCapture(e.pointerId); } catch (err) {} e.preventDefault(); });
+    hit.addEventListener("pointermove", (e) => { if (drag) setFromY(e.clientY); });
+    ["pointerup", "pointercancel"].forEach((n) => hit.addEventListener(n, () => { drag = false; }));
+    svgButtonize(hit, "SPATIAL 스테레오 폭");
+    paintCap();
+}
+
+// 턴테이블 잔여 조작 — SL-1200 플린스 START·STOP, TD124 미세 속도, LP12 33/45 노브
+function bindTtFrontPanel() {
+    const svg = document.querySelector("#ttStage svg");
+    if (!svg) return;
+    if (ttModelId === "sl1200") {
+        fpButton(svg, 154, 294, 74, 74, "시작/정지", "START·STOP — 플래터 기동/정지", () => {
+            const b = document.getElementById("ttStartBtn");
+            if (b) b.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+        });
+    } else if (ttModelId === "td124") {
+        fpKnob(svg, 108, 431, 32, "tt.fine124", {
+            label: "FINE SPEED — 미세 속도", min: -0.03, max: 0.03, def: 0,
+            fmt: (v) => (v > 0 ? "+" : "") + (v * 100).toFixed(1) + "%",
+            apply: (v) => {
+                ttSpeedTrim = ({ 16: 0.5, 33: 1, 45: 1.35, 78: 2.34 })[ttSpeed124] * (1 + v);
+                applyRpmRate();
+            }
+        });
+    } else if (ttModelId === "lp12") {
+        fpButton(svg, 166, 520, 62, 62, "회전수 전환", "33/45 — 회전수 전환", () => {
+            const target = document.getElementById(ttRpm45 ? "tt33" : "tt45");
+            if (target) target.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+        });
+    }
+}
+
+// 마운트 훅 — 기존 마운트 함수 뒤에 프런트패널 배선을 잇는다 (모델 전환 시에도 재배선)
+const _fpInitTunerSkin = initTunerSkin;
+initTunerSkin = function (id) { _fpInitTunerSkin(id); bindTunerFrontPanel(); };
+const _fpMountEq = mountEq;
+mountEq = function () { _fpMountEq(); bindEqFrontPanel(); };
+const _fpMountTurntable = mountTurntable;
+mountTurntable = function () { _fpMountTurntable(); bindTtFrontPanel(); };
 
 // E-303: 그려져 있던 LOUDNESS 노브 소생 — 클릭 토글, 저음량 등청감 보상 (Chromium DSP)
 function bindAmpLoudness() {
@@ -1836,7 +2137,7 @@ function bindTtModelControls() {
         const cycle = () => {
             ttSpeed124 = SPEEDS[(SPEEDS.indexOf(ttSpeed124) + 1) % SPEEDS.length];
             ttRpm45 = false;                  // 속도는 노브가 단일 소스
-            ttSpeedTrim = TRIMS[ttSpeed124];
+            ttSpeedTrim = TRIMS[ttSpeed124] * (1 + fpGet("tt.fine124", 0));
             ttSyncSpeedPtr();
             applyRpmRate();
             updatePhonoVisuals();
@@ -2619,7 +2920,7 @@ function ttFrame(now) {
                 if (revSeg && revSeg.start < 1) deckStartSegment(revSeg, Math.max(0, -revSeg.start));
                 nowStation.textContent = deckTape.label + " — TAPE";
                 playerSubtext.textContent = "AUTO REVERSE — SIDE " + deckTape.side + " 재생으로 반전했습니다.";
-            } else if (deckModelId === "dragon" && dragonRepeat && deckTape && deckTape.segments.length && !recorder) {
+            } else if ((deckModelId === "dragon" || deckModelId === "b215") && dragonRepeat && deckTape && deckTape.segments.length && !recorder) {
                 deckAutoResume = true;
                 deckSegPlaying = null;
                 audio.pause();
@@ -2649,7 +2950,12 @@ function ttFrame(now) {
             }
         }
         const deckSpec = DECK_MODELS[deckModelId] || DECK_MODELS.dragon;
-        if (hissGain) hissGain.gain.value += ((deckSegPlaying ? deckSpec.hissFloor : deckSpec.blankHiss) * (deckTape && deckTape.cal ? 0.55 : 1) - hissGain.gain.value) * 0.1;
+        if (hissGain) hissGain.gain.value += ((deckSegPlaying ? deckSpec.hissFloor : deckSpec.blankHiss) * (deckTape && deckTape.cal ? 0.55 : 1) * (typeof deckHissMult === "function" ? deckHissMult() : 1) - hissGain.gain.value) * 0.1;
+        // W-990RX BLANK SCAN — 빈 구간을 만나면 다음 수록곡 직전으로 건너뛴다
+        if (typeof deckBlankScan !== "undefined" && deckBlankScan && deckMode === "play" && !deckSegPlaying && deckTape) {
+            const nxt = (deckTape.segments || []).filter((s) => s.start > tapePos + 1).sort((a, b) => a.start - b.start)[0];
+            if (nxt && nxt.start - tapePos > 4) tapePos = nxt.start - 1;
+        }
     } else if (deckMode === "wind") {
         const deckSpec = DECK_MODELS[deckModelId] || DECK_MODELS.dragon;
         tapePos = Math.max(0, Math.min(tapeLenOf(deckTape), tapePos + windDir * deckSpec.windRate * dt));
@@ -2688,7 +2994,9 @@ function ttFrame(now) {
         if (pr) pr.setAttribute("r", (24 + p * 16).toFixed(1));
         const cnt = document.getElementById("deckCounter");
         if (cnt) {
-            const txt = formatDuration(tapePos * 1000);
+            const txt = (typeof deckTimeRemaining !== "undefined" && deckTimeRemaining && deckTape)
+            ? "-" + formatDuration(Math.max(0, tapeLenOf(deckTape) - tapePos) * 1000)
+            : formatDuration(tapePos * 1000);
             if (cnt.textContent !== txt) cnt.textContent = txt;
         }
         const led = document.getElementById("deckRecLed");
