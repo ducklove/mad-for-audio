@@ -676,6 +676,26 @@ function mfaDeckSvg(spec) {
 
 // PIONEER CT-F1250 전용 스킨 — 릴(610/850,260)·미터·트랜스포트 등 기능 좌표는 공용 레이아웃
 // 그대로 두고, 우드 캐비닛·브러시드 알루미늄 페이스·플렉시 도어를 사진 기준 명암으로 다시 그린다.
+// CT-F1250 플루로스캔 — 실물의 청록 형광 바 미터 (세그먼트 드라이버가 구동)
+function ctfFluro(id, x, ch) {
+    const segs = Array.from({ length: 20 }, (_, i) => {
+        const hot = i > 16;
+        const warn = i > 13 && !hot;
+        const on = hot ? "#ff5040" : warn ? "#f2c355" : "#6fe8c8";
+        const off = hot ? "#331a18" : warn ? "#33290f" : "#0d2b24";
+        return '<rect data-meter-segment="' + i + '" data-on="' + on + '" data-off="' + off + '" x="' + (x + 16 + i * 12.8) + '" y="176" width="10" height="46" rx="1.5" fill="' + off + '"/>';
+    }).join("");
+    const scale = [["-20", 0], ["-10", 5], ["-5", 9], ["0", 14], ["+3", 18]].map(([t, i]) =>
+        '<text x="' + (x + 21 + i * 12.8) + '" y="248" font-family="Arial" font-size="9" font-weight="700" fill="#3f6f5f" text-anchor="middle">' + t + '</text>').join("");
+    return '<rect x="' + (x + 6) + '" y="116" width="272" height="160" rx="5" fill="#04100d"/>' +
+        '<path d="M' + (x + 12) + ' 122 H' + (x + 270) + '" stroke="#6fe8c8" stroke-width="1" opacity=".14"/>' +
+        '<text x="' + (x + 16) + '" y="146" font-family="Arial" font-size="10" font-weight="700" letter-spacing="2.4" fill="#57c7a8">FLUROSCAN</text>' +
+        '<text x="' + (x + 266) + '" y="146" font-family="Arial" font-size="12" font-weight="700" fill="#7de9cb" text-anchor="end">' + ch + '</text>' +
+        '<path d="M' + (x + 16) + ' 158 H' + (x + 268) + '" stroke="#1b4a3d" stroke-width="1.4"/>' +
+        '<g id="' + id + '" data-meter-style="segments">' + segs + '</g>' + scale +
+        '<text x="' + (x + 142) + '" y="266" font-family="Arial" font-size="8" letter-spacing="2" fill="#2e5548" text-anchor="middle">FLUORESCENT PEAK LEVEL &#183; dB</text>';
+}
+
 function mfaCtf1250Svg() {
     // 브러시드 알루미늄 헤어라인 — 가로 결
     let hair = "";
@@ -771,7 +791,7 @@ function mfaCtf1250Svg() {
     <rect x="446" y="348" width="568" height="18" rx="4" fill="#000" opacity=".35"/>
     <text x="1000" y="362" font-family="Arial" font-size="13" font-weight="700" letter-spacing="2" fill="#adb1b5" text-anchor="end" opacity=".9">CT-F1250</text>
     ${meterFrame(1120)}${meterFrame(1430)}
-    ${mfaMeter(1120, 110, 284, 172, "deckVuL", "LEVEL L", "#efe3b8", false)}${mfaMeter(1430, 110, 284, 172, "deckVuR", "LEVEL R", "#efe3b8", false)}
+    ${ctfFluro("deckVuL", 1120, "L")}${ctfFluro("deckVuR", 1430, "R")}
     ${meterGlass(1262)}${meterGlass(1572)}
     <text x="1120" y="330" font-family="Arial" font-size="13" font-weight="700" letter-spacing="2" fill="#4b4e51">TAPE COUNTER</text>
     <rect x="1114" y="334" width="212" height="70" rx="8" fill="#0b0c0f" stroke="url(#ctfChrome)" stroke-width="2"/>
@@ -816,7 +836,7 @@ function mfaW990Svg() {
         }).join("")}
     </g>`;
     const modeKeys = ["COUNTER", "DOLBY B", "DOLBY C", "REV MODE", "DUBBING", "SYNC", "BLANK SCAN"]
-        .map((label, i) => `<g><rect x="${735 + i * 76}" y="186" width="68" height="30" rx="3" fill="url(#w9MiniBtn)" stroke="#4e5155"/><path d="M${742 + i * 76} 191H${796 + i * 76}" stroke="#fff" opacity=".18"/><text x="${769 + i * 76}" y="232" font-family="Arial" font-size="8.5" font-weight="700" fill="#898d90" text-anchor="middle">${label}</text></g>`).join("");
+        .map((label, i) => `<g><rect id="deckModeKey${i}" x="${735 + i * 76}" y="186" width="68" height="30" rx="3" fill="url(#w9MiniBtn)" stroke="#4e5155"${i === 3 || i === 4 ? ' style="cursor:pointer"' : ''}/><path d="M${742 + i * 76} 191H${796 + i * 76}" stroke="#fff" opacity=".18"/><text x="${769 + i * 76}" y="232" font-family="Arial" font-size="8.5" font-weight="700" fill="#898d90" text-anchor="middle">${label}</text></g>`).join("");
     const transport = (id, x, label, symbol, rec) => `<g>
         <rect id="${id}" x="${x}" y="252" width="86" height="42" rx="3" fill="url(#w9Btn)" stroke="${rec ? "#9b4037" : "#5d6065"}" stroke-width="1.5" style="cursor:pointer;touch-action:none"><title>${label}</title></rect>
         <text x="${x + 43}" y="279" font-family="Arial" font-size="18" font-weight="700" fill="${rec ? "#ff4a3a" : "#d6d7d6"}" text-anchor="middle" pointer-events="none">${symbol}</text>
@@ -859,7 +879,7 @@ function mfaW990Svg() {
     <!-- 좌측 조작 레일 -->
     <rect x="20" y="56" width="120" height="334" rx="5" fill="#696c70" stroke="#323438" stroke-width="2"/>
     <rect x="24" y="60" width="112" height="326" rx="4" fill="url(#w9Brush)" opacity=".62"/>
-    <text x="80" y="86" font-family="Georgia,serif" font-size="24" font-weight="700" fill="#242526" stroke="#c9b880" stroke-width=".7" paint-order="stroke">TEAK</text>
+    <text x="80" y="86" font-family="Georgia,serif" font-size="24" font-weight="700" fill="#242526" stroke="#c9b880" stroke-width=".7" paint-order="stroke" text-anchor="middle">TEAK</text>
     <text x="80" y="101" font-family="Arial" font-size="8.5" font-weight="700" letter-spacing="2" fill="#3a3c3f" text-anchor="middle">DECK I</text>
     <rect id="deckBtnEject" x="38" y="112" width="84" height="38" rx="3" fill="url(#w9Btn)" stroke="#222429" stroke-width="2" style="cursor:pointer"><title>EJECT</title></rect>
     <path d="M60 140H100 M67 132L80 121L93 132" fill="none" stroke="#d5d5d1" stroke-width="3" pointer-events="none"/>

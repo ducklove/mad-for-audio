@@ -278,7 +278,7 @@ FM NOISE CUT, 포노 재생 중엔 VINYL RESTORE, 테이프 재생 중엔 CASSET
 SL-1200 피치+스트로브+쿼츠록 · TD124 4속 · GARRARD 트림+브레이크 · B215 MEM/CUE/RST/AUTO · MR-78 SELECTIVITY 3단 · 8B BIAS 미터 순환 (클러치는 미구현 — 4속 노브로 갈음)
 
 **2차 — 모델을 고르는 이유가 되는 고유 기능**
-B760 프리셋 8국 · **SE-9 MEMORY EQ ✅ 구현됨 (v92)** · W-990RX 고속더빙+CONT PLAY · CT-F1250 플루로스캔 미터 · 91E 정류관 지연+스텝 볼륨 · CA-100 LOUDNESS
+**2차 ✅ 구현됨 (v93)** — B760 프리셋 8국 · **SE-9 MEMORY EQ ✅ (v92)** · W-990RX 고속더빙+CONT PLAY · CT-F1250 플루로스캔 미터 · 91E 정류관 지연+스텝 볼륨 · LOUDNESS는 CA-100 대신 **E-303**에 (노브가 이미 그려져 있던 쪽 — 원칙 4)
 
 **3차 — 음색 체인 확장 (Chromium 한정 DSP)**
 TUNER_VOICE 테이블 · TT 보이싱(럼블/펀치/정숙) · GE-10C 버퍼 새추레이션 · TCD3014 녹음 헤드룸 차등

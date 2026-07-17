@@ -322,6 +322,77 @@ function tsSyncPanel() {
 }
 
 // ----- 조작 바인딩 (스킨 마운트마다 다시 연결) -----
+// REVOX B760 — 방송국 프리셋 1–8. 신시사이저 튜너의 존재 이유.
+// 짧게 누르면 호출, 길게(0.6초) 누르면 현재 국 저장. localStorage 영속.
+let tunerPresets = loadJson("fmRadio.tunerPresets", {});
+
+function mountB760Presets() {
+    if (tunerSkinId !== "b760" || !tunerSvgEl || tunerSvgEl.querySelector("#tsPresetG")) return;
+    const g = document.createElementNS(SVG_NS, "g");
+    g.setAttribute("id", "tsPresetG");
+    let html = '<text x="1128" y="288" font-family="Arial" font-size="10" letter-spacing="2" fill="#5d7a68">STATION MEMORY &#183; 길게 눌러 저장</text>';
+    for (let i = 1; i <= 8; i++) {
+        const x = 1120 + (i - 1) * 62;
+        html += '<g id="tsPreset' + i + '" role="button" tabindex="0" aria-label="프리셋 ' + i + ' — 짧게 호출, 길게 저장" style="cursor:pointer">' +
+            '<title>프리셋 ' + i + ' — 짧게 누르면 호출, 길게 누르면 현재 채널 저장</title>' +
+            '<rect x="' + x + '" y="296" width="54" height="42" rx="5" fill="#14171b" stroke="#3a4a40" stroke-width="1.4"/>' +
+            '<path d="M' + (x + 4) + ' 300 H' + (x + 50) + '" stroke="#fff" stroke-width="1.2" opacity=".14" pointer-events="none"/>' +
+            '<circle id="tsPresetLed' + i + '" cx="' + (x + 10) + '" cy="306" r="2.6" fill="#1c3527" pointer-events="none"/>' +
+            '<text x="' + (x + 27) + '" y="323" font-family="Arial" font-size="14" font-weight="700" fill="#9fe8bd" text-anchor="middle" pointer-events="none">' + i + '</text>' +
+            '<text id="tsPresetFreq' + i + '" x="' + (x + 27) + '" y="334" font-family="Arial" font-size="7.5" fill="#5d7a68" text-anchor="middle" pointer-events="none"></text></g>';
+    }
+    g.innerHTML = html;
+    tunerSvgEl.appendChild(g);
+    const paint = () => {
+        for (let i = 1; i <= 8; i++) {
+            const st = stations.find((x) => x.id === tunerPresets[i]);
+            const led = document.getElementById("tsPresetLed" + i);
+            const fq = document.getElementById("tsPresetFreq" + i);
+            if (led) led.style.fill = st ? "#54d18a" : "#1c3527";
+            if (fq) fq.textContent = st ? st.freq.toFixed(1) : "";
+        }
+    };
+    for (let i = 1; i <= 8; i++) {
+        const key = document.getElementById("tsPreset" + i);
+        let downAt = 0, timer = 0;
+        const store = () => {
+            if (!currentStation) {
+                playerSubtext.textContent = "저장할 채널이 없습니다 — 먼저 선국하세요.";
+                return;
+            }
+            tunerPresets[i] = currentStation.id;
+            saveJson("fmRadio.tunerPresets", tunerPresets);
+            paint();
+            playerSubtext.textContent = "프리셋 " + i + " ← " + currentStation.name + " (" + currentStation.freq.toFixed(1) + "MHz) 저장";
+        };
+        const recall = () => {
+            const st = stations.find((x) => x.id === tunerPresets[i]);
+            if (!st) {
+                playerSubtext.textContent = "프리셋 " + i + "은 비어 있습니다 — 길게 누르면 현재 채널이 저장됩니다.";
+                return;
+            }
+            selectStation(st.id);
+            playerSubtext.textContent = "프리셋 " + i + " — " + st.name + " (" + st.freq.toFixed(1) + "MHz)";
+        };
+        key.addEventListener("pointerdown", (e) => {
+            downAt = Date.now();
+            timer = setTimeout(store, 600);
+            try { key.setPointerCapture(e.pointerId); } catch (err) {}
+            e.preventDefault();
+        });
+        key.addEventListener("pointerup", () => {
+            clearTimeout(timer);
+            if (Date.now() - downAt < 600) recall();
+        });
+        key.addEventListener("pointercancel", () => clearTimeout(timer));
+        key.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); recall(); }
+            if (e.key.toLowerCase() === "s") { e.preventDefault(); store(); }
+        });
+    }
+    paint();
+}
+
 // MR-78 가변 선택도 — SELECTIVITY 노브 아래 3단 세그먼트 (WIDE/NORM/NARROW).
 // NARROW는 고역을 접는 대신 정숙해진다 (약전계·이스터에그에서 진가). DSP는 Chromium 한정.
 function mountMr78Selectivity() {
@@ -511,6 +582,7 @@ function initTunerSkin(id) {
     kc.appendChild(kt);
     tunerSvgEl.appendChild(kc);
     mountMr78Selectivity();
+    mountB760Presets();
 
     // 방송국 마커 생성
     const m = tunerCfg.mark;
@@ -1161,6 +1233,8 @@ function updateEqVisuals() {
 
 // 8B 바이어스 미터 모드 — 0=VU · 1=CH A 바이어스 · 2=CH B 바이어스 (미터 클릭으로 순환)
 let ampBiasMode = 0;
+// 91E 정류관 지연 — 콜드 스타트 시 이 시각까지 출력 무음 (마지막 0.7초 페이드인)
+let ampRectUntil = 0;
 let ampModelId = loadJson("fmRadio.amp", "mc2105");
 if (!AMP_MODELS[ampModelId]) ampModelId = "mc2105";
 
@@ -1216,7 +1290,11 @@ function bindAmpVolume() {
         e.preventDefault();
     });
     hit.addEventListener("pointermove", (e) => {
-        if (drag) setVolumeLevel(startV + (startY - e.clientY) / 180);
+        if (!drag) return;
+        let v = startV + (startY - e.clientY) / 180;
+        // 91E: 무단이 아니라 12스텝 어테뉴에이터 — 딸깍딸깍 스냅
+        if (ampModelId === "300b") v = Math.round(Math.max(0, Math.min(1, v)) * 12) / 12;
+        setVolumeLevel(v);
     });
     hit.addEventListener("pointerup", () => {
         drag = false;
@@ -1242,8 +1320,48 @@ function mountAmp() {
     bindAmpVolume();
     updateVolKnob();
     ampBiasMode = 0;
+    ampRectUntil = 0;
     bindAmpBiasMeter();
+    bindAmpLoudness();
     renderAmpPicker();
+}
+
+// E-303: 그려져 있던 LOUDNESS 노브 소생 — 클릭 토글, 저음량 등청감 보상 (Chromium DSP)
+function bindAmpLoudness() {
+    if (ampModelId !== "e303") { ampLoudnessOn = false; return; }
+    const svg = document.querySelector("#ampStage svg");
+    if (!svg) return;
+    const hit = document.createElementNS(SVG_NS, "circle");
+    hit.setAttribute("cx", "900");
+    hit.setAttribute("cy", "444");
+    hit.setAttribute("r", "40");
+    hit.setAttribute("fill", "#000");
+    hit.setAttribute("fill-opacity", "0");
+    hit.setAttribute("style", "cursor:pointer");
+    hit.setAttribute("tabindex", "0");
+    hit.setAttribute("role", "button");
+    hit.setAttribute("aria-label", "라우드니스 보상 켜기/끄기");
+    const title = document.createElementNS(SVG_NS, "title");
+    title.textContent = "LOUDNESS — 저음량에서 저·고역을 보상합니다";
+    hit.appendChild(title);
+    const led = document.createElementNS(SVG_NS, "circle");
+    led.setAttribute("id", "ampLoudnessLed");
+    led.setAttribute("cx", "935");
+    led.setAttribute("cy", "412");
+    led.setAttribute("r", "4.5");
+    led.setAttribute("fill", "#232018");
+    svg.appendChild(led);
+    svg.appendChild(hit);
+    const toggle = () => {
+        ampLoudnessOn = !ampLoudnessOn;
+        applyLoudnessComp();
+        led.style.fill = ampLoudnessOn ? "#f0b43e" : "#232018";
+        playerSubtext.textContent = ampLoudnessOn
+            ? "LOUDNESS ON — 볼륨이 낮을수록 저·고역을 보상합니다."
+            : "LOUDNESS OFF";
+    };
+    hit.addEventListener("click", toggle);
+    hit.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
 }
 
 // 8B: 죽어 있던 BIAS 미터 소생 — 미터를 누를 때마다 VU → CH A 바이어스 → CH B 바이어스 순환.
@@ -2088,6 +2206,24 @@ function ttFrame(now) {
     // 진공관 웜업: 켜면 ~2초에 걸쳐 달아오르고, 꺼지면 열이 식듯 더 천천히 어두워진다
     // (테이프 트랜스포트가 도는 동안은 빈 구간이라도 시스템이 켜져 있는 것으로 본다)
     const warmTarget = (isPlaying || deckMode === "play" || !!recorder) ? 1 : 0;
+    // 91E 정류관 지연 — 차가운 상태에서 소리를 걸면 2.6초간 정류관이 먼저 서고, 그 뒤 페이드인
+    if (ampModelId === "300b" && gainNode && warmTarget === 1 && ttFrame.prevWarmTarget === 0 && tubeWarm < 0.05) {
+        ampRectUntil = now + 2600;
+        playerSubtext.textContent = "정류관 예열 중 — 잠시 후 소리가 나옵니다 (300B 싱글엔디드의 아침 의식).";
+    }
+    ttFrame.prevWarmTarget = warmTarget;
+    if (ampRectUntil) {
+        if (ampModelId !== "300b" || !gainNode) {
+            ampRectUntil = 0;
+        } else if (now >= ampRectUntil) {
+            ampRectUntil = 0;
+            applyGainStaging();
+        } else {
+            const remain = ampRectUntil - now;
+            applyGainStaging();
+            gainNode.gain.value *= remain > 700 ? 0 : (1 - remain / 700);
+        }
+    }
     const warmRate = warmTarget > tubeWarm ? dt / 2.0 : dt / 3.5;
     tubeWarm = Math.max(0, Math.min(1, tubeWarm + (warmTarget > tubeWarm ? 1 : -1) * warmRate));
     // 앰프·EQ·턴테이블은 실제로 듣고 있을 때만 점등 — 백그라운드 예약 녹음은 앰프를 쓰지 않는다
@@ -2163,6 +2299,7 @@ function ttFrame(now) {
         const n = document.getElementById(id);
         if (!n) return;
         let sig = id.startsWith("amp") ? vuSig * ampWarm : deckSig;
+        if (id.startsWith("amp") && ampRectUntil && now < ampRectUntil) sig = 0;   // 정류관 예열 중
         // 8B: BIAS 모드에서는 좌측 미터가 신호 대신 채널 바이어스를 가리킨다 —
         // 켠 직후엔 낮았다가 관이 달아오르며 정격(중앙)으로 올라온다
         if (id === "ampVuL" && ampModelId === "el34" && ampBiasMode) {
@@ -2196,17 +2333,39 @@ function ttFrame(now) {
             if (isFinite(audio.currentTime)) tapePos = deckSegPlaying.start + Math.max(0, audio.currentTime - (deckSegPlaying.offset || 0));
         } else {
             tapePos += dt;   // 빈 구간: 히스만 내며 계속 감긴다
-            const nx = deckTape ? nextSegmentAfter(deckTape, tapePos) : null;
-            if (nx && tapePos >= nx.start) deckStartSegment(nx, tapePos - nx.start);
+            // 위치가 이미 세그먼트 안이면 그 자리에서 시작 — IndexedDB 복원이 늦게
+            // 도착한 경우(릴만 돌고 무음)와 구간 중간 재개를 모두 살린다
+            const inSeg = deckTape ? segmentAt(deckTape, tapePos) : null;
+            if (inSeg) {
+                deckStartSegment(inSeg, tapePos - inSeg.start);
+            } else {
+                const nx = deckTape ? nextSegmentAfter(deckTape, tapePos) : null;
+                if (nx && tapePos >= nx.start) deckStartSegment(nx, tapePos - nx.start);
+            }
         }
         if (tapePos >= tapeLenOf(deckTape)) {
             tapePos = tapeLenOf(deckTape);
-            deckStopTransport();
-            playerSubtext.textContent = "테이프가 끝났습니다 — 되감으세요.";
-            if (radioStandby) {
-                const nx2 = radioStandby;
-                radioStandby = null;
-                selectStation(nx2.id);
+            // REV MODE 릴레이 — A면이 끝나면 B웰 카세트를 A웰로 옮겨 이어 재생 (W-990RX)
+            if (isDoubleDeck() && w990ContPlay && deckBTape && deckBTape.segments.length && !recorder) {
+                deckTape.pos = tapeLenOf(deckTape);
+                const nextTape = deckBTape;
+                deckBTape = null;
+                deckTape = nextTape;
+                tapePos = 0;
+                deckSegPlaying = null;
+                deckRefreshShelf();
+                const relaySeg = segmentAt(deckTape, 0) || nextSegmentAfter(deckTape, 0);
+                if (relaySeg) deckStartSegment(relaySeg, Math.max(0, 0 - relaySeg.start));
+                nowStation.textContent = deckTape.label + " — TAPE";
+                playerSubtext.textContent = "릴레이 재생 — B웰 카세트 「" + deckTape.label + "」로 이어 갑니다.";
+            } else {
+                deckStopTransport();
+                playerSubtext.textContent = "테이프가 끝났습니다 — 되감으세요.";
+                if (radioStandby) {
+                    const nx2 = radioStandby;
+                    radioStandby = null;
+                    selectStation(nx2.id);
+                }
             }
         }
         const deckSpec = DECK_MODELS[deckModelId] || DECK_MODELS.dragon;
@@ -2228,7 +2387,8 @@ function ttFrame(now) {
     const deckRolling = (deckMode === "play") || (deckMode === "rec" && recorder);
     syncDeckStageLive();
     const deckSpec = DECK_MODELS[deckModelId] || DECK_MODELS.dragon;
-    const spinRate = (deckMode === "wind" ? 900 * windDir : (deckRolling ? 210 : 0)) * deckSpec.reelRate;
+    const dubbing = w990DubUntil > Date.now();
+    const spinRate = (dubbing ? 900 : deckMode === "wind" ? 900 * windDir : (deckRolling ? 210 : 0)) * deckSpec.reelRate;
     if (spinRate) deckReelAngle = (deckReelAngle + dt * spinRate + 360) % 360;
     const rl = document.getElementById("deckReelL");
     if (rl) {
@@ -2261,6 +2421,10 @@ function ttFrame(now) {
     const brl = document.getElementById("deckBReelL");
     if (brl) {
         const bLen = tapeLenOf(deckBTape);
+        if (dubbing) {
+            deckBReelAngle = (deckBReelAngle + dt * 900 + 360) % 360;
+            deckBPos = Math.min(bLen, deckBPos + dt * (w990DubHigh ? 30 : 15));
+        }
         if (recOnB && recorder) {
             deckBPos = Math.min(bLen, deckBRecStartPos + (Date.now() - recStartMs) / 1000);
             deckBReelAngle = (deckBReelAngle + dt * 210 + 360) % 360;
@@ -2803,7 +2967,23 @@ function togglePlay() {
             selectStation(currentStation.id);
             return;
         }
-        // 포노·테이프는 멈춘 자리에서 그대로 이어 재생
+        // 테이프: 현재 카운터 위치의 세그먼트를 다시 건다 — 묵은 src(직전 라디오 등)를
+        // 그대로 재생하면 릴은 테이프인데 소리는 딴 데서 나는 괴리가 생긴다
+        if (deckMode === "play") {
+            const seg = deckTape ? segmentAt(deckTape, tapePos) : null;
+            if (seg) {
+                deckStartSegment(seg, tapePos - seg.start);
+                playerSubtext.textContent = "테이프 재생 재개 (" + formatDuration(tapePos * 1000) + " 위치)";
+                updatePlayButton();
+                updateActiveStation();
+            } else {
+                playerSubtext.textContent = deckTape && deckTape.segments.length
+                    ? "테이프의 빈 구간입니다 — 릴은 감기는 중. REW로 되감으면 수록 구간부터 재생됩니다."
+                    : "공테이프입니다 — TAPE RACK에서 녹음된 테이프를 눌러 장착하세요.";
+            }
+            return;
+        }
+        // 포노는 멈춘 자리에서 그대로 이어 재생
         audio.play().then(() => {
             isPlaying = true;
             playerSubtext.textContent = `${sourceName} 재생 중입니다.`;
@@ -3087,7 +3267,7 @@ function stopRecording() {
         recOnB = false;
         if (deckBTape) {
             deckBTape.pos = 0;   // 되감아 랙으로 — B웰은 정지 즉시 배출한다
-            deckBTape = null;
+            if (!w990ContPlay) deckBTape = null;   // REV MODE 릴레이면 이어 재생을 위해 웰에 남긴다
         }
         deckBPos = 0;
         deckRefreshShelf();

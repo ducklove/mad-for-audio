@@ -318,6 +318,7 @@ function applyAmp() {
     ampPresence.Q.value = presence[2];
     ampTreble.frequency.value = m.treble[0];
     ampTreble.gain.value = m.treble[1];
+    applyLoudnessComp();
 
     setAudioParam(ampPowerDrive.gain, power.drive || 1);
     ampPowerShaper.curve = valveCurve(power);
@@ -352,6 +353,19 @@ function applyGainStaging() {
     setAudioParam(gainNode.gain, volumeLevel, .012);
 }
 
+// E-303 LOUDNESS COMP — 저음량 등청감 보상. 볼륨이 낮을수록 저·고역 셸프를 올린다.
+// (그려져 있던 LOUDNESS 노브 소생 — 실물 E-303의 컴펜세이터)
+let ampLoudnessOn = false;
+
+function applyLoudnessComp() {
+    if (!ampBass || !ampTreble) return;
+    const m = AMP_MODELS[ampModelId];
+    if (!m) return;
+    const comp = (ampModelId === "e303" && ampLoudnessOn) ? Math.max(0, 1 - volumeLevel) : 0;
+    ampBass.gain.value = m.bass[1] + comp * 6;
+    ampTreble.gain.value = m.treble[1] + comp * 2.5;
+}
+
 function setVolumeLevel(v) {
     volumeLevel = Math.max(0, Math.min(1, v));
     if (gainNode) {
@@ -359,6 +373,7 @@ function setVolumeLevel(v) {
     } else {
         try { audio.volume = volumeLevel; } catch (e) {}
     }
+    if (ampLoudnessOn) applyLoudnessComp();
     updateVolKnob();
 }
 

@@ -24,6 +24,10 @@ if (!DECK_MODELS[deckModelId]) deckModelId = "dragon";
 // ----- 더블데크(B웰) -----
 // W-990RX 같은 더블 데크에서 녹음(예약·수동)은 B웰이 전담한다.
 // A웰(재생 트랜스포트)은 녹음과 완전히 독립 — 예약이 걸려 있어도 자유롭게 쓴다.
+let w990DubUntil = 0;       // W-990RX 고속 더빙 연출 종료 시각 (릴 고속 회전)
+let w990DubBusy = false;
+let w990DubHigh = true;     // DUB SPEED — HIGH(30배 연출) / NORMAL(15배 연출)
+let w990ContPlay = false;   // REV MODE(relay) — A면이 끝나면 B웰 테이프로 이어 재생
 let deckLocAddr = null;     // B215 ADDR LOC — MEM으로 기억한 카운터 위치 (세션)
 let deckWindTarget = null;  // 자동 와인딩 목표 (ZERO/ADDR LOC), 도달 시 정지
 let deckBTape = null;           // B웰에 걸린 테이프 (녹음 중에만 장착, 정지 시 랙으로 배출)
@@ -381,6 +385,7 @@ function mountDeck() {
     ["deckBtnPlay", "deckBtnStop", "deckBtnRec", "deckBtnEject"].forEach((id) => svgButtonize(id));
     deckMountMicPanel();
     if (deckModelId === "b215") bindB215Keys();
+    if (isDoubleDeck()) bindW990Dub();
     if (!deckTape) deckTape = newBlankTape();
     deckRefreshShelf();
 }
@@ -438,6 +443,104 @@ function bindB215Keys() {
         }, 2000);
     });
     bind(11, "RST — 카운터 0으로 자동 와인딩 (ZERO LOC)", () => deckAutoWind(0, "ZERO LOC"));
+}
+
+// ----- W-990RX 더빙 버스 — DECK I PLAY ▶ DECK II RECORD (그려져 있던 패널 배선) -----
+// 고속 더빙은 실시간 캡처가 아니라 세그먼트의 '실복사'다: A웰 테이프의 각 구간 blob을
+// 복제해 IndexedDB에 새 녹음으로 영속하고 B웰 카세트에 싣는다 — 결과물은 정상 속도.
+// 릴이 고속으로 도는 연출 시간은 수록 길이 / (HIGH 30배 · NORMAL 15배).
+async function w990StartDub() {
+    if (w990DubBusy) { playerSubtext.textContent = "이미 더빙 중입니다."; return; }
+    if (recorder) { playerSubtext.textContent = "녹음 중에는 더빙할 수 없습니다."; return; }
+    if (!deckTape || !deckTape.segments.length) { playerSubtext.textContent = "A웰 테이프에 수록 내용이 없습니다 — TAPE RACK에서 장착하세요."; return; }
+    if (deckMode !== "stop") { playerSubtext.textContent = "정지 상태에서 더빙을 시작하세요 (더빙 중엔 두 웰을 모두 씁니다)."; return; }
+    w990DubBusy = true;
+    const src = deckTape;
+    const dst = newBlankTape(tapeLenOf(src));
+    deckBTape = dst;
+    deckBPos = 0;
+    deckRefreshShelf();
+    const used = tapeUsedSec(src);
+    const theater = Math.max(2500, used / (w990DubHigh ? 30 : 15) * 1000);
+    w990DubUntil = Date.now() + theater;
+    playerSubtext.textContent = (w990DubHigh ? "HIGH-SPEED" : "NORMAL") + " DUBBING — A→B 복사 중... (" + Math.ceil(theater / 1000) + "초)";
+    let copied = 0;
+    try {
+        for (const seg of src.segments.slice()) {
+            const blob = await fetch(seg.url).then((r) => r.blob());
+            const record = {
+                stationId: "dub", stationName: seg.name || "더빙",
+                startedAt: new Date().toISOString(), durationMs: seg.dur * 1000,
+                type: seg.type || blob.type || "audio/mp4",
+                tapeId: dst.id, tapeStart: seg.start, tapeLen: tapeLenOf(dst), blob
+            };
+            record.dbId = await persistRecording(record);
+            tapeAddSegment(dst, { start: seg.start, dur: seg.dur, url: URL.createObjectURL(blob), name: seg.name, dbId: record.dbId, type: record.type });
+            copied++;
+        }
+        tapeMetaSave();
+    } catch (e) { console.warn("더빙 복사 실패:", e); }
+    const remain = w990DubUntil - Date.now();
+    if (remain > 0) await new Promise((r) => setTimeout(r, remain));
+    w990DubUntil = 0;
+    w990DubBusy = false;
+    dst.pos = 0;
+    if (!copied) {
+        deckBTape = null;
+        tapes.splice(tapes.indexOf(dst), 1);
+        playerSubtext.textContent = "더빙에 실패했습니다.";
+    } else if (w990ContPlay) {
+        playerSubtext.textContent = "더빙 완료 — 카세트 「" + dst.label + "」가 B웰에 대기합니다 (REV MODE: 릴레이).";
+    } else {
+        deckBTape = null;
+        playerSubtext.textContent = "더빙 완료 — 카세트 「" + dst.label + "」를 되감아 테이프 랙에 보관했습니다.";
+    }
+    deckRefreshShelf();
+}
+
+function bindW990Dub() {
+    const svg = document.querySelector("#deckStage svg");
+    if (!svg) return;
+    const addHit = (x, y, w, h, label, title, fn) => {
+        const r = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        r.setAttribute("x", x); r.setAttribute("y", y);
+        r.setAttribute("width", w); r.setAttribute("height", h);
+        r.setAttribute("fill", "#000"); r.setAttribute("fill-opacity", "0");
+        r.setAttribute("style", "cursor:pointer");
+        r.setAttribute("tabindex", "0");
+        r.setAttribute("role", "button");
+        r.setAttribute("aria-label", label);
+        const t = document.createElementNS("http://www.w3.org/2000/svg", "title");
+        t.textContent = title;
+        r.appendChild(t);
+        svg.appendChild(r);
+        r.addEventListener("click", fn);
+        r.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fn(); } });
+        return r;
+    };
+    // 하단 더빙 버스: DECK I PLAY ▶ DECK II RECORD 흐름 전체가 시작 버튼
+    addHit(432, 448, 342, 48, "A웰 → B웰 더빙 시작", "DUBBING — A웰 테이프를 B웰 카세트로 복사합니다", w990StartDub);
+    // DUB SPEED 스위치 (NORMAL/HIGH)
+    addHit(886, 444, 110, 28, "더빙 속도 전환", "DUB SPEED — HIGH / NORMAL", () => {
+        w990DubHigh = !w990DubHigh;
+        playerSubtext.textContent = "DUB SPEED: " + (w990DubHigh ? "HIGH — 릴이 빠르게 감깁니다" : "NORMAL");
+    });
+    // 센터 패널: DUBBING 키 = 더빙 시작, REV MODE 키 = 릴레이(CONT PLAY) 토글
+    const dubKey = document.getElementById("deckModeKey4");
+    if (dubKey) {
+        dubKey.addEventListener("click", w990StartDub);
+    }
+    const revKey = document.getElementById("deckModeKey3");
+    if (revKey) {
+        revKey.addEventListener("click", () => {
+            w990ContPlay = !w990ContPlay;
+            revKey.setAttribute("stroke", w990ContPlay ? "#b9a46f" : "#4e5155");
+            revKey.setAttribute("stroke-width", w990ContPlay ? "2" : "1");
+            playerSubtext.textContent = w990ContPlay
+                ? "REV MODE: 릴레이 — A면이 끝나면 B웰 테이프로 이어 재생합니다."
+                : "REV MODE: 단면 — A면이 끝나면 정지합니다.";
+        });
+    }
 }
 
 // ----- REC INPUT (LINE/MIC) — 하단 좌측 입력 베이 -----
@@ -610,6 +713,8 @@ function deckPlay() {
     stopPhono();
     if (player) { player.destroy(); player = null; }
     if (typeof Hls !== "undefined" && Hls.isSupported()) ensureAudioGraph();
+    // 제스처 밖에서 만들어져 잠든 컨텍스트가 있으면 깨운다 — 릴만 돌고 무음이 되는 원인
+    if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
     if (gainNode) gainNode.gain.value = volumeLevel;
     ensureHiss();
     deckMode = "play";
@@ -627,7 +732,11 @@ function deckPlay() {
         deckSegPlaying = null;
     }
     nowStation.textContent = deckTape.label + " — TAPE";
-    playerSubtext.textContent = "카세트 재생 (" + formatDuration(tapePos * 1000) + " 위치부터)";
+    playerSubtext.textContent = !deckTape.segments.length
+        ? "공테이프가 돌고 있습니다 — 소리를 들으려면 TAPE RACK에서 녹음된 테이프를 장착하세요."
+        : !seg
+            ? "빈 구간부터 감기 시작 (" + formatDuration(tapePos * 1000) + ") — 수록 구간에 닿으면 소리가 납니다."
+            : "카세트 재생 (" + formatDuration(tapePos * 1000) + " 위치부터)";
     updatePlayButton();
     updateMediaSession();
     gtag('event', 'play_tape', { tape: deckTape.label });

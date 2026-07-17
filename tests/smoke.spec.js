@@ -537,6 +537,89 @@ test.describe("데스크톱", () => {
         expect(await page.evaluate(() => /"cal":true/.test(localStorage.getItem("fmRadio.tapeMeta") || "")), "cal 영속").toBe(true);
     });
 
+    test("데크 무음 회귀: 늦은 복원 픽업·스트립 정합 재개·묵은 소스 미탈취", async ({ page }) => {
+        // ① 공테이프 재생 중 세그먼트가 늦게 도착(IndexedDB 복원 경합)해도 그 자리에서 소리가 난다
+        await page.evaluate(() => deckPlay());
+        await page.waitForTimeout(300);
+        expect(await page.evaluate(() => !!deckSegPlaying), "복원 전엔 무음 롤").toBe(false);
+        await page.evaluate((b64) => {
+            const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+            const url = URL.createObjectURL(new Blob([bytes], { type: "audio/wav" }));
+            tapeAddSegment(deckTape, { start: 0, dur: 40, url, name: "늦은 복원", type: "audio/wav" });
+        }, makeWav(40).toString("base64"));
+        await page.waitForFunction(() => !!deckSegPlaying && !document.getElementById("audioPlayer").paused, null, { timeout: 5000, polling: 100 });
+        // ② 세그먼트 중간에서 멈췄다가 스트립 ▶ — 테이프가 이어지고 다른 소스를 훔치지 않는다
+        await page.evaluate(() => { viewMode = "simple"; applyViewMode(); applyUnitVisibility(); });
+        await page.evaluate(() => { audio.pause(); isPlaying = false; });
+        await page.click("#btnPlay");
+        await page.waitForFunction(() => !!deckSegPlaying && !document.getElementById("audioPlayer").paused, null, { timeout: 5000, polling: 100 });
+        expect(await page.evaluate(() => deckMode), "여전히 테이프 모드").toBe("play");
+        // ③ 공테이프(빈 구간)에서 스트립 ▶는 재생을 훔치지 않고 안내만 한다
+        await page.evaluate(() => { deckStopTransport(); deckEject(); deckPlay(); });
+        await page.waitForTimeout(200);
+        await page.click("#btnPlay");
+        await page.waitForTimeout(300);
+        expect(await page.evaluate(() => document.getElementById("audioPlayer").paused), "묵은 소스 미탈취").toBe(true);
+        expect(await page.evaluate(() => playerSubtext.textContent)).toContain("공테이프");
+    });
+
+    test("B760 방송국 프리셋: 길게 눌러 저장·짧게 눌러 호출·영속", async ({ page }) => {
+        await page.evaluate(() => initTunerSkin("b760"));
+        await expect(page.locator("#tsPreset1")).toHaveCount(1);
+        await page.evaluate(() => selectStation(window.FMRadio.stations[2].id));
+        await page.waitForTimeout(300);
+        // 길게(0.7초) → 저장
+        await page.evaluate(async () => {
+            const key = document.getElementById("tsPreset3");
+            key.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+            await new Promise((r) => setTimeout(r, 700));
+            key.dispatchEvent(new PointerEvent("pointerup", { bubbles: true }));
+        });
+        expect(await page.evaluate(() => JSON.parse(localStorage.getItem("fmRadio.tunerPresets"))["3"]), "저장 영속")
+            .toBe(await page.evaluate(() => window.FMRadio.stations[2].id));
+        // 다른 국으로 옮긴 뒤 짧게 → 호출
+        await page.evaluate(() => selectStation(window.FMRadio.stations[0].id));
+        await page.waitForTimeout(200);
+        await page.evaluate(async () => {
+            const key = document.getElementById("tsPreset3");
+            key.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+            await new Promise((r) => setTimeout(r, 80));
+            key.dispatchEvent(new PointerEvent("pointerup", { bubbles: true }));
+        });
+        await page.waitForFunction(() => currentStation && currentStation.id === window.FMRadio.stations[2].id, null, { timeout: 8000, polling: 100 });
+    });
+
+    test("W-990RX 더빙 버스: A→B 실복사 영속·REV MODE 릴레이 이어재생", async ({ page }) => {
+        await page.click('button:has-text("오디오 구성")');
+        await page.locator('#deckPicker .skin-btn', { hasText: "W-990RX" }).click();
+        await page.keyboard.press("Escape");
+        await page.evaluate((b64) => {
+            const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+            const url = URL.createObjectURL(new Blob([bytes], { type: "audio/wav" }));
+            const t = newBlankTape(1800);
+            tapeAddSegment(t, { start: 0, dur: 30, url, name: "더빙 원본", type: "audio/wav" });
+            deckInsertTape(t.id);
+        }, makeWav(30).toString("base64"));
+        // REV MODE(릴레이) ON → 더빙 시작
+        await page.evaluate(() => document.getElementById("deckModeKey3").dispatchEvent(new MouseEvent("click", { bubbles: true })));
+        await page.evaluate(() => { w990StartDub(); });
+        await page.waitForFunction(() => w990DubBusy && !!deckBTape, null, { timeout: 5000, polling: 100 });
+        // 완료: B웰에 실복사본(dbId 영속)이 남는다 (릴레이 ON이므로 배출 안 함)
+        await page.waitForFunction(() => !w990DubBusy && deckBTape && deckBTape.segments.length === 1, null, { timeout: 15000, polling: 120 });
+        expect(await page.evaluate(() => deckBTape.segments.every((sg) => !!sg.dbId)), "IndexedDB 영속 복사").toBe(true);
+        // A면 끝 → B웰 카세트로 릴레이 이어재생
+        await page.evaluate(() => {
+            tapePos = tapeUsedSec(deckTape);
+            deckPlay();
+            tapePos = tapeLenOf(deckTape) - 0.3;
+            const t0 = performance.now() - 2000;
+            ttLastTs = t0;
+            for (let i = 1; i <= 30; i++) ttFrame(t0 + i * 50);
+        });
+        expect(await page.evaluate(() => ({ mode: deckMode, seg: !!deckSegPlaying, bEmpty: deckBTape === null })))
+            .toEqual({ mode: "play", seg: true, bEmpty: true });
+    });
+
     test("테이프 보관함: 라벨 개명 영속·트랙 점프 재생·삭제 연동", async ({ page }) => {
         // 짧은 예약 녹음으로 수록곡 있는 테이프를 만든다
         await page.evaluate(() => {
