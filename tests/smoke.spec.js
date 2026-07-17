@@ -620,6 +620,81 @@ test.describe("데스크톱", () => {
             .toEqual({ mode: "play", seg: true, bEmpty: true });
     });
 
+    test("소스 보이싱: TT·튜너 시그니처 셸프, GE-10C 새추레이션, 10B 스코프", async ({ page, context }) => {
+        await context.route("https://upload.wikimedia.org/**", (route) =>
+            route.fulfill({ body: makeWav(40), contentType: "audio/wav", headers: { "Access-Control-Allow-Origin": "*" } }));
+        // GARRARD 301 포노 → low 셸프 +1.4dB
+        await page.evaluate(() => { ttModelId = "g301"; mountTurntable(); playPhonoTrack(0); });
+        await page.waitForFunction(() => phonoActive && isPlaying, null, { timeout: 15000 });
+        await page.evaluate(() => { const t0 = performance.now() - 100; ttLastTs = t0; ttFrame(t0 + 50); });
+        await page.waitForFunction(() => voiceLow && Math.abs(voiceLow.gain.value - 1.4) < 0.2, null, { timeout: 5000, polling: 100 });
+        expect(await page.evaluate(() => voiceSigLast)).toBe("tt:g301");
+        // 10B 라디오 → 튜너 보이싱 + 스코프 라이브
+        await page.evaluate(() => { stopPhono(); initTunerSkin("m10b"); selectStation(window.FMRadio.stations[0].id); });
+        await page.waitForFunction(() => isPlaying && currentStation, null, { timeout: 15000 });
+        await page.evaluate(() => { const t0 = performance.now() - 100; ttLastTs = t0; ttFrame(t0 + 50); });
+        await page.waitForFunction(() => voiceSigLast === "tuner:m10b" && Math.abs(voiceLow.gain.value - 1.2) < 0.2, null, { timeout: 5000, polling: 100 });
+        const scopeLive = await page.evaluate(() => {
+            const d1 = document.getElementById("tsScopeCore").getAttribute("d");
+            const t0 = performance.now() - 200;
+            ttLastTs = t0;
+            for (let i = 1; i <= 4; i++) ttFrame(t0 + i * 50);
+            return d1 !== document.getElementById("tsScopeCore").getAttribute("d");
+        });
+        expect(scopeLive, "10B 스코프 트레이스가 산다").toBe(true);
+        // GE-10C — 버퍼 새추레이션은 ACTIVE에서만, 모델 전환 시 해제
+        const ge = await page.evaluate(() => {
+            setEqModel("ge10chrome");
+            const withOn = !!(eqBufferShaper && eqBufferShaper.curve);
+            eqState.on = false;
+            applyEq();
+            const withOff = !!(eqBufferShaper && eqBufferShaper.curve);
+            eqState.on = true;
+            setEqModel("ge10");
+            return { withOn, withOff, cleared: eqBufferShaper === null };
+        });
+        expect(ge).toEqual({ withOn: true, withOff: false, cleared: true });
+    });
+
+    test("DRAGON: 외부 테이프 아지무스(NAAC 보정)·오토 리버스 리피트", async ({ page }) => {
+        // 외부(foreign) 테이프 — B215에선 고역 -4.5dB, DRAGON에선 평평
+        await page.evaluate((b64) => {
+            const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+            const url = URL.createObjectURL(new Blob([bytes], { type: "audio/wav" }));
+            const t = newBlankTape(60);
+            t.foreign = true;
+            tapeAddSegment(t, { start: 0, dur: 20, url, name: "외부 믹스", type: "audio/wav" });
+            window.__ft = t.id;
+            deckModelId = "b215";
+            mountDeck();
+            deckInsertTape(t.id);
+            deckPlay();
+        }, makeWav(20).toString("base64"));
+        await page.waitForFunction(() => deckMode === "play" && !document.getElementById("audioPlayer").paused, null, { timeout: 15000, polling: 100 });
+        await page.evaluate(() => { const t0 = performance.now() - 100; ttLastTs = t0; ttFrame(t0 + 50); });
+        await page.waitForFunction(() => voiceHigh && Math.abs(voiceHigh.gain.value - -4.5) < 0.4, null, { timeout: 5000, polling: 100 });
+        await page.evaluate(() => {
+            deckStopTransport();
+            deckModelId = "dragon";
+            mountDeck();
+            deckInsertTape(window.__ft);
+            deckPlay();
+        });
+        await page.waitForFunction(() => deckMode === "play", null, { timeout: 8000, polling: 100 });
+        await page.evaluate(() => { const t0 = performance.now() - 100; ttLastTs = t0; ttFrame(t0 + 50); });
+        await page.waitForFunction(() => voiceHigh && Math.abs(voiceHigh.gain.value) < 0.4, null, { timeout: 5000, polling: 100 });
+        // AUTO REVERSE — 끝나면 되감아 처음부터 (60초 테이프라 합성 프레임으로 완주)
+        await page.evaluate(() => document.getElementById("deckAutoRevLbl").dispatchEvent(new MouseEvent("click", { bubbles: true })));
+        expect(await page.evaluate(() => dragonRepeat)).toBe(true);
+        await page.evaluate(() => {
+            tapePos = tapeLenOf(deckTape) - 0.2;
+            const t0 = performance.now() - 9000;
+            ttLastTs = t0;
+            for (let i = 1; i <= 120; i++) ttFrame(t0 + i * 70);
+        });
+        await page.waitForFunction(() => deckMode === "play" && tapePos < 8 && !!deckSegPlaying, null, { timeout: 8000, polling: 100 });
+    });
+
     test("테이프 보관함: 라벨 개명 영속·트랙 점프 재생·삭제 연동", async ({ page }) => {
         // 짧은 예약 녹음으로 수록곡 있는 테이프를 만든다
         await page.evaluate(() => {

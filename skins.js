@@ -497,8 +497,8 @@ const TUNER_SKINS = {
                 <line x1="545" y1="205" x2="605" y2="205"/><line x1="555" y1="235" x2="595" y2="235"/><line x1="535" y1="267" x2="615" y2="267"/><line x1="555" y1="299" x2="595" y2="299"/><line x1="545" y1="330" x2="605" y2="330"/>
             </g>
             <g fill="none" stroke="#5af28a" stroke-linecap="round">
-                <path d="M445 268 C477 214 521 212 575 268 S674 322 705 268" stroke-width="3" opacity=".8" filter="url(#mzGlow)"/>
-                <path d="M445 268 C477 214 521 212 575 268 S674 322 705 268" stroke-width="1.2" opacity=".95"/>
+                <path id="tsScopeGlow" d="M445 268 C477 214 521 212 575 268 S674 322 705 268" stroke-width="3" opacity=".8" filter="url(#mzGlow)"/>
+                <path id="tsScopeCore" d="M445 268 C477 214 521 212 575 268 S674 322 705 268" stroke-width="1.2" opacity=".95"/>
             </g>
             <g id="tsTunePtr">
                 <rect x="572" y="185" width="6" height="165" fill="#ffb03a" filter="url(#mzGlow)" opacity="0.9"/>

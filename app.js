@@ -2345,6 +2345,13 @@ function ttFrame(now) {
         }
         if (tapePos >= tapeLenOf(deckTape)) {
             tapePos = tapeLenOf(deckTape);
+            // DRAGON 오토 리버스(리피트) — 끝나면 고속으로 되감아 처음부터 이어 재생
+            if (deckModelId === "dragon" && dragonRepeat && deckTape && deckTape.segments.length && !recorder) {
+                deckAutoResume = true;
+                deckSegPlaying = null;
+                audio.pause();
+                deckAutoWind(0, "AUTO REVERSE");
+            } else
             // REV MODE 릴레이 — A면이 끝나면 B웰 카세트를 A웰로 옮겨 이어 재생 (W-990RX)
             if (isDoubleDeck() && w990ContPlay && deckBTape && deckBTape.segments.length && !recorder) {
                 deckTape.pos = tapeLenOf(deckTape);
@@ -2380,7 +2387,13 @@ function ttFrame(now) {
             deckMode = "stop";
             windDir = 0;
             deckSyncTape();
-            playerSubtext.textContent = "LOC — " + formatDuration(tapePos * 1000) + " 위치에 도착했습니다.";
+            if (deckAutoResume) {
+                deckAutoResume = false;
+                deckPlay();
+                playerSubtext.textContent = "AUTO REVERSE — 되감기 완료, 처음부터 이어 재생합니다.";
+            } else {
+                playerSubtext.textContent = "LOC — " + formatDuration(tapePos * 1000) + " 위치에 도착했습니다.";
+            }
         }
         if (tapePos <= 0 || tapePos >= tapeLenOf(deckTape)) { deckMode = "stop"; windDir = 0; deckWindTarget = null; }
     }
@@ -2455,6 +2468,36 @@ function ttFrame(now) {
     const pled = document.getElementById("ampPwrLed");
     if (pled) pled.style.fill = isPlaying ? "#ff7a3a" : "#3a2012";
 
+    // 소스 보이싱 — 라디오/포노/테이프 소스와 모델 시그니처를 따라 셸프를 튼다
+    applySourceVoice();
+    // 10B 오실로스코프 — 미동조에선 유영하는 타원, 동조·재생 중엔 중앙의 안정된 정현파
+    const scopeCore = document.getElementById("tsScopeCore");
+    if (scopeCore) {
+        const scopeGlow = document.getElementById("tsScopeGlow");
+        const locked = isPlaying && currentStation;
+        const ts = now / 1000;
+        const amp = locked ? 22 + Math.max(0, Math.min(1, tsSignal)) * 36 : 13;
+        const drift = locked ? 0 : Math.sin(ts * 0.9) * 34;
+        let d = "";
+        for (let i = 0; i <= 26; i++) {
+            const ph = i / 26 * Math.PI * 2;
+            const x = 445 + i * 10 + (locked ? 0 : drift * Math.sin(ph) * 0.5);
+            const y = 268 - Math.sin(ph * 2 + ts * (locked ? 2.2 : 6.1)) * amp
+                - (locked ? 0 : Math.sin(ph * 5 + ts * 9) * 6);
+            d += (i ? "L" : "M") + x.toFixed(1) + " " + y.toFixed(1);
+        }
+        scopeCore.setAttribute("d", d);
+        if (scopeGlow) scopeGlow.setAttribute("d", d);
+        const scopeOp = (0.12 + tunerWarm * 0.88).toFixed(2);
+        scopeCore.style.opacity = scopeOp;
+        if (scopeGlow) scopeGlow.style.opacity = scopeOp * 0.8;
+    }
+    // DRAGON NAAC LED — 외부 테이프를 보정 중일 때 점멸, 평소엔 고정 점등
+    const naacLed = document.getElementById("deckNaacLed");
+    if (naacLed) {
+        const correcting = deckMode === "play" && deckTape && deckTape.foreign;
+        naacLed.style.fill = correcting ? ((now % 700) < 380 ? "#8dffb0" : "#2c5c42") : "#6ee58b";
+    }
     // SE-9 맥락 점등 — 지금 소스에 맞는 프리셋 키가 은은히 글로우 ("기계가 알고 있다")
     const eqCtx = (currentStation && isPlaying) ? "fmnr" : phonoActive ? "vinyl" : deckMode === "play" ? "tape" : null;
     if (eqCtx !== ttFrame.eqCtxLast && document.getElementById("eqKey_mem")) {

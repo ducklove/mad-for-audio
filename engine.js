@@ -62,6 +62,10 @@ let ampInputTrim = null;
 let recDest = null;
 let analyser = null;
 let blendFilter = null;
+// 소스 보이싱 — 튜너/턴테이블/데크 모델의 음색 시그니처를 싣는 셸프 한 쌍.
+// 라디오면 TUNER_VOICE[스킨], 포노면 TT_VOICE[모델], 테이프면 아지무스 감쇠(외부 테이프).
+let voiceLow = null;
+let voiceHigh = null;
 let monoGain = null;
 // 하이파이 랙 체인: EQ → 전압증폭관 → 톤 → 출력관 → 전원 새그 → 출력트랜스/스피커 부하
 let eqNodes = null;
@@ -99,6 +103,48 @@ let recordingCount = 0;
 // MR-78 가변 선택도 — 0=WIDE(개방) 1=NORMAL 2=NARROW(어둡고 정숙). DSP는 MSE 경로 한정.
 let tsSelectivity = 0;
 
+// ----- 소스 보이싱 테이블 (low/high 셸프 dB) — 같은 방송·같은 판이라도 기기마다 질감이 다르다 -----
+// 실기 세평 기반의 은은한 값 (±1.5dB 안짝) — 착색이 아니라 체온 차이여야 한다.
+const TUNER_VOICE = {
+    t2: { low: 0, high: 0 },              // 기준기 — 무색
+    mr78: { low: 0.5, high: -0.6 },       // 어두운 정숙
+    m10b: { low: 1.2, high: -0.9 },       // 진공관 온기
+    tu9900: { low: -0.4, high: 0.8 },     // 차고 깨끗한 상단
+    tx9500: { low: 0.4, high: 0.3 },      // 씩씩한 중저역
+    t110: { low: 0.8, high: -0.3 },       // 부드러운 중역
+    t100: { low: 0, high: 0.6 },          // 빠르고 개방적
+    b760: { low: 0, high: 0 }             // 신시사이저식 무결점
+};
+const TT_VOICE = {
+    pl12: { low: 0.4, high: -0.4 },       // 입문 벨트의 순함
+    sl1200: { low: 0, high: 0 },          // 쿼츠 DD — 중립
+    td124: { low: 1.0, high: -0.6 },      // 아이들러의 도톰함
+    g301: { low: 1.4, high: -0.4 },       // 방송국 모터의 박력
+    lp12: { low: 0.8, high: -0.8 }        // 정숙하고 어두운 배경
+};
+// 외부(가져온) 테이프의 아지무스 어긋남 — DRAGON의 NAAC만 이를 보정해 평평하게 튼다
+const AZIMUTH_LOSS_DB = -4.5;
+
+let voiceSigLast = null;
+function applySourceVoice() {
+    if (!voiceLow || !voiceHigh || !audioCtx) return;
+    let low = 0, high = 0, sig = "none";
+    if (typeof phonoActive !== "undefined" && phonoActive) {
+        const v = TT_VOICE[ttModelId] || { low: 0, high: 0 };
+        low = v.low; high = v.high; sig = "tt:" + ttModelId;
+    } else if (typeof deckMode !== "undefined" && deckMode === "play") {
+        if (deckTape && deckTape.foreign && deckModelId !== "dragon") high = AZIMUTH_LOSS_DB;
+        sig = "tape:" + deckModelId + ":" + !!(deckTape && deckTape.foreign);
+    } else if (typeof currentStation !== "undefined" && currentStation) {
+        const v = TUNER_VOICE[tunerSkinId] || { low: 0, high: 0 };
+        low = v.low; high = v.high; sig = "tuner:" + tunerSkinId;
+    }
+    if (sig === voiceSigLast) return;
+    voiceSigLast = sig;
+    voiceLow.gain.setTargetAtTime(low, audioCtx.currentTime, 0.08);
+    voiceHigh.gain.setTargetAtTime(high, audioCtx.currentTime, 0.08);
+}
+
 function applyBlend() {
     // 하이블렌드: 고음을 깎아 약전계 잡음을 줄이는 효과 (MSE 경로에서만 실제 적용)
     // 선택도(MR-78)와 블렌드 중 더 좁은 쪽이 이긴다 — 같은 로우패스 필터를 공유한다
@@ -115,8 +161,24 @@ function applyMono() {
     }
 }
 
+let eqBufferShaper = null;
+let eqBufferCurveCache = null;
+function eqBufferCurve() {
+    if (eqBufferCurveCache) return eqBufferCurveCache;
+    const n = 2048;
+    const c = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+        const x = i / (n - 1) * 2 - 1;
+        // 아주 순한 비대칭 tanh — 낮은 2차 배음의 윤기만 남긴다
+        c[i] = Math.tanh(x * 1.06 + 0.02 * x * x) / Math.tanh(1.06);
+    }
+    eqBufferCurveCache = c;
+    return c;
+}
+
 function applyEq() {
     if (!eqNodes) return;
+    if (eqBufferShaper) eqBufferShaper.curve = eqState.on ? eqBufferCurve() : null;
     const g = eqState.gains[eqModelId];
     eqNodes.forEach((b, i) => {
         const v = eqState.on ? (g[i] || 0) : 0;
@@ -145,6 +207,15 @@ function buildEqChain() {
     });
     let head = monoGain;
     eqNodes.forEach((b) => { head = head.connect(b); });
+    // GE-10C SIGNATURE — 출력단 버퍼 새추레이션: 통과만 해도 미세한 배음 윤기 (DEFEAT 시 무색)
+    if (eqModelId === "ge10chrome") {
+        eqBufferShaper = audioCtx.createWaveShaper();
+        eqBufferShaper.oversample = "2x";
+        eqBufferShaper.curve = eqState.on ? eqBufferCurve() : null;
+        head = head.connect(eqBufferShaper);
+    } else {
+        eqBufferShaper = null;
+    }
     head.connect(ampDrive);
     if (crackleGain) crackleGain.connect(eqNodes[0]);
     if (scratchGain) scratchGain.connect(eqNodes[0]);
@@ -508,7 +579,13 @@ function ensureAudioGraph() {
         ampSpeakerFeedback = audioCtx.createGain();
         ampSpeakerWet = audioCtx.createGain();
         ampOut = audioCtx.createGain();
-        source.connect(ampInputTrim).connect(blendFilter).connect(monoGain);
+        voiceLow = audioCtx.createBiquadFilter();
+        voiceLow.type = "lowshelf";
+        voiceLow.frequency.value = 130;
+        voiceHigh = audioCtx.createBiquadFilter();
+        voiceHigh.type = "highshelf";
+        voiceHigh.frequency.value = 7200;
+        source.connect(ampInputTrim).connect(blendFilter).connect(voiceLow).connect(voiceHigh).connect(monoGain);
         ampDrive.connect(ampShaper).connect(ampBass).connect(ampLowMid).connect(ampMid).connect(ampPresence).connect(ampTreble)
             .connect(ampPowerDrive).connect(ampPowerShaper).connect(ampSag).connect(ampTransformerHP).connect(ampTransformerLP)
             .connect(ampDampingBass).connect(ampDampingHigh);
