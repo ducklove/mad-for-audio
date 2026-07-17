@@ -2393,3 +2393,40 @@ body.mode-focus .focus-exit {
     background: rgba(229, 72, 77, 0.25);
     color: #ffe2e2;
 }
+
+/* ----- 장식 사이드 스피커 ----- */
+/* 전체 화면처럼 좌우 폭이 넉넉할 때만 랙(최대 1280px) 양옆 바닥에 세운다.
+   순수 장식: 포인터를 통과시키고, 랙·오버레이보다 뒤에 깔린다. */
+.side-speaker {
+    display: none;
+}
+
+@media (min-width: 1780px) {
+    .side-speaker {
+        /* 실물이 아주 큰 플로어 스피커라 화면 높이의 88%까지 키운다(사진 비율 612:1001).
+           랙과 겹치지 않게 남는 옆 공간이 더 좁으면 그 폭에 맞춰 줄고, 그 한가운데 선다 */
+        --spk-w: clamp(190px, min(calc((100vw - 1348px) / 2), calc(88vh * 0.6114)), 800px);
+        display: block;
+        position: fixed;
+        bottom: 0;
+        width: var(--spk-w);
+        height: auto;
+        left: calc((100vw - 1240px) / 4 - var(--spk-w) / 2);
+        z-index: 0;
+        pointer-events: none;
+        /* 사진의 검은 배경을 페이지 배경에 녹인다 — 밝은 픽셀(스피커)만 남는다 */
+        mix-blend-mode: lighten;
+    }
+
+    .side-speaker.right {
+        left: auto;
+        right: calc((100vw - 1240px) / 4 - var(--spk-w) / 2);
+        transform: scaleX(-1);
+    }
+}
+
+/* 간편 화면·트레이 슬림 바에서는 표시하지 않는다 */
+body.mode-simple .side-speaker,
+body.mode-bar .side-speaker {
+    display: none;
+}
