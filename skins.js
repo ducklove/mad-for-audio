@@ -365,9 +365,9 @@ const TUNER_SKINS = {
             <path d="M366 72H1544" stroke="#e5f6ff" stroke-width="2" opacity=".085" pointer-events="none"/>
             <rect x="350" y="60" width="1210" height="20" fill="url(#lzInset)" opacity="0.8"/>
             <g class="dialScale" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700" fill="#f2f2f2" text-anchor="middle">
-                <text x="430" y="130">88</text><text x="538" y="130">90</text><text x="646" y="130">92</text><text x="754" y="130">94</text><text x="862" y="130">96</text><text x="970" y="130">98</text><text x="1078" y="130">100</text><text x="1186" y="130">102</text><text x="1294" y="130">104</text><text x="1402" y="130">106</text><text x="1510" y="130">108</text>
+                <text x="430" y="136">88</text><text x="538" y="136">90</text><text x="646" y="136">92</text><text x="754" y="136">94</text><text x="862" y="136">96</text><text x="970" y="136">98</text><text x="1078" y="136">100</text><text x="1186" y="136">102</text><text x="1294" y="136">104</text><text x="1402" y="136">106</text><text x="1510" y="136">108</text>
             </g>
-            <text class="dialScale" x="390" y="130" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" letter-spacing="1.5" fill="#9fe2d4" text-anchor="end">FM · MHz</text>
+            <text class="dialScale" x="430" y="90" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" letter-spacing="1.2" fill="#9fe2d4" text-anchor="middle">FM · MHz</text>
             <rect class="dialScale" x="430" y="150" width="1080" height="16" fill="url(#mrTickMinor)"/>
             <rect class="dialScale" x="430" y="150" width="1080" height="26" fill="url(#mrTickMajor)"/>
             <g id="tsStationMarks"></g>
@@ -435,10 +435,10 @@ const TUNER_SKINS = {
             <ellipse cx="1715" cy="177" rx="30" ry="22" fill="#ffffff" opacity=".04" pointer-events="none"/>
             <!-- 하단 노브 행 (글라스 위) -->
             <g font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" letter-spacing="2" fill="#7ee08a" text-anchor="middle">
-                <text x="380" y="462">SELECTIVITY</text><text x="620" y="462">METER</text><text x="860" y="462">FILTER</text><text x="1100" y="462">MUTING</text><text x="1340" y="462">MODE</text><text x="1580" y="462">VOLUME</text>
+                <text x="380" y="442">SELECTIVITY</text><text x="620" y="442">METER</text><text x="860" y="442">FILTER</text><text x="1100" y="442">MUTING</text><text x="1340" y="442">MODE</text><text x="1580" y="442">VOLUME</text>
             </g>
             <g font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="600" letter-spacing="1.1" fill="#65a872" text-anchor="middle">
-                <text x="380" y="480">REC</text><text x="620" y="480">TIMER</text><text x="860" y="480">HI BLEND</text><text x="1100" y="480">MUTE</text><text x="1340" y="480">STEREO/MONO</text><text x="1580" y="480">LIST</text>
+                <text x="380" y="468">REC</text><text x="620" y="468">TIMER</text><text x="860" y="468">HI BLEND</text><text x="1100" y="468">MUTE</text><text x="1340" y="468">STEREO/MONO</text><text x="1580" y="468">LIST</text>
             </g>
             <g pointer-events="none"><use href="#mrSmallScale" transform="translate(380 533)"/><use href="#mrSmallScale" transform="translate(620 533)"/><use href="#mrSmallScale" transform="translate(860 533)"/><use href="#mrSmallScale" transform="translate(1100 533)"/><use href="#mrSmallScale" transform="translate(1340 533)"/><use href="#mrSmallScale" transform="translate(1580 533)"/></g>
             <g>
