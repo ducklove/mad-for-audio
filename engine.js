@@ -437,6 +437,22 @@ function applyGainStaging() {
 // E-303 LOUDNESS COMP — 저음량 등청감 보상. 볼륨이 낮을수록 저·고역 셸프를 올린다.
 // (그려져 있던 LOUDNESS 노브 소생 — 실물 E-303의 컴펜세이터)
 let ampLoudnessOn = false;
+// QUAD 33의 실제 고역 필터 선택. 전용 필터 노드를 늘리지 않고 기존 하이 셸프를
+// 선택 주파수별 완만한 감쇄로 재사용해 재생 중에도 끊김 없이 전환한다.
+let quadFilterMode = "cancel";
+
+function applyQuadFilter() {
+    if (!ampTreble || ampModelId !== "quad303") return;
+    const m = AMP_MODELS[ampModelId];
+    const filter = {
+        cancel: [m.treble[0], 0],
+        "10k": [10000, -3.4],
+        "7k": [7000, -5.4],
+        "5k": [5000, -7.8]
+    }[quadFilterMode] || [m.treble[0], 0];
+    ampTreble.frequency.value = filter[0];
+    ampTreble.gain.value = m.treble[1] + filter[1];
+}
 
 function applyLoudnessComp() {
     if (!ampBass || !ampTreble) return;
@@ -445,6 +461,7 @@ function applyLoudnessComp() {
     const comp = (ampModelId === "e303" && ampLoudnessOn) ? Math.max(0, 1 - volumeLevel) : 0;
     ampBass.gain.value = m.bass[1] + comp * 6;
     ampTreble.gain.value = m.treble[1] + comp * 2.5;
+    applyQuadFilter();
 }
 
 function setVolumeLevel(v) {

@@ -1548,7 +1548,47 @@ function mountAmp() {
     ampRectUntil = 0;
     bindAmpBiasMeter();
     bindAmpLoudness();
+    bindQuadFilters();
     renderAmpPicker();
+}
+
+function paintQuadFilters() {
+    document.querySelectorAll("#ampStage .quad-filter-button").forEach((button) => {
+        const active = button.dataset.quadFilter === quadFilterMode;
+        const face = button.querySelector(".quad-filter-face");
+        if (face) {
+            face.setAttribute("fill", active ? "#e68a43" : "#eee7c8");
+            face.setAttribute("stroke", active ? "#8b4622" : "#665d4f");
+            face.setAttribute("stroke-width", active ? "2.4" : "1.5");
+        }
+        button.setAttribute("aria-pressed", String(active));
+    });
+}
+
+// QUAD 33의 CANCEL/5k/7k/10k 버튼은 장식이 아니라 실제 고역 필터다.
+function bindQuadFilters() {
+    if (ampModelId !== "quad303") return;
+    const buttons = document.querySelectorAll("#ampStage .quad-filter-button");
+    const select = (button) => {
+        quadFilterMode = button.dataset.quadFilter || "cancel";
+        applyQuadFilter();
+        paintQuadFilters();
+        playerSubtext.textContent = quadFilterMode === "cancel"
+            ? "QUAD 33 필터: CANCEL — 원 신호 대역을 유지합니다."
+            : "QUAD 33 필터: " + quadFilterMode.toUpperCase() + " — 오래된 레코드의 고역 잡음을 완만하게 줄입니다.";
+    };
+    buttons.forEach((button) => {
+        button.setAttribute("tabindex", "0");
+        button.setAttribute("role", "button");
+        button.setAttribute("aria-label", "QUAD 33 고역 필터 " + button.dataset.quadFilter);
+        button.addEventListener("click", () => select(button));
+        button.addEventListener("keydown", (event) => {
+            if (event.key !== "Enter" && event.key !== " ") return;
+            event.preventDefault();
+            select(button);
+        });
+    });
+    paintQuadFilters();
 }
 
 // E-303: 그려져 있던 LOUDNESS 노브 소생 — 클릭 토글, 저음량 등청감 보상 (Chromium DSP)
