@@ -140,8 +140,10 @@
     </style>
 </head>
 <body>
-    <!-- 재생 엔진: 튜너형은 로컬 widget.html, 오디오 시스템은 배포판 index.html — postMessage API를 IPC로 중계 -->
-    <iframe id="widgetFrame" allow="autoplay"></iframe>
+    <!-- 재생 엔진: 튜너형은 로컬 widget.html, 오디오 시스템은 배포판 index.html — postMessage API를 IPC로 중계.
+         fullscreen 허용: 랙의 '⛶ 전체 화면(몰입)' 버튼이 트레이 안에서도 동작하게.
+         file://↔https 교차 출처라 기본(src) 위임이 매칭되지 않아 *로 명시한다 -->
+    <iframe id="widgetFrame" allow="autoplay *; fullscreen *" allowfullscreen></iframe>
 
     <div id="miniBar" hidden>
         <button id="miniPlay" type="button" aria-label="재생 또는 일시정지">

@@ -144,6 +144,16 @@ function createWindow() {
         else hideWindow();
     });
 
+    // 랙의 '⛶ 전체 화면' 해제 등 페이지발 풀스크린 이탈에도 오디오 시스템 보기는
+    // 전체 화면을 유지한다. 의도된 전환은 이 시점에 barMode·currentView·표시 상태가
+    // 이미 바뀌어 있어 조건에서 걸러진다.
+    win.on("leave-full-screen", () => {
+        setTimeout(() => {
+            if (win.isDestroyed() || barMode || currentView !== "system" || !win.isVisible()) return;
+            win.setFullScreen(true);
+        }, 120);
+    });
+
     if (DEBUG) {
         win.webContents.on("console-message", (_event, _level, message) => {
             console.log("[shell]", message);
