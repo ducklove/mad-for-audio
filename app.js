@@ -633,7 +633,7 @@ function applyUnitVisibility() {
 }
 
 function syncDeckStageLive() {
-    const live = deckMode === "play" || (deckMode === "rec" && !!recorder);
+    const live = deckMode === "play" || (deckMode === "rec" && !!recorder) || (recOnB && !!recorder);
     if (live === deckStageLive) return;
     deckStageLive = live;
     const el = document.getElementById(UNIT_STAGES.deck);
@@ -1789,6 +1789,37 @@ function ttFrame(now) {
                 : reservations.some((r) => r.enabled) ? "#c24530" : "#3a1210";
         }
     }
+    // 더블데크 B웰 — 녹음이 도는 동안 릴·팩·카운터가 독립적으로 움직인다
+    const brl = document.getElementById("deckBReelL");
+    if (brl) {
+        const bLen = tapeLenOf(deckBTape);
+        if (recOnB && recorder) {
+            deckBPos = Math.min(bLen, deckBRecStartPos + (Date.now() - recStartMs) / 1000);
+            deckBReelAngle = (deckBReelAngle + dt * 210 + 360) % 360;
+            if (deckBPos >= bLen) {
+                stopRecording();
+                playerSubtext.textContent = "B웰 테이프 끝 — 녹음이 정지되었습니다.";
+            }
+        }
+        brl.setAttribute("transform", "rotate(" + deckBReelAngle.toFixed(1) + " " + brl.getAttribute("data-cx") + " " + brl.getAttribute("data-cy") + ")");
+        const brr = document.getElementById("deckBReelR");
+        if (brr) brr.setAttribute("transform", "rotate(" + (deckBReelAngle * 0.82).toFixed(1) + " " + brr.getAttribute("data-cx") + " " + brr.getAttribute("data-cy") + ")");
+        const pB = deckBPos / bLen;
+        const bpl = document.getElementById("deckBPackL");
+        const bpr = document.getElementById("deckBPackR");
+        if (bpl) bpl.setAttribute("r", (24 + (1 - pB) * 16).toFixed(1));
+        if (bpr) bpr.setAttribute("r", (24 + pB * 16).toFixed(1));
+        const bcnt = document.getElementById("deckBCounter");
+        if (bcnt) {
+            const btxt = formatDuration(deckBPos * 1000);
+            if (bcnt.textContent !== btxt) bcnt.textContent = btxt;
+        }
+        const blabel = document.getElementById("deckBLabel");
+        if (blabel) {
+            const want = deckBTape ? deckBTape.label : (activeResRec ? "예약 대기" : "REC STANDBY");
+            if (blabel.textContent !== want) blabel.textContent = want;
+        }
+    }
     const pled = document.getElementById("ampPwrLed");
     if (pled) pled.style.fill = isPlaying ? "#ff7a3a" : "#3a2012";
 
@@ -2414,16 +2445,27 @@ function toggleRecording(opts) {
         return;
     }
 
-    // 녹음은 항상 장착된 테이프의 현재 위치에 기록된다 (덮어쓰기)
-    if (deckMode === "play") {
-        playerSubtext.textContent = "테이프 재생 중에는 녹음할 수 없습니다 — 라디오나 턴테이블을 재생하세요.";
-        return;
+    // 더블데크: 녹음(예약·수동)은 B웰 전담 — A웰이 재생 중이어도 무방 (수동 REC = 더빙)
+    const wellB = isDoubleDeck();
+    if (wellB) {
+        if (!bgRec) {
+            // 수동 녹음은 B웰 테이프 끝에 이어 붙인다 — 없거나 가득이면 새 C-60
+            if (!deckBTape || tapeUsedSec(deckBTape) >= tapeLenOf(deckBTape) - 5) deckBTape = newBlankTape(3600);
+            deckBPos = tapeUsedSec(deckBTape);
+        }
+        if (!deckBTape) deckBTape = newBlankTape(3600);
+    } else {
+        // 싱글 데크: 녹음은 장착 테이프의 현재 위치에 기록된다 (덮어쓰기)
+        if (deckMode === "play") {
+            playerSubtext.textContent = "테이프 재생 중에는 녹음할 수 없습니다 — 라디오나 턴테이블을 재생하세요.";
+            return;
+        }
+        if (tapePos >= tapeLenOf(deckTape) - 1) {
+            playerSubtext.textContent = "테이프 끝입니다 — 되감거나 EJECT로 새 테이프를 넣으세요.";
+            return;
+        }
+        if (!deckTape) deckTape = newBlankTape();
     }
-    if (tapePos >= tapeLenOf(deckTape) - 1) {
-        playerSubtext.textContent = "테이프 끝입니다 — 되감거나 EJECT로 새 테이프를 넣으세요.";
-        return;
-    }
-    if (!deckTape) deckTape = newBlankTape();
 
     // 백그라운드 녹음은 스트림 바이트 캡처라 WebAudio·MediaRecorder가 필요 없다.
     // 본체 그래프는 Safari 계열에서 의도적으로 꺼져 있으므로 bg 경로에서 요구하면 안 된다.
@@ -2477,8 +2519,9 @@ function toggleRecording(opts) {
     pendingRecName = null;
     const startMs = Date.now();
     const startDate = new Date();
-    const tapeStartPos = tapePos;
-    const tapeId = deckTape.id;
+    const tapeTarget = wellB ? deckBTape : deckTape;
+    const tapeStartPos = wellB ? deckBPos : tapePos;
+    const tapeId = tapeTarget.id;
 
     rec.ondataavailable = (event) => {
         if (event.data && event.data.size > 0) chunks.push(event.data);
@@ -2495,7 +2538,7 @@ function toggleRecording(opts) {
             type,
             tapeId,
             tapeStart: tapeStartPos,
-            tapeLen: deckTape ? tapeLenOf(deckTape) : TAPE_LEN,
+            tapeLen: tapeLenOf(tapeTarget),
             blob: new Blob(chunks, { type })
         };
         record.dbId = await persistRecording(record);
@@ -2513,8 +2556,13 @@ function toggleRecording(opts) {
     recorder = rec;
     recSavedMsgOverride = null;
     recStartMs = startMs;
-    deckRecStartPos = tapeStartPos;
-    deckMode = "rec";
+    if (wellB) {
+        recOnB = true;
+        deckBRecStartPos = tapeStartPos;
+    } else {
+        deckRecStartPos = tapeStartPos;
+        deckMode = "rec";
+    }
     rec.start(1000);
 
     recTimerId = setInterval(updateRecTime, 500);
@@ -2534,7 +2582,17 @@ function stopRecording() {
 
     const active = recorder;
     recorder = null;
-    if (deckMode === "rec") {
+    if (recOnB) {
+        recOnB = false;
+        if (deckBTape) {
+            deckBTape.pos = 0;   // 되감아 랙으로 — B웰은 정지 즉시 배출한다
+            deckBTape = null;
+        }
+        deckBPos = 0;
+        deckRefreshShelf();
+        // 예약 종료(finishReservedRecording)가 아니면 이 안내가 저장 시점에 표시된다
+        recSavedMsgOverride = "B웰 녹음 완료 — 카세트를 되감아 테이프 랙에 보관했습니다. TAPE RACK에서 누르면 A웰에 장착됩니다.";
+    } else if (deckMode === "rec") {
         deckMode = "stop";
         tapePos = Math.min(tapeLenOf(deckTape), deckRecStartPos + (Date.now() - recStartMs) / 1000);
         if (deckTape) deckTape.pos = tapePos;
@@ -3611,6 +3669,25 @@ function fireReservation(res, occ, key) {
 // 예약 회차 전용 테이프 준비 — 프로그램 길이에 맞는 규격(C-30/60/90/120…)의 새 공테이프를 장착.
 // 스트림이 끊겨 녹음이 재시작되면 같은 테이프에 이어 붙인다.
 function prepareReservedTape(active) {
+    if (isDoubleDeck()) {
+        // B웰 전용 — A웰(재생)은 그대로 둔다. 스트림이 끊겨 재시작하면 같은 테이프에 이어 붙인다.
+        if (active.tapeId) {
+            const t = tapes.find((x) => x.id === active.tapeId);
+            if (t && tapeUsedSec(t) < tapeLenOf(t) - 5) {
+                deckBTape = t;
+                deckBPos = Math.min(tapeUsedSec(t), tapeLenOf(t) - 1);
+                deckRefreshShelf();
+                return;
+            }
+        }
+        const remainSec = Math.ceil((active.endTs - Date.now()) / 1000) + 60;
+        const len = [1800, 3600, 5400, 7200].find((sz) => sz >= remainSec) || Math.ceil(remainSec / 1800) * 1800;
+        deckBTape = newBlankTape(len);
+        deckBPos = 0;
+        active.tapeId = deckBTape.id;
+        deckRefreshShelf();
+        return;
+    }
     if (active.tapeId) {
         if (deckTape && deckTape.id === active.tapeId) return;
         const t = tapes.find((x) => x.id === active.tapeId);
@@ -3784,7 +3861,7 @@ function serviceReservationRecording(nowTs) {
     }
     if (recorder) return;
     const res = activeResRec.res;
-    if (deckMode === "play" || deckMode === "wind") {
+    if (!isDoubleDeck() && (deckMode === "play" || deckMode === "wind")) {
         if (!activeResRec.deckBusyWarned) {
             activeResRec.deckBusyWarned = true;
             playerSubtext.textContent = "예약 녹음 대기 — 데크가 사용 중입니다. 정지(\u25a0)하면 시작됩니다: " + res.title;

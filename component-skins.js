@@ -793,14 +793,94 @@ function mfaCtf1250Svg() {
     <g id="deckShelf"></g></svg>`;
 }
 
+
+// TEAK W-990RX — 더블 카세트 데크. A웰(좌)은 재생 트랜스포트, B웰(우)은 녹음 전담.
+// 예약·수동 녹음이 B웰에서 돌므로 A웰 재생과 충돌하지 않는다 (엔진의 recOnB 참조).
+// A웰의 기능 좌표(라벨·릴 610/850,260·팩)는 공용 레이아웃 그대로, B웰 릴은 data-cx/cy로 구동.
+function mfaW990Svg() {
+    const well = (x, w, tag) =>
+        '<rect x="' + x + '" y="96" width="' + w + '" height="288" rx="10" fill="url(#w9Shell)" stroke="#4a4d55" stroke-width="2"/>' +
+        '<path d="M' + (x + 6) + ' 100 H' + (x + w - 6) + '" stroke="#82868f" stroke-width="1.4" opacity=".6"/>' +
+        '<rect x="' + (x + 14) + '" y="118" width="' + (w - 28) + '" height="248" rx="8" fill="url(#w9Well)" stroke="#000" stroke-width="2"/>' +
+        '<rect x="' + (x + 18) + '" y="120" width="' + (w - 36) + '" height="22" rx="6" fill="#000" opacity=".5" filter="url(#w9Blur)"/>' +
+        '<text x="' + (x + w / 2) + '" y="112" font-family="Arial" font-size="11" letter-spacing="3" fill="#9aa0a8" text-anchor="middle">' + tag + '</text>';
+    return `<svg class="deck-svg" viewBox="0 0 2000 540" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="TEAK W-990RX 더블 카세트 데크">
+    <defs>
+        <linearGradient id="w9Face" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b2d33"/><stop offset=".06" stop-color="#1e2025"/><stop offset=".5" stop-color="#141519"/><stop offset="1" stop-color="#0a0b0e"/></linearGradient>
+        <linearGradient id="w9Shell" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a3d45"/><stop offset=".14" stop-color="#2b2e35"/><stop offset="1" stop-color="#15171b"/></linearGradient>
+        <linearGradient id="w9Well" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#020304"/><stop offset=".2" stop-color="#0b0d10"/><stop offset="1" stop-color="#181b20"/></linearGradient>
+        <linearGradient id="w9Btn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4b4e56"/><stop offset=".12" stop-color="#34373e"/><stop offset=".55" stop-color="#22252b"/><stop offset="1" stop-color="#0e1013"/></linearGradient>
+        <linearGradient id="w9Tray" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d0f12"/><stop offset=".12" stop-color="#191c21"/><stop offset="1" stop-color="#272a31"/></linearGradient>
+        <linearGradient id="w9Label" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2ecd9"/><stop offset=".6" stop-color="#e4dcc4"/><stop offset="1" stop-color="#c9bea0"/></linearGradient>
+        <linearGradient id="w9Glass" x1="0" y1="0" x2=".6" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".14"/><stop offset=".3" stop-color="#fff" stop-opacity=".04"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/></linearGradient>
+        <radialGradient id="w9Pack"><stop offset="0" stop-color="#332619"/><stop offset=".68" stop-color="#271d12"/><stop offset=".9" stop-color="#181109"/><stop offset="1" stop-color="#0a0704"/></radialGradient>
+        <filter id="w9Blur" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2"/></filter>
+    </defs>
+    <rect width="2000" height="540" rx="10" fill="url(#w9Face)"/>
+    <rect x="0" y="2" width="2000" height="3" fill="#fff" opacity=".28"/>
+    <text x="76" y="70" font-family="Arial" font-size="30" font-weight="700" letter-spacing="3" fill="#e9e6df">TEAK</text>
+    <text x="196" y="70" font-family="Arial" font-size="22" font-weight="700" letter-spacing="4" fill="#c8a860">W-990RX</text>
+    <text x="76" y="98" font-family="Arial" font-size="12" letter-spacing="2" fill="#8a8e96">DOUBLE CASSETTE DECK &#183; PLAY A / REC B</text>
+    <text x="76" y="150" font-family="Arial" font-size="10" letter-spacing="2" fill="#6c717a">HIGH-SPEED DUBBING</text>
+    <text x="76" y="172" font-family="Arial" font-size="10" letter-spacing="2" fill="#6c717a">SYNC REVERSE &#183; DOLBY B/C</text>
+
+    ${well(400, 580, "DECK A · PLAY")}
+    <rect x="470" y="142" width="390" height="62" rx="4" fill="url(#w9Label)"/>
+    <rect x="470" y="142" width="390" height="14" fill="#fff" opacity=".22"/>
+    <text id="deckLabel" x="665" y="168" font-family="Arial" font-size="16" font-weight="700" fill="#3a2b1e" text-anchor="middle">C-30 공테이프</text>
+    <text id="deckLabelSub" x="665" y="192" font-family="Arial" font-size="11" fill="#6b5d4a" text-anchor="middle">사용 0:00 / 30:00</text>
+    <rect x="520" y="216" width="420" height="92" rx="46" fill="#08090b" stroke="#3f4248" stroke-width="2"/>
+    <rect x="524" y="218" width="412" height="16" rx="8" fill="url(#lzInset)" opacity=".8"/>
+    <circle id="deckPackL" cx="610" cy="260" r="40" fill="url(#w9Pack)" stroke="#070707" stroke-width="2"/>
+    <circle id="deckPackR" cx="850" cy="260" r="24" fill="url(#w9Pack)" stroke="#070707" stroke-width="2"/>
+    <g id="deckReelL"><circle cx="610" cy="260" r="19" fill="#e4e5e6" stroke="#55585d"/><path d="M610 244 V276 M594 260 H626 M599 249 L621 271 M621 249 L599 271" stroke="#55585d" stroke-width="4"/><circle cx="610" cy="260" r="5" fill="#111317"/></g>
+    <g id="deckReelR"><circle cx="850" cy="260" r="19" fill="#e4e5e6" stroke="#55585d"/><path d="M850 244 V276 M834 260 H866 M839 249 L861 271 M861 249 L839 271" stroke="#55585d" stroke-width="4"/><circle cx="850" cy="260" r="5" fill="#111317"/></g>
+    <polygon points="414,118 640,118 520,366 414,366" fill="url(#w9Glass)" pointer-events="none"/>
+
+    ${well(1000, 470, "DECK B · REC")}
+    <rect x="1040" y="142" width="390" height="42" rx="4" fill="url(#w9Label)" opacity=".92"/>
+    <text id="deckBLabel" x="1235" y="169" font-family="Arial" font-size="14" font-weight="700" fill="#3a2b1e" text-anchor="middle">REC STANDBY</text>
+    <rect x="1080" y="204" width="330" height="92" rx="46" fill="#08090b" stroke="#3f4248" stroke-width="2"/>
+    <rect x="1084" y="206" width="322" height="16" rx="8" fill="url(#lzInset)" opacity=".8"/>
+    <circle id="deckBPackL" cx="1160" cy="248" r="40" fill="url(#w9Pack)" stroke="#070707" stroke-width="2"/>
+    <circle id="deckBPackR" cx="1330" cy="248" r="24" fill="url(#w9Pack)" stroke="#070707" stroke-width="2"/>
+    <g id="deckBReelL" data-cx="1160" data-cy="248"><circle cx="1160" cy="248" r="19" fill="#e4e5e6" stroke="#55585d"/><path d="M1160 232 V264 M1144 248 H1176 M1149 237 L1171 259 M1171 237 L1149 259" stroke="#55585d" stroke-width="4"/><circle cx="1160" cy="248" r="5" fill="#111317"/></g>
+    <g id="deckBReelR" data-cx="1330" data-cy="248"><circle cx="1330" cy="248" r="19" fill="#e4e5e6" stroke="#55585d"/><path d="M1330 232 V264 M1314 248 H1346 M1319 237 L1341 259 M1341 237 L1319 259" stroke="#55585d" stroke-width="4"/><circle cx="1330" cy="248" r="5" fill="#111317"/></g>
+    <circle cx="1388" cy="330" r="11" fill="#1c1517" stroke="#565a60" stroke-width="1.6"/><circle id="deckRecLed" cx="1388" cy="330" r="8" fill="#3a1210"/>
+    <text x="1388" y="358" font-family="Arial" font-size="9" letter-spacing="1.5" fill="#8a8e96" text-anchor="middle">REC</text>
+    <circle cx="1338" cy="330" r="8" fill="#1c1517" stroke="#565a60" stroke-width="1.4"/><circle id="deckTimerLed" cx="1338" cy="330" r="6" fill="#3a1210"/>
+    <text x="1338" y="358" font-family="Arial" font-size="9" letter-spacing="1.5" fill="#8a8e96" text-anchor="middle">TIMER</text>
+    <rect x="1050" y="312" width="180" height="44" rx="6" fill="#050608" stroke="#2c3a4c" stroke-width="2"/>
+    <text id="deckBCounter" x="1210" y="342" font-family="Courier New" font-size="24" font-weight="700" fill="#7ec4ff" text-anchor="end">00:00</text>
+    <text x="1140" y="303" font-family="Arial" font-size="9" letter-spacing="2" fill="#6c717a" text-anchor="middle">REC COUNTER</text>
+    <polygon points="1014,118 1210,118 1102,366 1014,366" fill="url(#w9Glass)" pointer-events="none"/>
+
+    ${mfaMeter(1510, 78, 450, 118, "deckVuL", "LEVEL L", "#efe3b8", false)}
+    ${mfaMeter(1510, 208, 450, 118, "deckVuR", "LEVEL R", "#efe3b8", false)}
+    <text x="1510" y="358" font-family="Arial" font-size="10" letter-spacing="2" fill="#6c717a">TAPE COUNTER (A)</text>
+    <rect x="1510" y="364" width="200" height="40" rx="6" fill="#050608" stroke="#36393e"/>
+    <text id="deckCounter" x="1635" y="392" font-family="Courier New" font-size="22" font-weight="700" fill="#8ce9b6" text-anchor="end">00:00</text>
+    <text id="deckCounterMax" x="1644" y="392" font-family="Arial" font-size="10" fill="#686b70">/ 30:00</text>
+
+    <rect x="404" y="416" width="668" height="104" rx="12" fill="#08090b" opacity=".5" filter="url(#w9Blur)"/>
+    <rect x="408" y="412" width="660" height="104" rx="10" fill="url(#w9Tray)" stroke="#3c4046" stroke-width="2"/>
+    <rect x="410" y="413" width="656" height="14" rx="7" fill="#000" opacity=".5"/>
+    ${mfaTransportButtons(430, "url(#w9Btn)")}
+    <rect x="1102" y="420" width="862" height="96" rx="10" fill="#08090b" opacity=".35" filter="url(#w9Blur)"/>
+    <rect x="1106" y="424" width="854" height="88" rx="8" fill="url(#w9Tray)" opacity=".85" stroke="#3a3e44" stroke-width="1.5"/>
+    <text x="1120" y="443" font-family="Arial" font-size="9" letter-spacing="2" fill="#7c8085">TAPE RACK</text>
+    <g id="deckShelf"></g></svg>`;
+}
+
 const DECK_MODELS = {
     dragon: { label: "Nakamichi DRAGON", windRate: 16, hissFloor: .004, blankHiss: .010, reelRate: 1 },
     b215: { label: "REVOX B215", windRate: 18, hissFloor: .003, blankHiss: .008, reelRate: 1.08, svg: mfaDeckSvg({ id: "b215", brand: "REVOX", model: "B215", face: "black", signature: "revox", openTransport: true, ledMeters: true, display: "#8ce9b6" }) },
     tcd3014: { label: "TANDBERG TCD 3014A", windRate: 14, hissFloor: .005, blankHiss: .012, reelRate: .92, svg: mfaDeckSvg({ id: "tcd3014", brand: "TANDBERG", model: "TCD 3014A", face: "black", wood: true, signature: "tandberg", openTransport: true, ledMeters: false, display: "#f0a348" }) },
     tcka7es: { label: "SONY TC-KA7ES", windRate: 16, hissFloor: .0025, blankHiss: .007, reelRate: 1.02, svg: mfaDeckSvg({ id: "tcka7es", brand: "SONY", model: "TC-KA7ES", face: "champagne", signature: "sony", openTransport: false, ledMeters: true, display: "#84e4ae" }) },
-    ctf1250: { label: "PIONEER CT-F1250", windRate: 12, hissFloor: .006, blankHiss: .014, reelRate: .86, svg: mfaCtf1250Svg() }
+    ctf1250: { label: "PIONEER CT-F1250", windRate: 12, hissFloor: .006, blankHiss: .014, reelRate: .86, svg: mfaCtf1250Svg() },
+    w990: { label: "TEAK W-990RX", windRate: 15, hissFloor: .0035, blankHiss: .009, reelRate: 1, doubleDeck: true, svg: mfaW990Svg() }
 };
-const DECK_ORDER = ["dragon", "b215", "tcd3014", "tcka7es", "ctf1250"];
+const DECK_ORDER = ["dragon", "b215", "tcd3014", "tcka7es", "ctf1250", "w990"];
 
 const TT_MODELS = {
     pl12: {

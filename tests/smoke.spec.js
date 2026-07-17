@@ -135,7 +135,7 @@ test.describe("데스크톱", () => {
         await page.click('button:has-text("오디오 구성")');
         await expect(page.locator("#skinPicker .skin-btn")).toHaveCount(9);
         await expect(page.locator("#ampPicker .skin-btn")).toHaveCount(11);
-        await expect(page.locator("#deckPicker .skin-btn")).toHaveCount(6);
+        await expect(page.locator("#deckPicker .skin-btn")).toHaveCount(7);
         await expect(page.locator("#ttPicker .skin-btn")).toHaveCount(6);
         await expect(page.locator("#eqPicker .skin-btn")).toHaveCount(5);
 
@@ -353,6 +353,103 @@ test.describe("데스크톱", () => {
         expect(second.rec, "2차 조작: 녹음 중단").toBe(false);
         expect(second.active, "예약 회차 종료").toBe(false);
         expect(second.mode, "요청한 조작(PLAY) 실행").toBe("play");
+    });
+
+    test("더블데크 W-990RX: A웰 재생 중 예약 녹음은 B웰 — 재생 무중단, 종료 후 카세트 랙 보관", async ({ page }) => {
+        // W-990RX 장착
+        await page.click('button:has-text("오디오 구성")');
+        await page.locator('#deckPicker .skin-btn', { hasText: "TEAK W-990RX" }).click();
+        await page.keyboard.press("Escape");
+        expect(await page.evaluate(() => isDoubleDeck()), "더블데크 인식").toBe(true);
+        // 수록곡 있는 테이프를 A웰에 장착하고 재생 (합성 WAV 세그먼트)
+        await page.evaluate((b64) => {
+            const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+            const url = URL.createObjectURL(new Blob([bytes], { type: "audio/wav" }));
+            const t = newBlankTape(1800);
+            tapeAddSegment(t, { start: 0, dur: 40, url, name: "시험 곡", type: "audio/wav" });
+            deckInsertTape(t.id);
+            deckPlay();
+        }, makeWav(40).toString("base64"));
+        await page.waitForFunction(() => deckMode === "play" && !document.getElementById("audioPlayer").paused, null, { timeout: 15000 });
+        // 예약 발화 → 녹음은 B웰(recOnB)로, A웰 재생은 계속되어야 한다
+        await page.evaluate(() => {
+            const st = window.FMRadio.stations[0];
+            fireReservation({ id: 993, stationId: st.id, title: "더블데크 예약", repeat: "once", enabled: true },
+                { ymd: "tw", startTs: Date.now(), endTs: Date.now() + 8000 }, "993:tw");
+        });
+        await page.waitForFunction(() => !!recorder && recOnB === true, null, { timeout: 15000 });
+        const mid = await page.evaluate(() => ({
+            mode: deckMode,
+            playing: isPlaying,
+            mainPaused: document.getElementById("audioPlayer").paused,
+            hasB: !!deckBTape,
+            bReel: document.getElementById("deckBReelL").getAttribute("transform"),
+        }));
+        expect(mid.mode, "A웰 재생 무중단").toBe("play");
+        expect(mid.playing && !mid.mainPaused, "본체 오디오 유지").toBe(true);
+        expect(mid.hasB, "B웰 테이프 장착").toBe(true);
+        // B웰 릴 회전 — rAF 스로틀과 무관하게 합성 타임스탬프로 프레임 루프를 돌린다
+        expect(await page.evaluate((r1) => {
+            const t0 = performance.now() - 600;
+            ttLastTs = t0;
+            for (let i = 1; i <= 10; i++) ttFrame(t0 + i * 50);
+            return document.getElementById("deckBReelL").getAttribute("transform") !== r1;
+        }, mid.bReel), "B웰 릴 회전").toBe(true);
+        // 종료: A웰은 계속 재생, B웰 카세트는 되감겨 랙으로 배출
+        // (onstop→IndexedDB 저장이 비동기라 라벨 달린 카세트가 실릴 때까지 기다린다)
+        await page.waitForFunction(() =>
+            !recorder && !activeResRec && tapes.some((x) => x.label.includes("더블데크 예약") && x.segments.length),
+            null, { timeout: 20000 });
+        const end = await page.evaluate(() => {
+            const t = tapes.find((x) => x.label.includes("더블데크 예약"));
+            return {
+                mode: deckMode, playing: isPlaying, bEmpty: deckBTape === null,
+                pos: t && t.pos, segs: t ? t.segments.length : 0, inA: deckTape === t,
+            };
+        });
+        expect(end.mode, "종료 후에도 A웰 재생").toBe("play");
+        expect(end.playing, "본체 재생 유지").toBe(true);
+        expect(end.bEmpty, "B웰 자동 배출").toBe(true);
+        expect(end.pos, "되감김").toBe(0);
+        expect(end.segs, "녹음 세그먼트 존재").toBeGreaterThan(0);
+        expect(end.inA, "랙에 보관 (A웰 아님)").toBe(false);
+        const blobSize = await page.evaluate(async () => {
+            const t = tapes.find((x) => x.label.includes("더블데크 예약"));
+            return fetch(t.segments[0].url).then((r) => r.blob()).then((b) => b.size);
+        });
+        expect(blobSize, "녹음 파일 실데이터(>20KB)").toBeGreaterThan(20000);
+    });
+
+    test("더블데크 수동 REC = 더빙: A웰 재생을 B웰에 녹음, REC 재누름으로 정지·랙 보관", async ({ page }) => {
+        await page.click('button:has-text("오디오 구성")');
+        await page.locator('#deckPicker .skin-btn', { hasText: "TEAK W-990RX" }).click();
+        await page.keyboard.press("Escape");
+        await page.evaluate((b64) => {
+            const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+            const url = URL.createObjectURL(new Blob([bytes], { type: "audio/wav" }));
+            const t = newBlankTape(1800);
+            tapeAddSegment(t, { start: 0, dur: 40, url, name: "더빙 원본", type: "audio/wav" });
+            deckInsertTape(t.id);
+            deckPlay();
+        }, makeWav(40).toString("base64"));
+        await page.waitForFunction(() => deckMode === "play" && isPlaying, null, { timeout: 15000 });
+        // 재생 중 REC — 싱글 데크라면 거부되지만 더블데크는 B웰 더빙으로 시작된다
+        await page.evaluate(() => deckRec());
+        await page.waitForFunction(() => !!recorder && recOnB === true, null, { timeout: 8000 });
+        expect(await page.evaluate(() => deckMode), "A웰 재생 유지").toBe("play");
+        await page.waitForTimeout(2500);
+        await page.evaluate(() => deckRec());   // 재누름 = 정지
+        // onstop은 비동기 — 더빙 세그먼트가 랙의 카세트에 실릴 때까지 기다린다
+        await page.waitForFunction(() => !recorder && tapes.some((t) => t.segments.length && t !== deckTape), null, { timeout: 8000 });
+        const end = await page.evaluate(() => ({
+            mode: deckMode, bEmpty: deckBTape === null,
+            dubbed: tapes.some((t) => t.segments.length && t !== deckTape),
+            msg: playerSubtext.textContent,
+        }));
+        expect(end.mode, "정지 후에도 A웰 재생").toBe("play");
+        expect(end.bEmpty, "B웰 배출").toBe(true);
+        expect(end.dubbed, "더빙 카세트가 랙에").toBe(true);
+        expect(end.msg, "B웰 안내 문구").toContain("B웰");
     });
 
     test("테이프 보관함: 라벨 개명 영속·트랙 점프 재생·삭제 연동", async ({ page }) => {
