@@ -3673,8 +3673,10 @@ audio.addEventListener("pause", () => {
 }));
 
 audio.addEventListener("ended", () => {
+    if (deckSeekFixing) return;   // blob 길이 확정용 시크가 끝을 스친 것 — 진짜 종료가 아니다
     // 카세트: 세그먼트가 끝나도 테이프는 계속 감긴다 (빈 구간은 히스, 정지는 30:00에서)
     if (deckMode === "play" && deckSegPlaying) {
+        deckSegHeal();   // 실제 오디오가 선언보다 짧았다면 여기서 실측으로 줄어든다
         tapePos = deckSegPlaying.start + deckSegPlaying.dur;
         deckSegPlaying = null;
         isPlaying = false;

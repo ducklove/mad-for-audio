@@ -772,6 +772,66 @@ test.describe("데스크톱", () => {
         expect(hr).toEqual({ dragonSat: true, tcdClean: true });
     });
 
+    test("테이프 시킹: 길이 미상 blob 워크어라운드·동일 src 재시크·실측 자가 보정", async ({ page }) => {
+        // MediaRecorder 산 webm은 duration이 Infinity라 시킹이 무시된다 — 워크어라운드 검증
+        const inf = await page.evaluate(async () => {
+            const ctx = new AudioContext();
+            const dest = ctx.createMediaStreamDestination();
+            const osc = ctx.createOscillator();
+            osc.connect(dest);
+            osc.start();
+            const mr = new MediaRecorder(dest.stream);
+            const chunks = [];
+            mr.ondataavailable = (e) => chunks.push(e.data);
+            const stopped = new Promise((r) => { mr.onstop = r; });
+            mr.start();
+            await new Promise((r) => setTimeout(r, 4200));
+            mr.stop();
+            await stopped;
+            osc.stop();
+            ctx.close();
+            const url = URL.createObjectURL(new Blob(chunks, { type: mr.mimeType }));
+            const t = newBlankTape(1800);
+            tapeAddSegment(t, { start: 0, dur: 4.2, url, name: "webm", type: mr.mimeType });
+            deckInsertTape(t.id);
+            tapePos = 1.5;   // FF로 감아 둔 위치
+            deckPlay();
+            await new Promise((r) => setTimeout(r, 1600));
+            return { finite: isFinite(audio.duration), ct: audio.currentTime, playing: !audio.paused };
+        });
+        expect(inf.finite, "duration 확정").toBe(true);
+        expect(inf.ct, "감아 둔 위치부터").toBeGreaterThan(1.3);
+        expect(inf.playing, "재생 중").toBe(true);
+        // 같은 src 재시크 — 리로드 없이 위치 이동
+        const reseek = await page.evaluate(async () => {
+            deckStopTransport();
+            tapePos = 3.0;
+            deckPlay();
+            await new Promise((r) => setTimeout(r, 700));
+            return audio.currentTime;
+        });
+        expect(reseek).toBeGreaterThan(2.8);
+        // 실측 자가 보정 — 선언 40초·실제 20초 blob은 ended에서 20초로 줄고 빈 구간이 이어진다
+        const heal = await page.evaluate(async (b64) => {
+            deckStopTransport();
+            const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+            const url = URL.createObjectURL(new Blob([bytes], { type: "audio/wav" }));
+            const t = newBlankTape(1800);
+            tapeAddSegment(t, { start: 0, dur: 40, url, name: "잘린 녹음", type: "audio/wav" });
+            deckInsertTape(t.id);
+            tapePos = 0;
+            deckPlay();
+            await new Promise((r) => setTimeout(r, 700));
+            audio.currentTime = 19.7;
+            await new Promise((r) => setTimeout(r, 1200));
+            return { dur: Math.round(deckTape.segments[0].dur), rolling: deckMode === "play" && !deckSegPlaying };
+        }, makeWav(20).toString("base64"));
+        expect(heal.dur, "실측으로 축소").toBe(20);
+        expect(heal.rolling, "무음 루프 없이 빈 구간 롤").toBe(true);
+        // 감기 5배 — 전 데크 60~90배속
+        expect(await page.evaluate(() => Object.values(DECK_MODELS).every((m) => m.windRate >= 60))).toBe(true);
+    });
+
     test("테이프 보관함: 라벨 개명 영속·트랙 점프 재생·삭제 연동", async ({ page }) => {
         // 짧은 예약 녹음으로 수록곡 있는 테이프를 만든다
         await page.evaluate(() => {

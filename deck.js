@@ -204,14 +204,66 @@ function ensureHiss() {
     } catch (e) { hissSrc = null; }
 }
 
+// 선언된 길이보다 실제 오디오가 짧으면(녹음 중 스트림 끊김 등) 세그먼트를 실측으로 줄인다 —
+// 죽은 구간에서 소리만 사라진 채 카운터가 흐르는 증상을 원천에서 없앤다
+function deckSegHeal() {
+    const seg = deckSegPlaying;
+    if (!seg || !isFinite(audio.duration) || !audio.duration) return;
+    const realDur = Math.max(0.5, audio.duration - (seg.offset || 0));
+    if (realDur < seg.dur - 0.75) {
+        seg.dur = realDur;
+        updateDeckLabel();
+    }
+}
+
+let deckSeekFixing = false;   // 길이 확정 시크 중 — ended 핸들러가 오인하지 않게
+
 function deckStartSegment(seg, innerOffset) {
     deckSegPlaying = seg;
     streamLoaded = true;
-    audio.src = seg.url;
     const target = (seg.offset || 0) + Math.max(0, innerOffset);
-    const seek = () => { try { audio.currentTime = target; } catch (e) {} };
-    audio.addEventListener("loadedmetadata", seek, { once: true });
-    audio.play().catch(() => {});
+    const startPlay = () => {
+        audio.play().then(() => { isPlaying = true; updatePlayButton(); }).catch(() => {});
+    };
+    const seekAndPlay = () => {
+        if (!isFinite(audio.duration)) {
+            // MediaRecorder·바이트 캡처 blob은 길이 미상(Infinity)이라 시킹이 무시된다.
+            // 표준 워크어라운드: 끝으로 한 번 밀면 브라우저가 실제 길이와 큐를 확정한다.
+            deckSeekFixing = true;
+            audio.pause();
+            const done = () => {
+                audio.removeEventListener("seeked", done);
+                deckSeekFixing = false;
+                deckSegHeal();
+                if (!deckSegPlaying) return;
+                if (target - (seg.offset || 0) >= seg.dur - 0.05) {   // 실측보다 뒤 — 빈 구간으로
+                    deckSegPlaying = null;
+                    return;
+                }
+                try { audio.currentTime = target; } catch (e) {}
+                startPlay();
+            };
+            audio.addEventListener("seeked", done);
+            try { audio.currentTime = 1e10; } catch (e) { deckSeekFixing = false; startPlay(); }
+            return;
+        }
+        deckSegHeal();
+        if (target - (seg.offset || 0) >= seg.dur - 0.05) {
+            deckSegPlaying = null;
+            audio.pause();
+            return;
+        }
+        try { audio.currentTime = target; } catch (e) {}
+        startPlay();
+    };
+    if (audio.currentSrc === seg.url && audio.readyState >= 1) {
+        // 같은 blob이 이미 로드돼 있다 — 리로드 없이 시크만 (재대입은 위치를 0으로 되돌린다)
+        seekAndPlay();
+    } else {
+        audio.src = seg.url;
+        audio.addEventListener("loadedmetadata", seekAndPlay, { once: true });
+        startPlay();
+    }
     isPlaying = true;
 }
 
