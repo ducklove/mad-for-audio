@@ -66,6 +66,109 @@ function setPopupBarMode(on) {
 // 클래스만 적용해 창 안에서 크롬을 걷어낸다.
 function applyFocusMode(on) {
     document.body.classList.toggle("mode-focus", on);
+    if (on) window.scrollTo(0, 0);
+    fitFocusRack();
+}
+
+// 전체 화면(몰입)에서는 '선택할 수 있는 가장 높은 구성'(모든 유닛 + 각 슬롯에서 가장 높은
+// 모델)이 화면 높이에 꼭 맞도록 스케일(=폭)을 정한다. 유닛을 끄거나 슬림한 모델을 골라
+// 현재 랙이 그보다 낮아지면 확대하지 않고 바닥(스피커와 같은 층)에 정렬해 위를 비워 둔다.
+// 스케일된 실제 랙 폭은 --rack-w 로 내보내 장식 스피커가 옆 공간을 계산하게 한다.
+
+// 슬롯별 '가장 높은 모델'의 높이/너비 비율 — 카탈로그의 svg 문자열에서 viewBox를 읽는다.
+// EQ처럼 svg를 실행 중에 생성하는 슬롯은 아키텍처 템플릿 최대치(2000×540)를 바닥값으로 둔다.
+const FOCUS_SLOT_MIN_RATIO = { eq: 540 / 2000 };
+
+function focusSlotMaxRatio(key) {
+    const parse = (svg) => {
+        const m = /viewBox="0 0 ([\d.]+) ([\d.]+)"/.exec(svg || "");
+        return m ? parseFloat(m[2]) / parseFloat(m[1]) : 0;
+    };
+    const catalogs = {
+        tuner: [typeof TUNER_SKINS !== "undefined" && TUNER_SKINS, typeof MFA_TUNERS !== "undefined" && MFA_TUNERS],
+        amp: [typeof AMP_MODELS !== "undefined" && AMP_MODELS, typeof MFA_AMPS !== "undefined" && MFA_AMPS],
+        deck: [typeof DECK_MODELS !== "undefined" && DECK_MODELS],
+        tt: [typeof TT_MODELS !== "undefined" && TT_MODELS],
+        eq: [],
+        timer: []
+    }[key] || [];
+
+    let best = FOCUS_SLOT_MIN_RATIO[key] || 0;
+    catalogs.forEach((catalog) => {
+        if (!catalog) return;
+        (Array.isArray(catalog) ? catalog : Object.values(catalog)).forEach((item) => {
+            if (item && typeof item.svg === "string") best = Math.max(best, parse(item.svg));
+        });
+    });
+
+    // 공통 템플릿 슬롯(턴테이블·타이머 등)은 지금 마운트된 SVG 비율이 곧 최대치다
+    const stage = document.getElementById(UNIT_STAGES[key]);
+    const svgEl = stage && stage.querySelector("svg");
+    if (svgEl) {
+        const vb = (svgEl.getAttribute("viewBox") || "").split(/\s+/);
+        if (vb.length === 4 && parseFloat(vb[2]) > 0) {
+            best = Math.max(best, parseFloat(vb[3]) / parseFloat(vb[2]));
+        }
+    }
+    return best;
+}
+
+// '최대 구성' 랙의 자연 높이 — 슬롯 최대 비율 × 폭 + (숨김 여부와 무관한) 유닛 마진 + 셸 패딩
+function focusMaxRackHeight(shell) {
+    const width = shell.clientWidth;
+    let total = 0;
+    Object.keys(UNIT_STAGES).forEach((key) => {
+        const stage = document.getElementById(UNIT_STAGES[key]);
+        if (!stage) return;
+        const cs = getComputedStyle(stage);
+        total += width * focusSlotMaxRatio(key)
+            + (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0);
+    });
+    const shellCs = getComputedStyle(shell);
+    total += (parseFloat(shellCs.paddingTop) || 0) + (parseFloat(shellCs.paddingBottom) || 0);
+    return total;
+}
+
+function fitFocusRack() {
+    const shell = document.querySelector(".page-shell");
+    if (!shell) return;
+    if (!document.body.classList.contains("mode-focus")) {
+        shell.style.transform = "";
+        document.documentElement.style.removeProperty("--rack-w");
+        return;
+    }
+    shell.style.transform = "";
+    const natural = shell.getBoundingClientRect();
+    if (natural.height <= 0 || natural.width <= 0) return;
+
+    const reference = Math.max(focusMaxRackHeight(shell), natural.height);
+    const scale = Math.min(window.innerHeight / reference, (window.innerWidth - 64) / natural.width);
+    // 현재 구성이 기준보다 낮은 만큼 아래로 내려 바닥에 붙인다 (위쪽이 비워진다)
+    const lift = Math.max(0, window.innerHeight - natural.height * scale);
+    shell.style.transform = `translateY(${lift.toFixed(1)}px) scale(${scale.toFixed(4)})`;
+    document.documentElement.style.setProperty("--rack-w", (natural.width * scale).toFixed(1) + "px");
+}
+
+window.addEventListener("resize", () => {
+    if (document.body.classList.contains("mode-focus")) fitFocusRack();
+});
+
+// 오디오 구성에서 유닛을 켜고 끄면 랙 높이가 변한다 — 몰입 중이면 다시 맞춘다
+// (transform은 레이아웃 크기에 영향을 주지 않으므로 관찰 루프가 생기지 않는다)
+// 이 스크립트가 DOMContentLoaded 이후에 실행될 수도 있어 readyState로 나눈다.
+if (typeof ResizeObserver !== "undefined") {
+    const observeFocusShell = () => {
+        const shell = document.querySelector(".page-shell");
+        if (!shell) return;
+        new ResizeObserver(() => {
+            if (document.body.classList.contains("mode-focus")) fitFocusRack();
+        }).observe(shell);
+    };
+    if (document.readyState === "loading") {
+        window.addEventListener("DOMContentLoaded", observeFocusShell);
+    } else {
+        observeFocusShell();
+    }
 }
 
 function toggleFocusMode() {

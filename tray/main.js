@@ -17,9 +17,10 @@ const VOLUME_PRESETS = [100, 80, 60, 40, 20, 0];
 const DEBUG = !!process.env.MFA_TRAY_DEBUG;
 
 // 보기별 창 크기 (슬림 바는 곡명 + 재생/정지만)
-// 오디오 시스템 보기는 크기 대신 진짜 전체 화면(풀스크린)으로 띄운다
+// 전체 화면은 랙 페이지의 '⛶ 전체 화면' 버튼(HTML 풀스크린)으로만 진입한다
 const SIZE = {
     tuner: { w: 540, h: 300 },
+    system: { w: 520, h: 840 },
     bar: { w: 340, h: 58 }
 };
 
@@ -95,7 +96,9 @@ function createWindow() {
         height: SIZE.tuner.h,
         show: false,
         frame: false,
-        resizable: false,
+        // 리사이즈 불가 창은 Windows에서 (HTML) 풀스크린 전환이 무시된다 —
+        // 크기는 어차피 표시할 때마다 코드가 다시 잡으므로 리사이즈 가능으로 둔다
+        resizable: true,
         skipTaskbar: true,
         alwaysOnTop: true,
         backgroundColor: "#0b0a09",
@@ -139,18 +142,23 @@ function createWindow() {
     win.webContents.on("before-input-event", (event, input) => {
         if (input.type !== "keyDown" || input.key !== "Escape") return;
         event.preventDefault();
+        // 랙 '⛶ 전체 화면' 중이면 ESC는 창 보기로만 복귀 (닫기·슬림 바 아님)
+        if (win.isFullScreen()) {
+            applyViewBounds();
+            return;
+        }
         if (barMode) hideWindow();
         else if (state.playing) enterBarMode();
         else hideWindow();
     });
 
-    // 랙의 '⛶ 전체 화면' 해제 등 페이지발 풀스크린 이탈에도 오디오 시스템 보기는
-    // 전체 화면을 유지한다. 의도된 전환은 이 시점에 barMode·currentView·표시 상태가
-    // 이미 바뀌어 있어 조건에서 걸러진다.
+    // 랙의 '⛶ 전체 화면' 해제(버튼 재클릭·exitFullscreen)로 풀스크린이 풀리면
+    // 창 크기 보기로 복귀시킨다 — Chromium의 자동 복원 크기가 어긋날 수 있어 직접 맞춘다.
+    // 의도된 전환(슬림 바·숨김·보기 전환)은 이 시점에 상태가 이미 바뀌어 있어 걸러진다.
     win.on("leave-full-screen", () => {
         setTimeout(() => {
-            if (win.isDestroyed() || barMode || currentView !== "system" || !win.isVisible()) return;
-            win.setFullScreen(true);
+            if (win.isDestroyed() || barMode || !win.isVisible()) return;
+            applyBounds(placement(SIZE[currentView]));
         }, 120);
     });
 
@@ -196,11 +204,8 @@ function barPlacement() {
     return placement(SIZE.bar);
 }
 
-// resizable:false 창도 프로그램에서는 크기를 바꿀 수 있도록 잠깐 풀었다 되돌린다
 function applyBounds(bounds) {
-    win.setResizable(true);
     win.setBounds(bounds);
-    win.setResizable(false);
 }
 
 // 풀스크린을 빠져나온 '다음에' 배치를 적용한다 — 해제 직후 Chromium이 이전 창 크기를
@@ -211,14 +216,10 @@ function exitFullScreenThen(fn) {
     win.setFullScreen(false);
 }
 
-// 현재 보기에 맞는 '펼친' 배치 — 튜너형은 트레이 옆 소형 창, 오디오 시스템은 진짜 전체 화면
+// 현재 보기에 맞는 '펼친' 배치 — 두 보기 모두 트레이 옆 창.
+// 랙의 '⛶ 전체 화면'(HTML 풀스크린) 상태였다면 먼저 빠져나온다.
 function applyViewBounds() {
-    if (currentView === "system") {
-        win.setResizable(true);   // 리사이즈 불가 창은 Windows에서 풀스크린 전환이 무시된다
-        win.setFullScreen(true);
-    } else {
-        exitFullScreenThen(() => applyBounds(placement(SIZE.tuner)));
-    }
+    exitFullScreenThen(() => applyBounds(placement(SIZE[currentView])));
 }
 
 function showFull() {
@@ -243,10 +244,7 @@ function enterBarMode() {
 }
 
 function hideWindow() {
-    if (win.isFullScreen()) {
-        win.once("leave-full-screen", () => win.setResizable(false));
-        win.setFullScreen(false);
-    }
+    if (win.isFullScreen()) win.setFullScreen(false);
     win.hide();
 }
 
