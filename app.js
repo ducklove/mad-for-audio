@@ -330,16 +330,17 @@ function mountB760Presets() {
     if (tunerSkinId !== "b760" || !tunerSvgEl || tunerSvgEl.querySelector("#tsPresetG")) return;
     const g = document.createElementNS(SVG_NS, "g");
     g.setAttribute("id", "tsPresetG");
-    let html = '<text x="1128" y="288" font-family="Arial" font-size="10" letter-spacing="2" fill="#5d7a68">STATION MEMORY &#183; 길게 눌러 저장</text>';
+    let html = '<text x="1484" y="242" font-family="Arial" font-size="13" font-weight="700" letter-spacing="1.4" fill="#75a98c">STATION MEMORY &#183; HOLD</text>';
     for (let i = 1; i <= 8; i++) {
-        const x = 1120 + (i - 1) * 62;
+        const x = 1484 + ((i - 1) % 2) * 92;
+        const y = 250 + Math.floor((i - 1) / 2) * 34;
         html += '<g id="tsPreset' + i + '" role="button" tabindex="0" aria-label="프리셋 ' + i + ' — 짧게 호출, 길게 저장" style="cursor:pointer">' +
             '<title>프리셋 ' + i + ' — 짧게 누르면 호출, 길게 누르면 현재 채널 저장</title>' +
-            '<rect x="' + x + '" y="296" width="54" height="42" rx="5" fill="#14171b" stroke="#3a4a40" stroke-width="1.4"/>' +
-            '<path d="M' + (x + 4) + ' 300 H' + (x + 50) + '" stroke="#fff" stroke-width="1.2" opacity=".14" pointer-events="none"/>' +
-            '<circle id="tsPresetLed' + i + '" cx="' + (x + 10) + '" cy="306" r="2.6" fill="#1c3527" pointer-events="none"/>' +
-            '<text x="' + (x + 27) + '" y="323" font-family="Arial" font-size="14" font-weight="700" fill="#9fe8bd" text-anchor="middle" pointer-events="none">' + i + '</text>' +
-            '<text id="tsPresetFreq' + i + '" x="' + (x + 27) + '" y="334" font-family="Arial" font-size="7.5" fill="#5d7a68" text-anchor="middle" pointer-events="none"></text></g>';
+            '<rect x="' + x + '" y="' + y + '" width="82" height="28" rx="3" fill="#111519" stroke="#41584b" stroke-width="1.3"/>' +
+            '<path d="M' + (x + 4) + ' ' + (y + 4) + ' H' + (x + 78) + '" stroke="#fff" stroke-width="1" opacity=".13" pointer-events="none"/>' +
+            '<circle id="tsPresetLed' + i + '" cx="' + (x + 10) + '" cy="' + (y + 9) + '" r="3" fill="#1c3527" pointer-events="none"/>' +
+            '<text x="' + (x + 27) + '" y="' + (y + 20) + '" font-family="Arial" font-size="14" font-weight="700" fill="#9fe8bd" text-anchor="middle" pointer-events="none">' + i + '</text>' +
+            '<text id="tsPresetFreq' + i + '" x="' + (x + 58) + '" y="' + (y + 19) + '" font-family="Arial" font-size="10" font-weight="700" fill="#75a98c" text-anchor="middle" pointer-events="none"></text></g>';
     }
     g.innerHTML = html;
     tunerSvgEl.appendChild(g);

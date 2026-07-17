@@ -368,7 +368,23 @@ test.describe("데스크톱", () => {
         await expect(page.locator('#deckStage svg[aria-label*="W-990RX"]')).toHaveAttribute("viewBox", "0 0 2000 520");
         await expect(page.locator("#deckVuL [data-meter-segment]")).toHaveCount(14);
         await expect(page.locator("#deckVuR [data-meter-segment]")).toHaveCount(14);
-        await expect(page.locator("#deckBReelL")).toHaveAttribute("data-cx", "1450");
+        await expect(page.locator("#deckBReelL")).toHaveAttribute("data-cx", "1456");
+        await expect(page.locator("#deckBReelR")).toHaveAttribute("data-cx", "1696");
+        const deckGeometry = await page.evaluate(() => {
+            const a = document.getElementById("deckWindowA");
+            const b = document.getElementById("deckWindowB");
+            return {
+                ax: Number(a.getAttribute("x")), bx: Number(b.getAttribute("x")),
+                aw: Number(a.getAttribute("width")), bw: Number(b.getAttribute("width")),
+                headA: document.getElementById("deckHeadA").getAttribute("d"),
+                headB: document.getElementById("deckHeadB").getAttribute("d"),
+            };
+        });
+        expect(deckGeometry).toEqual({
+            ax: 264, bx: 1416, aw: 320, bw: 320,
+            headA: "M296 249H552L530 284H318Z",
+            headB: "M1448 249H1704L1682 284H1470Z",
+        });
         await expect(page.locator("#deckStage .lz-hardware-side")).toHaveCount(6);
         // 수록곡 있는 테이프를 A웰에 장착하고 재생 (합성 WAV 세그먼트)
         await page.evaluate((b64) => {
@@ -566,6 +582,14 @@ test.describe("데스크톱", () => {
     test("B760 방송국 프리셋: 길게 눌러 저장·짧게 눌러 호출·영속", async ({ page }) => {
         await page.evaluate(() => initTunerSkin("b760"));
         await expect(page.locator("#tsPreset1")).toHaveCount(1);
+        const layout = await page.evaluate(() => {
+            const meter = document.getElementById("tsDigitalMeterBay").getBBox();
+            const presets = document.getElementById("tsPresetG").getBBox();
+            const knob = document.getElementById("tsKnob").getBBox();
+            return { meterRight: meter.x + meter.width, presetLeft: presets.x, presetRight: presets.x + presets.width, knobLeft: knob.x };
+        });
+        expect(layout.presetLeft - layout.meterRight, "미터와 프리셋 간격").toBeGreaterThanOrEqual(18);
+        expect(layout.knobLeft - layout.presetRight, "프리셋과 튜닝 노브 간격").toBeGreaterThanOrEqual(70);
         await page.evaluate(() => selectStation(window.FMRadio.stations[2].id));
         await page.waitForTimeout(300);
         // 길게(0.7초) → 저장

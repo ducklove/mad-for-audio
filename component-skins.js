@@ -93,11 +93,15 @@ function mfaTunerSvg(spec) {
     const uid = "mfaT" + spec.id;
     const silver = spec.face === "silver";
     const champagne = spec.face === "champagne";
+    const knob = spec.knob || { cx: 1846, cy: 220, r: 98 };
     const panelTop = silver ? "#ece9df" : spec.face === "champagne" ? "#d7c49c" : "#22242a";
     const panelBot = silver ? "#8b8c8c" : spec.face === "champagne" ? "#897750" : "#090a0d";
     const ink = silver || champagne ? "#282a2c" : "#ebe8de";
-    const subInk = silver || champagne ? "#505357" : "#aeb2b8";
+    const subInk = silver || champagne ? "#34383b" : "#c7cacf";
     const dialGlow = spec.glow || "#f0c76c";
+    const lowerTop = spec.signature === "revox" ? "#1b1f23" : spec.signature === "luxman" ? "#17191d" : spec.signature === "accuphase" ? "#b7a477" : "#d2d0c8";
+    const lowerBot = spec.signature === "revox" ? "#080a0d" : spec.signature === "luxman" ? "#050608" : spec.signature === "accuphase" ? "#7b6845" : "#898b8d";
+    const lowerStroke = spec.signature === "revox" ? "#4d6559" : spec.signature === "luxman" ? "#9c763d" : spec.signature === "accuphase" ? "#9e824d" : "#62676c";
     let ticks = "";
     for (let i = 0; i <= 100; i++) {
         const x = 410 + i * 10.2;
@@ -110,11 +114,15 @@ function mfaTunerSvg(spec) {
     const switches = switchXs.map((x, i) =>
         '<path d="M' + (x - 25) + ' 342 H' + (x + 25) + '" stroke="' + (silver || champagne ? '#4c4f52' : '#d5d7d8') + '" opacity=".16"/>' +
         mfaSvgToggle(x, 306, switchIds[i], silver || champagne ? "#5c5f62" : "#b8bbc2") +
-        '<text x="' + x + '" y="363" font-family="Arial" font-size="13" font-weight="700" letter-spacing=".9" fill="' + subInk + '" text-anchor="middle">' + switchLabels[i] + '</text>'
+        '<text x="' + x + '" y="363" font-family="Arial" font-size="15" font-weight="700" letter-spacing=".6" fill="' + subInk + '" text-anchor="middle">' + switchLabels[i] + '</text>'
     ).join("");
     const meters = spec.digitalMeters
-        ? mfaMeter(1160, 240, 300, 112, null, "SIGNAL / CENTER", "#17120b", true)
+        ? '<g id="tsDigitalMeterBay">' + mfaMeter(1160, 240, 300, 112, null, "SIGNAL / CENTER", "#17120b", true) + '</g>'
         : mfaMeter(1140, 238, 170, 116, "tsSignalPtr", "SIGNAL", spec.meterFace || "#eadfb9", false) + mfaMeter(1326, 238, 170, 116, "tsTunePtr", "TUNING", spec.meterFace || "#eadfb9", false);
+    const lowerFinish = '<g pointer-events="none"><rect x="38" y="218" width="1924" height="170" rx="5" fill="url(#' + uid + 'Lower)" stroke="' + lowerStroke + '" stroke-width="1.5" opacity="' + (spec.signature === 'pioneer' ? '.72' : '.9') + '"/>' +
+        '<path d="M46 225H1954" stroke="#fff" stroke-width="1.5" opacity=".17"/><path d="M46 384H1954" stroke="#030405" stroke-width="2" opacity=".42"/>' +
+        (spec.signature === 'revox' ? '<path d="M282 226V380 M1106 226V380 M1476 226V380 M1680 226V380" stroke="#62746b" opacity=".22"/>' : '') +
+        (spec.signature === 'luxman' ? '<path d="M48 229H1952 M48 379H1952" stroke="#a67d3e" opacity=".55"/>' : '') + '</g>';
     const signature = spec.signature === "revox"
         ? '<g><rect x="66" y="232" width="202" height="116" rx="5" fill="#15171b" stroke="#555a60" stroke-width="2"/>' +
             '<g fill="url(#' + uid + 'Module)" stroke="#747981">' + [0, 1, 2].map(i => '<rect x="' + (78 + i * 62) + '" y="246" width="50" height="72" rx="4"/>').join("") + '</g>' +
@@ -148,6 +156,7 @@ function mfaTunerSvg(spec) {
         '<linearGradient id="' + uid + 'Dial" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#050608"/><stop offset=".62" stop-color="#10130f"/><stop offset="1" stop-color="#1d1d17"/></linearGradient>' +
         '<linearGradient id="' + uid + 'Wood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b160a"/><stop offset=".18" stop-color="#754522"/><stop offset=".55" stop-color="#5b3218"/><stop offset=".82" stop-color="#7f4a24"/><stop offset="1" stop-color="#241106"/></linearGradient>' +
         '<linearGradient id="' + uid + 'Module" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6f7379"/><stop offset=".18" stop-color="#3d4147"/><stop offset="1" stop-color="#17191d"/></linearGradient>' +
+        '<linearGradient id="' + uid + 'Lower" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + lowerTop + '"/><stop offset=".18" stop-color="' + (spec.signature === 'pioneer' ? '#c4c4bf' : lowerTop) + '"/><stop offset="1" stop-color="' + lowerBot + '"/></linearGradient>' +
         '<radialGradient id="' + uid + 'Knob" cx="35%" cy="27%"><stop offset="0" stop-color="' + (silver || champagne ? '#f4f2eb' : '#8a8e94') + '"/><stop offset=".52" stop-color="' + (silver || champagne ? '#a4a5a3' : '#393c42') + '"/><stop offset=".83" stop-color="#36393d"/><stop offset="1" stop-color="#111317"/></radialGradient>' +
         '<pattern id="' + uid + 'Hair" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M0 .5 H5 M0 3.5 H5" stroke="' + (silver || champagne ? '#fff' : '#cfd2d4') + '" stroke-width=".5" opacity=".1"/></pattern></defs>' +
         '<ellipse cx="1000" cy="407" rx="930" ry="20" fill="#000" opacity=".48" filter="url(#lzSoft)"/>' +
@@ -155,33 +164,34 @@ function mfaTunerSvg(spec) {
         '<rect x="' + (spec.wood ? 28 : 0) + '" y="' + (spec.wood ? 16 : 0) + '" width="' + (spec.wood ? 1944 : 2000) + '" height="' + (spec.wood ? 388 : 420) + '" rx="8" fill="url(#' + uid + 'Face)"/>' +
         '<rect x="' + (spec.wood ? 28 : 0) + '" y="' + (spec.wood ? 16 : 0) + '" width="' + (spec.wood ? 1944 : 2000) + '" height="' + (spec.wood ? 388 : 420) + '" rx="8" fill="url(#' + uid + 'Hair)" opacity=".7"/>' +
         '<rect x="38" y="18" width="1924" height="4" fill="#fff" opacity=".36"/><path d="M38 397 H1962" stroke="#050607" stroke-width="5" opacity=".48"/>' +
-        '<text x="72" y="86" font-family="Arial" font-size="30" font-weight="700" letter-spacing="2" fill="' + ink + '">' + spec.brand + '</text>' +
-        '<text x="72" y="116" font-family="Arial" font-size="15" font-weight="700" letter-spacing="2.6" fill="' + subInk + '">FM STEREO TUNER · ' + spec.model + '</text>' +
+        '<text x="72" y="80" font-family="Arial" font-size="30" font-weight="700" letter-spacing="2" fill="' + ink + '">' + spec.brand + '</text>' +
+        '<text x="72" y="112" font-family="Arial" font-size="17" font-weight="700" letter-spacing="2" fill="' + subInk + '">' + spec.model + '</text>' +
+        '<text x="72" y="137" font-family="Arial" font-size="11" font-weight="700" letter-spacing="1.7" fill="' + subInk + '">FM STEREO TUNER</text>' +
         '<rect x="352" y="54" width="1136" height="152" rx="8" fill="#08090b" stroke="' + (silver || champagne ? '#6e7072' : '#383c42') + '" stroke-width="3"/>' +
         '<rect x="360" y="62" width="1120" height="136" rx="5" fill="url(#' + uid + 'Dial)" stroke="#030405" stroke-width="3"/>' +
-        '<ellipse class="lampGlow" cx="920" cy="123" rx="530" ry="58" fill="' + dialGlow + '" opacity=".065" filter="url(#lzSoft)"/>' +
+        (spec.signature === 'revox' ? '<rect class="lampGlow" x="374" y="70" width="1092" height="112" rx="2" fill="' + dialGlow + '" opacity=".045" filter="url(#lzSoft)"/>' : '<ellipse class="lampGlow" cx="920" cy="123" rx="530" ry="58" fill="' + dialGlow + '" opacity=".065" filter="url(#lzSoft)"/>') +
         '<rect x="360" y="62" width="1120" height="22" fill="url(#lzInset)" opacity=".66"/><path d="M370 70 H1470" stroke="#fff" stroke-width="2" opacity=".1"/>' +
         dialDetail + '<g class="dialScale">' + ticks + '<g font-family="Arial" font-size="17" font-weight="700" fill="' + dialGlow + '" text-anchor="middle">' + [88, 90, 92, 94, 96, 98, 100, 102, 104, 106, 108].map((n, i) => '<text x="' + (410 + i * 102) + '" y="128">' + n + '</text>').join("") + '</g></g>' +
         '<g id="tsStationMarks"></g><g id="tsDialPtr"><rect x="916" y="83" width="8" height="92" rx="2" fill="#ff4d32" filter="url(#lzSoft)"/><rect x="918" y="83" width="4" height="92" fill="#ffd1b7"/></g>' +
         '<text x="1448" y="188" font-family="Arial" font-size="13" font-weight="700" fill="' + dialGlow + '" text-anchor="end">MHz</text>' +
         '<rect x="1510" y="54" width="226" height="152" rx="7" fill="#090b0d" stroke="' + (silver || champagne ? '#777a7d' : '#343940') + '" stroke-width="3"/><rect x="1518" y="62" width="210" height="136" rx="5" fill="#030506" stroke="#20242a" stroke-width="2"/>' +
         '<text id="tsFreqGlow" x="1702" y="144" font-family="Courier New" font-size="45" font-weight="700" fill="' + dialGlow + '" opacity=".32" text-anchor="end" filter="url(#lzSoft)">--.-</text><text id="tsFreq" x="1702" y="144" font-family="Courier New" font-size="45" font-weight="700" fill="' + dialGlow + '" text-anchor="end">--.-</text>' +
-        '<g font-family="Arial" font-size="13" font-weight="700" fill="' + subInk + '" text-anchor="middle"><text x="1548" y="193">STEREO</text><text x="1612" y="193">LOCK</text><text x="1680" y="193">BLEND</text></g>' +
+        '<g font-family="Arial" font-size="14" font-weight="700" fill="' + subInk + '" text-anchor="middle"><text x="1548" y="193">STEREO</text><text x="1612" y="193">LOCK</text><text x="1680" y="193">BLEND</text></g>' +
         '<rect id="tsLedStereo" x="1530" y="164" width="36" height="8" rx="2" fill="#34120e"/><rect id="tsLedLock" x="1594" y="164" width="36" height="8" rx="2" fill="#34120e"/><rect id="tsLedBlend" x="1662" y="164" width="36" height="8" rx="2" fill="#34120e"/>' +
-        signature + switches + meters +
-        '<g><rect x="282" y="266" width="50" height="76" rx="6" fill="#090b0e" stroke="#686c71" stroke-width="2"/><rect id="tsPwrTop" x="295" y="278" width="24" height="20" rx="3" fill="#25272b"/><rect id="tsPwrBot" x="295" y="304" width="24" height="24" rx="3" fill="#a4a5a5"/><text x="307" y="398" font-family="Arial" font-size="13" font-weight="700" fill="' + subInk + '" text-anchor="middle">POWER</text></g>' +
+        lowerFinish + signature + switches + meters +
+        '<g><rect x="282" y="266" width="50" height="76" rx="6" fill="#090b0e" stroke="#686c71" stroke-width="2"/><rect id="tsPwrTop" x="295" y="278" width="24" height="20" rx="3" fill="#25272b"/><rect id="tsPwrBot" x="295" y="304" width="24" height="24" rx="3" fill="#a4a5a5"/><text x="307" y="378" font-family="Arial" font-size="14" font-weight="700" fill="' + subInk + '" text-anchor="middle">POWER</text></g>' +
         (spec.digitalMeters ? '<g id="tsSignalPtr"><rect x="1248" y="263" width="3" height="63" fill="#d3472b"/></g><g id="tsTunePtr"><rect x="1400" y="263" width="3" height="63" fill="#d3472b"/></g>' : '') +
-        mfaSvgKnob(1812, 218, 116, "tsKnob", 'url(#' + uid + 'Knob)', null) +
-        '<text x="1812" y="374" font-family="Arial" font-size="14" font-weight="700" letter-spacing="3" fill="' + subInk + '" text-anchor="middle">TUNING</text>' +
+        mfaSvgKnob(knob.cx, knob.cy, knob.r, "tsKnob", 'url(#' + uid + 'Knob)', null) +
+        '<text x="' + knob.cx + '" y="374" font-family="Arial" font-size="16" font-weight="700" letter-spacing="2.6" fill="' + subInk + '" text-anchor="middle">TUNING</text>' +
         '<g pointer-events="none"><circle cx="22" cy="52" r="8" fill="#303238" stroke="#a1a3a6"/><path d="M18 52 H26" stroke="#121416"/><circle cx="1978" cy="52" r="8" fill="#303238" stroke="#a1a3a6"/><path d="M1974 52 H1982" stroke="#121416"/><circle cx="22" cy="368" r="8" fill="#303238" stroke="#a1a3a6"/><path d="M18 368 H26" stroke="#121416"/><circle cx="1978" cy="368" r="8" fill="#303238" stroke="#a1a3a6"/><path d="M1974 368 H1982" stroke="#121416"/></g>' +
         '</svg>';
 }
 
 const MFA_TUNERS = [
-    { id: "tx9500", brand: "PIONEER", model: "TX-9500 II", face: "silver", wood: true, glow: "#f6d58b", signature: "pioneer", meterFace: "#f2e6bd" },
-    { id: "t110", brand: "LUXMAN", model: "T-110", face: "black", wood: true, glow: "#f1d07a", signature: "luxman", meterFace: "#ead9aa" },
-    { id: "t100", brand: "ACCUPHASE", model: "T-100", face: "champagne", wood: true, glow: "#f1c66c", signature: "accuphase", meterFace: "#f0dfad" },
-    { id: "b760", brand: "REVOX", model: "B760", face: "black", wood: false, glow: "#85e5b0", signature: "revox", digitalMeters: true }
+    { id: "tx9500", brand: "PIONEER", model: "TX-9500 II", face: "silver", wood: true, glow: "#f6d58b", signature: "pioneer", meterFace: "#f2e6bd", knob: { cx: 1848, cy: 220, r: 104 } },
+    { id: "t110", brand: "LUXMAN", model: "T-110", face: "black", wood: true, glow: "#f1d07a", signature: "luxman", meterFace: "#ead9aa", knob: { cx: 1846, cy: 220, r: 96 } },
+    { id: "t100", brand: "ACCUPHASE", model: "T-100", face: "champagne", wood: true, glow: "#f1c66c", signature: "accuphase", meterFace: "#f0dfad", knob: { cx: 1846, cy: 220, r: 94 } },
+    { id: "b760", brand: "REVOX", model: "B760", face: "black", wood: false, glow: "#85e5b0", signature: "revox", digitalMeters: true, knob: { cx: 1848, cy: 220, r: 88 } }
 ];
 
 MFA_TUNERS.forEach((spec) => {
@@ -192,11 +202,11 @@ MFA_TUNERS.forEach((spec) => {
             mark: { y: 176, h: 7, hOn: 13, color: spec.glow, colorOn: "#ff5a3a" },
             signal: { drawX: 1248, baseX: 1170, travel: 156 },
             tune: { travel: 74 },
-            knob: { cx: 1812, cy: 218 },
+            knob: { cx: spec.knob.cx, cy: spec.knob.cy },
             swTravel: 18,
             led: { on: "#ff5137", off: "#34120e" },
             digit: { lit: spec.glow, glow: spec.glow, dim: "#263127", dimGlow: "#172019" },
-            hits: { power: [286, 270, 42, 68], dial: [360, 62, 1120, 136], rec: [330, 270, 60, 86], blend: [470, 270, 60, 86], mode: [610, 270, 60, 86], mute: [750, 270, 60, 86], if: [890, 270, 60, 86], rf: [1030, 270, 60, 86], knob: [1812, 218, 126] }
+            hits: { power: [286, 270, 42, 68], dial: [360, 62, 1120, 136], rec: [330, 270, 60, 86], blend: [470, 270, 60, 86], mode: [610, 270, 60, 86], mute: [750, 270, 60, 86], if: [890, 270, 60, 86], rf: [1030, 270, 60, 86], knob: [spec.knob.cx, spec.knob.cy, spec.knob.r + 12] }
         },
         svg: mfaTunerSvg(spec)
     };
@@ -207,16 +217,25 @@ function mfaAmpSvg(spec) {
     const uid = "mfaA" + spec.id;
     const pale = spec.face === "silver" || spec.face === "champagne";
     const theme = spec.signature === "pioneer"
-        ? { top: "#f1eee5", mid: "#c8c5bd", bot: "#777b80", ink: "#20252a", sub: "#495159", accent: "#304b5d", accent2: "#d66a38", wood: "#713f1d" }
+        ? { top: "#f1eee5", mid: "#c8c5bd", bot: "#777b80", edge: "#6c7074", ink: "#20252a", sub: "#495159", accent: "#304b5d", accent2: "#d66a38", wood: "#713f1d" }
         : spec.signature === "sansui"
-            ? { top: "#30343a", mid: "#13161a", bot: "#050608", ink: "#f0eee7", sub: "#c7c0ae", accent: "#c49a51", accent2: "#e19a45", wood: "#693716" }
+            ? { top: "#30343a", mid: "#13161a", bot: "#050608", edge: "#020304", ink: "#f0eee7", sub: "#c7c0ae", accent: "#c49a51", accent2: "#e19a45", wood: "#572812" }
             : spec.signature === "luxman"
-                ? { top: "#ead9ad", mid: "#bca77b", bot: "#796747", ink: "#28261f", sub: "#5f5846", accent: "#a77732", accent2: "#e7a73c", wood: "#75431f" }
-                : { top: "#eee0b8", mid: "#c4af7e", bot: "#816c48", ink: "#27271f", sub: "#5c5745", accent: "#997537", accent2: "#d98c31", wood: "#6d3a19" };
+                ? { top: "#ead9ad", mid: "#bca77b", bot: "#796747", edge: "#6d5e42", ink: "#28261f", sub: "#5f5846", accent: "#a77732", accent2: "#e7a73c", wood: "#75431f" }
+                : { top: "#eee0b8", mid: "#c4af7e", bot: "#816c48", edge: "#776446", ink: "#27271f", sub: "#5c5745", accent: "#997537", accent2: "#d98c31", wood: "#65401f" };
     const top = theme.top;
     const bot = theme.bot;
     const ink = pale ? "#222426" : "#e6e4df";
     const sub = theme.sub;
+    const controlInk = pale ? "#262b2f" : "#dbcda9";
+    const visibleVolumeR = spec.visibleVolumeR || 124;
+    const hairPath = spec.signature === "luxman"
+        ? '<path d="M.5 0V8 M4.5 0V8" stroke="#fff" stroke-width=".45" opacity=".08"/><path d="M2.5 0V8" stroke="#201d17" stroke-width=".4" opacity=".07"/>'
+        : spec.signature === "accuphase"
+            ? '<path d="M0 1L8 5 M-2 5L4 8 M5 0L8 2" stroke="#fff" stroke-width=".45" opacity=".065"/>'
+            : spec.signature === "sansui"
+                ? '<path d="M0 .5H8 M0 4.5H8" stroke="#d7d9db" stroke-width=".35" opacity=".045"/>'
+                : '<path d="M0 .5H8 M0 2.5H8 M0 5.5H8" stroke="#fff" stroke-width=".45" opacity=".09"/><path d="M0 4H8" stroke="#1b1d20" stroke-width=".4" opacity=".08"/>';
     const controlLabels = spec.signature === "sansui"
         ? ["POWER", "PHONES", "BASS", "TREBLE", "BALANCE", "MODE", "TAPE", "SELECTOR"]
         : spec.signature === "luxman"
@@ -230,23 +249,23 @@ function mfaAmpSvg(spec) {
             return '<path d="M' + (cx + Math.sin(a) * (r + 8)).toFixed(1) + ' ' + (cy - Math.cos(a) * (r + 8)).toFixed(1) + ' L' + (cx + Math.sin(a) * (r + 14)).toFixed(1) + ' ' + (cy - Math.cos(a) * (r + 14)).toFixed(1) + '" stroke-width="1.6"/>';
         }).join("") + '</g>';
     const controlXs = [102, 260, 420, 580, 740, 900, 1060, 1220];
-    let lowerControls = '<g><rect x="56" y="394" width="1222" height="102" rx="5" fill="' + (pale ? '#77705e' : '#030405') + '" opacity=".13"/>' +
-        '<path d="M62 397 H1272" stroke="' + (pale ? '#fff' : theme.accent) + '" stroke-width="2" opacity=".31"/>';
+    let lowerControls = '<g><rect x="56" y="394" width="1222" height="102" rx="5" fill="url(#' + uid + 'ControlBay)" stroke="' + theme.accent + '" stroke-width="1.5"/>' +
+        '<path d="M62 399 H1272" stroke="' + (pale ? '#fff' : theme.accent) + '" stroke-width="2" opacity=".35"/>';
     for (let i = 0; i < 8; i++) {
         const x = controlXs[i];
         if (i === 0) {
-            lowerControls += '<ellipse cx="102" cy="477" rx="36" ry="9" fill="#000" opacity=".28" filter="url(#' + uid + 'Soft)"/><rect x="72" y="409" width="60" height="75" rx="6" fill="#080a0d" stroke="' + theme.accent + '" stroke-width="2"/><rect x="86" y="420" width="32" height="40" rx="4" fill="url(#' + uid + 'Switch)" stroke="#181a1d"/><path d="M90 425 H114" stroke="#fff" stroke-width="3" opacity=".42"/>';
+            lowerControls += '<ellipse cx="102" cy="477" rx="36" ry="9" fill="#000" opacity=".28" filter="url(#' + uid + 'Soft)"/><rect x="72" y="409" width="60" height="75" rx="6" fill="#080a0d" stroke="' + theme.accent + '" stroke-width="2"/><rect class="lz-hardware-switch" x="86" y="420" width="32" height="40" rx="4" fill="url(#' + uid + 'Switch)" stroke="#181a1d"/><path d="M90 425 H114" stroke="#fff" stroke-width="3" opacity=".42"/>';
         } else if (i === 1) {
             lowerControls += '<ellipse cx="' + x + '" cy="461" rx="31" ry="9" fill="#000" opacity=".3" filter="url(#' + uid + 'Soft)"/><circle cx="' + x + '" cy="444" r="30" fill="url(#' + uid + 'Metal)" stroke="#292c2f" stroke-width="2"/><circle cx="' + x + '" cy="444" r="19" fill="#07090b" stroke="#8b9093"/><circle cx="' + x + '" cy="444" r="8" fill="#010203"/><path d="M' + (x - 14) + ' 430 A20 20 0 0 1 ' + (x + 12) + ' 429" fill="none" stroke="#fff" stroke-width="2" opacity=".32"/>';
         } else if ((spec.signature === "pioneer" && (i === 5 || i === 6)) || (spec.signature === "luxman" && (i === 5 || i === 6)) || (spec.signature === "accuphase" && i === 5)) {
-            lowerControls += '<ellipse cx="' + x + '" cy="469" rx="34" ry="8" fill="#000" opacity=".25" filter="url(#' + uid + 'Soft)"/><rect x="' + (x - 31) + '" y="417" width="62" height="55" rx="5" fill="#0a0c0e" stroke="' + theme.accent + '" stroke-width="2"/><rect x="' + (x - 21) + '" y="425" width="42" height="29" rx="3" fill="url(#' + uid + 'Switch)"/><path d="M' + (x - 16) + ' 430 H' + (x + 16) + '" stroke="#fff" stroke-width="2" opacity=".4"/>';
+            lowerControls += '<ellipse cx="' + x + '" cy="469" rx="34" ry="8" fill="#000" opacity=".25" filter="url(#' + uid + 'Soft)"/><rect x="' + (x - 31) + '" y="417" width="62" height="55" rx="5" fill="#0a0c0e" stroke="' + theme.accent + '" stroke-width="2"/><rect class="lz-hardware-switch" x="' + (x - 21) + '" y="425" width="42" height="29" rx="3" fill="url(#' + uid + 'Switch)"/><path d="M' + (x - 16) + ' 430 H' + (x + 16) + '" stroke="#fff" stroke-width="2" opacity=".4"/>';
         } else {
             const r = spec.signature === "sansui" ? (i === 7 ? 31 : 27) : i === 7 ? 30 : 25;
             lowerControls += smallScale(x, 445, r, theme.accent) +
                 (spec.signature === "sansui" ? '<circle cx="' + x + '" cy="445" r="' + (r + 7) + '" fill="#070809" stroke="#a67c39" stroke-width="2"/>' : '') +
                 mfaSvgKnob(x, 445, r, null, 'url(#' + uid + 'SmallKnob)', null);
         }
-        lowerControls += '<text x="' + x + '" y="516" font-family="Arial" font-size="14" font-weight="700" letter-spacing=".55" fill="' + sub + '" text-anchor="middle">' + controlLabels[i] + '</text>';
+        lowerControls += '<text x="' + x + '" y="516" font-family="Arial" font-size="15" font-weight="700" letter-spacing=".45" fill="' + controlInk + '" text-anchor="middle">' + controlLabels[i] + '</text>';
     }
     lowerControls += '</g>';
     const signature = spec.signature === "sansui"
@@ -288,24 +307,26 @@ function mfaAmpSvg(spec) {
             : spec.signature === "luxman"
                 ? '<g><circle cx="972" cy="297" r="5" fill="#332314" stroke="#9c7437"/><circle class="ampLamp" cx="972" cy="297" r="3" fill="#f1a637" opacity=".1"/><text x="988" y="303" font-family="Arial" font-size="13" font-weight="700" fill="#6d5835">BIAS OK</text></g>'
                 : '<rect x="928" y="287" width="120" height="22" rx="3" fill="#312718" stroke="#8f7138"/><text x="988" y="303" font-family="monospace" font-size="13" font-weight="700" fill="#e0ae58" text-anchor="middle">INPUT · CD</text>';
-    const centerConsole = '<g><rect x="690" y="166" width="600" height="160" rx="7" fill="' + (pale ? '#625b4b' : '#030405') + '" opacity=".16" stroke="' + theme.accent + '" stroke-width="2"/>' +
-        '<path d="M704 184 H1276" stroke="' + (pale ? '#fff' : theme.accent) + '" opacity=".28"/><text x="988" y="181" font-family="Arial" font-size="12" font-weight="700" letter-spacing="2.5" fill="' + sub + '" text-anchor="middle">' + consoleTitle + '</text>' +
+    const centerConsole = '<g><rect x="690" y="166" width="600" height="160" rx="7" fill="url(#' + uid + 'Console)" stroke="' + theme.accent + '" stroke-width="2"/>' +
+        '<path d="M704 184 H1276" stroke="' + (pale ? '#fff' : theme.accent) + '" opacity=".32"/><text x="988" y="181" font-family="Arial" font-size="13" font-weight="700" letter-spacing="2.1" fill="' + controlInk + '" text-anchor="middle">' + consoleTitle + '</text>' +
         '<path d="M974 190 V280" stroke="' + theme.accent + '" opacity=".3"/>' + consoleDetail + '</g>';
     const volumeTicks = '<g fill="none" stroke="' + theme.accent + '">' + Array.from({ length: 31 }, (_, i) => {
         const a = (-135 + i * 9) * Math.PI / 180;
         const major = i % 5 === 0;
-        const r1 = major ? 164 : 169, r2 = 180;
+        const r1 = visibleVolumeR + (major ? 19 : 25), r2 = visibleVolumeR + 34;
         return '<line x1="' + (1595 + Math.sin(a) * r1).toFixed(1) + '" y1="' + (244 - Math.cos(a) * r1).toFixed(1) + '" x2="' + (1595 + Math.sin(a) * r2).toFixed(1) + '" y2="' + (244 - Math.cos(a) * r2).toFixed(1) + '" stroke-width="' + (major ? 2.6 : 1.2) + '" opacity="' + (major ? '.8' : '.48') + '"/>';
-    }).join("") + '<path d="M1475 344 A164 164 0 1 1 1715 344" stroke-width="3" opacity=".52"/></g>';
+    }).join("") + '<path d="M' + (1595 - (visibleVolumeR + 18) * .73).toFixed(1) + ' ' + (244 + (visibleVolumeR + 18) * .68).toFixed(1) + ' A' + (visibleVolumeR + 18) + ' ' + (visibleVolumeR + 18) + ' 0 1 1 ' + (1595 + (visibleVolumeR + 18) * .73).toFixed(1) + ' ' + (244 + (visibleVolumeR + 18) * .68).toFixed(1) + '" stroke-width="3" opacity=".52"/></g>';
     return '<svg class="amp-svg" viewBox="0 0 2000 560" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="' + spec.brand + ' ' + spec.model + ' 앰프">' +
-        '<defs><linearGradient id="' + uid + 'Face" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + top + '"/><stop offset=".07" stop-color="' + (pale ? '#e4dfd0' : '#24282d') + '"/><stop offset=".48" stop-color="' + theme.mid + '"/><stop offset=".88" stop-color="' + bot + '"/><stop offset="1" stop-color="' + (pale ? '#55595c' : '#020304') + '"/></linearGradient>' +
-        '<linearGradient id="' + uid + 'Wood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#291308"/><stop offset=".2" stop-color="#76431f"/><stop offset=".5" stop-color="#583018"/><stop offset=".82" stop-color="#794520"/><stop offset="1" stop-color="#200e05"/></linearGradient>' +
+        '<defs><linearGradient id="' + uid + 'Face" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + top + '"/><stop offset=".07" stop-color="' + (pale ? '#e4dfd0' : '#24282d') + '"/><stop offset=".48" stop-color="' + theme.mid + '"/><stop offset=".88" stop-color="' + bot + '"/><stop offset="1" stop-color="' + theme.edge + '"/></linearGradient>' +
+        '<linearGradient id="' + uid + 'Wood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#291308"/><stop offset=".2" stop-color="' + theme.wood + '"/><stop offset=".5" stop-color="#4d2914"/><stop offset=".82" stop-color="' + theme.wood + '"/><stop offset="1" stop-color="#200e05"/></linearGradient>' +
         '<linearGradient id="' + uid + 'Glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#20242a"/><stop offset=".35" stop-color="#07090c"/><stop offset=".58" stop-color="#181c20"/><stop offset="1" stop-color="#030405"/></linearGradient>' +
         '<linearGradient id="' + uid + 'Switch" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f1f0eb"/><stop offset=".25" stop-color="#aaaeb0"/><stop offset="1" stop-color="#34373b"/></linearGradient>' +
         '<linearGradient id="' + uid + 'Metal" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#faf9f4"/><stop offset=".34" stop-color="#929699"/><stop offset=".7" stop-color="#3b3f43"/><stop offset="1" stop-color="#dedfdd"/></linearGradient>' +
         '<radialGradient id="' + uid + 'Knob" cx="35%" cy="28%"><stop offset="0" stop-color="' + (pale ? '#f7f4ea' : '#8c9096') + '"/><stop offset=".5" stop-color="' + (pale ? '#a3a39e' : '#393c42') + '"/><stop offset=".82" stop-color="#35383c"/><stop offset="1" stop-color="#111316"/></radialGradient>' +
         '<radialGradient id="' + uid + 'SmallKnob" cx="34%" cy="25%"><stop offset="0" stop-color="' + (pale ? '#eeeae0' : '#6d7177') + '"/><stop offset=".58" stop-color="' + (pale ? '#929596' : '#2d3035') + '"/><stop offset="1" stop-color="#101215"/></radialGradient>' +
-        '<pattern id="' + uid + 'Hair" width="7" height="7" patternUnits="userSpaceOnUse"><path d="M0 .5 H7 M0 2.5 H7 M0 5.5 H7" stroke="' + (pale ? '#fff' : '#d7d9db') + '" stroke-width=".45" opacity=".09"/><path d="M0 4 H7" stroke="#1b1d20" stroke-width=".4" opacity=".08"/></pattern>' +
+        '<linearGradient id="' + uid + 'Console" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + (pale ? '#aaa18c' : '#1e2024') + '"/><stop offset=".12" stop-color="' + (pale ? '#7f7765' : '#111317') + '"/><stop offset=".82" stop-color="' + (pale ? '#665e4e' : '#050608') + '"/><stop offset="1" stop-color="' + (pale ? '#a29a86' : '#202226') + '"/></linearGradient>' +
+        '<linearGradient id="' + uid + 'ControlBay" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + (pale ? '#aaa390' : '#1b1d20') + '"/><stop offset=".14" stop-color="' + (pale ? '#8f8876' : '#101216') + '"/><stop offset="1" stop-color="' + (pale ? '#716a5c' : '#050608') + '"/></linearGradient>' +
+        '<pattern id="' + uid + 'Hair" width="8" height="8" patternUnits="userSpaceOnUse">' + hairPath + '</pattern>' +
         '<pattern id="' + uid + 'WoodGrain" width="180" height="86" patternUnits="userSpaceOnUse"><path d="M-20 18 C28 2 72 33 126 14 S206 11 226 23 M-10 49 C38 31 70 66 125 45 S202 40 218 53 M18 74 C58 58 100 83 164 67" fill="none" stroke="#d09859" stroke-width="2" opacity=".32"/><path d="M8 25 C42 14 65 36 96 24" fill="none" stroke="#2b1207" opacity=".4"/></pattern>' +
         '<filter id="' + uid + 'PanelShadow" x="-20%" y="-25%" width="150%" height="170%"><feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#000" flood-opacity=".48"/></filter><filter id="' + uid + 'Soft" x="-50%" y="-70%" width="200%" height="240%"><feGaussianBlur stdDeviation="5"/></filter></defs>' +
         '<ellipse cx="1000" cy="548" rx="928" ry="22" fill="#000" opacity=".52" filter="url(#lzSoft)"/>' +
@@ -315,25 +336,25 @@ function mfaAmpSvg(spec) {
         '<rect x="38" y="20" width="1924" height="5" fill="#fff" opacity=".42"/><path d="M38 529 H1962" stroke="#08090b" stroke-width="7" opacity=".55"/><path d="M39 32 V518 M1961 32 V518" stroke="#fff" opacity=".14"/>' + signature + centerConsole +
         '<text x="' + brandX + '" y="91" font-family="Arial" font-size="37" font-weight="700" letter-spacing="2.4" fill="' + ink + '">' + spec.brand + '</text>' +
         '<text x="' + brandX + '" y="126" font-family="Arial" font-size="16" font-weight="700" letter-spacing="2.5" fill="' + sub + '">STEREO INTEGRATED AMPLIFIER · ' + spec.model + '</text>' + modelAccent +
-        '<g font-family="Arial" font-size="14" font-weight="700" letter-spacing=".9" fill="' + sub + '" text-anchor="end">' +
+        '<g font-family="Arial" font-size="14" font-weight="700" letter-spacing=".9" fill="' + controlInk + '" text-anchor="end">' +
         '<text x="810" y="201">SPEAKERS</text><text x="810" y="263">MUTING</text><text x="1055" y="201">TAPE MONITOR</text><text x="1055" y="263">SUBSONIC</text></g>' +
         mfaSvgToggle(850, 196, uid + "Spk", pale ? '#5f6265' : '#b6b9bf') + mfaSvgToggle(850, 258, uid + "Mute", pale ? '#5f6265' : '#b6b9bf') + mfaSvgToggle(1095, 196, uid + "Tape", pale ? '#5f6265' : '#b6b9bf') + mfaSvgToggle(1095, 258, uid + "Sub", pale ? '#5f6265' : '#b6b9bf') +
         '<circle cx="1240" cy="115" r="15" fill="url(#' + uid + 'Metal)"/><circle cx="1240" cy="115" r="11" fill="#1d0d08"/><circle id="ampPwrLed" cx="1240" cy="115" r="7" fill="#3a2012"/><ellipse cx="1237" cy="112" rx="3" ry="2" fill="#fff" opacity=".38"/><circle class="ampLamp" cx="1240" cy="115" r="20" fill="' + theme.accent2 + '" opacity=".02" filter="url(#' + uid + 'Soft)"/>' +
-        volumeTicks + '<ellipse cx="1599" cy="365" rx="132" ry="26" fill="#000" opacity=".32" filter="url(#' + uid + 'Soft)"/>' + mfaSvgKnob(1595, 244, 140, null, 'url(#' + uid + 'Knob)', 'ampVolMark') +
+        volumeTicks + '<ellipse cx="1599" cy="' + (244 + visibleVolumeR * .88).toFixed(1) + '" rx="' + (visibleVolumeR * .94).toFixed(1) + '" ry="' + (visibleVolumeR * .2).toFixed(1) + '" fill="#000" opacity=".32" filter="url(#' + uid + 'Soft)"/>' + mfaSvgKnob(1595, 244, visibleVolumeR, null, 'url(#' + uid + 'Knob)', 'ampVolMark') +
         '<g font-family="Arial" font-size="14" font-weight="700" fill="' + sub + '" text-anchor="middle">' + Array.from({ length: 11 }, (_, i) => {
             const a = (-135 + i * 27) * Math.PI / 180;
-            return '<text x="' + (1595 + Math.sin(a) * 175).toFixed(1) + '" y="' + (250 - Math.cos(a) * 175).toFixed(1) + '">' + i + '</text>';
-        }).join("") + '</g><text x="1595" y="420" font-family="Arial" font-size="15" font-weight="700" letter-spacing="3.4" fill="' + sub + '" text-anchor="middle">MASTER VOLUME</text>' +
+            return '<text x="' + (1595 + Math.sin(a) * (visibleVolumeR + 48)).toFixed(1) + '" y="' + (250 - Math.cos(a) * (visibleVolumeR + 48)).toFixed(1) + '">' + i + '</text>';
+        }).join("") + '</g><text x="1595" y="' + (244 + visibleVolumeR + 59) + '" font-family="Arial" font-size="15" font-weight="700" letter-spacing="3.1" fill="' + controlInk + '" text-anchor="middle">MASTER VOLUME</text>' +
         lowerControls + '<text x="1900" y="510" font-family="Georgia" font-size="20" font-style="italic" fill="' + sub + '" text-anchor="end">' + spec.tagline + '</text>' +
         '<g pointer-events="none" fill="#2d3034" stroke="#a5a7a8"><circle cx="48" cy="48" r="7"/><circle cx="1952" cy="48" r="7"/><circle cx="48" cy="512" r="7"/><circle cx="1952" cy="512" r="7"/></g>' +
         '</svg>';
 }
 
 const MFA_AMPS = [
-    { id: "sa9900", brand: "PIONEER", model: "SA-9900", pill: "TR · SA-9900", face: "silver", wood: true, signature: "pioneer", tagline: "dual-mono direct coupled", desc: "단단한 저역과 또렷한 프레즌스의 다이렉트 커플드 사운드", drive: 1.08, k: .08, asym: .01, bass: [70, .8], lowMid: [260, -.2, .8], mid: [1000, 0, 1], presence: [3300, .8, .9], treble: [10000, .7], out: .93 },
-    { id: "au111", brand: "SANSUI", model: "AU-111", pill: "6L6GC · AU-111", face: "black", wood: true, signature: "sansui", tagline: "tube control amplifier", desc: "6L6GC 푸시풀 — 묵직한 3차 배음, 가장 큰 전원 새그와 낮은 댐핑", drive: 2.05, k: 1.45, asym: .16, bass: [90, .35], lowMid: [310, .5, .78], mid: [1400, .2, .9], presence: [3600, -.15, 1], treble: [7600, -.3], out: .88, circuit: AMP_CIRCUITS.sixL6PushPull },
-    { id: "l550", brand: "LUXMAN", model: "L-550", pill: "CLASS A · L-550", face: "champagne", wood: true, signature: "luxman", tagline: "pure class A integrated", desc: "매끈한 중역과 섬세한 윤기를 살린 클래스 A 보이싱", drive: 1.22, k: .32, asym: .04, bass: [75, 1.2], lowMid: [280, .5, .8], mid: [900, .3, 1], presence: [3200, .3, .9], treble: [9500, .4], out: .86 },
-    { id: "e303", brand: "ACCUPHASE", model: "E-303", pill: "TR · E-303", face: "champagne", wood: true, signature: "accuphase", tagline: "precision stereo control", desc: "빠른 과도응답과 개방적인 상단을 노린 정밀 제어형 사운드", drive: 1.03, k: .06, asym: 0, bass: [65, .2], lowMid: [250, 0, .82], mid: [1100, 0, 1], presence: [3400, .4, .9], treble: [11000, .6], out: .96 }
+    { id: "sa9900", brand: "PIONEER", model: "SA-9900", pill: "TR · SA-9900", face: "silver", wood: true, signature: "pioneer", visibleVolumeR: 124, tagline: "dual-mono direct coupled", desc: "단단한 저역과 또렷한 프레즌스의 다이렉트 커플드 사운드", drive: 1.08, k: .08, asym: .01, bass: [70, .8], lowMid: [260, -.2, .8], mid: [1000, 0, 1], presence: [3300, .8, .9], treble: [10000, .7], out: .93 },
+    { id: "au111", brand: "SANSUI", model: "AU-111", pill: "6L6GC · AU-111", face: "black", wood: true, signature: "sansui", visibleVolumeR: 120, tagline: "tube control amplifier", desc: "6L6GC 푸시풀 — 묵직한 3차 배음, 가장 큰 전원 새그와 낮은 댐핑", drive: 2.05, k: 1.45, asym: .16, bass: [90, .35], lowMid: [310, .5, .78], mid: [1400, .2, .9], presence: [3600, -.15, 1], treble: [7600, -.3], out: .88, circuit: AMP_CIRCUITS.sixL6PushPull },
+    { id: "l550", brand: "LUXMAN", model: "L-550", pill: "CLASS A · L-550", face: "champagne", wood: true, signature: "luxman", visibleVolumeR: 124, tagline: "pure class A integrated", desc: "매끈한 중역과 섬세한 윤기를 살린 클래스 A 보이싱", drive: 1.22, k: .32, asym: .04, bass: [75, 1.2], lowMid: [280, .5, .8], mid: [900, .3, 1], presence: [3200, .3, .9], treble: [9500, .4], out: .86 },
+    { id: "e303", brand: "ACCUPHASE", model: "E-303", pill: "TR · E-303", face: "champagne", wood: true, signature: "accuphase", visibleVolumeR: 126, tagline: "precision stereo control", desc: "빠른 과도응답과 개방적인 상단을 노린 정밀 제어형 사운드", drive: 1.03, k: .06, asym: 0, bass: [65, .2], lowMid: [250, 0, .82], mid: [1100, 0, 1], presence: [3400, .4, .9], treble: [11000, .6], out: .96 }
 ];
 
 MFA_AMPS.forEach((spec) => {
@@ -379,7 +400,7 @@ function mfaMa2375Meter(x, needleId) {
 function mfaMa2375Tube(cx, baseY, scale, cage) {
     const w = 92 * scale, h = 220 * scale, top = baseY - h;
     const cageLines = cage ?
-        '<g fill="none" stroke="url(#ma2375Cage)" stroke-width="' + (8 * scale).toFixed(1) + '" opacity=".96">' +
+        '<g fill="none" stroke="url(#ma2375Cage)" stroke-width="' + (5.8 * scale).toFixed(1) + '" opacity=".78">' +
         Array.from({ length: 6 }, (_, i) => '<ellipse cx="' + cx + '" cy="' + (top + 24 * scale + i * 32 * scale).toFixed(1) + '" rx="' + (w * .74).toFixed(1) + '" ry="' + (12 * scale).toFixed(1) + '"/>').join("") +
         '<path d="M' + (cx - w * .67).toFixed(1) + ' ' + (top + 20 * scale).toFixed(1) + ' L' + (cx - w * .67).toFixed(1) + ' ' + baseY + ' M' + (cx - w * .22).toFixed(1) + ' ' + (top + 10 * scale).toFixed(1) + ' L' + (cx - w * .22).toFixed(1) + ' ' + baseY + ' M' + (cx + w * .22).toFixed(1) + ' ' + (top + 10 * scale).toFixed(1) + ' L' + (cx + w * .22).toFixed(1) + ' ' + baseY + ' M' + (cx + w * .67).toFixed(1) + ' ' + (top + 20 * scale).toFixed(1) + ' L' + (cx + w * .67).toFixed(1) + ' ' + baseY + '"/>' +
         '<ellipse cx="' + cx + '" cy="' + baseY + '" rx="' + (w * .82).toFixed(1) + '" ry="' + (15 * scale).toFixed(1) + '"/></g>' : '';
@@ -624,8 +645,20 @@ function mfaDeckSvg(spec) {
         '<path d="M630 293 Q730 312 830 293" fill="none" stroke="#4b321d" stroke-width="3" opacity=".8"/>' +
         '<rect x="640" y="327" width="180" height="32" rx="7" fill="#0b0d10" stroke="#45494f"/><rect x="696" y="334" width="68" height="17" rx="3" fill="#30343a" stroke="#55595f"/>' +
         '<circle cx="663" cy="343" r="7" fill="#202328" stroke="#6d7176"/><circle cx="797" cy="343" r="7" fill="#202328" stroke="#6d7176"/><circle cx="677" cy="343" r="4" fill="#08090b"/><circle cx="783" cy="343" r="4" fill="#08090b"/>';
+    const deckLedRow = (id, y) => '<g id="' + id + '" data-meter-style="segments">' + Array.from({ length: 22 }, (_, i) => {
+        const hot = i >= 20;
+        const warn = i >= 17 && !hot;
+        const on = hot ? '#ff4c3f' : warn ? '#e5bd58' : spec.signature === 'sony' ? '#76e7ad' : '#86d0a6';
+        const off = hot ? '#321617' : warn ? '#302817' : spec.signature === 'sony' ? '#10291f' : '#15251f';
+        return '<rect data-meter-segment="' + i + '" data-on="' + on + '" data-off="' + off + '" x="' + (1170 + i * 23.2).toFixed(1) + '" y="' + y + '" width="17" height="18" rx="2" fill="' + off + '"/>';
+    }).join('') + '</g>';
     const meterBlock = spec.ledMeters
-        ? '<rect x="1106" y="98" width="622" height="198" rx="9" fill="#07090b" stroke="' + doorStroke + '" stroke-width="3"/>' + mfaMeter(1120, 112, 594, 170, null, "PEAK PROGRAM · dB", "#17120b", true) + '<line id="deckVuL" data-cx="1262" data-cy="262" x1="1262" y1="262" x2="1262" y2="150" stroke="#d4501e" stroke-width="0"/><line id="deckVuR" data-cx="1572" data-cy="262" x1="1572" y1="262" x2="1572" y2="150" stroke="#d4501e" stroke-width="0"/>'
+        ? '<g><rect x="1106" y="98" width="622" height="198" rx="9" fill="#07090b" stroke="' + doorStroke + '" stroke-width="3"/>' +
+            '<rect x="1118" y="110" width="598" height="174" rx="6" fill="#030607" stroke="#20262a" stroke-width="2"/><path d="M1128 120H1706" stroke="#fff" stroke-width="2" opacity=".09"/>' +
+            '<text x="1417" y="139" font-family="Arial" font-size="14" font-weight="700" letter-spacing="2.4" fill="' + (spec.signature === 'sony' ? '#80dca9' : '#86b79e') + '" text-anchor="middle">PEAK PROGRAM · dB' + (spec.signature === 'sony' ? ' · PEAK HOLD' : '') + '</text>' +
+            '<g font-family="Arial" font-size="12" font-weight="700" fill="#64736d"><text x="1143" y="178">L</text><text x="1143" y="226">R</text><text x="1170" y="261">-30</text><text x="1402" y="261">-10</text><text x="1564" y="261">0</text><text x="1668" y="261" fill="#a85845">+6</text></g>' +
+            deckLedRow('deckVuL', 162) + deckLedRow('deckVuR', 210) +
+            '<polygon points="1124,116 1390,116 1298,278 1124,278" fill="url(#' + uid + 'Glass)" opacity=".34" pointer-events="none"/></g>'
         : mfaMeter(1120, 110, 284, 172, "deckVuL", "LEVEL L", "#e9dcb5", false) + mfaMeter(1430, 110, 284, 172, "deckVuR", "LEVEL R", "#e9dcb5", false);
     const signature = spec.signature === "revox"
         ? '<g><rect x="64" y="166" width="320" height="166" rx="6" fill="#111317" stroke="#5c6168" stroke-width="2"/>' +
@@ -643,11 +676,21 @@ function mfaDeckSvg(spec) {
                     '<g fill="url(#' + uid + 'Key)" stroke="#777a7f"><rect x="190" y="262" width="48" height="42" rx="4"/><rect x="250" y="262" width="48" height="42" rx="4"/><rect x="310" y="262" width="48" height="42" rx="4"/></g>' +
                     '<g font-family="Arial" font-size="13" font-weight="700" fill="#c1bba9" text-anchor="middle"><text x="130" y="327">CAL LEVEL</text><text x="214" y="324">BIAS</text><text x="274" y="324">EQ</text><text x="334" y="324">NR</text></g></g>'
                 : '<g>' + [0,1,2,3].map(i => mfaSvgKnob(104 + i * 78, 232, 27, null, 'url(#' + uid + 'Btn)', null)).join("") + '</g><g stroke="#d4d0c4" stroke-width="2.4">' + [0,1,2,3].map(i => '<line x1="' + (104 + i * 78) + '" y1="209" x2="' + (104 + i * 78) + '" y2="219"/>').join("") + '</g>';
+    const doorIdentity = spec.signature === "revox"
+        ? '<text x="988" y="347" font-family="Arial" font-size="10" font-weight="700" letter-spacing="1.8" fill="#879c91" text-anchor="end">DIRECT DRIVE · 4 MOTOR</text>'
+        : spec.signature === "tandberg"
+            ? '<text x="988" y="347" font-family="Georgia" font-size="11" font-style="italic" letter-spacing="1.2" fill="#b79b68" text-anchor="end">ACTILINEAR · DYNEQ</text>'
+            : spec.signature === "sony"
+                ? '<g pointer-events="none"><text x="936" y="374" font-family="Arial" font-size="10" font-weight="700" letter-spacing="1.5" fill="#9b8b67" text-anchor="end">CLOSED LOOP · DUAL CAPSTAN</text><rect x="952" y="353" width="47" height="25" rx="3" fill="#332d21" stroke="#b19b69"/><text x="975.5" y="371" font-family="Georgia" font-size="16" font-weight="700" font-style="italic" fill="#d7c286" text-anchor="middle">ES</text></g>'
+                : '';
+    const architecture = spec.signature === "revox" ? "3 HEAD · DIRECT DRIVE · 4 MOTOR"
+        : spec.signature === "tandberg" ? "3 HEAD · ACTILINEAR · DYNEQ"
+            : spec.signature === "sony" ? "3 HEAD · CLOSED LOOP · DUAL CAPSTAN" : "3 HEAD CASSETTE DECK";
     const modelDetail = spec.signature === "revox"
         ? '<path d="M400 44 V404 M1060 44 V404" stroke="#5f6369" stroke-width="2" opacity=".5"/><text x="1940" y="89" font-family="Arial" font-size="13" font-weight="700" letter-spacing="2" fill="#9ca1a7" text-anchor="end">MICROPROCESSOR CONTROL</text>'
         : spec.signature === "tandberg"
-            ? '<path d="M48 132 H1952 M48 402 H1952" stroke="#9e7b45" stroke-width="2" opacity=".65"/><text x="1940" y="89" font-family="Georgia" font-size="14" font-style="italic" fill="#c2a268" text-anchor="end">Actilinear recording system</text>'
-            : '<path d="M48 132 H1952" stroke="#826e45" stroke-width="2" opacity=".55"/><text x="1940" y="89" font-family="Arial" font-size="13" font-weight="700" letter-spacing="2" fill="#6d624b" text-anchor="end">CLOSED LOOP DUAL CAPSTAN</text>';
+            ? '<path d="M48 146 H1952 M48 402 H1952" stroke="#9e7b45" stroke-width="2" opacity=".65"/><text x="1940" y="89" font-family="Georgia" font-size="14" font-style="italic" fill="#c2a268" text-anchor="end">Actilinear recording system</text>'
+            : '<path d="M48 146 H1952" stroke="#826e45" stroke-width="2" opacity=".55"/><text x="1940" y="89" font-family="Arial" font-size="13" font-weight="700" letter-spacing="2" fill="#6d624b" text-anchor="end">CLOSED LOOP DUAL CAPSTAN</text>';
     return '<svg class="deck-svg" viewBox="0 0 2000 540" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="' + spec.brand + ' ' + spec.model + ' 카세트 데크">' +
         '<defs><linearGradient id="' + uid + 'Face" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + top + '"/><stop offset=".08" stop-color="' + (pale ? '#d5cdbb' : '#202329') + '"/><stop offset=".5" stop-color="' + (pale ? '#b9b4a8' : '#17191d') + '"/><stop offset=".9" stop-color="' + bot + '"/><stop offset="1" stop-color="' + (pale ? '#62563f' : '#030405') + '"/></linearGradient>' +
         '<linearGradient id="' + uid + 'Wood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#281208"/><stop offset=".18" stop-color="#74421f"/><stop offset=".55" stop-color="#553018"/><stop offset=".84" stop-color="#78451f"/><stop offset="1" stop-color="#1e0d05"/></linearGradient>' +
@@ -665,8 +708,10 @@ function mfaDeckSvg(spec) {
         '<rect x="' + (spec.wood ? 26 : 0) + '" y="' + (spec.wood ? 16 : 0) + '" width="' + (spec.wood ? 1948 : 2000) + '" height="' + (spec.wood ? 508 : 540) + '" rx="8" fill="url(#' + uid + 'Face)"/>' +
         '<rect x="' + (spec.wood ? 26 : 0) + '" y="' + (spec.wood ? 16 : 0) + '" width="' + (spec.wood ? 1948 : 2000) + '" height="' + (spec.wood ? 508 : 540) + '" rx="8" fill="url(#' + uid + 'Hair)"/>' +
         '<path d="M40 22 H1960" stroke="#fff" stroke-width="3" opacity=".3"/><path d="M40 516 H1960" stroke="#050607" stroke-width="6" opacity=".45"/>' +
-        '<text x="76" y="82" font-family="Arial" font-size="31" font-weight="700" letter-spacing="2" fill="' + ink + '">' + spec.brand + '</text><text x="76" y="116" font-family="Arial" font-size="15" font-weight="700" letter-spacing="2.6" fill="' + sub + '">' + spec.model + ' · 3 HEAD CASSETTE DECK</text>' + modelDetail +
-        signature + tapeDoor + reels + meterBlock +
+        '<text x="76" y="76" font-family="Arial" font-size="31" font-weight="700" letter-spacing="2" fill="' + ink + '">' + spec.brand + '</text>' +
+        '<text x="76" y="108" font-family="Arial" font-size="16" font-weight="700" letter-spacing="2.2" fill="' + sub + '">' + spec.model + '</text>' +
+        '<text x="76" y="132" font-family="Arial" font-size="11" font-weight="700" letter-spacing="1.35" fill="' + sub + '" textLength="300" lengthAdjust="spacingAndGlyphs">' + architecture + '</text>' + modelDetail +
+        signature + tapeDoor + reels + doorIdentity + meterBlock +
         '<text x="1120" y="330" font-family="Arial" font-size="13" font-weight="700" letter-spacing="2" fill="' + sub + '">TAPE COUNTER</text><rect x="1112" y="334" width="216" height="72" rx="8" fill="#111317" stroke="#65696e" stroke-width="2"/><rect x="1120" y="340" width="200" height="58" rx="6" fill="#030608" stroke="#27343a"/><path d="M1128 347 H1312" stroke="#fff" stroke-width="2" opacity=".08"/><text id="deckCounter" x="1245" y="381" font-family="Courier New" font-size="30" font-weight="700" fill="' + (spec.display || '#ff4f34') + '" text-anchor="end">00:00</text><text id="deckCounterMax" x="1254" y="381" font-family="Arial" font-size="13" font-weight="700" fill="#777b80">/ 30:00</text>' +
         '<circle cx="1420" cy="369" r="13" fill="url(#' + uid + 'Reel)"/><circle cx="1420" cy="369" r="10" fill="#16090a"/><circle id="deckRecLed" cx="1420" cy="369" r="9" fill="#3a1210"/><text x="1420" y="406" font-family="Arial" font-size="13" font-weight="700" letter-spacing="1.3" fill="' + sub + '" text-anchor="middle">REC</text>' +
         '<circle cx="1366" cy="369" r="10" fill="url(#' + uid + 'Reel)"/><circle cx="1366" cy="369" r="7" fill="#16090a"/><circle id="deckTimerLed" cx="1366" cy="369" r="6" fill="#3a1210"/><text x="1366" y="406" font-family="Arial" font-size="13" font-weight="700" letter-spacing="1.3" fill="' + sub + '" text-anchor="middle">TIMER</text>' +
@@ -861,8 +906,8 @@ function mfaW990Svg() {
         <radialGradient id="w9Tape"><stop offset="0" stop-color="#513924"/><stop offset=".68" stop-color="#332214"/><stop offset=".9" stop-color="#1c120c"/><stop offset="1" stop-color="#090604"/></radialGradient>
         <radialGradient id="w9Knob"><stop offset="0" stop-color="#7e8185"/><stop offset=".3" stop-color="#303338"/><stop offset=".72" stop-color="#15171a"/><stop offset="1" stop-color="#050608"/></radialGradient>
         <pattern id="w9Brush" width="12" height="5" patternUnits="userSpaceOnUse"><path d="M0 .5H12 M0 3.5H12" stroke="#fff" stroke-opacity=".045"/><path d="M0 2H12 M0 4.5H12" stroke="#000" stroke-opacity=".045"/></pattern>
-        <clipPath id="w9ALabelClip"><rect x="226" y="104" width="398" height="48" rx="2"/></clipPath>
-        <clipPath id="w9BLabelClip"><rect x="1366" y="104" width="398" height="48" rx="2"/></clipPath>
+        <clipPath id="w9ALabelClip"><rect x="226" y="104" width="396" height="48" rx="2"/></clipPath>
+        <clipPath id="w9BLabelClip"><rect x="1378" y="104" width="396" height="48" rx="2"/></clipPath>
         <filter id="w9Blur" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="3"/></filter>
         <filter id="w9Glow" x="-70%" y="-100%" width="240%" height="300%"><feGaussianBlur stdDeviation="4"/></filter>
         <filter id="w9Contact" x="-20%" y="-30%" width="150%" height="180%"><feGaussianBlur in="SourceAlpha" stdDeviation="3" result="b"/><feOffset dy="6" result="o"/><feFlood flood-color="#000" flood-opacity=".65"/><feComposite in2="o" operator="in"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
@@ -902,11 +947,11 @@ function mfaW990Svg() {
         <text id="deckLabel" x="430" y="128" font-family="Arial" font-size="14" font-weight="700" letter-spacing=".4" fill="#362e21" text-anchor="middle" clip-path="url(#w9ALabelClip)">C-30 공테이프</text>
         <text id="deckLabelSub" x="430" y="146" font-family="Arial" font-size="10" font-weight="700" fill="#6b5c43" text-anchor="middle" clip-path="url(#w9ALabelClip)">사용 0:00 / 30:00</text>
         <text x="606" y="145" font-family="Arial" font-size="20" font-weight="700" fill="#7b2f25">A</text>
-        <rect x="320" y="166" width="220" height="72" rx="31" fill="#171719" stroke="#746b5c" stroke-width="2"/>
-        <circle id="deckPackL" cx="370" cy="202" r="40" fill="url(#w9Tape)" stroke="#17100b" stroke-width="2"/>
-        <circle id="deckPackR" cx="610" cy="202" r="24" fill="url(#w9Tape)" stroke="#17100b" stroke-width="2"/>
-        <g transform="translate(-240 -58)">${reel("deckReelL", 610, 260)}${reel("deckReelR", 850, 260)}</g>
-        <path d="M302 249H558L536 284H324Z" fill="#c5b998" stroke="#675e4f"/><rect x="389" y="257" width="82" height="17" rx="4" fill="#313236" stroke="#6c6b67"/><circle cx="346" cy="266" r="7" fill="#232528"/><circle cx="514" cy="266" r="7" fill="#232528"/>
+        <rect id="deckWindowA" x="264" y="166" width="320" height="72" rx="31" fill="#171719" stroke="#746b5c" stroke-width="2"/>
+        <circle id="deckPackL" cx="304" cy="202" r="40" fill="url(#w9Tape)" stroke="#17100b" stroke-width="2"/>
+        <circle id="deckPackR" cx="544" cy="202" r="24" fill="url(#w9Tape)" stroke="#17100b" stroke-width="2"/>
+        <g transform="translate(-306 -58)">${reel("deckReelL", 610, 260)}${reel("deckReelR", 850, 260)}</g>
+        <path id="deckHeadA" d="M296 249H552L530 284H318Z" fill="#c5b998" stroke="#675e4f"/><rect x="383" y="257" width="82" height="17" rx="4" fill="#313236" stroke="#6c6b67"/><circle cx="340" cy="266" r="7" fill="#232528"/><circle cx="508" cy="266" r="7" fill="#232528"/>
         <g fill="#504b42" stroke="#d8ccb0" stroke-width="1.2"><circle cx="206" cy="112" r="4"/><circle cx="644" cy="112" r="4"/><circle cx="206" cy="270" r="4"/><circle cx="644" cy="270" r="4"/></g>
         <path d="M170 72H410L286 304H170Z" fill="url(#w9Glass)" pointer-events="none"/>
     </g>
@@ -958,11 +1003,11 @@ function mfaW990Svg() {
         <text id="deckBLabel" x="1582" y="129" font-family="Arial" font-size="14" font-weight="700" letter-spacing=".4" fill="#43292c" text-anchor="middle" clip-path="url(#w9BLabelClip)">REC STANDBY</text>
         <text x="1582" y="146" font-family="Arial" font-size="10" font-weight="700" fill="#765357" text-anchor="middle">RECORD CASSETTE &#183; SIDE B</text>
         <text x="1758" y="145" font-family="Arial" font-size="20" font-weight="700" fill="#843d45">B</text>
-        <rect x="1400" y="166" width="320" height="72" rx="31" fill="#171719" stroke="#71595b" stroke-width="2"/>
-        <circle id="deckBPackL" cx="1450" cy="202" r="40" fill="url(#w9Tape)" stroke="#17100b" stroke-width="2"/>
-        <circle id="deckBPackR" cx="1690" cy="202" r="24" fill="url(#w9Tape)" stroke="#17100b" stroke-width="2"/>
-        ${reel("deckBReelL", 1450, 202, 'data-cx="1450" data-cy="202"')}${reel("deckBReelR", 1690, 202, 'data-cx="1690" data-cy="202"')}
-        <path d="M1382 249H1710L1688 284H1404Z" fill="#c0a2a0" stroke="#685052"/><rect x="1519" y="257" width="82" height="17" rx="4" fill="#313236" stroke="#6c6b67"/><circle cx="1426" cy="266" r="7" fill="#232528"/><circle cx="1666" cy="266" r="7" fill="#232528"/>
+        <rect id="deckWindowB" x="1416" y="166" width="320" height="72" rx="31" fill="#171719" stroke="#71595b" stroke-width="2"/>
+        <circle id="deckBPackL" cx="1456" cy="202" r="40" fill="url(#w9Tape)" stroke="#17100b" stroke-width="2"/>
+        <circle id="deckBPackR" cx="1696" cy="202" r="24" fill="url(#w9Tape)" stroke="#17100b" stroke-width="2"/>
+        ${reel("deckBReelL", 1456, 202, 'data-cx="1456" data-cy="202"')}${reel("deckBReelR", 1696, 202, 'data-cx="1696" data-cy="202"')}
+        <path id="deckHeadB" d="M1448 249H1704L1682 284H1470Z" fill="#c0a2a0" stroke="#685052"/><rect x="1535" y="257" width="82" height="17" rx="4" fill="#313236" stroke="#6c6b67"/><circle cx="1492" cy="266" r="7" fill="#232528"/><circle cx="1660" cy="266" r="7" fill="#232528"/>
         <g fill="#514345" stroke="#e1c5c2" stroke-width="1.2"><circle cx="1358" cy="112" r="4"/><circle cx="1796" cy="112" r="4"/><circle cx="1358" cy="270" r="4"/><circle cx="1796" cy="270" r="4"/></g>
         <path d="M1322 72H1562L1438 304H1322Z" fill="url(#w9Glass)" pointer-events="none"/>
     </g>
