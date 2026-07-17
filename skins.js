@@ -308,13 +308,16 @@ const TUNER_SKINS = {
                 <linearGradient id="mrMeter" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#95e4da"/><stop offset="1" stop-color="#5cb6ad"/></linearGradient>
                 <radialGradient id="mrKnob" cx="0.38" cy="0.32" r="0.9"><stop offset="0" stop-color="#3a3a40"/><stop offset="0.6" stop-color="#1c1c22"/><stop offset="1" stop-color="#0c0c10"/></radialGradient>
                 <linearGradient id="mrGlass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#17242d" stop-opacity=".72"/><stop offset=".14" stop-color="#071016" stop-opacity=".18"/><stop offset=".62" stop-color="#020406" stop-opacity=".08"/><stop offset="1" stop-color="#000000" stop-opacity=".48"/></linearGradient>
-                <linearGradient id="mrBrass" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#80642e"/><stop offset=".25" stop-color="#d6b86c"/><stop offset=".52" stop-color="#8e7134"/><stop offset=".76" stop-color="#e2c77e"/><stop offset="1" stop-color="#6a5126"/></linearGradient>
+                <linearGradient id="mrChrome" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#30343a"/><stop offset=".12" stop-color="#d9dde0"/><stop offset=".28" stop-color="#777d84"/><stop offset=".46" stop-color="#f5f6f4"/><stop offset=".62" stop-color="#8c9299"/><stop offset=".82" stop-color="#e2e5e6"/><stop offset="1" stop-color="#353a41"/></linearGradient>
+                <linearGradient id="mrEdgeFade" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000711" stop-opacity=".76"/><stop offset=".1" stop-color="#00101c" stop-opacity="0"/><stop offset=".88" stop-color="#00101c" stop-opacity="0"/><stop offset="1" stop-color="#00050b" stop-opacity=".72"/></linearGradient>
+                <radialGradient id="mrMeterShade" cx="46%" cy="42%" r="72%"><stop offset=".48" stop-color="#001f29" stop-opacity="0"/><stop offset=".82" stop-color="#00202b" stop-opacity=".18"/><stop offset="1" stop-color="#00070b" stop-opacity=".74"/></radialGradient>
                 <filter id="mrGlow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.4"/></filter>
                 <filter id="mrBlueBloom" x="-30%" y="-40%" width="160%" height="180%"><feGaussianBlur stdDeviation="12"/></filter>
                 <pattern id="mrTickMinor" width="10.8" height="30" patternUnits="userSpaceOnUse"><rect width="1.2" height="14" fill="#e8e8ea" opacity="0.75"/></pattern>
                 <pattern id="mrTickMajor" width="54" height="30" patternUnits="userSpaceOnUse"><rect width="2" height="24" fill="#ffffff"/></pattern>
                 <pattern id="mrFine" width="11" height="9" patternUnits="userSpaceOnUse"><path d="M0 .5H11 M0 4.5H11 M0 8.5H11" stroke="#ffffff" stroke-width=".55" opacity=".025"/><path d="M0 2.5H11 M0 6.5H11" stroke="#000000" stroke-width=".5" opacity=".12"/></pattern>
                 <pattern id="mrKnurl" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(28)"><path d="M1 0V7 M4.5 0V7" stroke="#bfc2c9" stroke-width=".9" opacity=".33"/><path d="M2.5 0V7 M6 0V7" stroke="#050608" stroke-width="1.2" opacity=".72"/></pattern>
+                <g id="mrSmallScale" fill="none" stroke="#8b929a" stroke-linecap="round"><path d="M-44 -7 A45 45 0 0 1 44 -7" stroke-width="1.2" opacity=".42"/><path d="M-38 -25l-5 -3 M-24 -38l-3 -5 M0 -44v-6 M24 -38l3 -5 M38 -25l5 -3" stroke-width="2" opacity=".6"/></g>
             </defs>
             <rect x="0" y="0" width="2000" height="700" rx="8" fill="url(#mrPanel)"/>
             <rect x="0" y="0" width="2000" height="700" rx="8" fill="url(#mrFine)" opacity=".72"/>
@@ -326,18 +329,22 @@ const TUNER_SKINS = {
             <rect x="0" y="686" width="2000" height="14" fill="#000000" opacity="0.4"/>
             <g fill="#15161a" stroke="#d7d9df" stroke-width="1.2"><circle cx="15" cy="32" r="6"/><circle cx="1985" cy="32" r="6"/><circle cx="15" cy="668" r="6"/><circle cx="1985" cy="668" r="6"/></g>
             <!-- FUNCTION 표시창 -->
-            <rect x="70" y="60" width="240" height="145" rx="4" fill="#050506" stroke="#6b6648" stroke-width="1.6"/>
-            <rect x="66" y="56" width="248" height="153" rx="6" fill="none" stroke="url(#mrBrass)" stroke-width="2" opacity=".7"/>
+            <rect x="70" y="60" width="240" height="145" rx="4" fill="#050506" stroke="#555c65" stroke-width="1.6"/>
+            <rect x="66" y="56" width="248" height="153" rx="6" fill="none" stroke="url(#mrChrome)" stroke-width="2" opacity=".76"/>
             <rect x="74" y="64" width="232" height="137" rx="2" fill="url(#mrGlass)" opacity=".52"/>
+            <rect x="74" y="64" width="232" height="137" rx="2" fill="url(#mrEdgeFade)" opacity=".48" pointer-events="none"/>
+            <path d="M82 72H298" stroke="#e9f7ff" stroke-width="1.6" opacity=".075" pointer-events="none"/>
             <text x="190" y="88" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" letter-spacing="2.5" fill="#7ee08a" text-anchor="middle">FUNCTION</text>
             <text id="tsLedStereo" data-on="#ff4a3a" data-off="#3a1512" x="190" y="126" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700" letter-spacing="3.5" fill="#3a1512" text-anchor="middle">STEREO</text>
             <text id="tsLedLock" data-on="#ffd24a" data-off="#3a3012" x="190" y="158" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700" letter-spacing="3.5" fill="#3a3012" text-anchor="middle">LOCKED</text>
             <text id="tsLedBlend" data-on="#ff9a3a" data-off="#3a2312" x="190" y="190" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700" letter-spacing="3.5" fill="#3a2312" text-anchor="middle">FILTER</text>
             <!-- STATION 표시창 -->
-            <rect x="70" y="225" width="240" height="145" rx="4" fill="#050506" stroke="#6b6648" stroke-width="1.6"/>
-            <rect x="66" y="221" width="248" height="153" rx="6" fill="none" stroke="url(#mrBrass)" stroke-width="2" opacity=".7"/>
-            <rect class="lampGlow" x="72" y="227" width="236" height="141" rx="3" fill="url(#lzMcBlue)" opacity="0.4" style="mix-blend-mode:screen"/>
+            <rect x="70" y="225" width="240" height="145" rx="4" fill="#050506" stroke="#555c65" stroke-width="1.6"/>
+            <rect x="66" y="221" width="248" height="153" rx="6" fill="none" stroke="url(#mrChrome)" stroke-width="2" opacity=".76"/>
+            <g opacity=".46"><rect class="lampGlow" x="72" y="227" width="236" height="141" rx="3" fill="url(#lzMcBlue)" opacity="0.4" style="mix-blend-mode:screen"/></g>
             <polygon points="74,229 230,229 174,366 74,366" fill="url(#lzGlassSweep)" opacity=".4"/>
+            <rect x="72" y="227" width="236" height="141" rx="3" fill="url(#mrEdgeFade)" opacity=".6" pointer-events="none"/>
+            <path d="M80 234H300" stroke="#dff6ff" stroke-width="1.6" opacity=".08" pointer-events="none"/>
             <text x="190" y="253" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" letter-spacing="2.5" fill="#7ee08a" text-anchor="middle">STATION</text>
             <text id="tsFreqGlow" x="190" y="330" font-family="'Courier New', monospace" font-size="54" font-weight="700" fill="#0d1f30" text-anchor="middle" filter="url(#mrGlow)">--.-</text>
             <text id="tsFreq" x="190" y="330" font-family="'Courier New', monospace" font-size="54" font-weight="700" fill="#16324d" text-anchor="middle">--.-</text>
@@ -348,12 +355,14 @@ const TUNER_SKINS = {
             <rect x="68" y="222" width="244" height="3" fill="#04050a" opacity="0.55"/>
             <rect x="68" y="371" width="244" height="2.5" fill="#ffffff" opacity="0.09"/>
             <!-- 다이얼 창 (블랙글라스) -->
-            <rect x="350" y="60" width="1210" height="310" rx="4" fill="#060607" stroke="#6b6648" stroke-width="1.6"/>
-            <rect x="344" y="54" width="1222" height="322" rx="7" fill="none" stroke="url(#mrBrass)" stroke-width="2.5" opacity=".82"/>
+            <rect x="350" y="60" width="1210" height="310" rx="4" fill="#060607" stroke="#555c65" stroke-width="1.6"/>
+            <rect x="344" y="54" width="1222" height="322" rx="7" fill="none" stroke="url(#mrChrome)" stroke-width="2.5" opacity=".86"/>
             <rect x="350" y="60" width="1210" height="310" rx="4" fill="url(#mrGlass)" opacity=".58"/>
-            <rect class="lampGlow" x="352" y="62" width="1206" height="306" rx="3" fill="url(#lzMcBlue)" opacity="0.4" style="mix-blend-mode:screen"/>
-            <ellipse class="lampGlow" cx="955" cy="216" rx="570" ry="132" fill="#1679be" opacity=".05" filter="url(#mrBlueBloom)"/>
+            <g opacity=".48"><rect class="lampGlow" x="352" y="62" width="1206" height="306" rx="3" fill="url(#lzMcBlue)" opacity="0.4" style="mix-blend-mode:screen"/></g>
+            <g opacity=".3"><ellipse class="lampGlow" cx="920" cy="208" rx="510" ry="118" fill="#168bd0" opacity=".05" filter="url(#mrBlueBloom)"/></g>
             <polygon points="354,64 770,64 610,366 354,366" fill="url(#lzGlassSweep)" opacity=".56"/>
+            <rect x="352" y="62" width="1206" height="306" rx="3" fill="url(#mrEdgeFade)" opacity=".68" pointer-events="none"/>
+            <path d="M366 72H1544" stroke="#e5f6ff" stroke-width="2" opacity=".085" pointer-events="none"/>
             <rect x="350" y="60" width="1210" height="20" fill="url(#lzInset)" opacity="0.8"/>
             <g class="dialScale" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700" fill="#f2f2f2" text-anchor="middle">
                 <text x="430" y="130">88</text><text x="538" y="130">90</text><text x="646" y="130">92</text><text x="754" y="130">94</text><text x="862" y="130">96</text><text x="970" y="130">98</text><text x="1078" y="130">100</text><text x="1186" y="130">102</text><text x="1294" y="130">104</text><text x="1402" y="130">106</text><text x="1510" y="130">108</text>
@@ -372,7 +381,7 @@ const TUNER_SKINS = {
             <!-- 틸 미터 (SIGNAL / TUNING) -->
             <text x="560" y="266" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" letter-spacing="2" fill="#7ee08a" text-anchor="middle">SIGNAL STRENGTH</text>
             <rect x="420" y="276" width="280" height="60" rx="3" fill="url(#mrMeter)"/>
-            <rect class="ampLamp" x="420" y="276" width="280" height="60" rx="3" fill="url(#lzMcBlue)" opacity=".03"/>
+            <g opacity=".68"><rect class="ampLamp" x="420" y="276" width="280" height="60" rx="3" fill="url(#lzMcBlue)" opacity=".03"/></g>
             <g stroke="#134a44" stroke-width="1.4">
                 <line x1="450" y1="286" x2="450" y2="302"/><line x1="490" y1="290" x2="490" y2="302"/><line x1="530" y1="286" x2="530" y2="302"/><line x1="570" y1="290" x2="570" y2="302"/><line x1="610" y1="286" x2="610" y2="302"/><line x1="650" y1="290" x2="650" y2="302"/><line x1="680" y1="286" x2="680" y2="302"/>
             </g>
@@ -385,10 +394,12 @@ const TUNER_SKINS = {
             <rect x="420" y="326.4" width="280" height="9.6" fill="url(#lzInBot)" opacity="0.55"/>
             <rect x="418" y="273" width="284" height="3" fill="#04050a" opacity="0.55"/>
             <rect x="418" y="337" width="284" height="2.5" fill="#ffffff" opacity="0.09"/>
+            <rect x="420" y="276" width="280" height="60" rx="3" fill="url(#mrMeterShade)" opacity=".7" pointer-events="none"/>
+            <path d="M434 283 C506 273 602 275 686 286" fill="none" stroke="#e9ffff" stroke-width="1.6" opacity=".11" pointer-events="none"/>
             <rect class="meterDark" x="420" y="276" width="280" height="60" rx="3" fill="#0d0a06" opacity="0.5"/>
             <text x="1350" y="266" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" letter-spacing="2" fill="#7ee08a" text-anchor="middle">TUNING</text>
             <rect x="1210" y="276" width="280" height="60" rx="3" fill="url(#mrMeter)"/>
-            <rect class="ampLamp" x="1210" y="276" width="280" height="60" rx="3" fill="url(#lzMcBlue)" opacity=".03"/>
+            <g opacity=".68"><rect class="ampLamp" x="1210" y="276" width="280" height="60" rx="3" fill="url(#lzMcBlue)" opacity=".03"/></g>
             <g stroke="#134a44" stroke-width="1.4">
                 <line x1="1240" y1="288" x2="1240" y2="302"/><line x1="1295" y1="290" x2="1295" y2="302"/><line x1="1350" y1="284" x2="1350" y2="304"/><line x1="1405" y1="290" x2="1405" y2="302"/><line x1="1460" y1="288" x2="1460" y2="302"/>
             </g>
@@ -401,21 +412,27 @@ const TUNER_SKINS = {
             <rect x="1210" y="326.4" width="280" height="9.6" fill="url(#lzInBot)" opacity="0.55"/>
             <rect x="1208" y="273" width="284" height="3" fill="#04050a" opacity="0.55"/>
             <rect x="1208" y="337" width="284" height="2.5" fill="#ffffff" opacity="0.09"/>
+            <rect x="1210" y="276" width="280" height="60" rx="3" fill="url(#mrMeterShade)" opacity=".7" pointer-events="none"/>
+            <path d="M1224 283 C1296 273 1392 275 1476 286" fill="none" stroke="#e9ffff" stroke-width="1.6" opacity=".11" pointer-events="none"/>
             <rect class="meterDark" x="1210" y="276" width="280" height="60" rx="3" fill="#0d0a06" opacity="0.5"/>
             <!-- 브랜드 -->
-            <text x="955" y="310" font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-size="46" font-weight="700" fill="#d8b060" text-anchor="middle">McIntoch</text>
+            <text x="955" y="310" font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-size="46" font-weight="700" fill="#5ff18a" opacity=".2" filter="url(#mrGlow)" text-anchor="middle">McIntoch</text>
+            <text x="955" y="310" font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-size="46" font-weight="700" fill="#61e987" stroke="#183e28" stroke-width="1" text-anchor="middle">McIntoch</text>
             <text x="955" y="345" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="600" letter-spacing="7" fill="#e8e8ea" text-anchor="middle">MR 78 FM TUNER</text>
             <!-- 튜닝 노브 (우상단, 다이얼 높이) -->
-            <circle cx="1755" cy="215" r="134" fill="#050507"/>
-            <circle cx="1755" cy="215" r="137" fill="none" stroke="url(#mrBrass)" stroke-width="3" opacity=".78"/>
+            <circle cx="1768" cy="238" r="139" fill="#000" opacity=".48" filter="url(#lzSoft)"/>
+            <circle cx="1755" cy="215" r="141" fill="#050507" stroke="#1d2228" stroke-width="3"/>
+            <circle cx="1755" cy="215" r="136" fill="none" stroke="url(#mrChrome)" stroke-width="7" opacity=".92"/>
+            <circle cx="1755" cy="215" r="130" fill="none" stroke="#090b0e" stroke-width="3"/>
             <g id="tsKnob">
-                <circle cx="1768.0" cy="238.4" r="132.6" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><circle cx="1755" cy="215" r="130" fill="url(#mrKnob)" stroke="#c8c8ce" stroke-width="3"/><path d="M 1661.4 150.0 A 114.4 114.4 0 0 1 1770.6 103.2" stroke="#ffffff" stroke-width="7.8" opacity="0.3" fill="none" stroke-linecap="round" pointer-events="none"/>
-                <circle cx="1755" cy="215" r="121" fill="url(#mrKnurl)" opacity=".62"/>
-                <circle cx="1755" cy="215" r="105" fill="url(#mrKnob)" stroke="#4d5159" stroke-width="1.5"/>
+                <circle cx="1755" cy="215" r="127" fill="url(#mrKnob)" stroke="#70757c" stroke-width="2"/>
+                <circle cx="1755" cy="215" r="119" fill="url(#mrKnurl)" opacity=".5"/>
+                <circle cx="1755" cy="215" r="105" fill="url(#mrKnob)" stroke="#454a51" stroke-width="1.5"/>
                 <circle cx="1755" cy="215" r="112" fill="none" stroke="#3a3a42" stroke-width="1.5"/>
+                <path d="M1668 150 A109 109 0 0 1 1768 108" stroke="#ffffff" stroke-width="3.2" opacity=".2" fill="none" stroke-linecap="round" pointer-events="none"/>
                 <circle cx="1755" cy="123" r="8" fill="#4a4a52"/>
             </g>
-            <ellipse cx="1712" cy="176" rx="46" ry="36" fill="#ffffff" opacity="0.05" pointer-events="none"/>
+            <ellipse cx="1715" cy="177" rx="30" ry="22" fill="#ffffff" opacity=".04" pointer-events="none"/>
             <!-- 하단 노브 행 (글라스 위) -->
             <g font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" letter-spacing="2" fill="#7ee08a" text-anchor="middle">
                 <text x="380" y="462">SELECTIVITY</text><text x="620" y="462">METER</text><text x="860" y="462">FILTER</text><text x="1100" y="462">MUTING</text><text x="1340" y="462">MODE</text><text x="1580" y="462">VOLUME</text>
@@ -423,13 +440,14 @@ const TUNER_SKINS = {
             <g font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="600" letter-spacing="1.1" fill="#65a872" text-anchor="middle">
                 <text x="380" y="480">REC</text><text x="620" y="480">TIMER</text><text x="860" y="480">HI BLEND</text><text x="1100" y="480">MUTE</text><text x="1340" y="480">STEREO/MONO</text><text x="1580" y="480">LIST</text>
             </g>
+            <g pointer-events="none"><use href="#mrSmallScale" transform="translate(380 533)"/><use href="#mrSmallScale" transform="translate(620 533)"/><use href="#mrSmallScale" transform="translate(860 533)"/><use href="#mrSmallScale" transform="translate(1100 533)"/><use href="#mrSmallScale" transform="translate(1340 533)"/><use href="#mrSmallScale" transform="translate(1580 533)"/></g>
             <g>
-                <circle cx="384.0" cy="540.2" r="40.8" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><circle cx="380" cy="533" r="40" fill="url(#mrKnob)" stroke="#9a9aa2" stroke-width="2"/><path d="M 351.2 513.0 A 35.2 35.2 0 0 1 384.8 498.6" stroke="#ffffff" stroke-width="2.4" opacity="0.3" fill="none" stroke-linecap="round" pointer-events="none"/><rect id="tsSwRec" x="378" y="497" width="4" height="18" rx="2" fill="#d8d8dc"/>
-                <circle cx="624.0" cy="540.2" r="40.8" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><circle cx="620" cy="533" r="40" fill="url(#mrKnob)" stroke="#9a9aa2" stroke-width="2"/><path d="M 591.2 513.0 A 35.2 35.2 0 0 1 624.8 498.6" stroke="#ffffff" stroke-width="2.4" opacity="0.3" fill="none" stroke-linecap="round" pointer-events="none"/><rect id="tsSwIf" x="618" y="497" width="4" height="18" rx="2" fill="#d8d8dc"/>
-                <circle cx="864.0" cy="540.2" r="40.8" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><circle cx="860" cy="533" r="40" fill="url(#mrKnob)" stroke="#9a9aa2" stroke-width="2"/><path d="M 831.2 513.0 A 35.2 35.2 0 0 1 864.8 498.6" stroke="#ffffff" stroke-width="2.4" opacity="0.3" fill="none" stroke-linecap="round" pointer-events="none"/><rect id="tsSwBlend" x="858" y="497" width="4" height="18" rx="2" fill="#d8d8dc"/>
-                <circle cx="1104.0" cy="540.2" r="40.8" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><circle cx="1100" cy="533" r="40" fill="url(#mrKnob)" stroke="#9a9aa2" stroke-width="2"/><path d="M 1071.2 513.0 A 35.2 35.2 0 0 1 1104.8 498.6" stroke="#ffffff" stroke-width="2.4" opacity="0.3" fill="none" stroke-linecap="round" pointer-events="none"/><rect id="tsSwMute" x="1098" y="497" width="4" height="18" rx="2" fill="#d8d8dc"/>
-                <circle cx="1344.0" cy="540.2" r="40.8" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><circle cx="1340" cy="533" r="40" fill="url(#mrKnob)" stroke="#9a9aa2" stroke-width="2"/><path d="M 1311.2 513.0 A 35.2 35.2 0 0 1 1344.8 498.6" stroke="#ffffff" stroke-width="2.4" opacity="0.3" fill="none" stroke-linecap="round" pointer-events="none"/><rect id="tsSwMode" x="1338" y="497" width="4" height="18" rx="2" fill="#d8d8dc"/>
-                <circle cx="1584.0" cy="540.2" r="40.8" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><circle cx="1580" cy="533" r="40" fill="url(#mrKnob)" stroke="#9a9aa2" stroke-width="2"/><path d="M 1551.2 513.0 A 35.2 35.2 0 0 1 1584.8 498.6" stroke="#ffffff" stroke-width="2.4" opacity="0.3" fill="none" stroke-linecap="round" pointer-events="none"/><rect id="tsSwRf" x="1578" y="497" width="4" height="18" rx="2" fill="#d8d8dc"/>
+                <circle cx="384" cy="541" r="43" fill="#000" opacity=".48" filter="url(#lzSoft)"/><circle cx="380" cy="533" r="43" fill="url(#mrChrome)" stroke="#dfe2e4" stroke-width="1.2"/><circle cx="380" cy="533" r="34" fill="url(#mrKnob)" stroke="#111318" stroke-width="2"/><path d="M354 516 A31 31 0 0 1 385 502" stroke="#fff" stroke-width="1.8" opacity=".18" fill="none" stroke-linecap="round" pointer-events="none"/><rect id="tsSwRec" x="378" y="497" width="4" height="18" rx="2" fill="#e3e5e6"/>
+                <circle cx="624" cy="541" r="43" fill="#000" opacity=".48" filter="url(#lzSoft)"/><circle cx="620" cy="533" r="43" fill="url(#mrChrome)" stroke="#dfe2e4" stroke-width="1.2"/><circle cx="620" cy="533" r="34" fill="url(#mrKnob)" stroke="#111318" stroke-width="2"/><path d="M594 516 A31 31 0 0 1 625 502" stroke="#fff" stroke-width="1.8" opacity=".18" fill="none" stroke-linecap="round" pointer-events="none"/><rect id="tsSwIf" x="618" y="497" width="4" height="18" rx="2" fill="#e3e5e6"/>
+                <circle cx="864" cy="541" r="43" fill="#000" opacity=".48" filter="url(#lzSoft)"/><circle cx="860" cy="533" r="43" fill="url(#mrChrome)" stroke="#dfe2e4" stroke-width="1.2"/><circle cx="860" cy="533" r="34" fill="url(#mrKnob)" stroke="#111318" stroke-width="2"/><path d="M834 516 A31 31 0 0 1 865 502" stroke="#fff" stroke-width="1.8" opacity=".18" fill="none" stroke-linecap="round" pointer-events="none"/><rect id="tsSwBlend" x="858" y="497" width="4" height="18" rx="2" fill="#e3e5e6"/>
+                <circle cx="1104" cy="541" r="43" fill="#000" opacity=".48" filter="url(#lzSoft)"/><circle cx="1100" cy="533" r="43" fill="url(#mrChrome)" stroke="#dfe2e4" stroke-width="1.2"/><circle cx="1100" cy="533" r="34" fill="url(#mrKnob)" stroke="#111318" stroke-width="2"/><path d="M1074 516 A31 31 0 0 1 1105 502" stroke="#fff" stroke-width="1.8" opacity=".18" fill="none" stroke-linecap="round" pointer-events="none"/><rect id="tsSwMute" x="1098" y="497" width="4" height="18" rx="2" fill="#e3e5e6"/>
+                <circle cx="1344" cy="541" r="43" fill="#000" opacity=".48" filter="url(#lzSoft)"/><circle cx="1340" cy="533" r="43" fill="url(#mrChrome)" stroke="#dfe2e4" stroke-width="1.2"/><circle cx="1340" cy="533" r="34" fill="url(#mrKnob)" stroke="#111318" stroke-width="2"/><path d="M1314 516 A31 31 0 0 1 1345 502" stroke="#fff" stroke-width="1.8" opacity=".18" fill="none" stroke-linecap="round" pointer-events="none"/><rect id="tsSwMode" x="1338" y="497" width="4" height="18" rx="2" fill="#e3e5e6"/>
+                <circle cx="1584" cy="541" r="43" fill="#000" opacity=".48" filter="url(#lzSoft)"/><circle cx="1580" cy="533" r="43" fill="url(#mrChrome)" stroke="#dfe2e4" stroke-width="1.2"/><circle cx="1580" cy="533" r="34" fill="url(#mrKnob)" stroke="#111318" stroke-width="2"/><path d="M1554 516 A31 31 0 0 1 1585 502" stroke="#fff" stroke-width="1.8" opacity=".18" fill="none" stroke-linecap="round" pointer-events="none"/><rect id="tsSwRf" x="1578" y="497" width="4" height="18" rx="2" fill="#e3e5e6"/>
             </g>
             <!-- PANLOC (좌 = 전원) -->
             <circle cx="105" cy="560" r="20" fill="#1c1c22" stroke="#8a8a92" stroke-width="1.6"/>
@@ -439,7 +457,7 @@ const TUNER_SKINS = {
             <circle cx="1895" cy="556" r="9" fill="#55555c"/>
             <text x="1895" y="608" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" letter-spacing="1.7" fill="#7ee08a" text-anchor="middle">PANLOC</text>
             <!-- 하단 로고 -->
-            <path d="M250 628H1660" stroke="url(#mrBrass)" stroke-width="1.2" opacity=".48"/>
+            <path d="M250 628H1660" stroke="url(#mrChrome)" stroke-width="1.2" opacity=".36"/>
             <text x="955" y="655" font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-size="24" font-weight="700" fill="#555860" text-anchor="middle">McIntoch</text>
             <text x="1645" y="653" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="600" letter-spacing="2.2" fill="#5d6068" text-anchor="end">LABORATORY REFERENCE · SERIAL 078-2105</text>
         </svg>`
