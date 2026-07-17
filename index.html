@@ -32,7 +32,7 @@
     </script>
     <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-    <link rel="stylesheet" href="styles.css?v=104">
+    <link rel="stylesheet" href="styles.css?v=105">
 </head>
 <body>
     <div class="page-shell">
@@ -149,6 +149,11 @@
                 오디오 구성
                 <button class="settings-close" type="button" aria-label="오디오 구성 닫기" onclick="toggleSettings(false)">✕</button>
             </div>
+            <div class="settings-sec settings-preset-sec">
+                <div class="settings-title">추천 세트</div>
+                <div class="settings-note">완성된 랙을 한 번에 구성합니다. 대표 기본은 신규 설치의 기본 조합입니다.</div>
+                <div class="skin-picker rack-preset-picker" id="rackPresetPicker" role="group" aria-label="추천 오디오 세트 선택"></div>
+            </div>
             <div class="settings-sec">
                 <div class="settings-title">튜너</div>
                 <div class="skin-picker" id="skinPicker" role="group" aria-label="튜너 선택"></div>
@@ -254,15 +259,15 @@
 
     <audio id="audioPlayer" crossorigin="anonymous"></audio>
 
-    <script src="stations.js?v=104"></script>
-    <script src="player-core.js?v=104"></script>
-    <script src="store.js?v=104"></script>
-    <script src="schedule.js?v=104"></script>
-    <script src="skins.js?v=104"></script>
-    <script src="component-skins.js?v=104"></script>
-    <script src="engine.js?v=104"></script>
-    <script src="deck.js?v=104"></script>
-    <script src="bootstrap.js?v=104"></script>
+    <script src="stations.js?v=105"></script>
+    <script src="player-core.js?v=105"></script>
+    <script src="store.js?v=105"></script>
+    <script src="schedule.js?v=105"></script>
+    <script src="skins.js?v=105"></script>
+    <script src="component-skins.js?v=105"></script>
+    <script src="engine.js?v=105"></script>
+    <script src="deck.js?v=105"></script>
+    <script src="bootstrap.js?v=105"></script>
     <script>
         // PWA 서비스워커 등록 — 앱 셸 캐싱으로 오프라인 실행/즉시 시작 지원.
         if ("serviceWorker" in navigator) {

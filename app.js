@@ -560,6 +560,7 @@ function renderSkinPicker() {
             if (!unitShow.tuner) setUnitShow("tuner", true);
             if (id !== tunerSkinId) initTunerSkin(id);
             renderSkinPicker();
+            renderRackPresetPicker();
         });
         el.appendChild(b);
     });
@@ -653,7 +654,7 @@ let EQ_FREQS = [], EQ_LABELS = [], EQ_X = [], EQ_CAPW = 60;
 const eqSaved = loadJson("fmRadio.eq", null);
 const EQ_MODEL_MIGRATION = { ge10: "ge5", ge10silver: "ge5", ge10chrome: "ge5" };
 const eqSavedModel = eqSaved && (EQ_MODEL_MIGRATION[eqSaved.model] || eqSaved.model);
-let eqModelId = EQ_ORDER.includes(eqSavedModel) ? eqSavedModel : "ge5";
+let eqModelId = EQ_ORDER.includes(eqSavedModel) ? eqSavedModel : "se9";
 let eqState = { on: !eqSaved || eqSaved.on !== false, gains: {} };
 const EQ_LEGACY_FREQS = {
     ge5: [60, 250, 1000, 4000, 12000],
@@ -792,6 +793,29 @@ if (!unitShow || typeof unitShow !== "object") {
 }
 Object.keys(UNIT_STAGES).forEach((k) => { if (typeof unitShow[k] !== "boolean") unitShow[k] = k !== "eq"; });
 
+// 개별 스킨 목록과 별개로, 한 덩어리의 제품처럼 보이는 검증된 랙 구성을 제공한다.
+// 대표 기본은 신규 설치의 초기값과 같고, 기존 사용자의 저장 구성은 그대로 존중한다.
+const RACK_PRESETS = [
+    {
+        id: "signature", label: "대표 기본 · BLACK",
+        desc: "MR78 · DT-540 BLACK · MC2105 · DRAGON · LP12 — 소개 화면용 시그니처 랙",
+        tuner: "mr78", timer: "black", eq: "se9", amp: "mc2105", deck: "dragon", tt: "lp12",
+        show: { tuner: true, timer: true, eq: false, amp: true, deck: true, tt: true }
+    },
+    {
+        id: "black", label: "블랙 풀세트",
+        desc: "대표 기본에 SANSUI SE-9을 더한 전 유닛 블랙 랙",
+        tuner: "mr78", timer: "black", eq: "se9", amp: "mc2105", deck: "dragon", tt: "lp12",
+        show: { tuner: true, timer: true, eq: true, amp: true, deck: true, tt: true }
+    },
+    {
+        id: "silver", label: "실버 클래식",
+        desc: "MODEL 10B · DT-540 SILVER · E-303 · CT-F1250 · SL-1200MK2 — 샴페인/실버 빈티지 랙",
+        tuner: "m10b", timer: "silver", eq: "ge5", amp: "e303", deck: "ctf1250", tt: "sl1200",
+        show: { tuner: true, timer: true, eq: false, amp: true, deck: true, tt: true }
+    }
+];
+
 // 트랜스포트가 도는 동안(재생·녹음)은 데크를 숨겨 두었어도 보여준다 — 돌아가는 릴이 보이도록
 let deckStageLive = false;
 
@@ -828,6 +852,7 @@ function setUnitShow(key, show) {
     renderDeckPicker();
     renderTtPicker();
     renderTimerPicker();
+    renderRackPresetPicker();
 }
 
 // 피커 공통 '숨김' 알약
@@ -855,9 +880,9 @@ function renderSinglePicker(elId, key, label) {
 }
 
 const TT_MODEL_MIGRATION = { pl12: "sl1200" };
-let ttModelId = loadJson("fmRadio.turntable", "sl1200");
+let ttModelId = loadJson("fmRadio.turntable", "lp12");
 ttModelId = TT_MODEL_MIGRATION[ttModelId] || ttModelId;
-if (!TT_ORDER.includes(ttModelId)) ttModelId = "sl1200";
+if (!TT_ORDER.includes(ttModelId)) ttModelId = "lp12";
 saveJson("fmRadio.turntable", ttModelId);
 
 function renderDeckPicker() {
@@ -879,6 +904,7 @@ function renderDeckPicker() {
                 playerSubtext.textContent = "카세트 데크: " + DECK_MODELS[id].label;
             }
             renderDeckPicker();
+            renderRackPresetPicker();
         });
         el.appendChild(b);
     });
@@ -903,6 +929,7 @@ function renderTtPicker() {
                 playerSubtext.textContent = "턴테이블: " + TT_MODELS[id].label;
             }
             renderTtPicker();
+            renderRackPresetPicker();
         });
         el.appendChild(b);
     });
@@ -922,6 +949,7 @@ function renderEqPicker() {
             if (!unitShow.eq) setUnitShow("eq", true);
             setEqModel(id);
             renderEqPicker();
+            renderRackPresetPicker();
         });
         el.appendChild(b);
     });
@@ -932,13 +960,39 @@ function renderEqPicker() {
 // 예약 녹음 엔진의 실물 전면 — 시계와 다음 예약을 VFD로 보여주고,
 // TIMER 스위치가 실물 타이머의 스위치드 아웃렛처럼 예약 발화를 전담한다.
 let timerArmed = loadJson("fmRadio.timerArmed", true);
+let timerFinish = loadJson("fmRadio.timerFinish", "black");
+if (!TIMER_FINISHES[timerFinish]) timerFinish = "black";
+saveJson("fmRadio.timerFinish", timerFinish);
 
-function renderTimerPicker() { renderSinglePicker("timerPicker", "timer", TIMER_MODELS.dt540.label); }
+function renderTimerPicker() {
+    const el = document.getElementById("timerPicker");
+    if (!el) return;
+    el.innerHTML = "";
+    Object.entries(TIMER_FINISHES).forEach(([id, finish]) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "skin-btn" + (unitShow.timer && timerFinish === id ? " active" : "");
+        b.textContent = finish.label;
+        b.addEventListener("click", () => {
+            if (!unitShow.timer) setUnitShow("timer", true);
+            if (id !== timerFinish) {
+                timerFinish = id;
+                saveJson("fmRadio.timerFinish", timerFinish);
+                mountTimer();
+                playerSubtext.textContent = "오디오 타이머: " + finish.label;
+            }
+            renderTimerPicker();
+            renderRackPresetPicker();
+        });
+        el.appendChild(b);
+    });
+    el.appendChild(hidePill("timer"));
+}
 
 function mountTimer() {
     const stage = document.getElementById("timerStage");
     if (!stage) return;
-    stage.innerHTML = TIMER_MODELS.dt540.svg;
+    stage.innerHTML = TIMER_MODELS.dt540.render(timerFinish);
     applyPanelLighting(stage.querySelector("svg"));
     const bind = (id, fn, label) => {
         const el = document.getElementById(id);
@@ -996,18 +1050,28 @@ function timerPaint() {
     });
     const recActive = !!(activeResRec && activeResRec.started && recorder);
     const prog = document.getElementById("dtProgText");
+    let programText;
     if (!timerArmed) {
-        prog.textContent = "TIMER OFF";
+        programText = "TIMER OFF";
     } else if (recActive) {
-        prog.textContent = "● REC 〜" + FMSchedule.fmtHM(activeResRec.res.endMin) + " · " + activeResRec.res.title;
+        programText = "● REC 〜" + FMSchedule.fmtHM(activeResRec.res.endMin) + " · " + activeResRec.res.title;
     } else if (activeResRec) {
-        prog.textContent = "REC 대기 · " + activeResRec.res.title;
+        programText = "REC 대기 · " + activeResRec.res.title;
     } else if (next) {
         const st = stations.find((s) => s.id === next.res.stationId);
         const day = next.occ.ymd !== FMSchedule.ymdOf(now) ? DOW_KO[ymdToDate(next.occ.ymd).getDay()] + " " : "";
-        prog.textContent = "ON " + day + FMSchedule.fmtHM(next.res.startMin) + " · OFF " + FMSchedule.fmtHM(next.res.endMin) + " · " + (st ? st.name : next.res.stationId);
+        programText = "ON " + day + FMSchedule.fmtHM(next.res.startMin) + " · OFF " + FMSchedule.fmtHM(next.res.endMin) + " · " + (st ? st.name : next.res.stationId);
     } else {
-        prog.textContent = "PROGRAM --:--";
+        programText = "PROGRAM --:--";
+    }
+    prog.textContent = programText.length > 38 ? programText.slice(0, 37) + "…" : programText;
+    const progTitle = document.getElementById("dtProgTitle");
+    if (progTitle) progTitle.textContent = programText;
+
+    const vfdGroup = document.getElementById("dtVfdGroup");
+    if (vfdGroup) {
+        const pending = timerArmed && !!(next || activeResRec);
+        vfdGroup.style.opacity = recActive ? ".94" : pending || sleepDeadline > 0 ? ".78" : timerArmed ? ".62" : ".48";
     }
 
     const lamp = (id, onColor, on) => {
@@ -1018,19 +1082,98 @@ function timerPaint() {
         }
     };
     const blink = now.getSeconds() % 2 === 0;
-    lamp("dtLampTimer", "#8ce9b6", timerArmed && !!(next || activeResRec));
+    const timerVfd = TIMER_FINISHES[timerFinish].vfd;
+    lamp("dtLampTimer", timerVfd, timerArmed && !!(next || activeResRec));
     lamp("dtLampRec", "#ff5a3c", recActive && blink);
-    lamp("dtLampSleep", "#8ce9b6", sleepDeadline > 0);
+    lamp("dtLampSleep", timerVfd, sleepDeadline > 0);
     document.getElementById("dtSleepText").textContent =
         sleepDeadline > 0 ? "SLEEP " + formatDuration(sleepDeadline - Date.now()) : "";
 
     const sw = document.getElementById("dtSwTimer");
     if (sw) {
         sw.setAttribute("y", timerArmed ? "98" : "110");   // 올림 = ON
-        sw.style.fill = timerArmed ? "#cfe9d8" : "#b8babd";
+        sw.style.fill = timerFinish === "black"
+            ? (timerArmed ? "#9fb8ab" : "#697176")
+            : (timerArmed ? "#cfe9d8" : "#a7aaad");
     }
     const hit = document.getElementById("dtHitTimer");
     if (hit) hit.setAttribute("aria-pressed", String(timerArmed));
+}
+
+function rackPresetMatches(preset) {
+    if (!preset || tunerSkinId !== preset.tuner || timerFinish !== preset.timer ||
+        ampModelId !== preset.amp || deckModelId !== preset.deck || ttModelId !== preset.tt) return false;
+    if (preset.show.eq && eqModelId !== preset.eq) return false;
+    return Object.keys(UNIT_STAGES).every((key) => unitShow[key] === preset.show[key]);
+}
+
+function renderRackPresetPicker() {
+    const el = document.getElementById("rackPresetPicker");
+    if (!el) return;
+    el.innerHTML = "";
+    RACK_PRESETS.forEach((preset) => {
+        const active = rackPresetMatches(preset);
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "skin-btn" + (active ? " active" : "");
+        b.textContent = preset.label;
+        b.title = preset.desc;
+        b.setAttribute("aria-pressed", String(active));
+        b.addEventListener("click", () => applyRackPreset(preset.id));
+        el.appendChild(b);
+    });
+}
+
+function applyRackPreset(id) {
+    const preset = RACK_PRESETS.find((item) => item.id === id);
+    if (!preset) return;
+
+    unitShow = Object.assign({}, preset.show);
+    saveJson("fmRadio.units", unitShow);
+
+    timerFinish = preset.timer;
+    saveJson("fmRadio.timerFinish", timerFinish);
+    mountTimer();
+
+    if (tunerSkinId !== preset.tuner) initTunerSkin(preset.tuner);
+
+    if (eqModelId !== preset.eq) {
+        eqModelId = preset.eq;
+        eqApplyModelCfg();
+        buildEqChain();
+        mountEq();
+        saveEq();
+    }
+
+    if (ampModelId !== preset.amp) {
+        ampModelId = preset.amp;
+        applyAmp();
+        mountAmp();
+        saveJson("fmRadio.amp", ampModelId);
+    }
+
+    if (deckModelId !== preset.deck) {
+        deckModelId = preset.deck;
+        saveJson("fmRadio.deck", deckModelId);
+        mountDeck();
+    }
+
+    if (ttModelId !== preset.tt) {
+        ttModelId = preset.tt;
+        saveJson("fmRadio.turntable", ttModelId);
+        mountTurntable();
+    }
+
+    applyUnitVisibility();
+    renderSkinPicker();
+    renderTimerPicker();
+    renderEqPicker();
+    renderAmpPicker();
+    renderDeckPicker();
+    renderTtPicker();
+    renderRackPresetPicker();
+    playerSubtext.textContent = preset.label + " 구성으로 랙을 맞췄습니다.";
+    gtag("event", "rack_preset", { preset: preset.id });
 }
 
 function eqGainToY(g) {
@@ -1497,6 +1640,7 @@ function renderAmpPicker() {
                 playerSubtext.textContent = "앰프: " + AMP_MODELS[id].pill + " — " + AMP_MODELS[id].desc;
             }
             renderAmpPicker();
+            renderRackPresetPicker();
         });
         el.appendChild(b);
     });
@@ -2667,9 +2811,10 @@ function ttFrame(now) {
     if (tsFreq && tsFreqGlow) { tsFreq.style.opacity = digitOp; tsFreqGlow.style.opacity = digitOp; }
 
     // 전원 연동 조명: 튜너는 수신 램프를, 나머지 유닛은 시스템 웜업을 따른다.
-    // 타이머는 시계라 항상 통전 상태 — 어두워지지 않는다.
+    // 타이머는 시계라 통전 상태를 유지하되 예약·취침이 없을 때는 대기 밝기로 낮춘다.
     document.querySelectorAll(".lzPowerDim").forEach((el) => {
-        const w = el.closest("#tunerStage") ? tunerLight : el.closest("#timerStage") ? 1 : el.closest("#deckStage") ? tubeWarm : ampWarm;
+        const timerLight = (timerArmed && (activeResRec || reservations.some((res) => res.enabled))) || sleepDeadline > 0 ? .72 : .38;
+        const w = el.closest("#tunerStage") ? tunerLight : el.closest("#timerStage") ? timerLight : el.closest("#deckStage") ? tubeWarm : ampWarm;
         el.style.opacity = (0.22 * (1 - w)).toFixed(3);
     });
     // 미터 백라이트: 꺼진 미터 면은 어둡다
@@ -3898,6 +4043,7 @@ applyUnitVisibility();
 renderDeckPicker();
 renderTtPicker();
 renderTimerPicker();
+renderRackPresetPicker();
 tunerLoop();
 mountCoach();
 

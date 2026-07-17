@@ -1104,70 +1104,97 @@ const TT_ORDER = ["sl1200", "td124", "g301", "lp12"];
 // 동적 id: dtClockH/M/Sec·dtClockColon(시계), dtDayText(요일), dtProgText(다음 예약),
 // dtSleepText(취침 잔여), dtLampTimer/Rec/Sleep(LED), dtSwTimer(암 스위치),
 // dtBtnProg/dtBtnSleep(버튼), dtHitTimer/dtHitDisplay(히트).
-function mfaDt540Svg() {
-    const vfd = "#8ce9b6";        // 그린 형광 — B215 디스플레이와 같은 계열
-    const vfdDim = "#39604a";     // 꺼진 각인·보조 문자
+const TIMER_FINISHES = {
+    black: {
+        label: "DT-540 · BLACK FINISH",
+        face: ["#30353a", "#252a2f", "#171b20", "#0d1014", "#06080a"],
+        ink: "#d8dddf", sub: "#8c969c", edge: "#4d555c", edge2: "#090b0e",
+        highlight: "#e8edef", highlightOp: ".12", screw: "#0b0d10", screwEdge: "#81888d",
+        vfd: "#72c8ae", vfdDim: "#294b40"
+    },
+    silver: {
+        label: "DT-540 · SILVER FINISH",
+        face: ["#d9d8d2", "#c8c8c3", "#aaacab", "#818588", "#666b6f"],
+        ink: "#272a2d", sub: "#555b5f", edge: "#74797c", edge2: "#e4e5df",
+        highlight: "#ffffff", highlightOp: ".22", screw: "#2b2e31", screwEdge: "#c1c4c4",
+        vfd: "#72c8ae", vfdDim: "#294b40"
+    }
+};
+
+function mfaDt540Svg(finish) {
+    const key = TIMER_FINISHES[finish] ? finish : "black";
+    const theme = TIMER_FINISHES[key];
+    const vfd = theme.vfd;
+    const vfdDim = theme.vfdDim;
+    const faceStops = theme.face.map((color, i) =>
+        '<stop offset="' + [0, .09, .48, .86, 1][i] + '" stop-color="' + color + '"/>'
+    ).join("");
     const legend = (x, y, id, label) =>
-        '<circle cx="' + x + '" cy="' + (y - 5) + '" r="5" fill="#0e2418" stroke="#1c3527" stroke-width="1"/>' +
-        '<circle id="' + id + '" cx="' + x + '" cy="' + (y - 5) + '" r="3" fill="#12301f"/>' +
-        '<text x="' + (x + 16) + '" y="' + y + '" font-family="Arial" font-size="16" font-weight="700" letter-spacing="1.5" fill="' + vfdDim + '">' + label + '</text>';
+        '<circle cx="' + x + '" cy="' + (y - 4) + '" r="4.5" fill="#0a1b13" stroke="#1a3529" stroke-width="1"/>' +
+        '<circle id="' + id + '" cx="' + x + '" cy="' + (y - 4) + '" r="2.8" fill="#12301f"/>' +
+        '<text x="' + (x + 15) + '" y="' + y + '" font-family="Arial" font-size="14" font-weight="700" letter-spacing="1.4" fill="' + vfdDim + '">' + label + '</text>';
     const button = (x, id, label, title) =>
-        '<rect x="' + (x - 2) + '" y="104" width="120" height="50" rx="8" fill="#000" opacity=".4" filter="url(#lzSoft)"/>' +
-        '<rect id="' + id + '" x="' + x + '" y="98" width="116" height="46" rx="7" fill="url(#dtBtn)" stroke="#101114" stroke-width="1.5" style="cursor:pointer"><title>' + title + '</title></rect>' +
-        '<text x="' + (x + 58) + '" y="127" font-family="Arial" font-size="15" font-weight="700" letter-spacing="1.5" fill="#e2e3e5" text-anchor="middle" pointer-events="none">' + label + '</text>';
-    return '<svg class="timer-svg" viewBox="0 0 2000 248" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="PIONEER DT-540 오디오 타이머">' +
+        '<rect x="' + (x - 1) + '" y="104" width="118" height="47" rx="4" fill="#000" opacity=".22"/>' +
+        '<rect id="' + id + '" x="' + x + '" y="98" width="116" height="46" rx="4" fill="url(#dtBtn)" stroke="#0b0d10" stroke-width="1.5" style="cursor:pointer"><title>' + title + '</title></rect>' +
+        '<path d="M' + (x + 6) + ' 103H' + (x + 110) + '" stroke="#fff" opacity=".16" pointer-events="none"/>' +
+        '<text x="' + (x + 58) + '" y="127" font-family="Arial" font-size="14" font-weight="700" letter-spacing="1.4" fill="#dfe2e2" text-anchor="middle" pointer-events="none">' + label + '</text>';
+    return '<svg class="timer-svg timer-' + key + '" data-finish="' + key + '" viewBox="0 0 2000 248" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="PIONEER DT-540 오디오 타이머 ' + key + ' 마감">' +
         '<defs>' +
-        '<linearGradient id="dtFace" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2efe5"/><stop offset=".08" stop-color="#e4e1d7"/><stop offset=".55" stop-color="#c9c8c2"/><stop offset=".9" stop-color="#9d9fa0"/><stop offset="1" stop-color="#87898b"/></linearGradient>' +
+        '<linearGradient id="dtFace" x1="0" y1="0" x2="0" y2="1">' + faceStops + '</linearGradient>' +
         '<linearGradient id="dtBtn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a4c55"/><stop offset=".12" stop-color="#33353d"/><stop offset=".55" stop-color="#1f2127"/><stop offset="1" stop-color="#0e0f13"/></linearGradient>' +
         '<linearGradient id="dtGlass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#03130b"/><stop offset=".5" stop-color="#061009"/><stop offset="1" stop-color="#020a06"/></linearGradient>' +
-        '<filter id="dtGlow" x="-30%" y="-60%" width="160%" height="220%"><feGaussianBlur stdDeviation="5"/></filter>' +
+        '<linearGradient id="dtDisplayFrame" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#596066"/><stop offset=".14" stop-color="#22272c"/><stop offset=".55" stop-color="#101318"/><stop offset="1" stop-color="#050609"/></linearGradient>' +
+        '<pattern id="dtBrush" width="7" height="7" patternUnits="userSpaceOnUse"><path d="M0 .5H7 M0 3.5H7 M0 6.5H7" stroke="#fff" stroke-width=".45" opacity=".11"/><path d="M0 2H7 M0 5H7" stroke="#000" stroke-width=".45" opacity=".16"/></pattern>' +
+        '<clipPath id="dtProgClip"><rect x="684" y="165" width="618" height="34" rx="2"/></clipPath>' +
         '</defs>' +
         '<rect width="2000" height="248" rx="8" fill="url(#dtFace)"/>' +
-        '<rect width="2000" height="248" rx="8" fill="url(#lzHairline)" opacity=".9"/>' +
-        '<rect x="0" y="2" width="2000" height="3" fill="#ffffff" opacity=".5"/>' +
-        '<rect x="24" y="16" width="1952" height="216" rx="5" fill="none" stroke="#a8a69c" stroke-width="2" opacity=".8"/>' +
-        '<rect x="28" y="20" width="1944" height="208" rx="4" fill="none" stroke="#6f7173" stroke-width="1" opacity=".55"/>' +
-        '<g fill="#25282c" stroke="#b9bbbe" stroke-width="1.2"><circle cx="46" cy="40" r="6"/><circle cx="1954" cy="40" r="6"/><circle cx="46" cy="208" r="6"/><circle cx="1954" cy="208" r="6"/></g>' +
+        '<rect width="2000" height="248" rx="8" fill="url(#dtBrush)" opacity=".5"/>' +
+        '<rect x="0" y="2" width="2000" height="3" fill="' + theme.highlight + '" opacity="' + theme.highlightOp + '"/>' +
+        '<rect x="24" y="16" width="1952" height="216" rx="5" fill="none" stroke="' + theme.edge + '" stroke-width="2" opacity=".62"/>' +
+        '<rect x="28" y="20" width="1944" height="208" rx="4" fill="none" stroke="' + theme.edge2 + '" stroke-width="1" opacity=".38"/>' +
+        '<rect x="0" y="236" width="2000" height="12" fill="#020304" opacity=".38"/>' +
+        '<g fill="' + theme.screw + '" stroke="' + theme.screwEdge + '" stroke-width="1.2"><circle cx="46" cy="40" r="6"/><circle cx="1954" cy="40" r="6"/><circle cx="46" cy="208" r="6"/><circle cx="1954" cy="208" r="6"/></g>' +
         // 브랜드 블록
-        '<text x="80" y="112" font-family="Arial" font-size="34" font-weight="700" letter-spacing="3" fill="#2c2e30">PIONEER</text>' +
-        '<text x="80" y="146" font-family="Arial" font-size="15" font-weight="600" letter-spacing="2" fill="#55575a">AUDIO DIGITAL TIMER &#183; DT-540</text>' +
-        '<path d="M446 46 V202" stroke="#8f9092" stroke-width="1.5" opacity=".6"/><path d="M448 46 V202" stroke="#f4f2ea" stroke-width="1" opacity=".7"/>' +
+        '<text x="80" y="111" font-family="Arial" font-size="32" font-weight="700" letter-spacing="3" fill="' + theme.ink + '">PIONEER</text>' +
+        '<text x="80" y="144" font-family="Arial" font-size="14" font-weight="600" letter-spacing="1.9" fill="' + theme.sub + '">AUDIO DIGITAL TIMER &#183; DT-540</text>' +
+        '<path d="M446 48 V200" stroke="' + theme.edge + '" stroke-width="1.5" opacity=".58"/><path d="M448 48 V200" stroke="' + theme.highlight + '" stroke-width="1" opacity=".14"/>' +
         // VFD 표시창
-        '<rect x="474" y="34" width="1010" height="186" rx="10" fill="#000" opacity=".42" filter="url(#lzSoft)"/>' +
-        '<rect x="470" y="28" width="1010" height="188" rx="10" fill="#15151a" stroke="#3c3f45" stroke-width="2"/>' +
-        '<rect x="473" y="29.5" width="1004" height="2.5" rx="1" fill="#ffffff" opacity=".16"/>' +
-        '<rect x="484" y="42" width="982" height="160" rx="6" fill="url(#dtGlass)"/>' +
-        '<g id="dtVfdGroup">' +
-        legend(512, 90, "dtLampTimer", "TIMER") + legend(512, 132, "dtLampRec", "REC") + legend(512, 174, "dtLampSleep", "SLEEP") +
-        '<g transform="skewX(-3)" style="filter: drop-shadow(0 0 7px rgba(110,240,170,.45))" font-family="Arial" font-weight="700" fill="' + vfd + '">' +
-        '<text id="dtClockH" x="985" y="156" font-size="96" letter-spacing="5" text-anchor="end">--</text>' +
-        '<text id="dtClockColon" x="1013" y="150" font-size="88" text-anchor="middle">:</text>' +
-        '<text id="dtClockM" x="1042" y="156" font-size="96" letter-spacing="5">--</text>' +
-        '<text id="dtClockSec" x="1310" y="156" font-size="40" letter-spacing="3">--</text>' +
-        '<text id="dtDayText" x="1445" y="84" font-size="22" letter-spacing="3" text-anchor="end">---</text>' +
+        '<rect x="472" y="42" width="984" height="174" rx="8" fill="#000" opacity=".34"/>' +
+        '<rect x="468" y="36" width="984" height="174" rx="8" fill="url(#dtDisplayFrame)" stroke="#0b0d10" stroke-width="2"/>' +
+        '<rect x="472" y="39" width="976" height="3" rx="1.5" fill="#fff" opacity=".12"/>' +
+        '<rect x="484" y="50" width="952" height="146" rx="5" fill="url(#dtGlass)"/>' +
+        '<g id="dtVfdGroup" opacity=".78">' +
+        legend(512, 88, "dtLampTimer", "TIMER") + legend(512, 128, "dtLampRec", "REC") + legend(512, 168, "dtLampSleep", "SLEEP") +
+        '<g transform="skewX(-3)" style="filter: drop-shadow(0 0 4px rgba(102,215,168,.22))" font-family="Arial" font-weight="700" fill="' + vfd + '">' +
+        '<text id="dtClockH" x="927" y="153" font-size="86" letter-spacing="4" text-anchor="end">--</text>' +
+        '<text id="dtClockColon" x="953" y="148" font-size="78" text-anchor="middle">:</text>' +
+        '<text id="dtClockM" x="980" y="153" font-size="86" letter-spacing="4">--</text>' +
+        '<text id="dtClockSec" x="1213" y="153" font-size="34" letter-spacing="2">--</text>' +
+        '<text id="dtDayText" x="1414" y="82" font-size="20" letter-spacing="2.5" text-anchor="end">---</text>' +
         '</g>' +
-        '<text id="dtProgText" x="975" y="194" font-family="Arial" font-size="21" font-weight="650" letter-spacing="1" fill="#6cc892" text-anchor="middle">PROGRAM --:--</text>' +
-        '<text id="dtSleepText" x="1445" y="194" font-family="Arial" font-size="19" font-weight="700" letter-spacing="1.5" fill="' + vfd + '" text-anchor="end"></text>' +
+        '<title id="dtProgTitle">PROGRAM --:--</title>' +
+        '<text id="dtProgText" x="994" y="188" font-family="Arial" font-size="18" font-weight="650" letter-spacing=".8" fill="#66b993" text-anchor="middle" clip-path="url(#dtProgClip)">PROGRAM --:--</text>' +
+        '<text id="dtSleepText" x="1414" y="188" font-family="Arial" font-size="17" font-weight="700" letter-spacing="1.2" fill="' + vfd + '" text-anchor="end"></text>' +
         '</g>' +
-        '<polygon points="484,42 760,42 640,202 484,202" fill="url(#lzGlassSweep)" opacity=".4" pointer-events="none"/>' +
-        '<rect x="484" y="42" width="982" height="20" fill="url(#lzInset)" opacity=".6" pointer-events="none"/>' +
-        '<rect id="dtHitDisplay" x="470" y="28" width="1010" height="188" rx="10" fill="#000" fill-opacity="0" style="cursor:pointer"><title>편성표와 예약 녹음 — 표시창을 누르면 열립니다</title></rect>' +
+        '<polygon points="484,50 744,50 632,196 484,196" fill="url(#lzGlassSweep)" opacity=".3" pointer-events="none"/>' +
+        '<rect x="484" y="50" width="952" height="18" fill="url(#lzInset)" opacity=".48" pointer-events="none"/>' +
+        '<rect id="dtHitDisplay" x="468" y="36" width="984" height="174" rx="8" fill="#000" fill-opacity="0" style="cursor:pointer"><title>편성표와 예약 녹음 — 표시창을 누르면 열립니다</title></rect>' +
         // TIMER 암 스위치
-        mfaSvgToggle(1568, 118, "dtSwTimer", "#b8babd") +
-        '<g font-family="Arial" font-size="11" font-weight="700" fill="#55575a"><text x="1600" y="104">ON</text><text x="1600" y="152">OFF</text></g>' +
-        '<text x="1568" y="196" font-family="Arial" font-size="14" font-weight="700" letter-spacing="2" fill="#3c3e40" text-anchor="middle">TIMER</text>' +
-        '<rect id="dtHitTimer" x="1528" y="70" width="88" height="110" fill="#000" fill-opacity="0" style="cursor:pointer"><title>TIMER 스위치 — 올리면 예약 녹음 대기, 내리면 예약을 쉬게 합니다</title></rect>' +
+        mfaSvgToggle(1540, 118, "dtSwTimer", key === "black" ? "#858d91" : "#b8babd") +
+        '<g font-family="Arial" font-size="10" font-weight="700" fill="' + theme.sub + '"><text x="1572" y="104">ON</text><text x="1572" y="152">OFF</text></g>' +
+        '<text x="1540" y="196" font-family="Arial" font-size="13" font-weight="700" letter-spacing="1.8" fill="' + theme.ink + '" text-anchor="middle">TIMER</text>' +
+        '<rect id="dtHitTimer" x="1500" y="70" width="88" height="110" fill="#000" fill-opacity="0" style="cursor:pointer"><title>TIMER 스위치 — 올리면 예약 녹음 대기, 내리면 예약을 쉬게 합니다</title></rect>' +
         // PROGRAM · SLEEP 버튼
-        button(1672, "dtBtnProg", "PROGRAM", "예약 녹음 목록과 편성표를 엽니다") +
-        button(1808, "dtBtnSleep", "SLEEP", "취침 타이머 — 누를 때마다 15·30·60·90분 순환") +
-        '<text x="1730" y="176" font-family="Arial" font-size="12" font-weight="600" letter-spacing="1.5" fill="#55575a" text-anchor="middle">RESERVE</text>' +
-        '<text x="1866" y="176" font-family="Arial" font-size="12" font-weight="600" letter-spacing="1.5" fill="#55575a" text-anchor="middle">AUTO OFF</text>' +
-        '<text x="1924" y="222" font-family="Arial" font-size="11" font-weight="600" letter-spacing="1.2" fill="#75776f" text-anchor="end">SWITCHED OUTLETS &#183; TUNER / CASSETTE DECK</text>' +
+        button(1642, "dtBtnProg", "PROGRAM", "예약 녹음 목록과 편성표를 엽니다") +
+        button(1780, "dtBtnSleep", "SLEEP", "취침 타이머 — 누를 때마다 15·30·60·90분 순환") +
+        '<text x="1700" y="175" font-family="Arial" font-size="11" font-weight="600" letter-spacing="1.4" fill="' + theme.sub + '" text-anchor="middle">RESERVE</text>' +
+        '<text x="1838" y="175" font-family="Arial" font-size="11" font-weight="600" letter-spacing="1.4" fill="' + theme.sub + '" text-anchor="middle">AUTO OFF</text>' +
+        '<text x="1924" y="220" font-family="Arial" font-size="10" font-weight="600" letter-spacing="1.1" fill="' + theme.sub + '" opacity=".48" text-anchor="end">SWITCHED OUTLETS &#183; TUNER / CASSETTE DECK</text>' +
         '</svg>';
 }
 
 const TIMER_MODELS = {
-    dt540: { label: "PIONEER DT-540", svg: mfaDt540Svg() }
+    dt540: { label: "PIONEER DT-540", render: mfaDt540Svg }
 };
 
 // 초기 세대 SVG에도 얇은 패널 라이너와 체결 나사 디테일을 더한다.

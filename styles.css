@@ -862,6 +862,34 @@ body.mode-simple #stationMain.collapsed {
     margin-bottom: 10px;
 }
 
+.settings-note {
+    margin: -3px 0 11px;
+    color: color-mix(in srgb, var(--muted) 78%, transparent);
+    font-size: 0.72rem;
+    line-height: 1.45;
+}
+
+.settings-preset-sec {
+    padding: 14px;
+    border: 1px solid rgba(236, 130, 85, 0.19);
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(236, 130, 85, 0.075), rgba(255, 248, 240, 0.025));
+}
+
+.settings-preset-sec .settings-title {
+    color: #e6d5c5;
+}
+
+.settings-panel .rack-preset-picker {
+    gap: 8px;
+}
+
+.rack-preset-picker .skin-btn:first-child::before {
+    content: "★";
+    margin-right: 5px;
+    color: #e9a269;
+}
+
 .settings-panel .skin-picker {
     display: flex;
     justify-content: flex-start;
@@ -885,6 +913,20 @@ body.mode-simple #stationMain.collapsed {
         0 10px 18px rgba(0, 0, 0, 0.5),
         0 2px 4px rgba(0, 0, 0, 0.45),
         0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* 52 mm급 슬림 타이머에는 대형 앰프용 그림자가 과하다. 랙 사이에 붙는 얕은 섀시로 보이게 한다. */
+#timerStage {
+    margin-top: 12px;
+    margin-bottom: 2px;
+}
+
+#timerStage svg {
+    border-radius: 4px;
+    box-shadow:
+        0 12px 22px rgba(0, 0, 0, 0.42),
+        0 4px 8px rgba(0, 0, 0, 0.42),
+        0 1px 0 rgba(255, 255, 255, 0.035);
 }
 
 /* SVG 조작계도 실제 하드웨어처럼 패널에서 떠 보이게 한다.
