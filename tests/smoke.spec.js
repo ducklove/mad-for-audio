@@ -367,6 +367,9 @@ test.describe("데스크톱", () => {
         await page.waitForFunction(() => tapes.some((t) => t.segments.length), null, { timeout: 10000 });
         await page.evaluate(() => openTapeCase());
         await expect(page.locator("#tapeCaseOverlay")).toBeVisible();
+        // 케이스 메타에 생성일시 표기 (예: "7/17 01:23 생성")
+        await expect(page.locator(".tapecase-item", { hasText: "보관함 테스트" }).locator(".tapecase-meta"))
+            .toContainText(/\d{1,2}\/\d{1,2} \d{2}:\d{2} 생성/);
         // 라벨 개명(인라인 입력 — prompt는 WKWebView에서 무시된다) → localStorage 메타 영속
         await page.locator(".tapecase-item", { hasText: "보관함 테스트" }).locator("button", { hasText: "라벨" }).click();
         const labelInput = page.locator(".tapecase-label-input");

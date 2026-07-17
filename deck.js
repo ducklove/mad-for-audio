@@ -29,7 +29,7 @@ let tapeMeta = loadJson("fmRadio.tapeMeta", {});
 function tapeMetaSave() {
     const out = {};
     tapes.forEach((t) => {
-        if (t.segments.length || t.named) out[t.id] = { label: t.label, len: tapeLenOf(t), named: !!t.named };
+        if (t.segments.length || t.named) out[t.id] = { label: t.label, len: tapeLenOf(t), named: !!t.named, createdAt: tapeCreatedAt(t) || undefined };
     });
     tapeMeta = out;
     saveJson("fmRadio.tapeMeta", out);
@@ -38,8 +38,24 @@ function tapeMetaSave() {
 // 시작 시 메타에 있는 테이프를 빈 껍데기로 복원 — 녹음이 복원되면 세그먼트가 채워진다
 Object.entries(tapeMeta).forEach(([id, m]) => {
     if (!m || !m.label) return;
-    tapes.push({ id, label: m.label, segments: [], pos: 0, len: m.len || TAPE_LEN, blank: !m.named, named: !!m.named });
+    tapes.push({ id, label: m.label, segments: [], pos: 0, len: m.len || TAPE_LEN, blank: !m.named, named: !!m.named, createdAt: m.createdAt });
 });
+
+// 테이프 생성 시각 — 명시 필드가 없으면 id에 새겨진 타임스탬프("tape-<ms>-")에서 복원
+function tapeCreatedAt(t) {
+    if (!t) return null;
+    if (t.createdAt) return t.createdAt;
+    const m = /^tape-(\d{12,})-/.exec(t.id || "");
+    return m ? Number(m[1]) : null;
+}
+
+function tapeDateLabel(ts) {
+    if (!ts) return "";
+    const d = new Date(ts);
+    const p = (v) => String(v).padStart(2, "0");
+    const year = d.getFullYear() !== new Date().getFullYear() ? d.getFullYear() + ". " : "";
+    return year + (d.getMonth() + 1) + "/" + d.getDate() + " " + p(d.getHours()) + ":" + p(d.getMinutes());
+}
 
 // 테이프 길이는 규격별로 다르다 — 예약 녹음은 프로그램 길이에 맞는 규격을 자동으로 고른다
 function tapeLenOf(t) {
@@ -56,7 +72,7 @@ function tapeSizeName(len) {
 
 function newBlankTape(lenSec) {
     const len = lenSec || TAPE_LEN;
-    const t = { id: "tape-" + Date.now() + "-" + tapeSeq, label: tapeSizeName(len) + " · TAPE " + tapeSeq, segments: [], pos: 0, len, blank: true };
+    const t = { id: "tape-" + Date.now() + "-" + tapeSeq, label: tapeSizeName(len) + " · TAPE " + tapeSeq, segments: [], pos: 0, len, blank: true, createdAt: Date.now() };
     tapeSeq += 1;
     tapes.unshift(t);
     return t;
@@ -588,8 +604,10 @@ function tapeCaseItem(t) {
     label.textContent = t.label;
     const meta = document.createElement("div");
     meta.className = "tapecase-meta";
+    const born = tapeDateLabel(tapeCreatedAt(t));
     meta.textContent = tapeSizeName(tapeLenOf(t)) + " · 사용 " + formatDuration(tapeUsedSec(t) * 1000)
         + " / " + formatDuration(tapeLenOf(t) * 1000) + " · 수록 " + t.segments.length + "곡"
+        + (born ? " · " + born + " 생성" : "")
         + (t === deckTape ? " · 장착됨" : "");
     info.append(label, meta);
 

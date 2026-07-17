@@ -2604,7 +2604,7 @@ function addRecordingItem(record) {
     let tape = record.tapeId ? tapes.find((t) => t.id === record.tapeId) : null;
     if (!tape) {
         const len = record.tapeLen || TAPE_LEN;
-        tape = { id: record.tapeId || ("tape-legacy-" + (record.dbId || Math.random())), label: tapeSizeName(len) + " · TAPE " + tapeSeq, segments: [], pos: 0, len, blank: true };
+        tape = { id: record.tapeId || ("tape-legacy-" + (record.dbId || Math.random())), label: tapeSizeName(len) + " · TAPE " + tapeSeq, segments: [], pos: 0, len, blank: true, createdAt: Date.parse(record.startedAt) || Date.now() };
         tapeSeq += 1;
         tapes.push(tape);
     }
