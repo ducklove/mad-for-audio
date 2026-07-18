@@ -856,10 +856,10 @@
       <div class="hero-meta" aria-label="보고서 메타데이터">
         <span>기준일 2026-07-18</span>
         <span>검토 기준 9b4ea6a</span>
-        <span>동기화 기준 2874568</span>
+        <span>동기화 기준 2e7cc64</span>
         <span>1차 배포 a6f1b86</span>
-        <span>후속 브랜치 codex/structural-followup-2026-07-18</span>
-        <span>앱 셸 v121</span>
+        <span>Phase 2 브랜치 codex/app-modules-phase2-2026-07-18</span>
+        <span>앱 셸 v130</span>
       </div>
     </div>
   </header>
@@ -889,24 +889,24 @@
 
         <div class="metric-grid" aria-label="코드베이스 핵심 지표">
           <div class="metric">
-            <span class="metric-value">13,128</span>
+            <span class="metric-value">13,547</span>
             <span class="metric-label">프로덕션 JavaScript 물리 라인</span>
           </div>
           <div class="metric">
-            <span class="metric-value">6,083</span>
+            <span class="metric-value">6,330</span>
             <span class="metric-label">app.js 라인 · 호환 facade 포함</span>
           </div>
           <div class="metric">
-            <span class="metric-value">79.6%</span>
+            <span class="metric-value">80.4%</span>
             <span class="metric-label">대형 핵심 4개 파일의 JS 비중</span>
           </div>
           <div class="metric">
-            <span class="metric-value">854KB</span>
+            <span class="metric-value">886KB</span>
             <span class="metric-label">초기 브라우저 JS 원본 크기</span>
           </div>
           <div class="metric">
-            <span class="metric-value">77</span>
-            <span class="metric-label">Playwright 테스트 정의</span>
+            <span class="metric-value">86</span>
+            <span class="metric-label">Chromium Playwright 정의</span>
           </div>
           <div class="metric">
             <span class="metric-value">0 High</span>
@@ -1386,13 +1386,13 @@
             </tr>
             <tr>
               <td>Chromium Playwright</td>
-              <td><span class="status pass">77 / 77</span></td>
+              <td><span class="status pass">86 / 86</span></td>
               <td>기존 기능과 신규 안전성·접근성·플랫폼 회귀 테스트 전체 통과</td>
             </tr>
             <tr>
               <td>WebKit Playwright</td>
-              <td><span class="status pass">6 / 6</span></td>
-              <td>네이티브 HLS 세그먼트 캡처와 WAV 헤더 판독 추가 후 핵심 경로 전체 통과</td>
+              <td><span class="status pass">15 / 15</span></td>
+              <td>네이티브 HLS·몰입 화면·테이프 보관함을 포함한 WebKit 핵심 경로 통과</td>
             </tr>
             <tr>
               <td>복제 코드 검사</td>
@@ -1427,8 +1427,8 @@
         <p class="section-kicker">07 / Implementation Addendum</p>
         <h2>리팩토링 반영 결과</h2>
         <p class="lead">
-          원격 <code>master</code>를 <code>2874568</code>까지 fast-forward한 뒤 별도 작업 브랜치에서
-          Phase 0의 확정 결함과 Phase 1·3의 핵심 경계를 우선 구현했다. 변경은 기존 바닐라 JavaScript·정적 배포
+          원격 <code>master</code>를 <code>2e7cc64</code>까지 fast-forward한 뒤 별도 작업 브랜치에서
+          Phase 0의 확정 결함과 Phase 1·2·3의 핵심 경계를 순차 구현했다. 변경은 기존 바닐라 JavaScript·정적 배포
           구조와 안정적인 SVG 조작 ID를 보존하는 호환 계층 방식으로 적용했다.
         </p>
         <table class="verification-table">
@@ -1458,7 +1458,7 @@
             <tr>
               <td>서비스워커·운영</td>
               <td><span class="status pass">완료</span></td>
-              <td>소유 캐시만 정리, 페이지별 navigation 키, 스트림/range 무개입, v121 프리캐시 정합</td>
+              <td>소유 캐시만 정리, 페이지별 navigation 키, 스트림/range 무개입, v130 프리캐시 정합</td>
             </tr>
             <tr>
               <td>Electron·메시지 보안</td>
@@ -1480,14 +1480,20 @@
               <td><span class="status pass">1차 완료</span></td>
               <td><code>app-runtime-core.js</code>로 재생·예약·포맷 코어 분리, bootstrap 동적 import 게이트, CSS를 <code>styles-foundation.css</code>·library·schedule·tape 4계층으로 분리</td>
             </tr>
+            <tr>
+              <td>트레이 브리지 모듈화</td>
+              <td><span class="status pass">2차 완료</span></td>
+              <td><code>tray-bridge.js</code> ESM으로 source/origin 검증·명령 라우팅·상태 브로드캐스트·destroy 수명주기를 분리하고 기존 <code>fmRadio:*</code> 계약을 보존</td>
+            </tr>
           </tbody>
         </table>
         <div class="callout warn">
           <strong>남은 구조적 후속</strong>
           <p>
-            <code>app.js</code>의 순수 코어와 CSS 계층은 물리 분리를 시작했지만, 화면·녹음 orchestration의 추가 ES module 분해와
-            모델별 지연 로딩은 별도 호환 전환이 필요하다. 장시간 단일 녹음은 세션 오염과 프리버퍼 상한은 해결됐지만,
-            완전한 무메모리 처리를 위해 OPFS/IndexedDB 점진 chunk 저장이 후속으로 필요하다.
+            <code>app.js</code>의 순수 코어·트레이 프로토콜과 CSS 계층은 물리 분리를 시작했지만, 화면·녹음 orchestration의 추가 ES module 분해와
+            모델별 지연 로딩은 별도 호환 전환이 필요하다. 다음 안전 단계는 기존 DB v1을 변경하지 않고
+            <code>RecordingRepository</code>의 open/read/status/removeMany 경계를 완성하는 것이다. 그 뒤 메모리 writer와
+            OPFS/IndexedDB 점진 chunk 저장을 순차 도입해야 기존 사용자 녹음을 보존할 수 있다.
             macOS Safari 실기·실제 방송 CORS·장시간 트레이 실행도 배포 전 최종 확인 대상으로 남긴다.
           </p>
         </div>
@@ -1529,7 +1535,7 @@
   </div>
 
   <footer class="footer">
-    Mad for Audio 코드베이스 검토·구현 보고서 · 2026-07-18 · 검토 9b4ea6a · 구현 v121
+    Mad for Audio 코드베이스 검토·구현 보고서 · 2026-07-18 · 검토 9b4ea6a · 구현 v130
   </footer>
 </body>
 </html>

@@ -395,6 +395,126 @@ test.describe("안전성 코어 경계", () => {
         expect(result).toEqual({ y: 2031, m: 2, d: 12, h: 10, ymd: "20310312" });
     });
 
+    test("트레이 브리지 ESM은 명령 검증과 이벤트 수명주기를 독립 소유한다", async ({ page }) => {
+        await page.goto("/manual.html");
+        const result = await page.evaluate(async () => {
+            const { mountTrayBridge } = await import("/tray-bridge.js?module-contract=1");
+            const messages = [];
+            const commands = [];
+            const listeners = new Map();
+            const mediaListeners = new Map();
+            const parent = {
+                postMessage(data, origin) {
+                    messages.push({ data: Object.assign({}, data), origin });
+                }
+            };
+            const hostWindow = {
+                location: { search: "?chrome=tray" },
+                parent,
+                navigator: { userAgent: "Electron contract test" },
+                document: { referrer: "" },
+                console,
+                addEventListener(name, listener) { listeners.set(name, listener); },
+                removeEventListener(name, listener) {
+                    if (listeners.get(name) === listener) listeners.delete(name);
+                }
+            };
+            const media = {
+                addEventListener(name, listener) { mediaListeners.set(name, listener); },
+                removeEventListener(name, listener) {
+                    if (mediaListeners.get(name) === listener) mediaListeners.delete(name);
+                }
+            };
+            const state = {
+                stationId: "kbs1fm", stationName: "KBS Classic FM",
+                playing: false, volume: 0.5
+            };
+            const bridge = mountTrayBridge({
+                hostWindow,
+                media,
+                readState: () => state,
+                canSelectStation: (id) => id === "kbs1fm",
+                selectStation: (id) => commands.push(["station", id]),
+                togglePlayback: () => commands.push(["toggle"]),
+                setVolume: (level) => {
+                    state.volume = level;
+                    commands.push(["volume", level]);
+                }
+            });
+            const onMessage = listeners.get("message");
+            const send = (data, source = parent, origin = "null") =>
+                onMessage({ data, source, origin });
+
+            send({ type: "fmRadio:setStation", station: "attacker" });
+            send({ type: "fmRadio:setVolume", value: 7 }, {}, "null");
+            send({ type: "fmRadio:setVolume", value: 8 }, parent, "https://attacker.invalid");
+            [-1, 101, "37", NaN].forEach((value) =>
+                send({ type: "fmRadio:setVolume", value }));
+            send({ type: "fmRadio:setStation", station: "kbs1fm" });
+            send({ type: "fmRadio:setVolume", value: 37 });
+            send({ type: "fmRadio:play" });
+            state.playing = true;
+            send({ type: "fmRadio:pause" });
+            send({ type: "fmRadio:toggle" });
+            send({ type: "fmRadio:getState" });
+            mediaListeners.get("playing")();
+
+            const beforeDestroy = messages.length;
+            bridge.destroy();
+            onMessage({
+                source: parent,
+                origin: "null",
+                data: { type: "fmRadio:setVolume", value: 88 }
+            });
+
+            return {
+                active: bridge.active,
+                ready: messages[0],
+                commands,
+                messagesBeforeDestroy: beforeDestroy,
+                messagesAfterDestroy: messages.length,
+                listenersRemoved: !listeners.has("message") && mediaListeners.size === 0,
+                inspect: bridge.inspect()
+            };
+        });
+
+        expect(result.active).toBe(true);
+        expect(result.ready).toEqual({
+            data: {
+                type: "fmRadio:ready", mode: "radio", station: "kbs1fm",
+                stationName: "KBS Classic FM", playing: false, loading: false, volume: 50
+            },
+            origin: "*"
+        });
+        expect(result.commands).toEqual([
+            ["station", "kbs1fm"], ["volume", 0.37],
+            ["toggle"], ["toggle"], ["toggle"]
+        ]);
+        expect(result.messagesAfterDestroy).toBe(result.messagesBeforeDestroy);
+        expect(result.listenersRemoved).toBe(true);
+        expect(result.inspect).toEqual({
+            active: true, destroyed: true, parentOrigin: "null", postTargetOrigin: "*"
+        });
+    });
+
+    test("일반 앱은 선택 트레이 모듈의 네트워크 실패와 무관하게 부팅한다", async ({ context, page }) => {
+        await page.route("**/tray-bridge.js*", (route) => route.abort("failed"));
+        await loadApp(context, page);
+        const state = await page.evaluate(() => ({
+            phase: MFA_BOOTSTRAP.phase,
+            module: MFA_TRAY_BRIDGE_MODULE,
+            bridge: MFA_TrayBridge.inspect(),
+            rackReady: ["timerStage", "eqStage", "ampStage", "deckStage", "ttStage"]
+                .every((id) => Boolean(document.getElementById(id)))
+        }));
+        expect(state).toEqual({
+            phase: "ready",
+            module: null,
+            bridge: { active: false, destroyed: false },
+            rackReady: true
+        });
+    });
+
     test("트레이 제어 메시지는 정확한 parent source와 origin에서만 받는다", async ({ context, page }) => {
         await mockExternal(context);
         await page.goto("/manual.html");
@@ -412,6 +532,10 @@ test.describe("안전성 코어 경계", () => {
         await target.locator("#audioPlayer").waitFor({ state: "attached" });
         const targetFrame = page.frames().find((frame) => frame.url().includes("chrome=tray"));
         await targetFrame.evaluate(() => window.MFA_READY);
+        expect(await targetFrame.evaluate(() => MFA_TrayBridge.inspect())).toMatchObject({
+            active: true,
+            destroyed: false
+        });
         const initial = await targetFrame.evaluate(() => volumeLevel);
 
         await page.evaluate(() => {

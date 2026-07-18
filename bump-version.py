@@ -13,7 +13,7 @@ sw = re.sub(r"fm-radio-v\d+", f"fm-radio-v{n}", sw)
 
 ASSETS = [
     "styles.css", "styles-foundation.css", "styles-library.css", "styles-schedule.css", "styles-tape.css",
-    "stations.js", "player-core.js", "app-runtime-core.js", "native-hls-capture.js", "store.js", "schedule.js",
+    "stations.js", "player-core.js", "app-runtime-core.js", "tray-bridge.js", "native-hls-capture.js", "store.js", "schedule.js",
     "skins.js", "component-skins.js", "model-registry.js", "animation-scheduler.js",
     "engine.js", "deck.js", "records.json", "bootstrap.js", "ui-controls.js", "app.js",
 ]

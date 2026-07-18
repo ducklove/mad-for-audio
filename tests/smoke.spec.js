@@ -1805,9 +1805,11 @@ test.describe("키보드 조작", () => {
         await page.locator("#eqHit0").focus();
         await expect(page.locator("#eqHit0")).toBeFocused();
         await page.keyboard.press("ArrowUp");
+        await expect.poll(() => page.evaluate(() =>
+            JSON.parse(localStorage.getItem("fmRadio.eq")).gains.ge5[0])).toBe(1);
         await page.keyboard.press("ArrowUp");
-        const gain = await page.evaluate(() => JSON.parse(localStorage.getItem("fmRadio.eq")).gains.ge5[0]);
-        expect(gain).toBe(2);
+        await expect.poll(() => page.evaluate(() =>
+            JSON.parse(localStorage.getItem("fmRadio.eq")).gains.ge5[0])).toBe(2);
         const valueNow = await page.getAttribute("#eqHit0", "aria-valuenow");
         expect(valueNow).toBe("2");
     });

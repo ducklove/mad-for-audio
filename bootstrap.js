@@ -93,12 +93,22 @@
     // DOM과 독립적인 상태/포맷 코어는 실제 ES module로 먼저 준비한다. app.js의
     // classic 전역 계약은 유지하되, 이후 기능별 분리를 위한 명시적 로딩 경계를 만든다.
     const runtimeReady = import(assetUrl("./app-runtime-core.js"));
+    // 트레이 프로토콜은 선택 기능이다. 일반 웹/PWA 부팅의 실행 의존성으로 요구하지 않고,
+    // 트레이 iframe에서만 준비한다. 실패해도 라디오 본체는 정상 부팅한다.
+    const trayMode = new URLSearchParams(location.search).get("chrome") === "tray" && window.parent !== window;
+    const trayBridgeReady = trayMode
+        ? import(assetUrl("./tray-bridge.js")).catch((error) => {
+            console.warn("트레이 브리지 degraded 모드:", error);
+            return null;
+        })
+        : Promise.resolve(null);
 
     // 카탈로그 장애는 포노 기능에만 격리한다. 런타임 코어나 app.js 자체를 받지 못한
     // 경우만 MFA_READY를 reject하여 셸 로드 실패와 기능 저하를 구분한다.
-    window.MFA_READY = Promise.all([catalogReady, runtimeReady])
-        .then(([, runtime]) => {
+    window.MFA_READY = Promise.all([catalogReady, runtimeReady, trayBridgeReady])
+        .then(([, runtime, trayBridge]) => {
             window.MFA_RUNTIME_CORE = runtime;
+            window.MFA_TRAY_BRIDGE_MODULE = trayBridge;
             return loadApp();
         })
         .then(() => {

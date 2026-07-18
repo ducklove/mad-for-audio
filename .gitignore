@@ -6,6 +6,10 @@ marantz10b.jpg
 ref_*.jpg
 .DS_Store
 
+# Python 도구 실행 산출물
+__pycache__/
+*.py[cod]
+
 # 트레이 앱 (Electron)
 tray/node_modules/
 tray/dist*/

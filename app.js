@@ -4,6 +4,7 @@ const stations = FMRadio.stations;
 const getStreamUrl = FMRadio.getStreamUrl;
 const runtimeCore = window.MFA_RUNTIME_CORE;
 if (!runtimeCore) throw new Error("앱 런타임 코어가 준비되지 않았습니다");
+const trayBridgeModule = window.MFA_TRAY_BRIDGE_MODULE;
 const {
     formatDuration,
     formatSize,
@@ -5175,80 +5176,35 @@ startRackAnimationLoop();
 mountCoach();
 
 // ----- 트레이 앱 연동 (chrome=tray) -----
-// 윈도우 트레이 앱의 셸 iframe 안에서 돌 때: 재생 상태를 부모(셸)에 브로드캐스트하고
-// 위젯과 같은 원격 제어 API(fmRadio:*)를 받는다. 셸은 이 상태로 슬림 바·트레이 메뉴를 그린다.
-(function () {
-    if (new URLSearchParams(location.search).get("chrome") !== "tray") return;
-    if (window.parent === window) return;
-
-    const electronShell = /Electron/i.test(navigator.userAgent);
-    let parentOrigin = null;
-    try {
-        if (document.referrer) parentOrigin = new URL(document.referrer).origin;
-    } catch (error) {}
-    // Electron의 file:// 셸은 opaque origin("null")이다. 일반 웹에서 referrer도 없는
-    // 임의 임베더에는 이 예외를 열지 않는다.
-    if ((!parentOrigin || parentOrigin === "null") && electronShell) parentOrigin = "null";
-    const postTargetOrigin = parentOrigin && parentOrigin !== "null" ? parentOrigin : "*";
-
-    function trustedTrayMessage(event) {
-        if (event.source !== window.parent || !parentOrigin) return false;
-        return event.origin === parentOrigin;
-    }
-
-    function trayBroadcast(type) {
-        try {
-            window.parent.postMessage({
-                type: type || "fmRadio:state",
-                mode: "radio",
-                station: currentStation ? currentStation.id : null,
-                stationName: (nowStation.textContent || "").trim() || (currentStation ? currentStation.name : ""),
-                playing: isPlaying,
-                loading: false,
-                volume: Math.round(volumeLevel * 100)
-            }, postTargetOrigin);
-        } catch (error) {
-            console.error(error);
+// 프로토콜 검증과 이벤트 수명주기는 ESM이 맡고, 실제 재생 상태와 명령은 앱이 소유한다.
+const TrayBridge = trayBridgeModule && typeof trayBridgeModule.mountTrayBridge === "function"
+    ? trayBridgeModule.mountTrayBridge({
+        hostWindow: window,
+        media: audio,
+        readState: () => ({
+            stationId: currentStation ? currentStation.id : null,
+            stationName: (nowStation.textContent || "").trim() || (currentStation ? currentStation.name : ""),
+            playing: isPlaying,
+            volume: volumeLevel
+        }),
+        canSelectStation: (id) => stations.some((station) => station.id === id),
+        selectStation,
+        togglePlayback: togglePlay,
+        setVolume: (level) => {
+            setVolumeLevel(level);
+            saveJson("fmRadio.volume", volumeLevel);
         }
-    }
-
-    // isPlaying을 바꾸는 경로(선국·토글·포노·데크·오류)는 전부 audio 엘리먼트를 거친다
-    ["playing", "pause", "ended", "emptied"].forEach((name) =>
-        audio.addEventListener(name, () => trayBroadcast()));
-
-    window.addEventListener("message", (event) => {
-        if (!trustedTrayMessage(event)) return;
-        const data = event.data;
-        if (!data || typeof data.type !== "string" || !data.type.startsWith("fmRadio:")) return;
-        switch (data.type) {
-            case "fmRadio:play":
-                if (data.station && stations.some((station) => station.id === data.station)) selectStation(data.station);
-                else if (!isPlaying) togglePlay();
-                break;
-            case "fmRadio:pause":
-                if (isPlaying) togglePlay();
-                break;
-            case "fmRadio:toggle":
-                togglePlay();
-                break;
-            case "fmRadio:setStation":
-                if (data.station && stations.some((station) => station.id === data.station)) selectStation(data.station);
-                break;
-            case "fmRadio:setVolume":
-                if (typeof data.value === "number" && Number.isFinite(data.value) && data.value >= 0 && data.value <= 100) {
-                    setVolumeLevel(data.value / 100);
-                    saveJson("fmRadio.volume", volumeLevel);
-                    trayBroadcast();
-                }
-                break;
-            case "fmRadio:getState":
-                trayBroadcast();
-                break;
-        }
-    });
-
-    trayBroadcast("fmRadio:ready");
-})();
+    })
+    : (() => {
+        let destroyed = false;
+        return Object.freeze({
+            active: false,
+            broadcast() { return false; },
+            destroy() { destroyed = true; },
+            inspect() { return Object.freeze({ active: false, destroyed }); }
+        });
+    })();
+window.MFA_TrayBridge = TrayBridge;
 
 // ===== 편성표 & 예약 녹음 =====
 // 편성 데이터는 schedule.js(FMSchedule)가 가져오고, 여기서는 표시와 예약을 다룬다.
