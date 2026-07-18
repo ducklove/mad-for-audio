@@ -447,8 +447,11 @@ body.mode-focus.focus-room .page-shell {
 }
 
 body.mode-focus.focus-room .hero-visual {
+    --focus-system-left: calc(50% - 190px);
+    --focus-system-right: calc(50% + 190px);
+    --focus-speaker-gap: clamp(12px, 1.25vw, 24px);
     flex-direction: row;
-    align-items: center;
+    align-items: flex-end;
     justify-content: center;
     gap: 0;
     height: 100vh;
@@ -474,12 +477,15 @@ body.mode-focus.focus-room .focus-speaker {
 }
 
 body.mode-focus.focus-room .focus-speaker-left {
-    left: clamp(8px, 2vw, 42px);
+    left: auto;
+    right: calc(100% - var(--focus-system-left) + var(--focus-speaker-gap));
+    transform: translateY(2%);
 }
 
 body.mode-focus.focus-room .focus-speaker-right {
-    right: clamp(8px, 2vw, 42px);
-    transform: scaleX(-1);
+    right: auto;
+    left: calc(var(--focus-system-right) + var(--focus-speaker-gap));
+    transform: translateY(2%) scaleX(-1);
 }
 
 body.mode-focus.focus-room .rack-column {
@@ -546,7 +552,8 @@ body.focus-unit-zoomed .unit-zoomed .unit-zoom-btn {
 }
 
 body.focus-unit-zoomed .rack-column {
-    zoom: 1 !important;
+    flex: 0 0 100vw !important;
+    min-width: 0;
 }
 
 body.focus-unit-zoomed .rack-column > :not(.unit-zoomed) {

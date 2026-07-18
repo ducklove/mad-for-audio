@@ -77,6 +77,31 @@ function setPopupBarMode(on) {
 // room: 랙 전체가 화면 높이에 들어오고(zoom 스케일) 좌우에 스피커 — 단일 컴포넌트 확대는 여기서만.
 // wide: 예전처럼 컴포넌트를 크게, 세로 스크롤.
 let focusView = loadJson("fmRadio.focusView", "room");
+let focusSpeakerLayoutFrame = 0;
+
+// 스피커는 장식이지만 랙과 같은 바닥선, 랙 바깥쪽이라는 물리적 규칙은 지킨다.
+// 확대 중에는 rackColumn이 아니라 실제 확대 유닛을 기준으로 삼아 겹침을 막는다.
+function focusSyncSpeakerGeometry() {
+    const hero = document.querySelector(".hero-visual");
+    const col = document.getElementById("rackColumn");
+    const room = document.body.classList.contains("mode-focus") && focusView === "room";
+    cancelAnimationFrame(focusSpeakerLayoutFrame);
+    if (!hero || !col || !room) {
+        if (hero) {
+            hero.style.removeProperty("--focus-system-left");
+            hero.style.removeProperty("--focus-system-right");
+        }
+        return;
+    }
+    focusSpeakerLayoutFrame = requestAnimationFrame(() => {
+        const target = col.querySelector(":scope > .unit-zoomed") || col;
+        const heroRect = hero.getBoundingClientRect();
+        const targetRect = target.getBoundingClientRect();
+        if (!heroRect.width || !targetRect.width) return;
+        hero.style.setProperty("--focus-system-left", Math.round(targetRect.left - heroRect.left) + "px");
+        hero.style.setProperty("--focus-system-right", Math.round(targetRect.right - heroRect.left) + "px");
+    });
+}
 
 // 유닛마다 확대 버튼(⤢)을 보장한다 — 스킨 재마운트가 stage innerHTML을 갈아치우므로 멱등 주입
 function ensureZoomBtns() {
@@ -123,9 +148,13 @@ function focusClearZoom() {
 function focusFitRack() {
     const col = document.getElementById("rackColumn");
     if (!col) return;
-    const room = document.body.classList.contains("mode-focus") && focusView === "room"
-        && !document.body.classList.contains("focus-unit-zoomed");
-    if (!room) { col.style.flex = ""; return; }
+    const room = document.body.classList.contains("mode-focus") && focusView === "room";
+    const zoomed = document.body.classList.contains("focus-unit-zoomed");
+    if (!room || zoomed) {
+        col.style.flex = "";
+        focusSyncSpeakerGeometry();
+        return;
+    }
     // 유닛은 폭 비례 고정비(2000:h) SVG라, 랙 '폭'을 줄이면 스택 높이가 따라 준다.
     // 화면 높이에 들어오는 폭을 역산해 flex-basis로 고정한다 (한 스텝이면 수렴).
     const rect = col.getBoundingClientRect();
@@ -135,6 +164,7 @@ function focusFitRack() {
         const w = Math.max(380, Math.round(rect.width * avail / h));
         if (Math.abs(w - rect.width) > 8) col.style.flex = "0 0 " + w + "px";
     }
+    focusSyncSpeakerGeometry();
 }
 
 function applyFocusView() {

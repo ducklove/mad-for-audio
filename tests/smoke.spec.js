@@ -627,22 +627,29 @@ test.describe("데스크톱", () => {
         await expect(page.locator("#speakerL")).toHaveAttribute("src", "images/side-speaker.jpg");
         await expect(page.locator("#speakerR")).toHaveAttribute("src", "images/side-speaker.jpg");
         await expect(page.locator(".speaker-svg")).toHaveCount(0);
+        await page.waitForTimeout(50);
         const speakers = await page.evaluate(() => {
             const l = document.getElementById("speakerL");
             const r = document.getElementById("speakerR");
+            const rack = document.getElementById("rackColumn");
             const lr = l.getBoundingClientRect();
             const rr = r.getBoundingClientRect();
+            const sr = rack.getBoundingClientRect();
             return {
                 natural: [l.naturalWidth, l.naturalHeight],
-                left: { x: lr.x, height: lr.height, bottom: lr.bottom },
-                right: { gap: innerWidth - rr.right, height: rr.height, bottom: rr.bottom },
+                left: { x: lr.x, right: lr.right, height: lr.height, visualBottom: lr.bottom - lr.height * .02 },
+                right: { x: rr.x, gap: innerWidth - rr.right, height: rr.height, visualBottom: rr.bottom - rr.height * .02 },
+                system: { left: sr.left, right: sr.right, bottom: sr.bottom },
                 viewport: [innerWidth, innerHeight]
             };
         });
         expect(speakers.natural).toEqual([612, 1001]);
         expect(speakers.left.height, "MacBook 화면에서 스피커가 충분히 커야 한다").toBeGreaterThanOrEqual(speakers.viewport[1] * .8);
-        expect(Math.abs(speakers.left.bottom - speakers.viewport[1]), "왼쪽 스피커 바닥 정렬").toBeLessThanOrEqual(2);
-        expect(Math.abs(speakers.right.bottom - speakers.viewport[1]), "오른쪽 스피커 바닥 정렬").toBeLessThanOrEqual(2);
+        expect(Math.abs(speakers.system.bottom - speakers.viewport[1]), "랙 바닥 = 화면 바닥").toBeLessThanOrEqual(2);
+        expect(Math.abs(speakers.left.visualBottom - speakers.system.bottom), "왼쪽 스피커 실물 바닥 = 랙 바닥").toBeLessThanOrEqual(2);
+        expect(Math.abs(speakers.right.visualBottom - speakers.system.bottom), "오른쪽 스피커 실물 바닥 = 랙 바닥").toBeLessThanOrEqual(2);
+        expect(speakers.left.right, "왼쪽 스피커는 랙과 겹치지 않음").toBeLessThanOrEqual(speakers.system.left - 10);
+        expect(speakers.right.x, "오른쪽 스피커는 랙과 겹치지 않음").toBeGreaterThanOrEqual(speakers.system.right + 10);
         expect(Math.abs(speakers.left.x - speakers.right.gap), "좌우 대칭 배치").toBeLessThanOrEqual(2);
         expect(Math.abs(speakers.left.height - speakers.right.height), "좌우 동일 크기").toBeLessThanOrEqual(1);
         await page.waitForFunction(() => {
@@ -651,8 +658,28 @@ test.describe("데스크톱", () => {
         }, null, { timeout: 3000 });
         expect(await page.evaluate(() => document.documentElement.scrollHeight - innerHeight), "룸 모드 무스크롤").toBeLessThanOrEqual(0);
         await page.evaluate(() => focusUnitZoom(document.getElementById("deckStage")));
+        await page.waitForTimeout(50);
         expect(await page.evaluate(() => document.getElementById("ampStage").offsetParent === null), "확대 중 다른 유닛 후퇴").toBe(true);
         expect(await page.evaluate(() => document.getElementById("deckStage").getBoundingClientRect().width), "확대 폭").toBeGreaterThan(1000);
+        const zoomLayout = await page.evaluate(() => {
+            const deck = document.getElementById("deckStage").getBoundingClientRect();
+            const left = document.getElementById("speakerL").getBoundingClientRect();
+            const right = document.getElementById("speakerR").getBoundingClientRect();
+            return {
+                deck: { left: deck.left, right: deck.right, bottom: deck.bottom },
+                left: { right: left.right, visualBottom: left.bottom - left.height * .02 },
+                right: { left: right.left, visualBottom: right.bottom - right.height * .02 },
+                viewportRight: innerWidth,
+                viewportBottom: innerHeight
+            };
+        });
+        expect(Math.abs(zoomLayout.deck.bottom - zoomLayout.viewportBottom), "확대 유닛 바닥 = 화면 바닥").toBeLessThanOrEqual(2);
+        expect(zoomLayout.deck.left, "확대 유닛 왼쪽은 화면 안").toBeGreaterThanOrEqual(0);
+        expect(zoomLayout.deck.right, "확대 유닛 오른쪽은 화면 안").toBeLessThanOrEqual(zoomLayout.viewportRight);
+        expect(Math.abs(zoomLayout.left.visualBottom - zoomLayout.deck.bottom), "확대 시 왼쪽 스피커 바닥").toBeLessThanOrEqual(2);
+        expect(Math.abs(zoomLayout.right.visualBottom - zoomLayout.deck.bottom), "확대 시 오른쪽 스피커 바닥").toBeLessThanOrEqual(2);
+        expect(zoomLayout.left.right, "확대 시 왼쪽 겹침 없음").toBeLessThanOrEqual(zoomLayout.deck.left - 10);
+        expect(zoomLayout.right.left, "확대 시 오른쪽 겹침 없음").toBeGreaterThanOrEqual(zoomLayout.deck.right + 10);
         await page.keyboard.press("Escape");
         expect(await page.evaluate(() => document.body.classList.contains("focus-unit-zoomed")), "ESC 1회 = 확대 해제").toBe(false);
         expect(await page.evaluate(() => document.body.classList.contains("mode-focus")), "룸은 유지").toBe(true);
