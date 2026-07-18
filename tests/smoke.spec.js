@@ -258,7 +258,8 @@ test.describe("데스크톱", () => {
         expect(on.dark).toBeLessThan(.1);
 
         await page.click("#tsPowerHit");
-        await page.waitForFunction(() => Number(document.querySelector("#ampStage .meterDark").style.opacity) > .45, null, { timeout: 7000 });
+        // 공유 CI에서는 Chromium과 WebKit이 함께 합성 부하를 만들어 냉각 보간이 로컬보다 늦다.
+        await page.waitForFunction(() => Number(document.querySelector("#ampStage .meterDark").style.opacity) > .45, null, { timeout: 12000 });
         const cooled = await lighting();
         expect(cooled.meter).toBeLessThan(.22);
         expect(cooled.lettering).toBeLessThan(.36);
@@ -1743,7 +1744,11 @@ test.describe("키보드 조작", () => {
         await page.click('button:has-text("오디오 구성")');
         await page.click('button:has-text("YAMAHA GE-5 · 10밴드")');
         await page.keyboard.press("Escape");
-        await page.evaluate(() => document.getElementById("eqHit0").focus());
+        // 모달은 닫히며 호출 버튼으로 포커스를 복원한다. 그 비동기 정리가 끝난 뒤 슬라이더를
+        // 포커스하지 않으면 느린 CI에서 ArrowUp이 설정 버튼으로 전달되는 경합이 생긴다.
+        await expect(page.locator("#settingsOverlay")).toBeHidden();
+        await page.locator("#eqHit0").focus();
+        await expect(page.locator("#eqHit0")).toBeFocused();
         await page.keyboard.press("ArrowUp");
         await page.keyboard.press("ArrowUp");
         const gain = await page.evaluate(() => JSON.parse(localStorage.getItem("fmRadio.eq")).gains.ge5[0]);
