@@ -275,11 +275,16 @@ test.describe("데스크톱", () => {
     test("예약 녹음: 정지 중 발화 → 백그라운드 무음 녹음, 튜너·데크만 점등, 종료 후 카세트 보관", async ({ page }) => {
         await page.evaluate(() => {
             const st = window.FMRadio.stations[0];
+            // 창을 넉넉히 — 스로틀된 WebKit에서 첫 bg 어태치가 죽으면 재튠(10초 주기
+            // reservationTick)이 살릴 때까지 회차가 만료되지 않아야 한다. 창이 짧으면
+            // 회차가 미시작으로 만료되어 아래 대기가 영원히 성립하지 않는다.
+            // 실제 종료는 시작 확인 후 endTs를 당겨 만든다.
             fireReservation(
                 { id: 990, stationId: st.id, title: "타이머 테스트", repeat: "once", enabled: true },
-                { ymd: "t", startTs: Date.now(), endTs: Date.now() + 12000 }, "990:t");
+                { ymd: "t", startTs: Date.now(), endTs: Date.now() + 45000 }, "990:t");
         });
-        await page.waitForFunction(() => !!recorder && deckMode === "rec", null, { timeout: 15000 });
+        // 대기 22초 = 재튠 한 번까지 흡수. rAF 폴링은 미디어 처리 중 멈출 수 있어 interval로 재평가
+        await page.waitForFunction(() => !!recorder && deckMode === "rec", null, { timeout: 22000, polling: 120 });
         // CI 헤드리스(특히 WebKit)는 rAF가 심하게 스로틀된다 — 조명 웜업·릴 회전은
         // 프레임 루프를 합성 타임스탬프로 직접 돌려 기계 속도와 무관하게 검증한다
         await page.evaluate(() => {
@@ -312,11 +317,13 @@ test.describe("데스크톱", () => {
             for (let i = 1; i <= 10; i++) ttFrame(t0 + i * 50);
             return document.getElementById("deckReelL").getAttribute("transform") !== r1;
         }, mid.reel1), "릴이 돌아간다").toBe(true);
-        await page.waitForFunction(() => !recorder && !activeResRec && !isPlaying && deckMode === "stop", null, { timeout: 15000 });
+        // 시작·점등·릴까지 확인됐다 — 종료 시각을 당겨 마감한다 (실데이터가 담길 몇 초만 남기고)
+        await page.evaluate(() => { activeResRec.endTs = Date.now() + 6000; });
+        await page.waitForFunction(() => !recorder && !activeResRec && !isPlaying && deckMode === "stop", null, { timeout: 15000, polling: 150 });
         // 완료되면 프로그램명이 붙은 카세트가 되감긴 채 테이프 랙에 보관된다
         await page.waitForFunction(() =>
             [...document.querySelectorAll("#deckShelf g[data-id] text")].some((t) => t.textContent.includes("타이머 테스트")),
-            null, { timeout: 10000 });
+            null, { timeout: 10000, polling: 150 });
         const stored = await page.evaluate(() => {
             const t = tapes.find((x) => x.label.includes("타이머 테스트"));
             return t && { pos: t.pos, segs: t.segments.length, inserted: deckTape === t };
@@ -557,31 +564,59 @@ test.describe("데스크톱", () => {
     test("SE-9 메모리 EQ: 프리셋 적용·모터 이동·A/B 비교·슬롯 저장·모델 간 리샘플", async ({ page }) => {
         await page.evaluate(() => { setUnitShow("eq", true); setEqModel("se9"); });
         await expect(page.locator("#eqKey_mem")).toHaveCount(1);
-        // 팩토리 프리셋 → 커브가 모터 이동으로 안착
+        // CI 헤드리스는 rAF가 수 초씩 멈춘다 — 모터 이동(rAF 320ms)이 언제 끝날지, 그 사이
+        // 어느 중간 커브가 잡힐지 기계 속도에 좌우된다. 특히 이동 초반에 MEM 저장이 끼어들면
+        // 미세한 커브가 담기고, 리샘플의 0.5dB 양자화가 이를 전부 0으로 뭉개 '모델 간 리샘플'
+        // 검증이 영원히 거짓이 된다. ttFrame 펌프와 같은 원리로 rAF를 가로채 합성 타임스탬프로
+        // 모터를 그 자리에서 완주시켜, 테스트가 항상 '안착 후' 상태만 다루게 한다.
         await page.evaluate(() => {
+            window.__eqMotorRun = (trigger) => {
+                const realRaf = window.requestAnimationFrame;
+                const realCancel = window.cancelAnimationFrame;
+                const q = new Map();
+                let id = 1e6;
+                window.requestAnimationFrame = (cb) => { q.set(++id, cb); return id; };
+                window.cancelAnimationFrame = (i) => { if (!q.delete(i)) realCancel.call(window, i); };
+                try {
+                    trigger();
+                    let t = performance.now();
+                    for (let i = 0; i < 40 && q.size; i++) {
+                        t += 50;
+                        const cbs = [...q.values()];
+                        q.clear();
+                        cbs.forEach((cb) => cb(t));
+                    }
+                } finally {
+                    window.requestAnimationFrame = realRaf;
+                    window.cancelAnimationFrame = realCancel;
+                    q.forEach((cb) => realRaf.call(window, cb));   // 모터 밖 잔여 콜백은 실제 rAF로
+                }
+            };
+        });
+        // 팩토리 프리셋 → 커브가 모터 이동으로 안착 — 완주하면 현재 모델 밴드로 리샘플된
+        // 목표값에 정확히 스냅된다 (밴드 수를 하드코딩하지 않는다 — 밴드 구성이 바뀌어도 유효)
+        await page.evaluate(() => __eqMotorRun(() => {
             const preset = EQ_PRESETS.find((x) => x.id === "y80");
             eqApplyCurvePts(preset.pts, preset.label, preset.id);
-        });
-        // 모터 이동이 끝나면 현재 모델 밴드로 리샘플된 목표값에 정확히 스냅된다
-        // (밴드 수를 하드코딩하지 않는다 — SE-9 개편으로 밴드 구성이 바뀌어도 유효)
-        await page.waitForFunction(() => {
+        }));
+        expect(await page.evaluate(() => {
             const want = eqResample(EQ_PRESETS.find((x) => x.id === "y80").pts);
             return eqState.gains.se9.length === want.length && eqState.gains.se9.every((g, i) => Math.abs(g - want[i]) < 0.01);
-        }, null, { timeout: 3000 });
+        }), "프리셋 안착").toBe(true);
         // 오토-B: A/B 한 번 = 직전(플랫) 커브, 다시 = 프리셋 복귀
-        await page.evaluate(() => eqToggleBank());
-        await page.waitForFunction(() => eqState.gains.se9.every((g) => g === 0), null, { timeout: 3000 });
-        await page.evaluate(() => eqToggleBank());
-        await page.waitForFunction(() => eqState.gains.se9.some((g) => g !== 0), null, { timeout: 3000 });
-        // MEMORY → 슬롯 A 저장 → localStorage 영속
+        await page.evaluate(() => __eqMotorRun(() => eqToggleBank()));
+        expect(await page.evaluate(() => eqState.gains.se9.every((g) => g === 0)), "B 뱅크 = 직전 플랫").toBe(true);
+        await page.evaluate(() => __eqMotorRun(() => eqToggleBank()));
+        expect(await page.evaluate(() => eqState.gains.se9.some((g) => g !== 0)), "A 뱅크 = 프리셋 복귀").toBe(true);
+        // MEMORY → 슬롯 A 저장 → localStorage 영속 (모터가 완주한 뒤라 온전한 커브가 담긴다)
         await page.evaluate(() => {
             document.getElementById("eqKey_mem").dispatchEvent(new MouseEvent("click", { bubbles: true }));
             document.getElementById("eqKey_slotA").dispatchEvent(new MouseEvent("click", { bubbles: true }));
         });
         expect(await page.evaluate(() => JSON.parse(localStorage.getItem("fmRadio.eq")).slots.A.pts.length), "슬롯 영속").toBeGreaterThanOrEqual(5);
-        // 슬롯은 모델을 넘나든다 — GE-5(5밴드)에서 호출하면 리샘플 적용
-        await page.evaluate(() => { setEqModel("ge5"); eqSlotPress("A"); });
-        await page.waitForFunction(() => eqState.gains.ge5.some((g) => g !== 0), null, { timeout: 3000 });
+        // 슬롯은 모델을 넘나든다 — GE-5(10밴드)에서 호출하면 리샘플 적용
+        await page.evaluate(() => __eqMotorRun(() => { setEqModel("ge5"); eqSlotPress("A"); }));
+        expect(await page.evaluate(() => eqState.gains.ge5.some((g) => g !== 0)), "리샘플 적용").toBe(true);
     });
 
     test("몰입 모드 두 보기: 리스닝 룸 핏·스피커·단일 확대·와이드", async ({ page }) => {
@@ -690,12 +725,21 @@ test.describe("데스크톱", () => {
             const url = URL.createObjectURL(new Blob([bytes], { type: "audio/wav" }));
             tapeAddSegment(deckTape, { start: 0, dur: 40, url, name: "늦은 복원", type: "audio/wav" });
         }, makeWav(40).toString("base64"));
-        await page.waitForFunction(() => !!deckSegPlaying && !document.getElementById("audioPlayer").paused, null, { timeout: 5000, polling: 100 });
+        // 늦은 픽업은 프레임 루프 몫 — CI 헤드리스는 rAF가 수 초씩 멈추므로, 합성 타임스탬프로
+        // 한 프레임 돌려 그 자리에서 집게 한다 (검증 대상은 픽업 로직이지 rAF 스케줄러가 아니다)
+        await page.evaluate(() => { const t0 = performance.now(); ttLastTs = t0 - 50; ttFrame(t0); });
+        // 재생이 온전히 자리잡을 때까지 기다린다 — 지연 시크 꼬리(loadedmetadata → seekAndPlay
+        // → play())가 남은 채 ②에서 멈추면, 뒤늦은 play()가 일시정지를 도로 뒤집어
+        // ▶ 클릭이 '재개'가 아니라 '일시정지'로 동작한다 (로컬·CI 플레이크의 원인)
+        await page.waitForFunction(() => {
+            const a = document.getElementById("audioPlayer");
+            return !!deckSegPlaying && !a.paused && a.readyState >= 2 && !a.seeking;
+        }, null, { timeout: 10000, polling: 100 });
         // ② 세그먼트 중간에서 멈췄다가 스트립 ▶ — 테이프가 이어지고 다른 소스를 훔치지 않는다
         await page.evaluate(() => { viewMode = "simple"; applyViewMode(); applyUnitVisibility(); });
         await page.evaluate(() => { audio.pause(); isPlaying = false; });
         await page.click("#btnPlay");
-        await page.waitForFunction(() => !!deckSegPlaying && !document.getElementById("audioPlayer").paused, null, { timeout: 5000, polling: 100 });
+        await page.waitForFunction(() => !!deckSegPlaying && !document.getElementById("audioPlayer").paused, null, { timeout: 10000, polling: 100 });
         expect(await page.evaluate(() => deckMode), "여전히 테이프 모드").toBe("play");
         // ③ 공테이프(빈 구간)에서 스트립 ▶는 재생을 훔치지 않고 안내만 한다
         await page.evaluate(() => { deckStopTransport(); deckEject(); deckPlay(); });
