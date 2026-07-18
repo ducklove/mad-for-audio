@@ -2093,6 +2093,7 @@ let ttRubLast = null;     // 문지름 드래그의 직전 포인터 좌표
 let tubeWarm = 0;    // 진공관 웜업 상태 0..1 (켜면 서서히 달아오르고, 꺼지면 더 천천히 식는다)
 let tunerWarm = 0;   // 튜너 조명 상태 0..1 — 라디오 수신 중에만 점등 (포노/테이프 중엔 튜너는 꺼진 것)
 let ampWarm = 0;     // 앰프·EQ·턴테이블 조명 0..1 — 실제 청취 중일 때만 점등
+let deckWarm = 0;    // 데크 조명 0..1 — 트랜스포트가 도는 동안(REW/FF 와인딩 포함) 통전
 let bgRecSignal = 0; // 백그라운드 수신기 레벨 (예약 녹음 중 데크 VU 구동)
 let micSignal = 0;   // 마이크 입력 레벨 (REC INPUT=MIC일 때 데크 VU 구동 — 입력 모니터)
 let tsPreviewUntil = 0;   // 다이얼 조작 중 디스플레이 웨이크 시각
@@ -2856,6 +2857,10 @@ function ttFrame(now) {
     const ampTarget = (isPlaying || deckMode === "play") ? 1 : 0;
     const ampRate = ampTarget > ampWarm ? dt / 2.0 : dt / 3.5;
     ampWarm = Math.max(0, Math.min(1, ampWarm + (ampTarget > ampWarm ? 1 : -1) * ampRate));
+    // 데크 조명: REW/FF 와인딩도 트랜스포트 구동 — 데크는 통전 상태다
+    const deckTarget = (isPlaying || deckMode !== "stop" || !!recorder) ? 1 : 0;
+    const deckRate = deckTarget > deckWarm ? dt / 2.0 : dt / 3.5;
+    deckWarm = Math.max(0, Math.min(1, deckWarm + (deckTarget > deckWarm ? 1 : -1) * deckRate));
     updateMa2375Display();
 
     // 튜너 램프: 라디오 수신 중에만 (백열등이라 진공관보다 빠르게 켜지고 꺼진다)
@@ -3115,7 +3120,7 @@ function ttFrame(now) {
         }
     }
     const pled = document.getElementById("ampPwrLed");
-    if (pled) pled.style.fill = isPlaying ? "#ff7a3a" : "#3a2012";
+    if (pled) pled.style.fill = (isPlaying || deckMode === "play") ? "#ff7a3a" : "#3a2012";
 
     // 소스 보이싱 — 라디오/포노/테이프 소스와 모델 시그니처를 따라 셸프를 튼다
     applySourceVoice();
@@ -3209,7 +3214,7 @@ function ttFrame(now) {
     // 미터 백라이트 라이트박스 — 켜지면 면 전체가 발광한다.
     // 튜너 유닛의 미터는 튜너 램프에, 나머지는 시스템 웜업에 연동된다.
     document.querySelectorAll(".ampLamp").forEach((el) => {
-        const w = el.closest("#tunerStage") ? tunerLight : el.closest("#deckStage") ? tubeWarm : ampWarm;
+        const w = el.closest("#tunerStage") ? tunerLight : el.closest("#deckStage") ? deckWarm : ampWarm;
         const off = Number(el.dataset.lzOff || 0.025);
         const on = Number(el.dataset.lzOn || 0.68);
         el.style.opacity = (off + (on - off) * w).toFixed(3);
@@ -3230,12 +3235,12 @@ function ttFrame(now) {
     // 타이머는 시계라 통전 상태를 유지하되 예약·취침이 없을 때는 대기 밝기로 낮춘다.
     document.querySelectorAll(".lzPowerDim").forEach((el) => {
         const timerLight = (timerArmed && (activeResRec || reservations.some((res) => res.enabled))) || sleepDeadline > 0 ? .72 : .38;
-        const w = el.closest("#tunerStage") ? tunerLight : el.closest("#timerStage") ? timerLight : el.closest("#deckStage") ? tubeWarm : ampWarm;
+        const w = el.closest("#tunerStage") ? tunerLight : el.closest("#timerStage") ? timerLight : el.closest("#deckStage") ? deckWarm : ampWarm;
         el.style.opacity = (0.22 * (1 - w)).toFixed(3);
     });
     // 미터 백라이트: 꺼진 미터 면은 어둡다
     document.querySelectorAll(".meterDark").forEach((el) => {
-        const w = el.closest("#tunerStage") ? tunerLight : el.closest("#deckStage") ? tubeWarm : ampWarm;
+        const w = el.closest("#tunerStage") ? tunerLight : el.closest("#deckStage") ? deckWarm : ampWarm;
         el.style.opacity = (0.55 * (1 - w)).toFixed(3);
     });
 }
