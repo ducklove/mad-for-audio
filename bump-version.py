@@ -12,7 +12,8 @@ n = int(re.search(r"fm-radio-v(\d+)", sw).group(1)) + 1
 sw = re.sub(r"fm-radio-v\d+", f"fm-radio-v{n}", sw)
 
 ASSETS = [
-    "styles.css", "stations.js", "player-core.js", "native-hls-capture.js", "store.js", "schedule.js",
+    "styles.css", "styles-foundation.css", "styles-library.css", "styles-schedule.css", "styles-tape.css",
+    "stations.js", "player-core.js", "app-runtime-core.js", "native-hls-capture.js", "store.js", "schedule.js",
     "skins.js", "component-skins.js", "model-registry.js", "animation-scheduler.js",
     "engine.js", "deck.js", "records.json", "bootstrap.js", "ui-controls.js", "app.js",
 ]
@@ -21,6 +22,13 @@ idx = (root / "index.html").read_text(encoding="utf-8")
 for a in ASSETS:
     idx = re.sub(re.escape(a) + r"(\?v=\d+)?\"", f"{a}?v={n}\"", idx)
 (root / "index.html").write_text(idx, encoding="utf-8")
+
+# styles.css는 호환 진입점을 유지하면서 실제 계층 파일을 @import한다. import에도 같은
+# 버전을 붙여 SW 프리캐시 URL과 일치시키고, 새 설치의 완전 오프라인 첫 화면을 보장한다.
+css_entry = (root / "styles.css").read_text(encoding="utf-8")
+for asset in (name for name in ASSETS if name.startswith("styles-") and name.endswith(".css")):
+    css_entry = re.sub(re.escape(asset) + r"(?:\?v=\d+)?", f"{asset}?v={n}", css_entry)
+(root / "styles.css").write_text(css_entry, encoding="utf-8")
 
 # SW 프리캐시도 버전 URL로 (오프라인 첫 화면 보장)
 def core_repl(m):

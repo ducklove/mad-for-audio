@@ -459,7 +459,7 @@ test.describe("데스크톱", () => {
             deckPlay();
         }, MOCK_AUDIO_URL);
         await page.waitForFunction(() => deckMode === "play" && !document.getElementById("audioPlayer").paused, null, { timeout: 15000 });
-        const mainSource = await page.evaluate(() => audio.currentSrc);
+        const mainSource = await page.evaluate(() => audio.currentSrc || audio.src);
         // 예약 발화 → 녹음은 B웰(recOnB)로, A웰 재생은 계속되어야 한다
         await page.evaluate(() => {
             const st = window.FMRadio.stations[0];
@@ -471,15 +471,19 @@ test.describe("데스크톱", () => {
             mode: deckMode,
             playing: isPlaying,
             mainPaused: document.getElementById("audioPlayer").paused,
-            mainSource: document.getElementById("audioPlayer").currentSrc,
+            mainSource: document.getElementById("audioPlayer").currentSrc
+                || document.getElementById("audioPlayer").src,
             hasB: !!deckBTape,
             bReel: document.getElementById("deckBReelL").getAttribute("transform"),
         }));
         expect(mid.mode, "A웰 재생 무중단").toBe("play");
-        expect(!mid.mainPaused && mid.mainSource === mainSource, "본체 오디오 소스 유지").toBe(true);
+        expect(mid.mainSource, "본체 오디오 소스 유지").toBe(mainSource);
         // Windows Playwright WebKit에는 MP3/PCM 디코더가 없어 playing이 error로
         // 바뀔 수 있다. 이 프로젝트에서 검증할 계약은 예약이 pause/src 교체를 하지 않는지다.
-        if (browserName !== "webkit") expect(mid.playing, "본체 오디오 유지").toBe(true);
+        if (browserName !== "webkit") {
+            expect(mid.mainPaused, "본체 오디오 재생 유지").toBe(false);
+            expect(mid.playing, "본체 오디오 상태 유지").toBe(true);
+        }
         expect(mid.hasB, "B웰 테이프 장착").toBe(true);
         // B웰 릴 회전 — rAF 스로틀과 무관하게 합성 타임스탬프로 프레임 루프를 돌린다
         expect(await page.evaluate((r1) => {
@@ -497,13 +501,16 @@ test.describe("데스크톱", () => {
             const t = tapes.find((x) => x.label.includes("더블데크 예약"));
             return {
                 mode: deckMode, playing: isPlaying, bEmpty: deckBTape === null,
-                mainPaused: audio.paused, mainSource: audio.currentSrc,
+                mainPaused: audio.paused, mainSource: audio.currentSrc || audio.src,
                 pos: t && t.pos, segs: t ? t.segments.length : 0, inA: deckTape === t,
             };
         });
         expect(end.mode, "종료 후에도 A웰 재생").toBe("play");
-        expect(!end.mainPaused && end.mainSource === mainSource, "종료 후에도 본체 소스 유지").toBe(true);
-        if (browserName !== "webkit") expect(end.playing, "본체 재생 유지").toBe(true);
+        expect(end.mainSource, "종료 후에도 본체 소스 유지").toBe(mainSource);
+        if (browserName !== "webkit") {
+            expect(end.mainPaused, "종료 후에도 본체 재생 유지").toBe(false);
+            expect(end.playing, "종료 후에도 본체 상태 유지").toBe(true);
+        }
         expect(end.bEmpty, "B웰 자동 배출").toBe(true);
         expect(end.pos, "되감김").toBe(0);
         expect(end.segs, "녹음 세그먼트 존재").toBeGreaterThan(0);

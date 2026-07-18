@@ -121,6 +121,79 @@ test.describe("안전성 코어 경계", () => {
         expect(result.afterStale.phase).toBe("buffering");
     });
 
+    test("ES module 런타임 코어가 재생 세대·예약 회차·포맷 계약을 독립 제공한다", async ({ context, page }) => {
+        await loadApp(context, page);
+        const result = await page.evaluate(async () => {
+            const core = await import("/app-runtime-core.js?module-contract=1");
+            const media = { currentSrc: "https://audio.test/live", src: "" };
+            let loaded = true;
+            let staleDestroyed = false;
+            let handleCurrent = true;
+            const controller = core.createPlaybackController({
+                audio: media,
+                isStreamLoaded: () => loaded,
+                resolveUrl: (url) => new URL(url, location.href).href
+            });
+            const stale = controller.begin("radio", "old");
+            const current = controller.begin("radio", "new");
+            controller.bind(stale, "https://audio.test/old", { destroy() { staleDestroyed = true; } });
+            controller.bind(current, "https://audio.test/live", {
+                kind: "native",
+                isCurrent: () => handleCurrent
+            });
+            const acceptsMatching = controller.acceptsMediaEvent();
+            media.currentSrc = "https://audio.test/other";
+            const rejectsOtherSource = !controller.acceptsMediaEvent();
+            media.currentSrc = "https://audio.test/live";
+            handleCurrent = false;
+            const rejectsStaleHandle = !controller.acceptsMediaEvent();
+            loaded = false;
+            const rejectsUnloaded = !controller.acceptsMediaEvent();
+
+            const crossingNow = new Date(2031, 2, 12, 0, 30, 0, 0);
+            const crossing = core.ReservationSchedule.occurrence({
+                repeat: "daily", startMin: 23 * 60 + 30, endMin: 25 * 60 + 30
+            }, crossingNow.getTime());
+            const weeklyNow = new Date(2031, 2, 11, 12, 0, 0, 0);
+            const weekly = core.ReservationSchedule.occurrence({
+                repeat: "weekly", dow: 4, startMin: 600, endMin: 660
+            }, weeklyNow.getTime());
+            const file = core.recordingFileInfo({
+                stationName: "KBS: 1FM", startedAt: "2031-03-11T01:02:03.000Z", type: "audio/mp4"
+            });
+
+            return {
+                globalReady: typeof MFA_RUNTIME_CORE.createPlaybackController === "function",
+                staleDestroyed,
+                acceptsMatching,
+                rejectsOtherSource,
+                rejectsStaleHandle,
+                rejectsUnloaded,
+                crossing: crossing && { ymd: crossing.ymd, startHour: new Date(crossing.startTs).getHours() },
+                weeklyDow: weekly && new Date(weekly.startTs).getDay(),
+                duration: core.formatDuration(3723000),
+                size: core.formatSize(1572864),
+                extension: core.recFileExtension("video/mp2t"),
+                safeFile: !file.fileName.includes(":") && file.fileName.endsWith(".m4a")
+            };
+        });
+
+        expect(result).toEqual({
+            globalReady: true,
+            staleDestroyed: true,
+            acceptsMatching: true,
+            rejectsOtherSource: true,
+            rejectsStaleHandle: true,
+            rejectsUnloaded: true,
+            crossing: { ymd: "20310311", startHour: 23 },
+            weeklyDow: 4,
+            duration: "1:02:03",
+            size: "1.5MB",
+            extension: "ts",
+            safeFile: true
+        });
+    });
+
     test("예약 수신기 generation이 이전 채널 rolling buffer와 늦은 청크를 격리한다", async ({ context, page }) => {
         await loadApp(context, page);
         const result = await page.evaluate(() => {

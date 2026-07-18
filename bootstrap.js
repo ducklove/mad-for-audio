@@ -90,10 +90,17 @@
             return bootstrapState.catalog.records;
         });
 
-    // 카탈로그 장애는 포노 기능에만 격리한다. app.js 자체를 받지 못한 경우만
-    // MFA_READY를 reject하여 실제 앱 셸 로드 실패와 기능 저하를 구분한다.
-    window.MFA_READY = catalogReady
-        .then(() => loadApp())
+    // DOM과 독립적인 상태/포맷 코어는 실제 ES module로 먼저 준비한다. app.js의
+    // classic 전역 계약은 유지하되, 이후 기능별 분리를 위한 명시적 로딩 경계를 만든다.
+    const runtimeReady = import(assetUrl("./app-runtime-core.js"));
+
+    // 카탈로그 장애는 포노 기능에만 격리한다. 런타임 코어나 app.js 자체를 받지 못한
+    // 경우만 MFA_READY를 reject하여 셸 로드 실패와 기능 저하를 구분한다.
+    window.MFA_READY = Promise.all([catalogReady, runtimeReady])
+        .then(([, runtime]) => {
+            window.MFA_RUNTIME_CORE = runtime;
+            return loadApp();
+        })
         .then(() => {
             bootstrapState.phase = "ready";
             if (!bootstrapState.capabilities.phono) showCatalogWarning(bootstrapState.catalog.error);

@@ -4,7 +4,7 @@
  * 네트워크로 그대로 통과시킨다 — 오디오 range 요청과 실시간성을 깨지 않기 위함.
  */
 const CACHE_PREFIX = "fm-radio-";
-const CACHE = "fm-radio-v120";
+const CACHE = "fm-radio-v121";
 // 일반 URL과 분리한 합성 키를 사용한다. manual.html 같은 다른 내비게이션 응답이
 // 오프라인 앱 셸을 덮어쓰지 못하게 하기 위함이다.
 const NAVIGATION_CACHE_KEY = new URL("__mfa_navigation_shell__", self.registration.scope).href;
@@ -16,22 +16,27 @@ const CORE = [
     "manual.html",
     "widget.html",
     "embed.html",
-    "styles.css?v=120",
-    "stations.js?v=120",
-    "player-core.js?v=120",
-    "native-hls-capture.js?v=120",
-    "store.js?v=120",
-    "schedule.js?v=120",
-    "model-registry.js?v=120",
-    "skins.js?v=120",
-    "component-skins.js?v=120",
-    "engine.js?v=120",
-    "animation-scheduler.js?v=120",
-    "deck.js?v=120",
-    "ui-controls.js?v=120",
-    "records.json?v=120",
-    "bootstrap.js?v=120",
-    "app.js?v=120",
+    "styles.css?v=121",
+    "styles-foundation.css?v=121",
+    "styles-library.css?v=121",
+    "styles-schedule.css?v=121",
+    "styles-tape.css?v=121",
+    "stations.js?v=121",
+    "player-core.js?v=121",
+    "app-runtime-core.js?v=121",
+    "native-hls-capture.js?v=121",
+    "store.js?v=121",
+    "schedule.js?v=121",
+    "model-registry.js?v=121",
+    "skins.js?v=121",
+    "component-skins.js?v=121",
+    "engine.js?v=121",
+    "animation-scheduler.js?v=121",
+    "deck.js?v=121",
+    "ui-controls.js?v=121",
+    "records.json?v=121",
+    "bootstrap.js?v=121",
+    "app.js?v=121",
     "manifest.webmanifest",
     "icons/icon.svg",
     "icons/icon-192.png",

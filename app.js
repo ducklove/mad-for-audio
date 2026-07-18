@@ -2,6 +2,15 @@
 
 const stations = FMRadio.stations;
 const getStreamUrl = FMRadio.getStreamUrl;
+const runtimeCore = window.MFA_RUNTIME_CORE;
+if (!runtimeCore) throw new Error("앱 런타임 코어가 준비되지 않았습니다");
+const {
+    formatDuration,
+    formatSize,
+    recFileExtension,
+    recordingFileInfo,
+    ymdToDate
+} = runtimeCore;
 
 const audio = document.getElementById("audioPlayer");
 const playIcon = document.getElementById("playIcon");
@@ -3465,68 +3474,13 @@ let isPlaying = false;
 let player = null; // PlayerCore 핸들 (hls 인스턴스 포함)
 let streamLoaded = false;
 
-// 재생 소스와 비동기 콜백의 단일 소유자. 각 선국/포노/테이프 요청은 새 generation을
-// 받고, 이전 요청의 URL 해석·play Promise·HLS 콜백은 현재 토큰이 아니면 UI를 못 바꾼다.
-const PlaybackController = (() => {
-    let generation = 0;
-    let current = { generation: 0, source: "none", phase: "idle", label: "", url: "", handle: null };
-
-    function begin(source, label) {
-        generation += 1;
-        current = { generation, source, phase: "resolving", label: label || "", url: "", handle: null };
-        return generation;
-    }
-
-    function isCurrent(token) { return token === current.generation; }
-
-    function bind(token, url, handle) {
-        if (!isCurrent(token)) {
-            if (handle) handle.destroy();
-            return false;
-        }
-        current.url = url || "";
-        current.handle = handle || null;
-        current.phase = "buffering";
-        return true;
-    }
-
-    function transition(token, phase) {
-        if (!isCurrent(token)) return false;
-        current.phase = phase;
-        return true;
-    }
-
-    function acceptsMediaEvent() {
-        if (!streamLoaded || current.source === "none") return false;
-        if (current.handle && typeof current.handle.isCurrent === "function" && !current.handle.isCurrent()) return false;
-        if (!current.url || (current.handle && current.handle.kind === "hls")) return true;
-        try {
-            const expected = new URL(current.url, location.href).href;
-            const actual = audio.currentSrc || audio.src || "";
-            return !actual || actual === expected;
-        } catch (error) {
-            return true;
-        }
-    }
-
-    function invalidate(phase) {
-        generation += 1;
-        current = { generation, source: "none", phase: phase || "idle", label: "", url: "", handle: null };
-        return generation;
-    }
-
-    function inspect() {
-        return Object.freeze({
-            generation: current.generation,
-            source: current.source,
-            phase: current.phase,
-            label: current.label,
-            kind: current.handle ? current.handle.kind : null
-        });
-    }
-
-    return Object.freeze({ begin, bind, transition, isCurrent, acceptsMediaEvent, invalidate, inspect });
-})();
+// 재생 소스와 비동기 콜백의 단일 소유자. 구현은 ES module 코어에 있고,
+// 이 인스턴스만 현재 audio/stream 상태를 주입받아 기존 전역 계약을 유지한다.
+const PlaybackController = runtimeCore.createPlaybackController({
+    audio,
+    isStreamLoaded: () => streamLoaded,
+    resolveUrl: (url) => new URL(url, location.href).href
+});
 window.MFA_PlaybackController = PlaybackController;
 let volumeLevel = loadJson("fmRadio.volume", 1.0);
 if (typeof volumeLevel !== "number" || !(volumeLevel >= 0 && volumeLevel <= 1)) volumeLevel = 1.0;
@@ -3850,8 +3804,25 @@ function togglePlay() {
     }
     const sourceName = currentStation ? currentStation.name : phonoActive ? "레코드" : "테이프";
 
-    if (isPlaying) {
-        audio.pause();
+    // media의 실제 재생이 playing 이벤트보다 먼저 관측될 수 있다. CPU가 바쁜 탭에서
+    // isPlaying 갱신을 기다리면 첫 전원 조작이 다시 선국으로 오인될 수 있다.
+    const mediaIsPlaying = !audio.paused && streamLoaded;
+    if (isPlaying || mediaIsPlaying) {
+        // 라이브 라디오의 POWER OFF는 HLS 핸들까지 끊는다. manifest/복구 콜백이
+        // 늦게 도착해 사용자가 끈 audio를 다시 play()하는 경합을 원천 차단한다.
+        if (currentStation) {
+            if (player) {
+                player.destroy();
+                player = null;
+            }
+            PlaybackController.invalidate();
+            streamLoaded = false;
+            audio.pause();
+            audio.removeAttribute("src");
+            audio.load();
+        } else {
+            audio.pause();
+        }
         isPlaying = false;
         playerSubtext.textContent = `${sourceName} 재생을 일시정지했습니다.`;
     } else {
@@ -4234,30 +4205,6 @@ function probeRecordingOffset(blob, contentSec) {
     });
 }
 
-function recFileExtension(mimeType) {
-    if (mimeType.includes("mp2t")) return "ts";
-    if (mimeType.includes("mpeg") || mimeType.includes("mp3")) return "mp3";
-    if (mimeType.includes("mp4")) return "m4a";
-    if (mimeType.includes("ogg")) return "ogg";
-    if (mimeType.includes("wav")) return "wav";
-    if (mimeType.includes("flac")) return "flac";
-    return "webm";
-}
-
-function formatDuration(ms) {
-    const totalSeconds = Math.max(0, Math.floor(ms / 1000));
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-    const pad = (value) => String(value).padStart(2, "0");
-    return hours > 0 ? `${hours}:${pad(minutes)}:${pad(seconds)}` : `${pad(minutes)}:${pad(seconds)}`;
-}
-
-function formatSize(bytes) {
-    if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
-    return `${Math.max(1, Math.round(bytes / 1024))}KB`;
-}
-
 function updateRecTime() {
     recTimeEl.textContent = formatDuration(Date.now() - recStartMs);
     updateResDiag();
@@ -4431,17 +4378,6 @@ window.MFA_RecordingLifecycle = Object.freeze({
         return handle ? { deleting: handle.deleting, cleaned: handle.cleaned, persistence: handle.item.dataset.persistence } : null;
     }
 });
-
-function recordingFileInfo(record) {
-    const startDate = new Date(record.startedAt);
-    const pad = (value) => String(value).padStart(2, "0");
-    const stamp = `${startDate.getFullYear()}${pad(startDate.getMonth() + 1)}${pad(startDate.getDate())}_${pad(startDate.getHours())}${pad(startDate.getMinutes())}${pad(startDate.getSeconds())}`;
-    const safeName = String(record.stationName || "recording").replace(/[\\/:*?"<>|]/g, "").replace(/\s+/g, "-");
-    return {
-        fileName: `${safeName}_${stamp}.${recFileExtension(record.type || "")}`,
-        startLabel: `${startDate.getMonth() + 1}/${startDate.getDate()} ${pad(startDate.getHours())}:${pad(startDate.getMinutes())} 시작`
-    };
-}
 
 // IndexedDB 실패 시 Blob을 잃기 전에 다운로드를 시도한다. 자동 다운로드가 정책상
 // 막혀도 녹음 카드의 '저장' 링크는 같은 URL을 계속 제공한다.
@@ -5036,10 +4972,6 @@ const nowProgramEl = document.getElementById("nowProgram");
 
 function resSave() { saveJson("fmRadio.reservations", reservations); }
 
-function ymdToDate(ymd) {
-    return new Date(parseInt(ymd.slice(0, 4), 10), parseInt(ymd.slice(4, 6), 10) - 1, parseInt(ymd.slice(6, 8), 10));
-}
-
 function minutesNow() {
     const d = new Date();
     return d.getHours() * 60 + d.getMinutes();
@@ -5047,31 +4979,7 @@ function minutesNow() {
 
 // 예약의 현재(진행 중 포함) 또는 다음 회차. once는 지정 날짜 고정,
 // 반복 예약은 어제(자정 넘김 진행분)부터 일주일 안에서 endTs가 남아 있는 첫 회차.
-const ReservationSchedule = Object.freeze({
-    occurrence(res, nowTs) {
-        if (!res || !Number.isFinite(res.startMin) || !Number.isFinite(res.endMin)) return null;
-        const ymdOf = (date) => {
-            const pad = (value) => String(value).padStart(2, "0");
-            return "" + date.getFullYear() + pad(date.getMonth() + 1) + pad(date.getDate());
-        };
-        const mk = (base) => ({
-            startTs: base.getTime() + res.startMin * 60000,
-            endTs: base.getTime() + res.endMin * 60000,
-            ymd: ymdOf(base)
-        });
-        if (res.repeat === "once") return /^\d{8}$/.test(res.ymd || "") ? mk(ymdToDate(res.ymd)) : null;
-        const today = new Date(nowTs);
-        today.setHours(0, 0, 0, 0);
-        for (let i = -1; i <= 7; i++) {
-            const d = new Date(today);
-            d.setDate(today.getDate() + i);
-            if (res.repeat === "weekly" && d.getDay() !== res.dow) continue;
-            const occ = mk(d);
-            if (occ.endTs > nowTs) return occ;
-        }
-        return null;
-    }
-});
+const ReservationSchedule = runtimeCore.ReservationSchedule;
 window.MFA_ReservationSchedule = ReservationSchedule;
 
 function resOccurrence(res, nowTs) {
@@ -5742,6 +5650,13 @@ function bgRecOnChunk(event, data, generation) {
     for (const c of bgRecCap.rolling) rollBytes += c.bytes.length;
     while (bgRecCap.rolling.length > 1 && rollBytes > 4 * 1024 * 1024) {
         rollBytes -= bgRecCap.rolling.shift().bytes.length;
+    }
+    // 네이티브 HLS 캡처의 첫 청크는 준비 완료의 가장 확실한 신호다. worker timer가
+    // 스로틀되는 WebKit/백그라운드 탭에서도 다음 800ms tick을 기다리지 않고 REC를 건다.
+    if (activeResRec && !activeResRec.started && bgRecStationId === activeResRec.res.stationId) {
+        queueMicrotask(() => {
+            if (activeResRec && !activeResRec.started) serviceReservationRecording(Date.now());
+        });
     }
     // 종료 시각 안전망 — 백그라운드에서 타이머가 굶주려도 스트림 청크는 계속 오므로,
     // 여기서도 예약 종료를 보장한다 (finishReservedRecording은 재진입에 안전).

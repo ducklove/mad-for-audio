@@ -857,8 +857,9 @@
         <span>기준일 2026-07-18</span>
         <span>검토 기준 9b4ea6a</span>
         <span>동기화 기준 2874568</span>
-        <span>구현 브랜치 codex/code-review-refactor-2026-07-18</span>
-        <span>앱 셸 v120</span>
+        <span>1차 배포 a6f1b86</span>
+        <span>후속 브랜치 codex/structural-followup-2026-07-18</span>
+        <span>앱 셸 v121</span>
       </div>
     </div>
   </header>
@@ -888,23 +889,23 @@
 
         <div class="metric-grid" aria-label="코드베이스 핵심 지표">
           <div class="metric">
-            <span class="metric-value">12,883</span>
+            <span class="metric-value">13,128</span>
             <span class="metric-label">프로덕션 JavaScript 물리 라인</span>
           </div>
           <div class="metric">
-            <span class="metric-value">6,168</span>
+            <span class="metric-value">6,083</span>
             <span class="metric-label">app.js 라인 · 호환 facade 포함</span>
           </div>
           <div class="metric">
-            <span class="metric-value">79.1%</span>
+            <span class="metric-value">79.6%</span>
             <span class="metric-label">대형 핵심 4개 파일의 JS 비중</span>
           </div>
           <div class="metric">
-            <span class="metric-value">843KB</span>
+            <span class="metric-value">854KB</span>
             <span class="metric-label">초기 브라우저 JS 원본 크기</span>
           </div>
           <div class="metric">
-            <span class="metric-value">76</span>
+            <span class="metric-value">77</span>
             <span class="metric-label">Playwright 테스트 정의</span>
           </div>
           <div class="metric">
@@ -1385,7 +1386,7 @@
             </tr>
             <tr>
               <td>Chromium Playwright</td>
-              <td><span class="status pass">76 / 76</span></td>
+              <td><span class="status pass">77 / 77</span></td>
               <td>기존 기능과 신규 안전성·접근성·플랫폼 회귀 테스트 전체 통과</td>
             </tr>
             <tr>
@@ -1457,7 +1458,7 @@
             <tr>
               <td>서비스워커·운영</td>
               <td><span class="status pass">완료</span></td>
-              <td>소유 캐시만 정리, 페이지별 navigation 키, 스트림/range 무개입, v120 프리캐시 정합</td>
+              <td>소유 캐시만 정리, 페이지별 navigation 키, 스트림/range 무개입, v121 프리캐시 정합</td>
             </tr>
             <tr>
               <td>Electron·메시지 보안</td>
@@ -1474,14 +1475,19 @@
               <td><span class="status pass">핵심 완료</span></td>
               <td>통합 모델 레지스트리, 고유 SVG defs, 상태 기반 RAF scheduler, 숨김 탭 정지, 안정 ID 회귀 테스트</td>
             </tr>
+            <tr>
+              <td>ESM·CSS 구조 후속</td>
+              <td><span class="status pass">1차 완료</span></td>
+              <td><code>app-runtime-core.js</code>로 재생·예약·포맷 코어 분리, bootstrap 동적 import 게이트, CSS를 <code>styles-foundation.css</code>·library·schedule·tape 4계층으로 분리</td>
+            </tr>
           </tbody>
         </table>
         <div class="callout warn">
           <strong>남은 구조적 후속</strong>
           <p>
-            <code>app.js</code>의 물리적 ES module 분해, CSS 계층 파일 분리, 모델별 지연 로딩은 대규모 호환 전환이라
-            이번 안전화 브랜치에서는 facade와 제어 계층까지만 적용했다. 장시간 단일 녹음은 세션 오염과 프리버퍼 상한은
-            해결됐지만, 완전한 무메모리 처리를 위해 OPFS/IndexedDB 점진 chunk 저장이 후속으로 필요하다.
+            <code>app.js</code>의 순수 코어와 CSS 계층은 물리 분리를 시작했지만, 화면·녹음 orchestration의 추가 ES module 분해와
+            모델별 지연 로딩은 별도 호환 전환이 필요하다. 장시간 단일 녹음은 세션 오염과 프리버퍼 상한은 해결됐지만,
+            완전한 무메모리 처리를 위해 OPFS/IndexedDB 점진 chunk 저장이 후속으로 필요하다.
             macOS Safari 실기·실제 방송 CORS·장시간 트레이 실행도 배포 전 최종 확인 대상으로 남긴다.
           </p>
         </div>
@@ -1523,7 +1529,7 @@
   </div>
 
   <footer class="footer">
-    Mad for Audio 코드베이스 검토·구현 보고서 · 2026-07-18 · 검토 9b4ea6a · 구현 v120
+    Mad for Audio 코드베이스 검토·구현 보고서 · 2026-07-18 · 검토 9b4ea6a · 구현 v121
   </footer>
 </body>
 </html>
