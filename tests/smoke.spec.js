@@ -744,15 +744,14 @@ test.describe("데스크톱", () => {
         await page.waitForTimeout(50);
         expect(await page.evaluate(() => document.getElementById("ampStage").offsetParent === null), "확대 중 다른 유닛 후퇴").toBe(true);
         expect(await page.evaluate(() => document.getElementById("deckStage").getBoundingClientRect().width), "확대 폭").toBeGreaterThan(1000);
+        // 단일 컴포넌트 확대에서는 스피커가 사라지고 그 컴포넌트만 크게 보인다.
+        expect(await page.evaluate(() => getComputedStyle(document.getElementById("speakerL")).display), "확대 = 왼쪽 스피커 숨김").toBe("none");
+        expect(await page.evaluate(() => getComputedStyle(document.getElementById("speakerR")).display), "확대 = 오른쪽 스피커 숨김").toBe("none");
         const zoomLayout = await page.evaluate(() => {
             const deck = document.getElementById("deckStage").getBoundingClientRect();
-            const left = document.getElementById("speakerL").getBoundingClientRect();
-            const right = document.getElementById("speakerR").getBoundingClientRect();
             const heroStyle = getComputedStyle(document.querySelector(".hero-visual"));
             return {
-                deck: { left: deck.left, right: deck.right, bottom: deck.bottom },
-                left: { right: left.right, bottom: left.bottom },
-                right: { left: right.left, bottom: right.bottom },
+                deck: { left: deck.left, right: deck.right, bottom: deck.bottom, width: deck.width },
                 safe: { top: parseFloat(heroStyle.paddingTop), bottom: parseFloat(heroStyle.paddingBottom) },
                 viewportRight: innerWidth,
                 viewportBottom: innerHeight
@@ -761,10 +760,8 @@ test.describe("데스크톱", () => {
         expect(Math.abs((zoomLayout.viewportBottom - zoomLayout.deck.bottom) - zoomLayout.safe.bottom), "확대 유닛 바닥 = 동적 안전선").toBeLessThanOrEqual(2);
         expect(zoomLayout.deck.left, "확대 유닛 왼쪽은 화면 안").toBeGreaterThanOrEqual(0);
         expect(zoomLayout.deck.right, "확대 유닛 오른쪽은 화면 안").toBeLessThanOrEqual(zoomLayout.viewportRight);
-        expect(Math.abs(zoomLayout.left.bottom - zoomLayout.deck.bottom), "확대 시 왼쪽 스피커 원본 바닥").toBeLessThanOrEqual(2);
-        expect(Math.abs(zoomLayout.right.bottom - zoomLayout.deck.bottom), "확대 시 오른쪽 스피커 원본 바닥").toBeLessThanOrEqual(2);
-        expect(zoomLayout.left.right, "확대 시 왼쪽 겹침 없음").toBeLessThanOrEqual(zoomLayout.deck.left - 10);
-        expect(zoomLayout.right.left, "확대 시 오른쪽 겹침 없음").toBeGreaterThanOrEqual(zoomLayout.deck.right + 10);
+        // 스피커가 자리를 비웠으니 컴포넌트가 화면 폭을 거의 가득 쓴다.
+        expect(zoomLayout.deck.width, "확대 유닛이 화면 폭을 넓게 사용").toBeGreaterThan(zoomLayout.viewportRight * 0.9);
         await page.keyboard.press("Escape");
         expect(await page.evaluate(() => document.body.classList.contains("focus-unit-zoomed")), "ESC 1회 = 확대 해제").toBe(false);
         expect(await page.evaluate(() => document.body.classList.contains("mode-focus")), "룸은 유지").toBe(true);
@@ -955,6 +952,7 @@ test.describe("데스크톱", () => {
         const smallWidth = await page.locator("#deckStage").evaluate((el) => el.getBoundingClientRect().width);
 
         await page.setViewportSize({ width: 1408, height: 881 });
+        // 단일 확대는 스피커 없이 컴포넌트만 크게 — 창이 커지면 그 컴포넌트가 재측정돼 커진다.
         await page.waitForFunction((oldWidth) => {
             const hero = document.querySelector(".hero-visual");
             const style = getComputedStyle(hero);
@@ -963,25 +961,22 @@ test.describe("데스크톱", () => {
             return deck.width > oldWidth * 2 &&
                 deck.top >= bounds.top + parseFloat(style.paddingTop) - 2 &&
                 deck.bottom <= bounds.bottom - parseFloat(style.paddingBottom) + 2 &&
-                getComputedStyle(document.getElementById("speakerL")).display !== "none";
+                getComputedStyle(document.getElementById("speakerL")).display === "none";
         }, smallWidth);
         const large = await page.evaluate(() => {
             const deck = document.getElementById("deckStage").getBoundingClientRect();
-            const left = document.getElementById("speakerL").getBoundingClientRect();
-            const right = document.getElementById("speakerR").getBoundingClientRect();
             return {
                 bridge: window.__focusBridgeCalls,
-                deck: { left: deck.left, right: deck.right, bottom: deck.bottom },
-                left: { right: left.right, bottom: left.bottom },
-                right: { left: right.left, bottom: right.bottom },
+                speakerL: getComputedStyle(document.getElementById("speakerL")).display,
+                speakerR: getComputedStyle(document.getElementById("speakerR")).display,
+                deck: { left: deck.left, right: deck.right, bottom: deck.bottom, width: deck.width },
                 scroll: [document.documentElement.scrollWidth, document.documentElement.scrollHeight]
             };
         });
         expect(large.bridge).toEqual([true]);
-        expect(large.left.bottom, "확대 전환 뒤 왼쪽 스피커 바닥 일치").toBeCloseTo(large.deck.bottom, 0);
-        expect(large.right.bottom, "확대 전환 뒤 오른쪽 스피커 바닥 일치").toBeCloseTo(large.deck.bottom, 0);
-        expect(large.left.right, "확대 전환 뒤 왼쪽 비겹침").toBeLessThanOrEqual(large.deck.left - 10);
-        expect(large.right.left, "확대 전환 뒤 오른쪽 비겹침").toBeGreaterThanOrEqual(large.deck.right + 10);
+        expect(large.speakerL, "확대 전환 뒤에도 왼쪽 스피커 숨김").toBe("none");
+        expect(large.speakerR, "확대 전환 뒤에도 오른쪽 스피커 숨김").toBe("none");
+        expect(large.deck.width, "확대 유닛이 넓은 화면 폭을 넓게 사용").toBeGreaterThan(1408 * 0.9);
         expect(large.scroll[0], "확대 전환 뒤 가로 무스크롤").toBeLessThanOrEqual(1408);
         expect(large.scroll[1], "확대 전환 뒤 세로 무스크롤").toBeLessThanOrEqual(881);
 

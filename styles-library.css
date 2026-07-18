@@ -622,8 +622,13 @@ body.focus-unit-zoomed .rack-column > :not(.unit-zoomed) {
     display: none !important;
 }
 
+/* 단일 컴포넌트 확대에서는 스피커도 물러난다 — 오직 그 컴포넌트만 화면 가득 크게. */
+body.focus-unit-zoomed .focus-speaker {
+    display: none !important;
+}
+
 body.focus-unit-zoomed .unit-zoomed {
-    width: min(94%, 1680px);
+    width: min(98%, 1920px);
     min-width: 0;
     margin: 0 auto;
     filter: none;
@@ -631,7 +636,7 @@ body.focus-unit-zoomed .unit-zoomed {
 
 @media (max-width: 1180px) {
     body.focus-unit-zoomed .unit-zoomed {
-        width: 94%;
+        width: 98%;
         min-width: 0;
     }
 }
