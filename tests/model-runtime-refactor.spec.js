@@ -79,6 +79,44 @@ test.describe("모델 런타임 리팩토링", () => {
         expect(ids.duplicates).toEqual([]);
     });
 
+    test("스코프된 하드웨어 필터가 실제 SVG defs를 가리킨다", async ({ page }) => {
+        const audit = async (kind, id) => page.evaluate(({ kind, id }) => {
+            if (kind === "amp") { ampModelId = id; mountAmp(); }
+            else { deckModelId = id; mountDeck(); }
+            const svg = document.querySelector(kind === "amp" ? "#ampStage svg" : "#deckStage svg");
+            const hardware = Array.from(svg.querySelectorAll(".lz-hardware-button,.lz-hardware-knob,.lz-hardware-switch"));
+            const unresolved = hardware.flatMap((el) => {
+                const match = el.style.filter.match(/url\(["']?#([^"')]+)["']?\)/);
+                if (!match) return [`${el.tagName}.${el.classList.value}:missing-inline-filter`];
+                const target = document.getElementById(match[1]);
+                return target && target.ownerSVGElement === svg ? [] : [`${el.tagName}.${el.classList.value}:${match[1]}`];
+            });
+            const unresolvedFragments = Array.from(svg.querySelectorAll("*")).flatMap((el) =>
+                Array.from(el.attributes || []).flatMap((attr) => {
+                    const refs = Array.from(attr.value.matchAll(/url\(["']?#([^"')]+)["']?\)/g), (match) => match[1]);
+                    return refs.filter((ref) => {
+                        const target = document.getElementById(ref);
+                        return !target || target.ownerSVGElement !== svg;
+                    }).map((ref) => `${el.tagName}:${attr.name}=${ref}`);
+                }));
+            return {
+                count: hardware.length,
+                customKnobs: svg.querySelectorAll(".e303-cylinder-knob").length,
+                unresolved,
+                unresolvedFragments
+            };
+        }, { kind, id });
+
+        const e303 = await audit("amp", "e303");
+        const ctf1250 = await audit("deck", "ctf1250");
+        expect(e303.customKnobs).toBeGreaterThanOrEqual(4);
+        expect(ctf1250.count).toBeGreaterThanOrEqual(10);
+        expect(e303.unresolved).toEqual([]);
+        expect(ctf1250.unresolved).toEqual([]);
+        expect(e303.unresolvedFragments).toEqual([]);
+        expect(ctf1250.unresolvedFragments).toEqual([]);
+    });
+
     test("애니메이션 스케줄러는 dirty·active 상태에서만 프레임을 유지", async ({ page }) => {
         const result = await page.evaluate(() => {
             let nextId = 0;

@@ -357,18 +357,212 @@ function mfaAmpSvg(spec) {
         '</svg>';
 }
 
+// ACCUPHASE E-303 전용 정면. 공용 앰프 템플릿은 여러 시대의 조형을 섞기 때문에
+// 실제 E-303의 높은 패널, 촘촘한 버튼 뱅크와 대형 볼륨/밸런스 관계를 담기 어렵다.
+// 이 스킨은 전용 재질과 필터만 사용해 공통 lz* 필터 스코핑에도 영향을 받지 않는다.
+function mfaE303Knob(cx, cy, r, options) {
+    const opt = options || {};
+    const ridges = Array.from({ length: Math.max(28, Math.round(r * .65)) }, (_, i) => {
+        const a = i * Math.PI * 2 / Math.max(28, Math.round(r * .65));
+        const x1 = (cx + Math.cos(a) * r * .84).toFixed(1);
+        const y1 = (cy + Math.sin(a) * r * .84).toFixed(1);
+        const x2 = (cx + Math.cos(a) * r * .97).toFixed(1);
+        const y2 = (cy + Math.sin(a) * r * .97).toFixed(1);
+        const light = Math.cos(a + .72) > .55;
+        return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="' + (light ? '#f5f0df' : '#191817') + '" stroke-width="' + Math.max(1.2, r * .024).toFixed(1) + '" opacity="' + (light ? '.7' : '.52') + '"/>';
+    }).join("");
+    const mark = opt.mark
+        ? '<path id="' + opt.mark + '" d="M' + cx + ' ' + (cy - r * .72).toFixed(1) + ' V' + (cy - r * .43).toFixed(1) + '" fill="none" stroke="#29251d" stroke-width="' + Math.max(3, r * .055).toFixed(1) + '" stroke-linecap="round"/>'
+        : '';
+    return '<g class="e303-cylinder-knob">' +
+        '<ellipse cx="' + (cx + r * .05).toFixed(1) + '" cy="' + (cy + r * .78).toFixed(1) + '" rx="' + (r * .94).toFixed(1) + '" ry="' + (r * .27).toFixed(1) + '" fill="#000" opacity=".48" filter="url(#e303KnobShadow)"/>' +
+        '<circle cx="' + cx + '" cy="' + (cy + r * .11).toFixed(1) + '" r="' + (r + 8).toFixed(1) + '" fill="#171612" stroke="#070706" stroke-width="3"/>' +
+        '<circle cx="' + cx + '" cy="' + (cy + r * .07).toFixed(1) + '" r="' + (r + 3).toFixed(1) + '" fill="url(#e303KnobSide)" stroke="#24231f" stroke-width="2"/>' +
+        '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="url(#e303Knurl)" stroke="#5d584b" stroke-width="2"/>' +
+        '<g>' + ridges + '</g>' +
+        '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * .82).toFixed(1) + '" fill="url(#e303KnobFace)" stroke="#777062" stroke-width="1.8"/>' +
+        '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * .75).toFixed(1) + '" fill="none" stroke="#fff" stroke-width="1.3" opacity=".34"/>' +
+        '<path d="M' + (cx - r * .58).toFixed(1) + ' ' + (cy - r * .38).toFixed(1) + ' Q' + (cx - r * .08).toFixed(1) + ' ' + (cy - r * .83).toFixed(1) + ' ' + (cx + r * .42).toFixed(1) + ' ' + (cy - r * .55).toFixed(1) + '" fill="none" stroke="#fff" stroke-width="' + Math.max(2, r * .04).toFixed(1) + '" opacity=".42" stroke-linecap="round"/>' +
+        '<path d="M' + (cx - r * .63).toFixed(1) + ' ' + (cy + r * .46).toFixed(1) + ' Q' + cx + ' ' + (cy + r * .8).toFixed(1) + ' ' + (cx + r * .63).toFixed(1) + ' ' + (cy + r * .46).toFixed(1) + '" fill="none" stroke="#080806" stroke-width="' + Math.max(3, r * .052).toFixed(1) + '" opacity=".48"/>' +
+        mark + '</g>';
+}
+
+function mfaE303Scale(cx, cy, r, labels) {
+    const ticks = Array.from({ length: 11 }, (_, i) => {
+        const a = (-135 + i * 27) * Math.PI / 180;
+        const major = i % 5 === 0;
+        const inner = r + (major ? 11 : 15), outer = r + 23;
+        return '<line x1="' + (cx + Math.sin(a) * inner).toFixed(1) + '" y1="' + (cy - Math.cos(a) * inner).toFixed(1) + '" x2="' + (cx + Math.sin(a) * outer).toFixed(1) + '" y2="' + (cy - Math.cos(a) * outer).toFixed(1) + '" stroke="#6c5d3c" stroke-width="' + (major ? '2.3' : '1.2') + '" opacity="' + (major ? '.82' : '.5') + '"/>';
+    }).join("");
+    const text = (labels || []).map((label, i) => {
+        const a = (-135 + i * (270 / Math.max(1, labels.length - 1))) * Math.PI / 180;
+        return '<text x="' + (cx + Math.sin(a) * (r + 38)).toFixed(1) + '" y="' + (cy + 5 - Math.cos(a) * (r + 38)).toFixed(1) + '">' + label + '</text>';
+    }).join("");
+    return '<g pointer-events="none">' + ticks + '<g font-family="Arial" font-size="11" font-weight="700" fill="#514a39" text-anchor="middle">' + text + '</g></g>';
+}
+
+function mfaE303Meter(x, y, needleId, channel) {
+    const w = 284, h = 158, cx = x + w / 2, cy = y + 136, radius = 106;
+    const polar = (deg, rr) => {
+        const a = deg * Math.PI / 180;
+        return { x: cx + Math.sin(a) * rr, y: cy - Math.cos(a) * rr };
+    };
+    const ticks = Array.from({ length: 17 }, (_, i) => {
+        const deg = -42 + i * 5.25;
+        const major = i % 4 === 0;
+        const p1 = polar(deg, radius), p2 = polar(deg, radius - (major ? 17 : 10));
+        return '<line x1="' + p1.x.toFixed(1) + '" y1="' + p1.y.toFixed(1) + '" x2="' + p2.x.toFixed(1) + '" y2="' + p2.y.toFixed(1) + '" stroke-width="' + (major ? '2.2' : '1.15') + '"/>';
+    }).join("");
+    const nums = ["-40", "-30", "-20", "-10", "0"].map((label, i) => {
+        const p = polar(-42 + i * 21, radius - 31);
+        return '<text x="' + p.x.toFixed(1) + '" y="' + (p.y + 4).toFixed(1) + '">' + label + '</text>';
+    }).join("");
+    const tip = polar(0, radius - 12);
+    return '<g class="e303-meter">' +
+        '<rect x="' + (x - 3) + '" y="' + (y + 5) + '" width="' + (w + 8) + '" height="' + (h + 3) + '" rx="4" fill="#000" opacity=".35" filter="url(#e303MeterShadow)"/>' +
+        '<rect x="' + (x - 4) + '" y="' + (y - 4) + '" width="' + (w + 8) + '" height="' + (h + 8) + '" rx="4" fill="url(#e303MeterRim)" stroke="#77736a" stroke-width="1.5"/>' +
+        '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="2" fill="url(#e303MeterFace)" stroke="#0a0b0a" stroke-width="2"/>' +
+        '<rect class="ampLamp" data-lz-off=".025" data-lz-on=".62" x="' + (x + 3) + '" y="' + (y + 3) + '" width="' + (w - 6) + '" height="' + (h - 6) + '" rx="2" fill="url(#e303MeterLamp)" opacity=".025"/>' +
+        '<path d="M' + polar(-42, radius).x.toFixed(1) + ' ' + polar(-42, radius).y.toFixed(1) + ' A' + radius + ' ' + radius + ' 0 0 1 ' + polar(42, radius).x.toFixed(1) + ' ' + polar(42, radius).y.toFixed(1) + '" fill="none" stroke="#d5bd77" stroke-width="2.2"/>' +
+        '<g stroke="#d8c584">' + ticks + '</g>' +
+        '<g font-family="Arial" font-size="9" font-weight="700" fill="#dfc982" text-anchor="middle">' + nums + '</g>' +
+        '<text x="' + cx + '" y="' + (y + 22) + '" font-family="Arial" font-size="10" font-weight="700" letter-spacing="2" fill="#d9c47e" text-anchor="middle">PEAK POWER · ' + channel + '</text>' +
+        '<text x="' + cx + '" y="' + (y + 148) + '" font-family="Arial" font-size="8" font-weight="700" letter-spacing="1.6" fill="#bca969" text-anchor="middle">WATTS · dB</text>' +
+        '<line id="' + needleId + '" data-cx="' + cx + '" data-cy="' + cy + '" x1="' + cx + '" y1="' + cy + '" x2="' + tip.x.toFixed(1) + '" y2="' + tip.y.toFixed(1) + '" stroke="#e1d3a6" stroke-width="3.2" transform="rotate(-42 ' + cx + ' ' + cy + ')"/>' +
+        '<circle cx="' + cx + '" cy="' + cy + '" r="6" fill="#1b1811" stroke="#b8a56f" stroke-width="1.5"/>' +
+        '<rect class="meterDark" x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="2" fill="#030505" opacity=".55" pointer-events="none"/>' +
+        '<path d="M' + (x + 9) + ' ' + (y + 9) + ' H' + (x + w - 9) + '" stroke="#fff" stroke-width="1.4" opacity=".12"/>' +
+        '<polygon points="' + (x + 8) + ',' + (y + 8) + ' ' + (x + w * .5) + ',' + (y + 8) + ' ' + (x + w * .27) + ',' + (y + h - 8) + ' ' + (x + 8) + ',' + (y + h - 8) + '" fill="url(#e303GlassSweep)" opacity=".55"/>' +
+        '</g>';
+}
+
+function mfaE303Button(x, y, w, h, label, active, id) {
+    return '<g class="e303-button"' + (id ? ' id="' + id + '"' : '') + '>' +
+        '<rect x="' + (x + 1) + '" y="' + (y + 3) + '" width="' + w + '" height="' + h + '" rx="2" fill="#000" opacity=".34" filter="url(#e303ButtonShadow)"/>' +
+        '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="2" fill="#171817" stroke="#77746b" stroke-width="1.2"/>' +
+        '<rect x="' + (x + 3) + '" y="' + (y + 3) + '" width="' + (w - 6) + '" height="' + (h - 6) + '" rx="1.5" fill="' + (active ? '#6e2c25' : 'url(#e303ButtonFace)') + '"/>' +
+        '<path d="M' + (x + 5) + ' ' + (y + 5) + ' H' + (x + w - 5) + '" stroke="#fff" stroke-width="1" opacity=".28"/>' +
+        '<text x="' + (x + w / 2) + '" y="' + (y + h + 13) + '" font-family="Arial" font-size="9" font-weight="700" letter-spacing=".45" fill="#4b4942" text-anchor="middle">' + label + '</text></g>';
+}
+
+function mfaE303Svg(spec) {
+    const speakerButtons = [
+        [270, "OFF", "e303SpeakerOff"], [330, "A", "e303SpeakerA"],
+        [390, "B", "e303SpeakerB"], [450, "A+B", "e303SpeakerAB"]
+    ].map(([x, label, id], i) => mfaE303Button(x, 164, 30, 24, label, i === 1, id)).join("");
+    const impedanceButtons = [
+        [1518, "10", "e303Load10"], [1570, "30", "e303Load30"], [1622, "100", "e303Load100"]
+    ].map(([x, label, id], i) => mfaE303Button(x, 164, 30, 24, label, i === 1, id)).join("");
+    const inputButtons = [
+        ["DISC 1", 378, "e303InputDisc1"], ["DISC 2", 428, "e303InputDisc2"],
+        ["TUNER", 478, "e303InputTuner"], ["AUX", 528, "e303InputAux"],
+        ["TAPE", 578, "e303InputTape"]
+    ].map(([label, y, id], i) => mfaE303Button(1826, y, 36, 24, label, i === 2, id)).join("");
+    const toneButtons = [
+        [520, "200Hz", "e303Tone200"], [572, "500Hz", "e303Tone500"],
+        [624, "TONE", "e303ToneOn"], [676, "2kHz", "e303Tone2k"], [728, "7kHz", "e303Tone7k"]
+    ].map(([x, label, id], i) => mfaE303Button(x, 594, 28, 23, label, i === 2, id)).join("");
+    const tapeButtons = [
+        [930, "REC", "e303TapeRec"], [990, "MON 1", "e303TapeMon1"],
+        [1050, "MON 2", "e303TapeMon2"], [1110, "COPY", "e303TapeCopy"]
+    ].map(([x, label, id], i) => mfaE303Button(x, 488, 30, 24, label, i === 3, id)).join("");
+    const modeButtons = [
+        [1120, "MODE", "e303Mode"], [1190, "ATT", "e303Attenuator"], [1260, "SUB", "e303Subsonic"]
+    ].map(([x, label, id]) => mfaE303Button(x, 594, 30, 24, label, false, id)).join("");
+    const volumeCx = 1580, volumeCy = 446, volumeR = 100;
+    const volumeTicks = Array.from({ length: 31 }, (_, i) => {
+        const a = (-135 + i * 9) * Math.PI / 180;
+        const major = i % 5 === 0;
+        const r1 = volumeR + (major ? 12 : 17), r2 = volumeR + 27;
+        return '<line x1="' + (volumeCx + Math.sin(a) * r1).toFixed(1) + '" y1="' + (volumeCy - Math.cos(a) * r1).toFixed(1) + '" x2="' + (volumeCx + Math.sin(a) * r2).toFixed(1) + '" y2="' + (volumeCy - Math.cos(a) * r2).toFixed(1) + '" stroke="#5d5a52" stroke-width="' + (major ? '2.2' : '1.05') + '" opacity="' + (major ? '.78' : '.46') + '"/>';
+    }).join("");
+    const volumeNums = Array.from({ length: 11 }, (_, i) => {
+        const a = (-135 + i * 27) * Math.PI / 180;
+        return '<text x="' + (volumeCx + Math.sin(a) * (volumeR + 44)).toFixed(1) + '" y="' + (volumeCy + 4 - Math.cos(a) * (volumeR + 44)).toFixed(1) + '">' + i + '</text>';
+    }).join("");
+    const balanceTicks = Array.from({ length: 11 }, (_, i) => '<line x1="' + (1490 + i * 18) + '" y1="586" x2="' + (1490 + i * 18) + '" y2="' + (i === 5 ? 601 : 596) + '" stroke="#5d5a52" stroke-width="' + (i === 5 ? 2 : 1) + '"/>').join("");
+    return `<svg class="amp-svg e303-svg" viewBox="0 0 2000 720" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="ACCUPHASE E-303 TRIBUTE 인티그레이티드 앰프 정면">
+    <defs>
+        <linearGradient id="e303Face" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbfaf5"/><stop offset=".1" stop-color="#edeae1"/><stop offset=".5" stop-color="#d8d4c9"/><stop offset=".88" stop-color="#c0baad"/><stop offset="1" stop-color="#999287"/></linearGradient>
+        <linearGradient id="e303Edge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".18" stop-color="#d7d4cc"/><stop offset=".72" stop-color="#8c8981"/><stop offset="1" stop-color="#464541"/></linearGradient>
+        <linearGradient id="e303SideRail" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4e5051"/><stop offset=".24" stop-color="#eef0ed"/><stop offset=".48" stop-color="#a4a7a5"/><stop offset=".74" stop-color="#f4f4ef"/><stop offset="1" stop-color="#515354"/></linearGradient>
+        <pattern id="e303Hair" width="10" height="5" patternUnits="userSpaceOnUse"><path d="M0 .5H10 M0 2.5H10 M0 4.5H10" stroke="#fff" stroke-width=".35" opacity=".045"/><path d="M0 1.5H10 M0 3.5H10" stroke="#4a4945" stroke-width=".3" opacity=".03"/></pattern>
+        <linearGradient id="e303MeterRim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8d8a80"/><stop offset=".18" stop-color="#33332e"/><stop offset=".72" stop-color="#111210"/><stop offset="1" stop-color="#979386"/></linearGradient>
+        <radialGradient id="e303MeterFace" cx="50%" cy="38%" r="76%"><stop offset="0" stop-color="#29281f"/><stop offset=".5" stop-color="#12130f"/><stop offset="1" stop-color="#050605"/></radialGradient>
+        <radialGradient id="e303MeterLamp" cx="50%" cy="25%" r="84%"><stop offset="0" stop-color="#ffe8a8" stop-opacity=".78"/><stop offset=".5" stop-color="#d6a94f" stop-opacity=".3"/><stop offset="1" stop-color="#b27b2b" stop-opacity="0"/></radialGradient>
+        <linearGradient id="e303GlassSweep" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".17"/><stop offset=".3" stop-color="#fff" stop-opacity=".035"/><stop offset=".62" stop-color="#fff" stop-opacity="0"/></linearGradient>
+        <linearGradient id="e303KnobSide" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#282724"/><stop offset=".17" stop-color="#aaa597"/><stop offset=".38" stop-color="#4a4842"/><stop offset=".61" stop-color="#d6d0c0"/><stop offset=".82" stop-color="#4b4942"/><stop offset="1" stop-color="#171714"/></linearGradient>
+        <radialGradient id="e303KnobFace" cx="31%" cy="25%" r="88%"><stop offset="0" stop-color="#fffdf4"/><stop offset=".18" stop-color="#ded9ca"/><stop offset=".48" stop-color="#999589"/><stop offset=".76" stop-color="#55534e"/><stop offset="1" stop-color="#222321"/></radialGradient>
+        <pattern id="e303Knurl" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(23)"><path d="M1 0V7 M4.5 0V7" stroke="#f5f0e4" stroke-width="1" opacity=".32"/><path d="M2.8 0V7 M6.2 0V7" stroke="#151513" stroke-width="1.2" opacity=".66"/></pattern>
+        <linearGradient id="e303ButtonFace" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#777873"/><stop offset=".22" stop-color="#4a4b48"/><stop offset=".7" stop-color="#292a28"/><stop offset="1" stop-color="#121311"/></linearGradient>
+        <filter id="e303Contact" x="-25%" y="-30%" width="160%" height="190%"><feGaussianBlur stdDeviation="6"/></filter>
+        <filter id="e303MeterShadow" x="-20%" y="-25%" width="150%" height="170%"><feGaussianBlur stdDeviation="3"/></filter>
+        <filter id="e303KnobShadow" x="-45%" y="-60%" width="200%" height="230%"><feGaussianBlur stdDeviation="8"/></filter>
+        <filter id="e303ButtonShadow" x="-45%" y="-60%" width="200%" height="240%"><feGaussianBlur stdDeviation="1.5"/></filter>
+    </defs>
+    <ellipse cx="1000" cy="702" rx="930" ry="16" fill="#000" opacity=".38" filter="url(#e303Contact)"/>
+    <rect x="0" y="12" width="34" height="690" rx="6" fill="url(#e303SideRail)"/><rect x="1966" y="12" width="34" height="690" rx="6" fill="url(#e303SideRail)"/>
+    <path d="M27 24V688 M1973 24V688" stroke="#fff" stroke-width="2" opacity=".48"/>
+    <rect x="28" y="18" width="1944" height="680" rx="5" fill="url(#e303Edge)"/>
+    <rect x="36" y="25" width="1928" height="666" rx="3" fill="url(#e303Face)" stroke="#8d8980" stroke-width="1.5"/>
+    <rect x="36" y="25" width="1928" height="666" rx="3" fill="url(#e303Hair)" opacity=".9"/>
+    <path d="M44 33H1956" stroke="#fff" stroke-width="2.5" opacity=".58"/><path d="M44 683H1956" stroke="#4b4944" stroke-width="5" opacity=".48"/>
+    <path d="M70 300H1930" stroke="#aaa497" stroke-width="1.5"/><path d="M70 304H1930" stroke="#fff" opacity=".42"/>
+
+    <text x="270" y="136" font-family="Arial" font-size="12" font-weight="700" letter-spacing="2" fill="#46453f">SPEAKERS</text>
+    <path d="M266 146H484 M266 146V153 M484 146V153" stroke="#8b877d" fill="none"/>
+    ${speakerButtons}
+    <text x="625" y="152" font-family="Georgia,Times New Roman,serif" font-size="28" font-style="italic" fill="#3e3d38" text-anchor="middle">Accuphase</text>
+    <g font-family="Arial" fill="#4b4943" text-anchor="middle"><text x="625" y="175" font-size="9" font-weight="700" letter-spacing="1.2">INTEGRATED</text><text x="625" y="190" font-size="9" font-weight="700" letter-spacing="1.1">STEREO AMPLIFIER · E-303</text></g>
+
+    ${mfaE303Meter(830, 82, "ampVuL", "LEFT")}${mfaE303Meter(1130, 82, "ampVuR", "RIGHT")}
+
+    <text x="1516" y="136" font-family="Arial" font-size="10" font-weight="700" letter-spacing="1.4" fill="#46453f">DISC 1 IMPEDANCE</text>
+    <path d="M1512 146H1664 M1512 146V153 M1664 146V153" stroke="#8b877d" fill="none"/>${impedanceButtons}
+    <text x="1742" y="136" font-family="Arial" font-size="10" font-weight="700" letter-spacing="1.2" fill="#46453f">HEAD AMP</text>
+    ${mfaE303Button(1750, 164, 30, 24, "ON", false, "e303HeadAmp")}
+
+    <text x="285" y="337" font-family="Arial" font-size="12" font-weight="700" letter-spacing="1.8" fill="#494842" text-anchor="middle">LOUDNESS COMPENSATOR</text>
+    ${mfaE303Scale(285, 446, 57, ["OFF", "1", "2", "3"])}${mfaE303Knob(285, 446, 57, { mark: "e303LoudnessMark" })}
+    <text x="575" y="337" font-family="Arial" font-size="12" font-weight="700" letter-spacing="1.8" fill="#494842" text-anchor="middle">BASS</text>
+    ${mfaE303Scale(575, 446, 59, ["-7.5", "0", "+7.5"])}${mfaE303Knob(575, 446, 59)}
+    <text x="790" y="337" font-family="Arial" font-size="12" font-weight="700" letter-spacing="1.8" fill="#494842" text-anchor="middle">TREBLE</text>
+    ${mfaE303Scale(790, 446, 59, ["-7.5", "0", "+7.5"])}${mfaE303Knob(790, 446, 59)}
+
+    <g fill="none" stroke="#9c978b"><path d="M510 574H766 M510 574V584 M766 574V584"/><path d="M918 468H1152 M918 468V478 M1152 468V478"/><path d="M1108 574H1302 M1108 574V584 M1302 574V584"/></g>
+    <g font-family="Arial" font-size="10" font-weight="700" letter-spacing="1.1" fill="#4b4943" text-anchor="middle"><text x="638" y="568">TONE CONTROL</text><text x="1035" y="462">TAPE MONITOR · COPY</text><text x="1205" y="568">MODE · ATTENUATOR · SUBSONIC</text></g>
+    ${toneButtons}${tapeButtons}${modeButtons}
+
+    <text x="1580" y="337" font-family="Arial" font-size="12" font-weight="700" letter-spacing="2.2" fill="#494842" text-anchor="middle">VOLUME</text>
+    <g>${volumeTicks}<g font-family="Arial" font-size="11" font-weight="700" fill="#4f4d47" text-anchor="middle">${volumeNums}</g></g>
+    ${mfaE303Knob(volumeCx, volumeCy, volumeR, { mark: "ampVolMark" })}
+    <g>${balanceTicks}
+    <rect x="1482" y="606" width="196" height="10" rx="5" fill="#111210" stroke="#66645e" stroke-width="1.4"/><rect x="1488" y="609" width="184" height="4" rx="2" fill="#020303"/>
+    <g id="e303BalanceCap"><rect x="1576" y="586" width="8" height="48" rx="2" fill="#171817" stroke="#77736a" stroke-width="1.2"/><path d="M1578 589V628" stroke="#b7b4aa" opacity=".35"/></g>
+    <text x="1472" y="615" font-family="Arial" font-size="9" font-weight="700" fill="#4b4943" text-anchor="end">L</text><text x="1688" y="615" font-family="Arial" font-size="9" font-weight="700" fill="#4b4943">R</text>
+    <text x="1580" y="655" font-family="Arial" font-size="10" font-weight="700" letter-spacing="1.8" fill="#4b4943" text-anchor="middle">BALANCE</text></g>
+
+    <g><text x="1844" y="337" font-family="Arial" font-size="11" font-weight="700" letter-spacing="1.4" fill="#494842" text-anchor="middle">INPUT</text>${inputButtons}</g>
+
+    <g id="e303PowerButton"><text x="245" y="578" font-family="Arial" font-size="10" font-weight="700" letter-spacing="1.5" fill="#4b4943" text-anchor="middle">POWER</text><rect x="210" y="590" width="70" height="34" rx="2" fill="#111210" stroke="#77736a" stroke-width="1.5"/><rect x="216" y="596" width="58" height="20" rx="1.5" fill="url(#e303ButtonFace)"/><path d="M220 599H270" stroke="#fff" opacity=".25"/><circle id="ampPwrLed" cx="270" cy="607" r="4" fill="#3a2012"/><circle class="ampLamp" data-lz-off=".02" data-lz-on=".76" cx="270" cy="607" r="3.5" fill="#d48534" opacity=".02"/></g>
+    <g><text x="350" y="578" font-family="Arial" font-size="10" font-weight="700" letter-spacing="1.5" fill="#4b4943" text-anchor="middle">PHONES</text><ellipse cx="350" cy="628" rx="25" ry="7" fill="#000" opacity=".24" filter="url(#e303ButtonShadow)"/><circle cx="350" cy="608" r="25" fill="url(#e303KnobSide)" stroke="#55544f" stroke-width="1.5"/><circle cx="350" cy="608" r="15" fill="#080909" stroke="#8b8880"/><circle cx="350" cy="608" r="7" fill="#010202"/><path d="M339 596A16 16 0 0 1 361 596" fill="none" stroke="#fff" stroke-width="1.5" opacity=".28"/></g>
+
+    <g pointer-events="none" fill="#343532" stroke="#d8d6cf"><circle cx="52" cy="44" r="6"/><circle cx="1948" cy="44" r="6"/><circle cx="52" cy="672" r="6"/><circle cx="1948" cy="672" r="6"/></g>
+    </svg>`;
+}
+
 const MFA_AMPS = [
-    { id: "e303", brand: "ACCUPHASE", model: "E-303", pill: "TR · E-303 TRIBUTE", face: "champagne", wood: true, signature: "accuphase", visibleVolumeR: 126, tagline: "precision stereo control", desc: "빠른 과도응답과 개방적인 상단을 노린 정밀 제어형 사운드", drive: 1.03, k: .06, asym: 0, bass: [65, .2], lowMid: [250, 0, .82], mid: [1100, 0, 1], presence: [3400, .4, .9], treble: [11000, .6], out: .96 }
+    { id: "e303", brand: "ACCUPHASE", model: "E-303", pill: "TR · E-303 TRIBUTE", face: "champagne", signature: "accuphase", vol: { cx: 1580, cy: 446, r: 112 }, tagline: "precision stereo control", desc: "빠른 과도응답과 개방적인 상단을 노린 정밀 제어형 사운드", drive: 1.03, k: .06, asym: 0, bass: [65, .2], lowMid: [250, 0, .82], mid: [1100, 0, 1], presence: [3400, .4, .9], treble: [11000, .6], out: .96 }
 ];
 
 MFA_AMPS.forEach((spec) => {
     AMP_MODELS[spec.id] = {
         pill: spec.pill,
         desc: spec.desc,
-        vol: { cx: 1595, cy: 244, r: 158 },
+        vol: spec.vol || { cx: 1595, cy: 244, r: 158 },
         drive: spec.drive, k: spec.k, asym: spec.asym,
         bass: spec.bass, lowMid: spec.lowMid, mid: spec.mid, presence: spec.presence, treble: spec.treble, out: spec.out, circuit: spec.circuit,
-        svg: mfaAmpSvg(spec)
+        svg: spec.id === "e303" ? mfaE303Svg(spec) : mfaAmpSvg(spec)
     };
     AMP_ORDER.push(spec.id);
 });

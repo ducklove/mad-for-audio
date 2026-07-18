@@ -144,6 +144,17 @@ test.describe("데스크톱", () => {
         await expect(page.locator("#tsFreq")).toHaveCount(0);
         await page.locator('#ampPicker .skin-btn', { hasText: "E-303 TRIBUTE" }).click();
         await expect(page.locator('#ampStage svg[aria-label*="ACCUPHASE E-303"]')).toHaveCount(1);
+        await expect(page.locator("#ampStage svg")).toHaveAttribute("viewBox", "0 0 2000 720");
+        await expect(page.locator("#ampStage .e303-cylinder-knob")).toHaveCount(4);
+        await expect(page.locator("#ampStage .e303-meter")).toHaveCount(2);
+        await expect(page.locator("#ampStage .e303-button")).toHaveCount(25);
+        expect(await page.locator("#ampStage .e303-button").evaluateAll((buttons) =>
+            Math.max(...buttons.map((button) => Number(button.querySelectorAll("rect")[1].getAttribute("width")))))).toBeLessThanOrEqual(36);
+        await expect(page.locator("#e303BalanceCap rect")).toHaveAttribute("width", "8");
+        await expect(page.locator("#e303BalanceCap")).toHaveCount(1);
+        await expect(page.locator('#ampStage [role="slider"][aria-label="BALANCE"]')).toHaveCount(1);
+        expect(await page.locator("#ampStage svg").evaluate((svg) =>
+            [...svg.children].filter((el) => el.tagName === "line" && ["740", "1060"].includes(el.getAttribute("x1"))).length)).toBe(0);
         await page.locator('#ampPicker .skin-btn', { hasText: "KT88 · MA2375" }).click();
         await expect(page.locator('#ampStage svg[aria-label*="McIntosh MA2375"]')).toHaveCount(1);
         await expect(page.locator("#ampStage")).not.toHaveClass(/amp-stage-tall/);
@@ -1014,21 +1025,46 @@ test.describe("데스크톱", () => {
     test("DRAGON 릴 정렬: 카세트·투명 창·회전축 중심 일치", async ({ page }) => {
         await page.evaluate(() => { deckModelId = "dragon"; mountDeck(); });
         const geometry = await page.evaluate(() => {
+            const door = document.getElementById("dragonCassetteDoor");
             const shell = document.getElementById("dragonCassetteShell");
             const aperture = document.getElementById("dragonReelWindow");
             const left = document.getElementById("deckReelL");
             const right = document.getElementById("deckReelR");
             const center = (el) => Number(el.getAttribute("x")) + Number(el.getAttribute("width")) / 2;
+            const windowBox = {
+                x: Number(aperture.getAttribute("x")), y: Number(aperture.getAttribute("y")),
+                w: Number(aperture.getAttribute("width")), h: Number(aperture.getAttribute("height"))
+            };
+            const packAudit = (side, reel) => {
+                const pack = document.getElementById("deckPack" + side);
+                const cx = Number(pack.getAttribute("cx")), cy = Number(pack.getAttribute("cy"));
+                const packR = Number(pack.getAttribute("r"));
+                const hubR = Number(reel.querySelector("circle").getAttribute("r"));
+                return {
+                    contained: cx - packR >= windowBox.x && cx + packR <= windowBox.x + windowBox.w &&
+                        cy - packR >= windowBox.y && cy + packR <= windowBox.y + windowBox.h,
+                    hubR, packR
+                };
+            };
             return {
+                door: center(door),
                 shell: center(shell),
                 aperture: center(aperture),
                 reels: (Number(left.dataset.cx) + Number(right.dataset.cx)) / 2,
-                ys: [Number(left.dataset.cy), Number(right.dataset.cy)]
+                windowY: windowBox.y + windowBox.h / 2,
+                ys: [Number(left.dataset.cy), Number(right.dataset.cy)],
+                packs: [packAudit("L", left), packAudit("R", right)]
             };
         });
+        expect(Math.abs(geometry.door - geometry.shell), "도어와 카세트 중심").toBeLessThanOrEqual(1);
         expect(Math.abs(geometry.shell - geometry.aperture), "카세트와 릴 창 중심").toBeLessThanOrEqual(1);
         expect(Math.abs(geometry.shell - geometry.reels), "카세트와 좌우 릴 중점").toBeLessThanOrEqual(1);
         expect(geometry.ys[0]).toBe(geometry.ys[1]);
+        expect(Math.abs(geometry.windowY - geometry.ys[0]), "릴 창과 회전축 수직 중심").toBeLessThanOrEqual(1);
+        geometry.packs.forEach((pack) => {
+            expect(pack.contained, "테이프 팩이 투명 창 안에 포함").toBe(true);
+            expect(pack.hubR, "허브가 테이프 팩보다 작음").toBeLessThan(pack.packR);
+        });
 
         const rotated = await page.evaluate(() => {
             deckReelAngle = 37;
@@ -1052,8 +1088,8 @@ test.describe("데스크톱", () => {
             };
             return { left: check("L", 610), right: check("R", 850) };
         });
-        expect(rotated.left.transform).toContain(" 463 260)");
-        expect(rotated.right.transform).toContain(" 703 260)");
+        expect(rotated.left.transform).toContain(" 450 260)");
+        expect(rotated.right.transform).toContain(" 622 260)");
         expect(rotated.left.distance).toBeLessThan(1);
         expect(rotated.right.distance).toBeLessThan(1);
     });
@@ -1063,8 +1099,13 @@ test.describe("데스크톱", () => {
         await page.evaluate(() => {
             const k = [...document.querySelectorAll("#ampStage svg [role=slider]")].find((e) => e.getAttribute("aria-label") === "BASS");
             for (let i = 0; i < 5; i++) k.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true }));
+            const balance = [...document.querySelectorAll("#ampStage svg [role=slider]")].find((e) => e.getAttribute("aria-label") === "BALANCE");
+            for (let i = 0; i < 4; i++) balance.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
         });
         expect(await page.evaluate(() => JSON.parse(localStorage.getItem("fmRadio.frontPanel"))["e303.bass"]), "톤 영속").toBeCloseTo(4, 1);
+        expect(await page.evaluate(() => JSON.parse(localStorage.getItem("fmRadio.frontPanel"))["e303.balance"]), "밸런스 슬라이더 영속").toBeCloseTo(.4, 2);
+        await page.locator('#ampStage [role="button"][aria-label="라우드니스 보상 켜기/끄기"]').click();
+        await expect(page.locator("#e303LoudnessMark")).toHaveAttribute("transform", "rotate(45 285 446)");
         await page.evaluate(() => { setUnitShow("eq", true); eqTogglePower(); });
         expect(await page.evaluate(() => eqPowerOn)).toBe(false);
         expect(await page.evaluate(() => document.querySelector("#eqStage svg").style.filter)).toContain("brightness");

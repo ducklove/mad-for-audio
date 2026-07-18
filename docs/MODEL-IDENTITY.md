@@ -1,4 +1,4 @@
-# 공개 모델 정체성 — v112
+# 공개 모델 정체성 — v127
 
 이 문서는 현재 설정 화면에서 선택할 수 있는 하이파이 모델의 정체성과 구현 범위를 정리한다.
 공개 카탈로그는 **선택 모델 19종**(튜너 3, 이퀄라이저 2, 앰프 5, 카세트 데크 5,
@@ -29,9 +29,9 @@
 | 앰프 | McIntosh MC2105 | 블랙 글라스, 듀얼 블루 POWER OUTPUT 미터, 그린 레전드 |
 | 앰프 | 8B TRIBUTE | EL34 갤러리, 단계적 워밍업, 순환식 바이어스 모니터 |
 | 앰프 | 91E TRIBUTE | 300B·정류관 갤러리, 지연 점등, 싱글엔디드 보이싱 |
-| 앰프 | E-303 TRIBUTE | 샴페인 패널, 피크 미터, 정돈된 스위치 열, 저음량 LOUDNESS |
+| 앰프 | E-303 TRIBUTE | 밝은 샴페인 패널, 독립 듀얼 피크 미터, 소형 버튼군, LOUDNESS·대형 VOLUME·BALANCE 레버 |
 | 앰프 | McIntosh MA2375 | 넓은 블랙글라스 상부와 스테인리스 하부, 블루 미터, KT88 크롬 케이지, 5밴드 톤 |
-| 데크 | Nakamichi Dragon | 스모크 웰, 4자리 카운터, 2×20 피크 미터, NAAC·오토 리버스 |
+| 데크 | Nakamichi Dragon | 작은 카세트 도어, 방향/Auto Azimuth·NAAC, 4자리 카운터, 세로 L/R 미터, 4행 제어 매트릭스 |
 | 데크 | Revox B215 | 오픈 트랜스포트, 모듈 키패드, MEM·CUE·RST·AUTO CAL |
 | 데크 | Tandberg TCD 3014A | 우드 케이스, 웜 아날로그 미터, 큰 노브, 높은 녹음 헤드룸 |
 | 데크 | Pioneer CT-F1250 | 월넛·헤어라인 실버, 플렉시 도어, 블루 카운터, 플루로스캔 미터 |
@@ -106,11 +106,12 @@
 - 벌룬형 300B와 정류관의 지연 점등, 웜 단일 미터, 단계식 볼륨이 식별 요소다.
 - 2차 배음과 낮은 댐핑을 이용한 가장 부드러운 프로필이다.
 
-### E-303 TRIBUTE — 샴페인 계측기 문법
+### E-303 TRIBUTE — 실기 전면을 따른 정밀 제어형 앰프
 
-- 특정 실물의 정확한 복제품이 아니라 샴페인 골드 계측기 문법과 앱의 LOUDNESS 기능을
-  결합한 **창작 재해석**이다.
-- 피크 미터, 정렬된 토글과 대형 볼륨을 수평 기준선에 맞춰 정밀한 인상을 만든다.
+- 밝은 실버·옅은 샴페인 금속, 독립된 두 피크 미터, 좌측 SPEAKERS와 우측 MC LOAD/HEAD AMP
+  소형 버튼군을 실기 전면의 큰 구획 순서에 맞춘다.
+- 하단은 LOUDNESS·BASS·TREBLE, 작은 TONE/TAPE/MODE 버튼군, 대형 VOLUME과 얇은
+  BALANCE 레버, 세로 INPUT 버튼 열로 구성한다. 앱 기능 때문에 부품 형상을 바꾸지 않는다.
 - 거의 중립인 프로필에 저음량 등청감 보상을 선택적으로 더한다.
 
 ### McIntosh MA2375 — 현대 올튜브 플래그십
@@ -123,8 +124,9 @@
 
 ### Nakamichi Dragon — 정보 밀도와 NAAC
 
-- 좌측 스모크 카세트 웰, 중앙 4자리 카운터·2×20 피크 미터, 우측 NAAC·테이프·노이즈
-  리덕션, 하단 트랜스포트를 네 구역으로 분리한다.
+- 좌측 POWER/TIMER/EJECT 열과 방향·Auto Azimuth 표시가 있는 작은 카세트 도어,
+  중앙 4자리 카운터·세로 L/R 미터, 4행 트랜스포트/캘리브레이션 매트릭스,
+  우측 레벨 노브·필터 열을 실기와 같은 순서로 분리한다.
 - 외부에서 가져온 테이프의 고역 감쇠를 NAAC이 보정하고, 오토 리버스는 반대 면 재생 또는
   공면 리피트로 동작한다.
 - 테이프 위치, 양면과 녹음 구간은 브라우저 저장소에 유지된다.
@@ -187,7 +189,7 @@
 ## 프런트패널 전면 소생 (v107)
 
 그려져 있던 모든 조작부에 기능을 배선했다 — 장식 오브젝트 제로가 목표.
-- **앰프**: E-303 BASS/TREBLE/BALANCE/INPUT/REC OUT/SPEAKERS/MUTING(-20dB)/TAPE MON/SUBSONIC,
+- **앰프**: E-303 LOUDNESS/BASS/TREBLE/BALANCE/INPUT/SPEAKERS/ATTENUATOR(-20dB)/TAPE MON/SUBSONIC,
   MA2375 5밴드 톤+소스별 INPUT TRIM, MC2105 L·R GAIN(채널 트림)+SPEAKERS, 91E 입력 5키.
   전원 스위치류는 모두 시스템 재생/정지. DSP는 ampOut→gainNode 사이 fp 스테이지(Chromium).
 - **데크**: DRAGON BIAS/LEVEL/TAPE(I·II·IV)/DOLBY(OFF·B·C)/MPX, B215 12키 전부(수동 캘리브레이션

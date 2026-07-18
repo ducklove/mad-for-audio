@@ -1935,6 +1935,75 @@ function fpKnob(svg, cx, cy, r, keyOrFn, o) {
     return paint;
 }
 
+// 실기에서 회전 노브가 아닌 수평 BALANCE/LEVEL 조작도 원래 형태 그대로 소생한다.
+// capId가 가리키는 SVG 그룹은 중앙 위치를 기준으로 이동하며, 트랙 전체가 키보드·드래그 입력을 받는다.
+function fpHorizontalSlider(svg, x1, x2, y, key, o) {
+    const cap = o.capId ? document.getElementById(o.capId) : null;
+    const center = (x1 + x2) / 2;
+    const clamp = (v) => Math.max(o.min, Math.min(o.max, v));
+    const fraction = (v) => (clamp(v) - o.min) / (o.max - o.min);
+    const paint = () => {
+        const x = x1 + fraction(fpGet(key, o.def)) * (x2 - x1);
+        if (cap) cap.setAttribute("transform", "translate(" + (x - center).toFixed(1) + " 0)");
+        hit.setAttribute("aria-valuenow", String(Math.round(fraction(fpGet(key, o.def)) * 100)));
+    };
+    const hit = document.createElementNS(SVG_NS, "rect");
+    hit.setAttribute("x", x1 - 18);
+    hit.setAttribute("y", y - 28);
+    hit.setAttribute("width", x2 - x1 + 36);
+    hit.setAttribute("height", 56);
+    hit.setAttribute("rx", 12);
+    hit.setAttribute("fill", "#000");
+    hit.setAttribute("fill-opacity", "0");
+    hit.setAttribute("style", "cursor:ew-resize;touch-action:none");
+    hit.setAttribute("tabindex", "0");
+    hit.setAttribute("role", "slider");
+    hit.setAttribute("aria-label", o.label);
+    hit.setAttribute("aria-valuemin", "0");
+    hit.setAttribute("aria-valuemax", "100");
+    const title = document.createElementNS(SVG_NS, "title");
+    title.textContent = o.title || (o.label + " — 좌우로 드래그, 더블클릭 = 중앙");
+    hit.appendChild(title);
+    svg.appendChild(hit);
+    const setFromClientX = (clientX) => {
+        const rect = hit.getBoundingClientRect();
+        const t = Math.max(0, Math.min(1, (clientX - rect.left - 18) / Math.max(1, rect.width - 36)));
+        const v = o.min + t * (o.max - o.min);
+        fpSet(key, v);
+        if (o.apply) o.apply(v);
+        paint();
+        fpNote(o.label + " " + o.fmt(v));
+    };
+    let dragging = false;
+    hit.addEventListener("pointerdown", (e) => {
+        dragging = true;
+        try { hit.setPointerCapture(e.pointerId); } catch (err) {}
+        setFromClientX(e.clientX);
+        e.preventDefault();
+    });
+    hit.addEventListener("pointermove", (e) => { if (dragging) setFromClientX(e.clientX); });
+    ["pointerup", "pointercancel"].forEach((name) => hit.addEventListener(name, () => { dragging = false; }));
+    hit.addEventListener("dblclick", () => {
+        fpSet(key, o.def);
+        if (o.apply) o.apply(o.def);
+        paint();
+        fpNote(o.label + " " + o.fmt(o.def));
+    });
+    hit.addEventListener("keydown", (e) => {
+        const step = (e.key === "ArrowRight" || e.key === "ArrowUp") ? 1 :
+            (e.key === "ArrowLeft" || e.key === "ArrowDown") ? -1 : 0;
+        if (!step) return;
+        e.preventDefault();
+        const value = clamp(fpGet(key, o.def) + step * (o.max - o.min) / 20);
+        fpSet(key, value);
+        if (o.apply) o.apply(value);
+        paint();
+        fpNote(o.label + " " + o.fmt(value));
+    });
+    paint();
+    return paint;
+}
+
 // 버튼·스위치 소생 — 투명 히트 + 클릭/키보드
 function fpButton(svg, x, y, w, h, label, title, onClick) {
     const hit = document.createElementNS(SVG_NS, "rect");
@@ -1952,6 +2021,17 @@ function fpButton(svg, x, y, w, h, label, title, onClick) {
     hit.addEventListener("click", onClick);
     svgButtonize(hit, label);
     return hit;
+}
+
+// 전용 스킨의 부품 좌표를 앱에 한 번 더 복사하지 않는다. 실제 SVG 부품의 bbox에서
+// 히트 영역을 만들면 비례를 다시 다듬어도 클릭 영역이 과거 좌표에 남지 않는다.
+function fpButtonFromPart(svg, id, label, title, onClick, pad) {
+    const part = svg.querySelector("#" + id);
+    if (!part || typeof part.getBBox !== "function") return null;
+    let box;
+    try { box = part.getBBox(); } catch (error) { return null; }
+    const p = Number.isFinite(pad) ? pad : 6;
+    return fpButton(svg, box.x - p, box.y - p, box.width + p * 2, box.height + p * 2, label, title, onClick);
 }
 
 // 입력 셀렉터 공통 — 실제 소스를 전환한다 (기존 조작 경로를 그대로 태운다)
@@ -2007,28 +2087,37 @@ function bindAmpFrontPanel() {
         power(1088, 388, 64, 64);
         phones(1230, 420);
     } else if (ampModelId === "e303") {
-        fpKnob(svg, 420, 444, 42, "e303.bass", { label: "BASS", min: -8, max: 8, def: 0, fmt: FP_DB });
-        fpKnob(svg, 580, 444, 42, "e303.treble", { label: "TREBLE", min: -8, max: 8, def: 0, fmt: FP_DB });
-        fpKnob(svg, 740, 444, 42, "e303.balance", { label: "BALANCE", min: -1, max: 1, def: 0, fmt: (v) => Math.abs(v) < 0.03 ? "CENTER" : (v < 0 ? "L " : "R ") + Math.round(Math.abs(v) * 100) + "%" });
-        fpKnob(svg, 1060, 444, 42, "rec.level", { label: "REC OUT — 녹음 레벨", min: 0.4, max: 2, def: 1, fmt: FP_PCT });
-        fpButton(svg, 1178, 402, 84, 84, "입력 선택", "INPUT — 누를 때마다 TUNER → PHONO → TAPE 순환", fpCycleInput);
-        fpButton(svg, 812, 168, 76, 56, "스피커 전환", "SPEAKERS — 스피커 연결 차단/복구", fpToggleSpeakers);
-        fpButton(svg, 812, 230, 76, 56, "뮤팅", "MUTING — -20dB 감쇠 (심야 청취)", () => {
+        fpKnob(svg, 575, 446, 48, "e303.bass", { label: "BASS", min: -8, max: 8, def: 0, fmt: FP_DB, ink: "#2f2b22" });
+        fpKnob(svg, 790, 446, 48, "e303.treble", { label: "TREBLE", min: -8, max: 8, def: 0, fmt: FP_DB, ink: "#2f2b22" });
+        fpHorizontalSlider(svg, 1490, 1670, 611, "e303.balance", {
+            label: "BALANCE", min: -1, max: 1, def: 0, capId: "e303BalanceCap",
+            fmt: (v) => Math.abs(v) < 0.03 ? "CENTER" : (v < 0 ? "L " : "R ") + Math.round(Math.abs(v) * 100) + "%"
+        });
+        [["e303SpeakerOff", true, "OFF"], ["e303SpeakerA", false, "A"], ["e303SpeakerB", false, "B"], ["e303SpeakerAB", false, "A+B"]].forEach(([id, off, label]) => {
+            fpButtonFromPart(svg, id, "스피커 " + label, "SPEAKERS " + label, () => {
+                speakersOff = off;
+                applyFrontPanel();
+                fpNote(off ? "SPEAKERS OFF — 스피커 출력을 차단했습니다." : "SPEAKERS " + label + " — 스피커 출력을 연결했습니다.");
+            }, 5);
+        });
+        fpButtonFromPart(svg, "e303Attenuator", "어테뉴에이터", "ATTENUATOR — -20dB 감쇠 (심야 청취)", () => {
             ampMuting20 = !ampMuting20;
             applyFrontPanel();
-            fpNote(ampMuting20 ? "MUTING ON — 출력을 -20dB 낮춥니다 (심야 모드)." : "MUTING OFF");
-        });
-        fpButton(svg, 1057, 168, 76, 56, "테이프 모니터", "TAPE MONITOR — 데크 재생을 듣기/끊기", () => {
+            fpNote(ampMuting20 ? "ATTENUATOR ON — 출력을 -20dB 낮춥니다." : "ATTENUATOR OFF");
+        }, 7);
+        fpButtonFromPart(svg, "e303TapeMon1", "테이프 모니터 1", "TAPE MONITOR 1 — 데크 재생을 듣기/끊기", () => {
             if (deckMode === "play") { deckStopTransport(); fpNote("TAPE MONITOR OFF"); }
             else fpSourceSelect("tape");
-        });
-        fpButton(svg, 1057, 230, 76, 56, "서브소닉 필터", "SUBSONIC — 30Hz 이하 럼블 차단", () => {
+        }, 7);
+        fpButtonFromPart(svg, "e303Subsonic", "서브소닉 필터", "SUBSONIC — 30Hz 이하 럼블 차단", () => {
             fpSet("e303.subsonic", !fpGet("e303.subsonic", false));
             fpNote(fpGet("e303.subsonic", false) ? "SUBSONIC ON — 초저역 럼블을 걸러냅니다." : "SUBSONIC OFF");
+        }, 7);
+        [["phono", "DISC 1", "e303InputDisc1"], ["phono", "DISC 2", "e303InputDisc2"], ["radio", "TUNER", "e303InputTuner"], ["aux", "AUX", "e303InputAux"], ["tape", "TAPE", "e303InputTape"]].forEach(([source, label, id]) => {
+            fpButtonFromPart(svg, id, "입력 " + label, label + " 입력 선택", () => fpSourceSelect(source), 6);
         });
-        power(1208, 85, 64, 60);
-        power(70, 408, 66, 76);
-        phones(260, 444);
+        fpButtonFromPart(svg, "e303PowerButton", "전원", "POWER — 시스템 재생/정지", () => togglePlay(), 7);
+        phones(350, 608);
     } else if (ampModelId === "ma2375") {
         [720, 860, 1000, 1140, 1280].forEach((cx, i) => {
             fpKnob(svg, cx, 690, 38, "ma2375.tone" + i, {
@@ -2145,9 +2234,9 @@ function bindAmpLoudness() {
     const svg = document.querySelector("#ampStage svg");
     if (!svg) return;
     const hit = document.createElementNS(SVG_NS, "circle");
-    hit.setAttribute("cx", "900");
-    hit.setAttribute("cy", "444");
-    hit.setAttribute("r", "40");
+    hit.setAttribute("cx", "285");
+    hit.setAttribute("cy", "446");
+    hit.setAttribute("r", "68");
     hit.setAttribute("fill", "#000");
     hit.setAttribute("fill-opacity", "0");
     hit.setAttribute("style", "cursor:pointer");
@@ -2157,24 +2246,23 @@ function bindAmpLoudness() {
     const title = document.createElementNS(SVG_NS, "title");
     title.textContent = "LOUDNESS — 저음량에서 저·고역을 보상합니다";
     hit.appendChild(title);
-    const led = document.createElementNS(SVG_NS, "circle");
-    led.setAttribute("id", "ampLoudnessLed");
-    led.setAttribute("cx", "935");
-    led.setAttribute("cy", "412");
-    led.setAttribute("r", "4.5");
-    led.setAttribute("fill", "#232018");
-    svg.appendChild(led);
     svg.appendChild(hit);
+    const mark = document.getElementById("e303LoudnessMark");
+    const paint = () => {
+        if (mark) mark.setAttribute("transform", "rotate(" + (ampLoudnessOn ? 45 : -135) + " 285 446)");
+        hit.setAttribute("aria-pressed", String(ampLoudnessOn));
+    };
     const toggle = () => {
         ampLoudnessOn = !ampLoudnessOn;
         applyLoudnessComp();
-        led.style.fill = ampLoudnessOn ? "#f0b43e" : "#232018";
+        paint();
         playerSubtext.textContent = ampLoudnessOn
             ? "LOUDNESS ON — 볼륨이 낮을수록 저·고역을 보상합니다."
             : "LOUDNESS OFF";
     };
     hit.addEventListener("click", toggle);
     hit.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
+    paint();
 }
 
 // 8B: 죽어 있던 BIAS 미터 소생 — 미터를 누를 때마다 VU → CH A 바이어스 → CH B 바이어스 순환.

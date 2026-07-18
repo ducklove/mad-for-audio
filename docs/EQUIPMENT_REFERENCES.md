@@ -1,11 +1,12 @@
-# 하이파이 컴포넌트 SVG 레퍼런스 — v112
+# 하이파이 컴포넌트 SVG 레퍼런스 — v127
 
 현재 공개 카탈로그 19종과 단일 타이머 DT-540의 외형·조작 근거다. 사진과 설명서는
 비례, 재질, 계기와 대표 조작을 확인하는 용도로만 사용하며 원본 이미지를 배포 파일에
 포함하거나 벡터 트레이싱하지 않는다. 외부 자료의 공개 상태와 주소는 제공처에 따라 바뀔 수 있다.
 
-8B TRIBUTE·91E TRIBUTE·E-303 TRIBUTE는 아래 자료에서 시대와 설계 언어를 참고한
-**창작 재해석**이다. 특정 실물의 정확한 복제품이라고 주장하지 않는다.
+8B TRIBUTE·91E TRIBUTE는 아래 자료에서 시대와 설계 언어를 참고한 **창작 재해석**이다.
+E-303 TRIBUTE를 포함해 실명을 쓰는 모델은 공개 사진과 설명서에서 확인되는 전면 구획,
+부품 종류와 재질을 우선하고, 앱 기능에 필요한 최소한의 변형만 허용한다.
 
 ## 튜너 3종
 
@@ -32,14 +33,14 @@
 | McIntosh MC2105 | [McIntosh 공식 레거시 페이지](https://www.mcintoshlabs.com/legacy-products/amplifiers/MC2105) | 블랙 글라스, 듀얼 블루 POWER OUTPUT 미터, 중앙 녹색 로고, 좌우 랙 핸들 |
 | 8B TRIBUTE | [Marantz 8B 자료](https://www.hifiengine.com/manual_library/marantz/8b.shtml) | EL34 푸시풀 시대의 샴페인 섀시와 관 배열을 출발점으로 스모크 갤러리·바이어스 미터를 재구성 |
 | 91E TRIBUTE | [Western Electric 91E 공식 페이지](https://www.westernelectric.com/91e) | 300B 싱글엔디드, 아이보리·다크 대비와 벌룬관을 출발점으로 정류관 지연과 단일 미터를 재구성 |
-| E-303 TRIBUTE | [Accuphase E-303 사진 자료](https://www.hifido.co.jp/sold/23-41462-27564-00.html?LNG=E) | 샴페인 골드, 듀얼 미터, 정돈된 토글과 대형 볼륨을 출발점으로 LOUDNESS 조작을 재구성 |
+| E-303 TRIBUTE | [Accuphase E-303 사진 자료](https://www.hifido.co.jp/sold/23-41462-27564-00.html?LNG=E), [VintageChief 전면 사진](https://www.vintagechief.com/accuphase-e-303-amplifier-20919) | 밝은 실버·옅은 샴페인 패널, 독립 듀얼 미터, 소형 SPEAKERS/MC LOAD/HEAD AMP 버튼군, LOUDNESS·BASS·TREBLE, 대형 VOLUME과 얇은 BALANCE 레버 |
 | McIntosh MA2375 | [McIntosh 공식 제품 페이지](https://www.mcintoshlabs.com/products/integrated-amplifiers/MA2375), [제품 소개 사진](https://www.ecoustics.com/products/mcintosh-ma2375-tube-integrated-amplifier/) | 넓은 블랙글라스 상부, 듀얼 블루 미터, 중앙 표시창, KT88 크롬 케이지 4개, 직선형 스테인리스 하부와 5밴드 톤 |
 
 ## 카세트 데크 5종
 
 | 공개 모델 | 사진·자료 | SVG에 반영한 식별 포인트 |
 |---|---|---|
-| Nakamichi Dragon | [Dragon 사용 설명서](https://www.richardhess.com/manuals/Nakamichi/nakamichi_Dragon_ops.pdf) | 좌측 스모크 웰, 중앙 카운터·피크 미터, 우측 NAAC·테이프·노이즈 리덕션, 하단 대형 트랜스포트 |
+| Nakamichi Dragon | [Dragon 사용 설명서](https://www.richardhess.com/manuals/Nakamichi/nakamichi_Dragon_ops.pdf), [Wikimedia Commons 전면 사진](https://commons.wikimedia.org/wiki/File:Nakamichi_Dragon_-_High_End_Cassette_Deck_with_Auto_Reverse.jpg) | 좌측 POWER/TIMER/EJECT와 방향·Auto Azimuth 표시가 있는 작은 카세트 도어, 중앙 4자리 카운터·세로 L/R 미터, 4행 트랜스포트/캘리브레이션 매트릭스, 우측 레벨 노브·필터 열 |
 | Revox B215 | [Revox 공식](https://revox.com/us/classic/classic-products/173/b215-cassette-deck?c=230), [Wikimedia Commons · CC0](https://commons.wikimedia.org/wiki/File:Revox_B215_cassette_deck.jpg) | 중앙 오픈 트랜스포트, 좌측 모듈 키패드, 녹색 디지털 표시, 스튜디오형 블랙 패널 |
 | Tandberg TCD 3014A | [HiFi Wiki](https://hifi-wiki.com/index.php/Tandberg_TCD_3014_A) | 오픈 트랜스포트, 우드 케이스, 대형 조정 노브와 웜 아날로그 미터 |
 | Pioneer CT-F1250 | [Pioneer 사용 설명서](https://akdatabase.com/AKview/albums/userpics/10004/Pioneer%20CTF1250%20Owners.pdf) | 월넛 케이스, 헤어라인 실버, 플렉시 도어, 블루 카운터와 플루로스캔 미터 |

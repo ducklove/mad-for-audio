@@ -121,6 +121,9 @@ function lzDecorateHardwareButton(el) {
 
     const gloss = lzStripControlClone(el, "lz-hardware-gloss");
     const svgPrefix = el.ownerSVGElement ? (el.ownerSVGElement.getAttribute("data-lz-prefix") || "") : "";
+    const depthFilter = "url(#" + svgPrefix + "lzButtonDepth)";
+    const pressedFilter = "url(#" + svgPrefix + "lzButtonPressed)";
+    el.style.filter = depthFilter;
     gloss.setAttribute("fill", tag === "circle"
         ? "url(#" + svgPrefix + "lzControlGlossRound)"
         : "url(#" + svgPrefix + "lzControlGloss)");
@@ -131,6 +134,7 @@ function lzDecorateHardwareButton(el) {
     const setPressed = (pressed) => {
         el.classList.toggle("lz-pressed", pressed);
         gloss.classList.toggle("lz-pressed", pressed);
+        el.style.filter = pressed ? pressedFilter : depthFilter;
     };
     el.addEventListener("pointerdown", () => setPressed(true));
     ["pointerup", "pointercancel", "pointerleave"].forEach((name) => el.addEventListener(name, () => setPressed(false)));
@@ -143,9 +147,16 @@ function lzDecorateHardwareButton(el) {
 
 function applyHardwareDepth(svg) {
     if (!svg) return;
+    const prefix = svg.getAttribute("data-lz-prefix") || "";
     svg.querySelectorAll(LZ_HARDWARE_BUTTONS).forEach(lzDecorateHardwareButton);
-    svg.querySelectorAll('[id^="tsSw"], .lz-hardware-switch').forEach((el) => el.classList.add("lz-hardware-switch"));
-    svg.querySelectorAll('#tsKnob, .lz-hardware-knob').forEach((el) => el.classList.add("lz-hardware-knob"));
+    svg.querySelectorAll('[id^="tsSw"], .lz-hardware-switch').forEach((el) => {
+        el.classList.add("lz-hardware-switch");
+        el.style.filter = "url(#" + prefix + "lzSwitchDepth)";
+    });
+    svg.querySelectorAll('#tsKnob, .lz-hardware-knob').forEach((el) => {
+        el.classList.add("lz-hardware-knob");
+        el.style.filter = "url(#" + prefix + "lzKnobDepth)";
+    });
 }
 
 function applyPanelLighting(svg) {

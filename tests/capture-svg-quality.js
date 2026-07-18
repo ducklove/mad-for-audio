@@ -1,11 +1,13 @@
 const fs = require("fs");
 const path = require("path");
-const { chromium } = require("playwright");
+const { chromium, webkit } = require("playwright");
 
 const BASE = process.env.MFA_CAPTURE_BASE || "http://127.0.0.1:8147/";
 const runtimeScale = process.argv.includes("--runtime");
 const OUT = process.env.MFA_CAPTURE_OUT || (runtimeScale ? "/tmp/mfa-svg-eval-runtime" : "/tmp/mfa-svg-eval");
 const ONLY_GROUP = process.env.MFA_CAPTURE_GROUP || "";
+const BROWSER_NAME = process.env.MFA_CAPTURE_BROWSER || "chromium";
+const BROWSER_TYPE = BROWSER_NAME === "webkit" ? webkit : chromium;
 
 const groups = {
     tuner: ["t2", "mr78", "m10b"],
@@ -51,7 +53,7 @@ async function forcePoweredAppearance(page, selector) {
 
 (async () => {
     fs.mkdirSync(OUT, { recursive: true });
-    const browser = await chromium.launch({ headless: true });
+    const browser = await BROWSER_TYPE.launch({ headless: true });
     const context = await browser.newContext({
         viewport: { width: runtimeScale ? 1440 : 2200, height: 1500 },
         deviceScaleFactor: 1,
@@ -119,7 +121,7 @@ async function forcePoweredAppearance(page, selector) {
     console.log("icon/icon", await icon.getAttribute("viewBox"));
 
     await browser.close();
-    console.log("OUT", OUT);
+    console.log("BROWSER", BROWSER_NAME, "OUT", OUT);
 })().catch((error) => {
     console.error(error);
     process.exitCode = 1;
