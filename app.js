@@ -77,7 +77,8 @@ function setPopupBarMode(on) {
 // room: 랙 전체가 화면 높이에 들어오고(zoom 스케일) 좌우에 스피커 — 단일 컴포넌트 확대는 여기서만.
 // wide: 예전처럼 컴포넌트를 크게, 세로 스크롤.
 let focusView = loadJson("fmRadio.focusView", "room");
-let focusSpeakerLayoutFrame = 0;
+let focusLayoutFrame = 0;
+let focusRoomResizeObserver = null;
 
 // 스피커는 장식이지만 랙과 같은 바닥선, 랙 바깥쪽이라는 물리적 규칙은 지킨다.
 // 확대 중에는 rackColumn이 아니라 실제 확대 유닛을 기준으로 삼아 겹침을 막는다.
@@ -85,7 +86,6 @@ function focusSyncSpeakerGeometry() {
     const hero = document.querySelector(".hero-visual");
     const col = document.getElementById("rackColumn");
     const room = document.body.classList.contains("mode-focus") && focusView === "room";
-    cancelAnimationFrame(focusSpeakerLayoutFrame);
     if (!hero || !col || !room) {
         if (hero) {
             hero.style.removeProperty("--focus-system-left");
@@ -93,14 +93,12 @@ function focusSyncSpeakerGeometry() {
         }
         return;
     }
-    focusSpeakerLayoutFrame = requestAnimationFrame(() => {
-        const target = col.querySelector(":scope > .unit-zoomed") || col;
-        const heroRect = hero.getBoundingClientRect();
-        const targetRect = target.getBoundingClientRect();
-        if (!heroRect.width || !targetRect.width) return;
-        hero.style.setProperty("--focus-system-left", Math.round(targetRect.left - heroRect.left) + "px");
-        hero.style.setProperty("--focus-system-right", Math.round(targetRect.right - heroRect.left) + "px");
-    });
+    const target = col.querySelector(":scope > .unit-zoomed") || col;
+    const heroRect = hero.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    if (!heroRect.width || !targetRect.width) return;
+    hero.style.setProperty("--focus-system-left", Math.round(targetRect.left - heroRect.left) + "px");
+    hero.style.setProperty("--focus-system-right", Math.round(targetRect.right - heroRect.left) + "px");
 }
 
 // 유닛마다 확대 버튼(⤢)을 보장한다 — 스킨 재마운트가 stage innerHTML을 갈아치우므로 멱등 주입
@@ -141,36 +139,148 @@ function focusClearZoom() {
     document.body.classList.remove("focus-unit-zoomed");
     // 이전 버전이 남긴 클래스도 함께 청소한다.
     document.body.classList.remove("unit-lightbox");
-    document.querySelectorAll(".unit-zoomed").forEach((el) => el.classList.remove("unit-zoomed"));
+    document.querySelectorAll(".unit-zoomed").forEach((el) => {
+        el.classList.remove("unit-zoomed");
+        el.style.removeProperty("width");
+        el.style.removeProperty("min-width");
+    });
 }
 
-// 룸 모드: 랙 스택 전체가 화면 높이에 들어오도록 zoom 배율을 맞춘다
-function focusFitRack() {
-    const col = document.getElementById("rackColumn");
-    if (!col) return;
+function focusViewportRect() {
+    const viewport = window.visualViewport;
+    const finite = (value, fallback) => Number.isFinite(Number(value)) ? Number(value) : fallback;
+    return {
+        left: finite(viewport?.offsetLeft, 0),
+        top: finite(viewport?.offsetTop, 0),
+        width: Math.max(1, finite(viewport?.width, window.innerWidth || 1)),
+        height: Math.max(1, finite(viewport?.height, window.innerHeight || 1))
+    };
+}
+
+// layout viewport와 visual viewport가 달라지는 모바일 주소창·키보드·핀치 확대에서도
+// 몰입 화면 자체를 '현재 보이는 사각형'에 고정한다. 광학 여백도 그 사각형 비율로 산출한다.
+function focusApplyViewport(hero) {
+    const rect = focusViewportRect();
+    const root = document.documentElement;
     const room = document.body.classList.contains("mode-focus") && focusView === "room";
+    const variables = {
+        "--focus-viewport-left": rect.left + "px",
+        "--focus-viewport-top": rect.top + "px",
+        "--focus-viewport-width": rect.width + "px",
+        "--focus-viewport-height": rect.height + "px",
+        "--focus-optical-top": Math.min(40, rect.height * 0.03) + "px",
+        "--focus-optical-bottom": Math.min(88, rect.height * 0.07) + "px",
+        "--focus-optical-side": Math.min(28, rect.width * 0.015) + "px",
+        "--focus-unit-gap": Math.min(10, rect.height * 0.012) + "px",
+        "--focus-timer-gap": Math.min(12, rect.height * 0.014) + "px",
+        "--focus-timer-bottom-gap": Math.min(2, rect.height * 0.0025) + "px"
+    };
+    Object.entries(variables).forEach(([name, value]) => root.style.setProperty(name, value));
+    if (hero) hero.dataset.focusSpeakers = rect.width > 1180 && rect.height > 720 ? "visible" : "hidden";
+    document.body.dataset.focusCompact = rect.width < 360 || rect.height < 240 ? "true" : "false";
+    if (!room && hero) {
+        hero.style.removeProperty("--focus-system-left");
+        hero.style.removeProperty("--focus-system-right");
+    }
+    return rect;
+}
+
+function focusClearViewport() {
+    const root = document.documentElement;
+    [
+        "--focus-viewport-left", "--focus-viewport-top", "--focus-viewport-width",
+        "--focus-viewport-height", "--focus-optical-top", "--focus-optical-bottom",
+        "--focus-optical-side", "--focus-unit-gap", "--focus-timer-gap",
+        "--focus-timer-bottom-gap"
+    ].forEach((name) => root.style.removeProperty(name));
+    document.querySelector(".hero-visual")?.removeAttribute("data-focus-speakers");
+    delete document.body.dataset.focusCompact;
+}
+
+function focusAvailableRoomSize(hero, viewport) {
+    const style = getComputedStyle(hero);
+    const horizontal = (parseFloat(style.paddingLeft) || 0) + (parseFloat(style.paddingRight) || 0);
+    const vertical = (parseFloat(style.paddingTop) || 0) + (parseFloat(style.paddingBottom) || 0);
+    return {
+        width: Math.max(1, Math.min(viewport.width, hero.clientWidth || viewport.width) - horizontal),
+        height: Math.max(1, Math.min(viewport.height, hero.clientHeight || viewport.height) - vertical)
+    };
+}
+
+// 폭에 따라 높이가 바뀌는 SVG 랙/유닛을 실제 렌더링 높이로 반복 수렴시킨다.
+// 고정 해상도 보정값 없이 visualViewport와 safe-area가 만든 가용 영역만 사용한다.
+function focusFitWidth(target, maxWidth, availableHeight, applyWidth) {
+    const heightLimit = Math.max(1, availableHeight);
+    let width = Math.max(1, Math.floor(maxWidth));
+    for (let i = 0; i < 8; i += 1) {
+        applyWidth(width);
+        const height = Math.max(target.getBoundingClientRect().height, target.scrollHeight || 0);
+        if (!height || height <= heightLimit + 0.5 || width <= 1) break;
+        const next = Math.max(1, Math.min(width - 1, Math.floor(width * heightLimit / height)));
+        if (next === width) break;
+        width = next;
+    }
+    applyWidth(width);
+    return width;
+}
+
+// 룸 모드: 전체 랙 또는 선택 유닛을 현재 화면의 실제 안전영역 안에 맞춘다.
+function focusFitRack() {
+    const hero = document.querySelector(".hero-visual");
+    const col = document.getElementById("rackColumn");
+    if (!hero || !col) return;
+    const focusOn = document.body.classList.contains("mode-focus");
+    const room = focusOn && focusView === "room";
     const zoomed = document.body.classList.contains("focus-unit-zoomed");
-    if (!room || zoomed) {
+    const viewport = focusOn ? focusApplyViewport(hero) : focusViewportRect();
+    if (!room) {
         col.style.flex = "";
         focusSyncSpeakerGeometry();
         return;
     }
-    // 유닛은 폭 비례 고정비(2000:h) SVG라, 랙 '폭'을 줄이면 스택 높이가 따라 준다.
-    // 화면 높이에 들어오는 폭을 역산해 flex-basis로 고정한다 (한 스텝이면 수렴).
-    const rect = col.getBoundingClientRect();
-    const h = col.scrollHeight;
-    const avail = (window.innerHeight || 800) * 0.94;
-    if (h > avail && rect.width > 0) {
-        const w = Math.max(380, Math.round(rect.width * avail / h));
-        if (Math.abs(w - rect.width) > 8) col.style.flex = "0 0 " + w + "px";
+
+    const available = focusAvailableRoomSize(hero, viewport);
+    if (zoomed) {
+        col.style.flex = "";
+        const target = col.querySelector(":scope > .unit-zoomed");
+        if (target) {
+            const maxWidth = Math.min(1680, available.width);
+            target.style.minWidth = "0";
+            focusFitWidth(target, maxWidth, available.height, (width) => {
+                target.style.width = Math.round(width) + "px";
+            });
+        }
+    } else {
+        document.querySelectorAll("#rackColumn > .rack-unit, #rackColumn > .tuner-stage").forEach((el) => {
+            el.style.removeProperty("width");
+            el.style.removeProperty("min-width");
+        });
+        const maxWidth = Math.min(1160, available.width);
+        focusFitWidth(col, maxWidth, available.height, (width) => {
+            col.style.flex = "0 0 " + Math.round(width) + "px";
+        });
     }
     focusSyncSpeakerGeometry();
+}
+
+// 리사이즈 중간값을 DOM에 고정하지 않는다. 첫 프레임에 즉시 맞추고 다음 프레임에
+// SVG와 폰트의 최종 높이를 한 번 더 재측정해 native panel 전환 경합을 없앤다.
+function focusScheduleFit() {
+    cancelAnimationFrame(focusLayoutFrame);
+    focusLayoutFrame = requestAnimationFrame(() => {
+        focusFitRack();
+        focusLayoutFrame = requestAnimationFrame(() => {
+            focusLayoutFrame = 0;
+            focusFitRack();
+        });
+    });
 }
 
 function applyFocusView() {
     const on = document.body.classList.contains("mode-focus");
     document.body.classList.toggle("focus-room", on && focusView === "room");
     document.body.classList.toggle("focus-wide", on && focusView === "wide");
+    document.documentElement.classList.toggle("focus-room-root", on && focusView === "room");
     if (on && focusView === "room") ensureZoomBtns();
     if (focusView !== "room") focusClearZoom();
     focusFitRack();
@@ -185,13 +295,34 @@ function toggleFocusView() {
         : "와이드 — 컴포넌트를 크게 보고 스크롤로 오갑니다.";
 }
 
-window.addEventListener("resize", focusFitRack);
-setTimeout(ensureZoomBtns, 0);
+window.addEventListener("resize", focusScheduleFit);
+window.addEventListener("orientationchange", focusScheduleFit);
+window.visualViewport?.addEventListener("resize", focusScheduleFit);
+window.visualViewport?.addEventListener("scroll", focusScheduleFit);
+document.addEventListener("fullscreenchange", focusScheduleFit);
+document.addEventListener("webkitfullscreenchange", focusScheduleFit);
+setTimeout(() => {
+    ensureZoomBtns();
+    const hero = document.querySelector(".hero-visual");
+    if (hero && typeof ResizeObserver !== "undefined") {
+        focusRoomResizeObserver = new ResizeObserver(() => focusScheduleFit());
+        focusRoomResizeObserver.observe(hero);
+        const col = document.getElementById("rackColumn");
+        if (col) {
+            focusRoomResizeObserver.observe(col);
+            [...col.children].forEach((stage) => focusRoomResizeObserver.observe(stage));
+        }
+    }
+}, 0);
 
 function applyFocusMode(on) {
     document.body.classList.toggle("mode-focus", on);
-    if (!on) focusClearZoom();
+    if (!on) {
+        focusClearZoom();
+        focusClearViewport();
+    }
     applyFocusView();
+    if (on) focusScheduleFit();
 }
 
 function toggleFocusMode() {
@@ -4671,7 +4802,6 @@ function tickClock() {
     timerPaint();
     // 스킨 재마운트가 확대 버튼을 지웠으면 되살린다 (멱등) — 일반 랙 화면 포함
     if (viewMode === "rack") ensureZoomBtns();
-    if (document.body.classList.contains("focus-room")) focusFitRack();
 }
 
 setInterval(tickClock, 1000);

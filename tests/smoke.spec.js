@@ -635,6 +635,9 @@ test.describe("데스크톱", () => {
             const lr = l.getBoundingClientRect();
             const rr = r.getBoundingClientRect();
             const sr = rack.getBoundingClientRect();
+            const heroStyle = getComputedStyle(document.querySelector(".hero-visual"));
+            const visibleUnits = [...rack.children]
+                .filter((el) => getComputedStyle(el).display !== "none");
             const unitBottom = Math.max(...[...rack.children]
                 .filter((el) => getComputedStyle(el).display !== "none")
                 .map((el) => el.getBoundingClientRect().bottom));
@@ -642,14 +645,22 @@ test.describe("데스크톱", () => {
                 natural: [l.naturalWidth, l.naturalHeight],
                 left: { x: lr.x, right: lr.right, height: lr.height, bottom: lr.bottom },
                 right: { x: rr.x, gap: innerWidth - rr.right, height: rr.height, bottom: rr.bottom },
-                system: { left: sr.left, right: sr.right, bottom: unitBottom, containerBottom: sr.bottom },
+                safe: { top: parseFloat(heroStyle.paddingTop), bottom: parseFloat(heroStyle.paddingBottom) },
+                system: {
+                    left: sr.left,
+                    right: sr.right,
+                    top: Math.min(...visibleUnits.map((el) => el.getBoundingClientRect().top)),
+                    bottom: unitBottom,
+                    containerBottom: sr.bottom
+                },
                 viewport: [innerWidth, innerHeight]
             };
         });
         expect(speakers.natural).toEqual([612, 1001]);
         expect(speakers.left.height, "MacBook 화면에서 스피커가 충분히 커야 한다").toBeGreaterThanOrEqual(speakers.viewport[1] * .8);
-        expect(speakers.viewport[1] - speakers.system.bottom, "랙 바닥 안전 여백 최소값").toBeGreaterThanOrEqual(10);
-        expect(speakers.viewport[1] - speakers.system.bottom, "랙 바닥 안전 여백 최대값").toBeLessThanOrEqual(20);
+        expect(speakers.safe.bottom, "그림자까지 보존하는 하단 광학 안전영역").toBeGreaterThanOrEqual(56);
+        expect(Math.abs((speakers.viewport[1] - speakers.system.bottom) - speakers.safe.bottom), "랙 바닥 = 동적 안전선").toBeLessThanOrEqual(2);
+        expect(speakers.system.top, "랙 상단 = 동적 안전영역 안").toBeGreaterThanOrEqual(speakers.safe.top - 2);
         expect(Math.abs(speakers.system.containerBottom - speakers.system.bottom), "랙 컨테이너와 실제 마지막 컴포넌트 바닥").toBeLessThanOrEqual(2);
         expect(Math.abs(speakers.left.bottom - speakers.system.bottom), "왼쪽 스피커 원본 바닥 = 랙 바닥").toBeLessThanOrEqual(2);
         expect(Math.abs(speakers.right.bottom - speakers.system.bottom), "오른쪽 스피커 원본 바닥 = 랙 바닥").toBeLessThanOrEqual(2);
@@ -670,16 +681,17 @@ test.describe("데스크톱", () => {
             const deck = document.getElementById("deckStage").getBoundingClientRect();
             const left = document.getElementById("speakerL").getBoundingClientRect();
             const right = document.getElementById("speakerR").getBoundingClientRect();
+            const heroStyle = getComputedStyle(document.querySelector(".hero-visual"));
             return {
                 deck: { left: deck.left, right: deck.right, bottom: deck.bottom },
                 left: { right: left.right, bottom: left.bottom },
                 right: { left: right.left, bottom: right.bottom },
+                safe: { top: parseFloat(heroStyle.paddingTop), bottom: parseFloat(heroStyle.paddingBottom) },
                 viewportRight: innerWidth,
                 viewportBottom: innerHeight
             };
         });
-        expect(zoomLayout.viewportBottom - zoomLayout.deck.bottom, "확대 유닛 바닥 안전 여백 최소값").toBeGreaterThanOrEqual(10);
-        expect(zoomLayout.viewportBottom - zoomLayout.deck.bottom, "확대 유닛 바닥 안전 여백 최대값").toBeLessThanOrEqual(20);
+        expect(Math.abs((zoomLayout.viewportBottom - zoomLayout.deck.bottom) - zoomLayout.safe.bottom), "확대 유닛 바닥 = 동적 안전선").toBeLessThanOrEqual(2);
         expect(zoomLayout.deck.left, "확대 유닛 왼쪽은 화면 안").toBeGreaterThanOrEqual(0);
         expect(zoomLayout.deck.right, "확대 유닛 오른쪽은 화면 안").toBeLessThanOrEqual(zoomLayout.viewportRight);
         expect(Math.abs(zoomLayout.left.bottom - zoomLayout.deck.bottom), "확대 시 왼쪽 스피커 원본 바닥").toBeLessThanOrEqual(2);
@@ -712,6 +724,281 @@ test.describe("데스크톱", () => {
         }))).toEqual({ bridge: [true], focus: true, room: true, zoom: true, lightbox: false, deck: true });
         await page.keyboard.press("Escape");
         expect(await page.evaluate(() => document.body.classList.contains("focus-unit-zoomed")), "ESC = 개별 확대 해제").toBe(false);
+        await page.evaluate(() => applyFocusMode(false));
+    });
+
+    test("몰입 모드 화면 행렬: 모든 비율에서 visible viewport·paint 안전영역 보존", async ({ page }) => {
+        const sizes = [
+            { width: 440, height: 780 },
+            { width: 1408, height: 881 },
+            { width: 390, height: 844 },
+            { width: 844, height: 390 },
+            { width: 240, height: 160 },
+            { width: 120, height: 80 },
+            { width: 800, height: 600 },
+            { width: 1280, height: 360 },
+            { width: 1024, height: 640 },
+            { width: 1180, height: 900 },
+            { width: 1181, height: 720 },
+            { width: 1181, height: 721 },
+            { width: 1280, height: 720 },
+            { width: 1366, height: 768 },
+            { width: 1440, height: 900 },
+            { width: 1512, height: 982 },
+            { width: 1920, height: 1080 },
+            { width: 2560, height: 1080 },
+            { width: 3440, height: 900 }
+        ];
+
+        await page.setViewportSize(sizes[0]);
+        await page.evaluate(() => {
+            focusView = "room";
+            focusClearZoom();
+            applyFocusMode(true);
+        });
+
+        for (let index = 0; index < sizes.length; index += 1) {
+            const size = sizes[index];
+            const label = `${size.width}×${size.height}`;
+            if (index) await page.setViewportSize(size);
+            await page.waitForFunction(({ width, height }) => {
+                const hero = document.querySelector(".hero-visual");
+                const rect = hero.getBoundingClientRect();
+                const speaker = document.getElementById("speakerL");
+                const shouldShow = width > 1180 && height > 720;
+                return Math.abs(rect.width - width) < 2 && Math.abs(rect.height - height) < 2 &&
+                    (getComputedStyle(speaker).display !== "none") === shouldShow;
+            }, size);
+
+            const room = await page.evaluate(() => {
+                const hero = document.querySelector(".hero-visual");
+                const rack = document.getElementById("rackColumn");
+                const units = [...rack.children].filter((el) => getComputedStyle(el).display !== "none");
+                const rects = units.map((el) => el.getBoundingClientRect());
+                const rackRect = rack.getBoundingClientRect();
+                const left = document.getElementById("speakerL");
+                const right = document.getElementById("speakerR");
+                const leftRect = left.getBoundingClientRect();
+                const rightRect = right.getBoundingClientRect();
+                const style = getComputedStyle(hero);
+                const heroRect = hero.getBoundingClientRect();
+                const firstSvg = rack.querySelector("svg");
+                return {
+                    safe: { top: parseFloat(style.paddingTop), bottom: parseFloat(style.paddingBottom) },
+                    hero: {
+                        left: heroRect.left, top: heroRect.top,
+                        right: heroRect.right, bottom: heroRect.bottom,
+                        width: heroRect.width, height: heroRect.height,
+                        radius: style.borderRadius
+                    },
+                    system: {
+                        left: rackRect.left,
+                        right: rackRect.right,
+                        top: Math.min(...rects.map((r) => r.top)),
+                        bottom: Math.max(...rects.map((r) => r.bottom))
+                    },
+                    speakers: {
+                        visible: getComputedStyle(left).display !== "none",
+                        left: { top: leftRect.top, right: leftRect.right, bottom: leftRect.bottom },
+                        right: { top: rightRect.top, left: rightRect.left, bottom: rightRect.bottom }
+                    },
+                    viewport: { width: innerWidth, height: innerHeight },
+                    scroll: {
+                        width: document.documentElement.scrollWidth,
+                        height: document.documentElement.scrollHeight
+                    },
+                    paint: {
+                        speakerFilter: getComputedStyle(left).filter,
+                        svgShadow: firstSvg ? getComputedStyle(firstSvg).boxShadow : "missing",
+                        insetShadow: getComputedStyle(rack.firstElementChild, "::after").boxShadow
+                    }
+                };
+            });
+
+            expect(room.hero.radius, `${label} 전체화면 모서리 비클리핑`).toBe("0px");
+            expect(room.system.top, `${label} 랙 상단`).toBeGreaterThanOrEqual(room.hero.top + room.safe.top - 2);
+            expect(room.system.bottom, `${label} 랙 하단`).toBeLessThanOrEqual(room.hero.bottom - room.safe.bottom + 2);
+            expect(Math.abs(room.system.bottom - (room.hero.bottom - room.safe.bottom)), `${label} 랙 바닥 = 안전 바닥선`).toBeLessThanOrEqual(2);
+            expect(room.scroll.width, `${label} 가로 스크롤 없음`).toBeLessThanOrEqual(room.viewport.width);
+            expect(room.scroll.height, `${label} 세로 스크롤 없음`).toBeLessThanOrEqual(room.viewport.height);
+            expect(room.paint.speakerFilter, `${label} 스피커 외부 paint 없음`).toBe("none");
+            expect(room.paint.svgShadow, `${label} SVG 외부 paint 없음`).toBe("none");
+            expect(room.paint.insetShadow, `${label} 깊이 효과는 내부 paint`).toContain("inset");
+
+            const shouldShowSpeakers = size.width > 1180 && size.height > 720;
+            expect(room.speakers.visible, `${label} 스피커 표시 정책`).toBe(shouldShowSpeakers);
+            if (shouldShowSpeakers) {
+                expect(room.speakers.left.top, `${label} 왼쪽 스피커 상단`).toBeGreaterThanOrEqual(room.hero.top + room.safe.top - 2);
+                expect(room.speakers.left.bottom, `${label} 왼쪽 스피커 하단`).toBeLessThanOrEqual(room.hero.bottom - room.safe.bottom + 2);
+                expect(room.speakers.right.top, `${label} 오른쪽 스피커 상단`).toBeGreaterThanOrEqual(room.hero.top + room.safe.top - 2);
+                expect(room.speakers.right.bottom, `${label} 오른쪽 스피커 하단`).toBeLessThanOrEqual(room.hero.bottom - room.safe.bottom + 2);
+                expect(Math.abs(room.speakers.left.bottom - room.system.bottom), `${label} 왼쪽 스피커·랙 바닥 일치`).toBeLessThanOrEqual(2);
+                expect(Math.abs(room.speakers.right.bottom - room.system.bottom), `${label} 오른쪽 스피커·랙 바닥 일치`).toBeLessThanOrEqual(2);
+                expect(room.system.left - room.speakers.left.right, `${label} 왼쪽 비겹침`).toBeGreaterThanOrEqual(10);
+                expect(room.speakers.right.left - room.system.right, `${label} 오른쪽 비겹침`).toBeGreaterThanOrEqual(10);
+            } else {
+                expect(room.speakers.left.bottom, `${label} 숨긴 왼쪽 스피커 무박스`).toBe(0);
+                expect(room.speakers.right.bottom, `${label} 숨긴 오른쪽 스피커 무박스`).toBe(0);
+            }
+
+            await page.evaluate(() => focusUnitZoom(document.getElementById("deckStage")));
+            await page.waitForFunction(() => {
+                const hero = document.querySelector(".hero-visual");
+                const style = getComputedStyle(hero);
+                const bounds = hero.getBoundingClientRect();
+                const deck = document.getElementById("deckStage").getBoundingClientRect();
+                return document.body.classList.contains("focus-unit-zoomed") &&
+                    deck.left >= bounds.left - 1 && deck.right <= bounds.right + 1 &&
+                    deck.top >= bounds.top + parseFloat(style.paddingTop) - 2 &&
+                    deck.bottom <= bounds.bottom - parseFloat(style.paddingBottom) + 2;
+            });
+            const zoom = await page.evaluate(() => {
+                const heroStyle = getComputedStyle(document.querySelector(".hero-visual"));
+                const hero = document.querySelector(".hero-visual").getBoundingClientRect();
+                const deck = document.getElementById("deckStage").getBoundingClientRect();
+                return {
+                    safe: { top: parseFloat(heroStyle.paddingTop), bottom: parseFloat(heroStyle.paddingBottom) },
+                    hero: { left: hero.left, top: hero.top, right: hero.right, bottom: hero.bottom },
+                    deck: { left: deck.left, top: deck.top, right: deck.right, bottom: deck.bottom },
+                    filter: getComputedStyle(document.getElementById("deckStage")).filter
+                };
+            });
+            expect(zoom.deck.left, `${label} 확대 왼쪽`).toBeGreaterThanOrEqual(zoom.hero.left);
+            expect(zoom.deck.right, `${label} 확대 오른쪽`).toBeLessThanOrEqual(zoom.hero.right);
+            expect(zoom.deck.top, `${label} 확대 상단`).toBeGreaterThanOrEqual(zoom.hero.top + zoom.safe.top - 2);
+            expect(zoom.deck.bottom, `${label} 확대 하단`).toBeLessThanOrEqual(zoom.hero.bottom - zoom.safe.bottom + 2);
+            expect(zoom.filter, `${label} 확대 래퍼 외부 paint 없음`).toBe("none");
+            await page.evaluate(() => { focusClearZoom(); focusFitRack(); });
+        }
+        await page.evaluate(() => applyFocusMode(false));
+    });
+
+    test("몰입 모드 native 창 전환: 440×780 ↔ 1408×881 자동 재측정", async ({ page }) => {
+        await page.setViewportSize({ width: 440, height: 780 });
+        await page.evaluate(() => {
+            focusView = "room";
+            applyFocusMode(false);
+            window.__focusBridgeCalls = [];
+            Object.defineProperty(window, "webkit", {
+                configurable: true,
+                value: { messageHandlers: { focus: { postMessage: (on) => window.__focusBridgeCalls.push(on) } } }
+            });
+            focusUnitZoom(document.getElementById("deckStage"));
+        });
+        const smallWidth = await page.locator("#deckStage").evaluate((el) => el.getBoundingClientRect().width);
+
+        await page.setViewportSize({ width: 1408, height: 881 });
+        await page.waitForFunction((oldWidth) => {
+            const hero = document.querySelector(".hero-visual");
+            const style = getComputedStyle(hero);
+            const bounds = hero.getBoundingClientRect();
+            const deck = document.getElementById("deckStage").getBoundingClientRect();
+            return deck.width > oldWidth * 2 &&
+                deck.top >= bounds.top + parseFloat(style.paddingTop) - 2 &&
+                deck.bottom <= bounds.bottom - parseFloat(style.paddingBottom) + 2 &&
+                getComputedStyle(document.getElementById("speakerL")).display !== "none";
+        }, smallWidth);
+        const large = await page.evaluate(() => {
+            const deck = document.getElementById("deckStage").getBoundingClientRect();
+            const left = document.getElementById("speakerL").getBoundingClientRect();
+            const right = document.getElementById("speakerR").getBoundingClientRect();
+            return {
+                bridge: window.__focusBridgeCalls,
+                deck: { left: deck.left, right: deck.right, bottom: deck.bottom },
+                left: { right: left.right, bottom: left.bottom },
+                right: { left: right.left, bottom: right.bottom },
+                scroll: [document.documentElement.scrollWidth, document.documentElement.scrollHeight]
+            };
+        });
+        expect(large.bridge).toEqual([true]);
+        expect(large.left.bottom, "확대 전환 뒤 왼쪽 스피커 바닥 일치").toBeCloseTo(large.deck.bottom, 0);
+        expect(large.right.bottom, "확대 전환 뒤 오른쪽 스피커 바닥 일치").toBeCloseTo(large.deck.bottom, 0);
+        expect(large.left.right, "확대 전환 뒤 왼쪽 비겹침").toBeLessThanOrEqual(large.deck.left - 10);
+        expect(large.right.left, "확대 전환 뒤 오른쪽 비겹침").toBeGreaterThanOrEqual(large.deck.right + 10);
+        expect(large.scroll[0], "확대 전환 뒤 가로 무스크롤").toBeLessThanOrEqual(1408);
+        expect(large.scroll[1], "확대 전환 뒤 세로 무스크롤").toBeLessThanOrEqual(881);
+
+        await page.setViewportSize({ width: 440, height: 780 });
+        await page.waitForFunction(() => {
+            const deck = document.getElementById("deckStage").getBoundingClientRect();
+            return getComputedStyle(document.getElementById("speakerL")).display === "none" &&
+                getComputedStyle(document.getElementById("speakerR")).display === "none" &&
+                deck.left >= -1 && deck.right <= (visualViewport?.width || innerWidth) + 1;
+        });
+        expect(await page.evaluate(() => [
+            document.getElementById("speakerL").getBoundingClientRect().width,
+            document.getElementById("speakerR").getBoundingClientRect().width
+        ]), "작은 화면에서는 양쪽 스피커 레이아웃 제거").toEqual([0, 0]);
+        await page.evaluate(() => applyFocusMode(false));
+    });
+
+    test("몰입 모드 visualViewport: 오프셋·키보드 축소·safe-area 등가값 반영", async ({ page }) => {
+        await page.setViewportSize({ width: 1408, height: 881 });
+        await page.evaluate(() => {
+            const state = { left: 31.5, top: 47.25, width: 900.5, height: 600.25, scale: 1.5 };
+            const viewport = new EventTarget();
+            for (const [property, key] of [
+                ["offsetLeft", "left"], ["offsetTop", "top"],
+                ["pageLeft", "left"], ["pageTop", "top"],
+                ["width", "width"], ["height", "height"], ["scale", "scale"]
+            ]) Object.defineProperty(viewport, property, { get: () => state[key] });
+            Object.defineProperty(window, "visualViewport", { configurable: true, value: viewport });
+            viewport.addEventListener("resize", focusScheduleFit);
+            viewport.addEventListener("scroll", focusScheduleFit);
+            window.__setMfaVisualViewport = (next, eventName = "resize") => {
+                Object.assign(state, next);
+                viewport.dispatchEvent(new Event(eventName));
+            };
+        });
+        await page.evaluate(() => {
+            focusView = "room";
+            applyFocusMode(true);
+            const hero = document.querySelector(".hero-visual");
+            hero.style.setProperty("--focus-ceiling-inset", "64px");
+            hero.style.setProperty("--focus-floor-inset", "96px");
+            focusScheduleFit();
+        });
+        await page.waitForFunction(() => {
+            const rect = document.querySelector(".hero-visual").getBoundingClientRect();
+            return Math.abs(rect.left - 31.5) < 1 && Math.abs(rect.top - 47.25) < 1 &&
+                Math.abs(rect.width - 900.5) < 1 && Math.abs(rect.height - 600.25) < 1;
+        });
+        const compact = await page.evaluate(() => {
+            const hero = document.querySelector(".hero-visual");
+            const bounds = hero.getBoundingClientRect();
+            const style = getComputedStyle(hero);
+            const units = [...document.querySelectorAll("#rackColumn > *")]
+                .filter((el) => getComputedStyle(el).display !== "none")
+                .map((el) => el.getBoundingClientRect());
+            return {
+                hero: { left: bounds.left, top: bounds.top, right: bounds.right, bottom: bounds.bottom },
+                safe: { top: parseFloat(style.paddingTop), bottom: parseFloat(style.paddingBottom) },
+                system: { top: Math.min(...units.map((r) => r.top)), bottom: Math.max(...units.map((r) => r.bottom)) },
+                speakers: [
+                    getComputedStyle(document.getElementById("speakerL")).display,
+                    getComputedStyle(document.getElementById("speakerR")).display,
+                    document.getElementById("speakerL").getBoundingClientRect().width,
+                    document.getElementById("speakerR").getBoundingClientRect().width
+                ]
+            };
+        });
+        expect(compact.safe).toEqual({ top: 64, bottom: 96 });
+        expect(compact.system.top).toBeGreaterThanOrEqual(compact.hero.top + compact.safe.top - 2);
+        expect(compact.system.bottom).toBeLessThanOrEqual(compact.hero.bottom - compact.safe.bottom + 2);
+        expect(compact.speakers).toEqual(["none", "none", 0, 0]);
+
+        await page.evaluate(() => __setMfaVisualViewport({ left: 55.25, top: 63.75 }, "scroll"));
+        await page.waitForFunction(() => {
+            const rect = document.querySelector(".hero-visual").getBoundingClientRect();
+            return Math.abs(rect.left - 55.25) < 1 && Math.abs(rect.top - 63.75) < 1;
+        });
+        await page.evaluate(() => __setMfaVisualViewport({ left: 12, top: 18, width: 1280, height: 760 }, "resize"));
+        await page.waitForFunction(() => {
+            const rect = document.querySelector(".hero-visual").getBoundingClientRect();
+            return Math.abs(rect.left - 12) < 1 && Math.abs(rect.top - 18) < 1 &&
+                Math.abs(rect.width - 1280) < 1 && Math.abs(rect.height - 760) < 1 &&
+                getComputedStyle(document.getElementById("speakerL")).display !== "none";
+        });
         await page.evaluate(() => applyFocusMode(false));
     });
 

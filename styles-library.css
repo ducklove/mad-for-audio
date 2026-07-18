@@ -416,6 +416,12 @@ body.mode-focus .page-shell {
 
 body.mode-focus .focus-exit {
     display: flex;
+    right: auto;
+    left: max(
+        var(--focus-viewport-left, 0px),
+        calc(var(--focus-viewport-left, 0px) + var(--focus-viewport-width, 100vw) - env(safe-area-inset-right, 0px) - 54px)
+    );
+    top: calc(var(--focus-viewport-top, 0px) + env(safe-area-inset-top, 0px) + 14px);
 }
 
 /* ===== 몰입 모드 두 보기: 리스닝 룸(스피커+전체 랙) / 와이드(컴포넌트 크게) ===== */
@@ -432,6 +438,7 @@ body.mode-focus .focus-exit {
 
 body.mode-focus .focus-view {
     display: flex;
+    top: calc(var(--focus-viewport-top, 0px) + env(safe-area-inset-top, 0px) + 64px);
 }
 
 /* 와이드 — 예전처럼 컴포넌트를 크게, 세로 스크롤 */
@@ -446,19 +453,40 @@ body.mode-focus.focus-room .page-shell {
     padding: 0;
 }
 
+body.mode-focus.focus-room {
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+
+html.focus-room-root,
+html.focus-room-root body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+
 body.mode-focus.focus-room .hero-visual {
     --focus-system-left: calc(50% - 190px);
     --focus-system-right: calc(50% + 190px);
     --focus-speaker-gap: clamp(12px, 1.25vw, 24px);
-    --focus-floor-inset: clamp(12px, 1.5vh, 18px);
+    --focus-floor-inset: calc(env(safe-area-inset-bottom, 0px) + var(--focus-optical-bottom, 7vh));
+    --focus-ceiling-inset: calc(env(safe-area-inset-top, 0px) + var(--focus-optical-top, 3vh));
+    --focus-left-inset: calc(env(safe-area-inset-left, 0px) + var(--focus-optical-side, 1.5vw));
+    --focus-right-inset: calc(env(safe-area-inset-right, 0px) + var(--focus-optical-side, 1.5vw));
+    position: fixed;
+    left: var(--focus-viewport-left, 0px);
+    top: var(--focus-viewport-top, 0px);
+    width: var(--focus-viewport-width, 100vw);
+    height: var(--focus-viewport-height, 100vh);
+    box-sizing: border-box;
     flex-direction: row;
     align-items: flex-end;
     justify-content: center;
     gap: 0;
-    height: 100vh;
-    height: 100dvh;
     margin: 0;
-    padding: 0 0 var(--focus-floor-inset);
+    padding: var(--focus-ceiling-inset) var(--focus-right-inset) var(--focus-floor-inset) var(--focus-left-inset);
+    border-radius: 0;
     overflow: hidden;
 }
 
@@ -467,14 +495,13 @@ body.mode-focus.focus-room .focus-speaker {
     position: absolute;
     bottom: var(--focus-floor-inset);
     z-index: 0;
-    width: clamp(320px, 35vw, 612px);
-    height: auto;
-    max-height: 96vh;
-    max-height: 96dvh;
+    width: auto;
+    height: calc(100% - var(--focus-ceiling-inset) - var(--focus-floor-inset));
+    max-height: 1200px;
     object-fit: contain;
     object-position: center bottom;
     mix-blend-mode: lighten;
-    filter: drop-shadow(0 22px 28px rgba(0, 0, 0, .72));
+    filter: none;
 }
 
 body.mode-focus.focus-room .focus-speaker-left {
@@ -495,11 +522,43 @@ body.mode-focus.focus-room .rack-column {
     z-index: 2;
 }
 
-/* 좁은 화면에서는 스피커를 접는다 — 룸의 의미가 없어지는 폭 */
-@media (max-width: 1180px) {
+body.mode-focus.focus-room .rack-unit {
+    margin-top: var(--focus-unit-gap, 10px);
+}
+
+body.mode-focus.focus-room #timerStage {
+    margin-top: var(--focus-timer-gap, 12px);
+    margin-bottom: var(--focus-timer-bottom-gap, 2px);
+}
+
+/* 몰입 화면에서는 외부 paint bounds를 만들지 않는다. 깊이는 박스 안쪽 오버레이로 표현해
+   어떤 엔진의 blur 커널에서도 viewport 밖 픽셀이 생기지 않게 한다. */
+body.mode-focus.focus-room .tuner-svg,
+body.mode-focus.focus-room .rack-unit svg {
+    box-shadow: none;
+}
+
+body.mode-focus.focus-room .tuner-stage::after,
+body.mode-focus.focus-room .rack-unit::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    box-shadow:
+        inset 0 -12px 18px rgba(0, 0, 0, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* 폭이나 높이가 부족하면 장식보다 컴포넌트의 온전한 표시를 우선한다. */
+@media (max-width: 1180px), (max-height: 720px) {
     body.mode-focus.focus-room .focus-speaker {
         display: none;
     }
+}
+
+body.mode-focus.focus-room .hero-visual[data-focus-speakers="hidden"] .focus-speaker {
+    display: none;
 }
 
 /* 단일 컴포넌트 확대 (룸 모드 전용) — 나머지 유닛은 잠시 물러난다 */
@@ -552,7 +611,8 @@ body.focus-unit-zoomed .unit-zoomed .unit-zoom-btn {
 }
 
 body.focus-unit-zoomed .rack-column {
-    flex: 0 0 100vw !important;
+    flex: 1 1 100% !important;
+    width: 100%;
     min-width: 0;
 }
 
@@ -561,15 +621,19 @@ body.focus-unit-zoomed .rack-column > :not(.unit-zoomed) {
 }
 
 body.focus-unit-zoomed .unit-zoomed {
-    width: min(94vw, 1680px);
-    min-width: 560px;
+    width: min(94%, 1680px);
+    min-width: 0;
     margin: 0 auto;
-    filter: drop-shadow(0 40px 90px rgba(0, 0, 0, 0.85));
+    filter: none;
 }
 
 @media (max-width: 1180px) {
     body.focus-unit-zoomed .unit-zoomed {
-        width: 94vw;
+        width: 94%;
         min-width: 0;
     }
+}
+
+body[data-focus-compact="true"] .unit-zoom-btn {
+    display: none !important;
 }
