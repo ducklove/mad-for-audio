@@ -480,13 +480,12 @@ body.mode-focus.focus-room .focus-speaker {
 body.mode-focus.focus-room .focus-speaker-left {
     left: auto;
     right: calc(100% - var(--focus-system-left) + var(--focus-speaker-gap));
-    transform: translateY(2%);
 }
 
 body.mode-focus.focus-room .focus-speaker-right {
     right: auto;
     left: calc(var(--focus-system-right) + var(--focus-speaker-gap));
-    transform: translateY(2%) scaleX(-1);
+    transform: scaleX(-1);
 }
 
 body.mode-focus.focus-room .rack-column {

@@ -635,11 +635,14 @@ test.describe("데스크톱", () => {
             const lr = l.getBoundingClientRect();
             const rr = r.getBoundingClientRect();
             const sr = rack.getBoundingClientRect();
+            const unitBottom = Math.max(...[...rack.children]
+                .filter((el) => getComputedStyle(el).display !== "none")
+                .map((el) => el.getBoundingClientRect().bottom));
             return {
                 natural: [l.naturalWidth, l.naturalHeight],
-                left: { x: lr.x, right: lr.right, height: lr.height, visualBottom: lr.bottom - lr.height * .02 },
-                right: { x: rr.x, gap: innerWidth - rr.right, height: rr.height, visualBottom: rr.bottom - rr.height * .02 },
-                system: { left: sr.left, right: sr.right, bottom: sr.bottom },
+                left: { x: lr.x, right: lr.right, height: lr.height, bottom: lr.bottom },
+                right: { x: rr.x, gap: innerWidth - rr.right, height: rr.height, bottom: rr.bottom },
+                system: { left: sr.left, right: sr.right, bottom: unitBottom, containerBottom: sr.bottom },
                 viewport: [innerWidth, innerHeight]
             };
         });
@@ -647,8 +650,9 @@ test.describe("데스크톱", () => {
         expect(speakers.left.height, "MacBook 화면에서 스피커가 충분히 커야 한다").toBeGreaterThanOrEqual(speakers.viewport[1] * .8);
         expect(speakers.viewport[1] - speakers.system.bottom, "랙 바닥 안전 여백 최소값").toBeGreaterThanOrEqual(10);
         expect(speakers.viewport[1] - speakers.system.bottom, "랙 바닥 안전 여백 최대값").toBeLessThanOrEqual(20);
-        expect(Math.abs(speakers.left.visualBottom - speakers.system.bottom), "왼쪽 스피커 실물 바닥 = 랙 바닥").toBeLessThanOrEqual(2);
-        expect(Math.abs(speakers.right.visualBottom - speakers.system.bottom), "오른쪽 스피커 실물 바닥 = 랙 바닥").toBeLessThanOrEqual(2);
+        expect(Math.abs(speakers.system.containerBottom - speakers.system.bottom), "랙 컨테이너와 실제 마지막 컴포넌트 바닥").toBeLessThanOrEqual(2);
+        expect(Math.abs(speakers.left.bottom - speakers.system.bottom), "왼쪽 스피커 원본 바닥 = 랙 바닥").toBeLessThanOrEqual(2);
+        expect(Math.abs(speakers.right.bottom - speakers.system.bottom), "오른쪽 스피커 원본 바닥 = 랙 바닥").toBeLessThanOrEqual(2);
         expect(speakers.left.right, "왼쪽 스피커는 랙과 겹치지 않음").toBeLessThanOrEqual(speakers.system.left - 10);
         expect(speakers.right.x, "오른쪽 스피커는 랙과 겹치지 않음").toBeGreaterThanOrEqual(speakers.system.right + 10);
         expect(Math.abs(speakers.left.x - speakers.right.gap), "좌우 대칭 배치").toBeLessThanOrEqual(2);
@@ -668,8 +672,8 @@ test.describe("데스크톱", () => {
             const right = document.getElementById("speakerR").getBoundingClientRect();
             return {
                 deck: { left: deck.left, right: deck.right, bottom: deck.bottom },
-                left: { right: left.right, visualBottom: left.bottom - left.height * .02 },
-                right: { left: right.left, visualBottom: right.bottom - right.height * .02 },
+                left: { right: left.right, bottom: left.bottom },
+                right: { left: right.left, bottom: right.bottom },
                 viewportRight: innerWidth,
                 viewportBottom: innerHeight
             };
@@ -678,8 +682,8 @@ test.describe("데스크톱", () => {
         expect(zoomLayout.viewportBottom - zoomLayout.deck.bottom, "확대 유닛 바닥 안전 여백 최대값").toBeLessThanOrEqual(20);
         expect(zoomLayout.deck.left, "확대 유닛 왼쪽은 화면 안").toBeGreaterThanOrEqual(0);
         expect(zoomLayout.deck.right, "확대 유닛 오른쪽은 화면 안").toBeLessThanOrEqual(zoomLayout.viewportRight);
-        expect(Math.abs(zoomLayout.left.visualBottom - zoomLayout.deck.bottom), "확대 시 왼쪽 스피커 바닥").toBeLessThanOrEqual(2);
-        expect(Math.abs(zoomLayout.right.visualBottom - zoomLayout.deck.bottom), "확대 시 오른쪽 스피커 바닥").toBeLessThanOrEqual(2);
+        expect(Math.abs(zoomLayout.left.bottom - zoomLayout.deck.bottom), "확대 시 왼쪽 스피커 원본 바닥").toBeLessThanOrEqual(2);
+        expect(Math.abs(zoomLayout.right.bottom - zoomLayout.deck.bottom), "확대 시 오른쪽 스피커 원본 바닥").toBeLessThanOrEqual(2);
         expect(zoomLayout.left.right, "확대 시 왼쪽 겹침 없음").toBeLessThanOrEqual(zoomLayout.deck.left - 10);
         expect(zoomLayout.right.left, "확대 시 오른쪽 겹침 없음").toBeGreaterThanOrEqual(zoomLayout.deck.right + 10);
         await page.keyboard.press("Escape");
