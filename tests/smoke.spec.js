@@ -131,6 +131,61 @@ test.describe("데스크톱", () => {
         await expect(page.locator("#settingsOverlay")).toBeHidden();
     });
 
+    test("기존 예약 녹음을 보존하고 모바일 구성 피커와 랙을 모두 초기화", async ({ page }) => {
+        const savedTitle = "기존 예약 보존 검증";
+        await page.evaluate((title) => {
+            const now = new Date();
+            const nowMin = now.getHours() * 60 + now.getMinutes();
+            const startMin = (nowMin + 180) % 1440;
+            localStorage.setItem("fmRadio.reservations", JSON.stringify([{
+                id: 1700000000000,
+                stationId: "kbs1fm",
+                title,
+                startMin,
+                endMin: startMin + 30,
+                repeat: "daily",
+                ymd: FMSchedule.ymdOf(now),
+                dow: now.getDay(),
+                enabled: true,
+                createdAt: 1700000000000
+            }]));
+        }, savedTitle);
+        await page.setViewportSize({ width: 824, height: 1178 });
+        await page.reload({ waitUntil: "domcontentloaded" });
+        await waitForMainApp(page);
+
+        for (const id of ["timerStage", "eqStage", "ampStage", "deckStage", "ttStage"]) {
+            await expect(page.locator(`#${id} svg`)).toHaveCount(1);
+        }
+        await page.click('button:has-text("오디오 구성")');
+        await expect(page.locator("#rackPresetPicker .skin-btn")).toHaveCount(3);
+        await expect(page.locator("#skinPicker .skin-btn")).toHaveCount(4);
+        await expect(page.locator("#timerPicker .skin-btn")).toHaveCount(3);
+        await expect(page.locator("#eqPicker .skin-btn")).toHaveCount(3);
+        await expect(page.locator("#ampPicker .skin-btn")).toHaveCount(6);
+        await expect(page.locator("#deckPicker .skin-btn")).toHaveCount(6);
+        await expect(page.locator("#ttPicker .skin-btn")).toHaveCount(5);
+        expect(await page.evaluate(() => JSON.parse(localStorage.getItem("fmRadio.reservations"))[0].title)).toBe(savedTitle);
+    });
+
+    test("손상된 예약 저장값을 복구해 모바일 구성 피커를 모두 유지", async ({ page }) => {
+        // 보조 방어: 예약값 자체가 배열이 아니어도 initTunerSkin 다음 초기화가 멎지 않는다.
+        await page.evaluate(() => localStorage.setItem("fmRadio.reservations", JSON.stringify({ legacy: true })));
+        await page.setViewportSize({ width: 824, height: 1178 });
+        await page.reload({ waitUntil: "domcontentloaded" });
+        await waitForMainApp(page);
+
+        await page.click('button:has-text("오디오 구성")');
+        await expect(page.locator("#rackPresetPicker .skin-btn")).toHaveCount(3);
+        await expect(page.locator("#skinPicker .skin-btn")).toHaveCount(4);
+        await expect(page.locator("#timerPicker .skin-btn")).toHaveCount(3);
+        await expect(page.locator("#eqPicker .skin-btn")).toHaveCount(3);
+        await expect(page.locator("#ampPicker .skin-btn")).toHaveCount(6);
+        await expect(page.locator("#deckPicker .skin-btn")).toHaveCount(6);
+        await expect(page.locator("#ttPicker .skin-btn")).toHaveCount(5);
+        expect(await page.evaluate(() => JSON.parse(localStorage.getItem("fmRadio.reservations")))).toEqual([]);
+    });
+
     test("실물 정체성 선별 19종: 피커 등록·기기군별 스킨 전환", async ({ page }) => {
         await page.click('button:has-text("오디오 구성")');
         await expect(page.locator("#skinPicker .skin-btn")).toHaveCount(4);

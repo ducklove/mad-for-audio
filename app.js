@@ -9,8 +9,12 @@ const {
     formatSize,
     recFileExtension,
     recordingFileInfo,
-    ymdToDate
+    ymdToDate,
+    ReservationSchedule
 } = runtimeCore;
+// 타이머의 첫 paint는 파일 하단의 예약 UI 초기화보다 먼저 실행된다. 실행 엔진 바인딩을
+// 여기서 확정해, 저장된 활성 예약이 있어도 TDZ에 걸리지 않게 한다.
+window.MFA_ReservationSchedule = ReservationSchedule;
 
 const audio = document.getElementById("audioPlayer");
 const playIcon = document.getElementById("playIcon");
@@ -1348,7 +1352,7 @@ function timerPaint() {
     const nowTs = now.getTime();
     let next = null;
     reservations.forEach((res) => {
-        if (!res.enabled) return;
+        if (!res || !res.enabled) return;
         const occ = resOccurrence(res, nowTs);
         if (occ && occ.endTs > nowTs && (!next || occ.startTs < next.occ.startTs)) next = { res, occ };
     });
@@ -3719,11 +3723,74 @@ let sleepTicker = null;
 
 // 예약 녹음 상태 — ttFrame(데크 TIMER 램프)·updateRecTime이 초기화 직후부터 읽으므로
 // 파일 끝(편성표 섹션)이 아니라 여기서 선언한다. 로직은 '편성표 & 예약 녹음' 섹션에.
+// 과거 세션이나 비정상 종료가 남긴 저장값 하나 때문에 타이머 마운트와 그 뒤의 랙 전체가
+// 중단되지 않도록, 배열 형태뿐 아니라 각 예약의 실행 필드도 로드 경계에서 정규화한다.
+function normalizeStoredReservations(raw) {
+    let source = [];
+    if (Array.isArray(raw)) {
+        source = raw;
+    } else if (raw && typeof raw === "object") {
+        // 래퍼/맵 형태로 들어온 값도 가능한 예약은 살린다.
+        if (Array.isArray(raw.reservations)) source = raw.reservations;
+        else if (Array.isArray(raw.items)) source = raw.items;
+        else source = Object.values(raw);
+    }
+
+    const todayYmd = FMSchedule.ymdOf(new Date());
+    let nextId = source.reduce((max, item) => {
+        const id = item && Number(item.id);
+        return Number.isSafeInteger(id) && id > 0 ? Math.max(max, id) : max;
+    }, Date.now());
+    const usedIds = new Set();
+
+    return source.reduce((out, item) => {
+        if (!item || typeof item !== "object" || Array.isArray(item)) return out;
+
+        const stationId = typeof item.stationId === "string" ? item.stationId.trim() : "";
+        const startMin = Number(item.startMin);
+        const endMin = Number(item.endMin);
+        const repeat = item.repeat;
+        if (!stationId || item.startMin == null || item.endMin == null
+            || !Number.isFinite(startMin) || !Number.isFinite(endMin)
+            || startMin < 0 || startMin >= 1440 || endMin <= startMin || endMin > startMin + 1440
+            || !["once", "daily", "weekly"].includes(repeat)) return out;
+
+        const savedYmd = typeof item.ymd === "string" && /^\d{8}$/.test(item.ymd) ? item.ymd : "";
+        if (repeat === "once" && !savedYmd) return out; // 날짜 없는 1회 예약은 임의 발화시키지 않는다.
+        const ymd = savedYmd || todayYmd;
+        let dow = Number(item.dow);
+        if (!Number.isInteger(dow) || dow < 0 || dow > 6) dow = ymdToDate(ymd).getDay();
+
+        let id = Number(item.id);
+        if (!Number.isSafeInteger(id) || id <= 0 || usedIds.has(id)) id = ++nextId;
+        usedIds.add(id);
+        const station = stations.find((candidate) => candidate.id === stationId);
+        const title = typeof item.title === "string" && item.title.trim()
+            ? item.title.trim()
+            : (station ? station.name : "예약 녹음");
+
+        out.push(Object.assign({}, item, {
+            id, stationId, title, startMin, endMin, repeat, ymd, dow,
+            enabled: typeof item.enabled === "boolean" ? item.enabled : true,
+            createdAt: Number.isFinite(Number(item.createdAt)) ? Number(item.createdAt) : Date.now()
+        }));
+        return out;
+    }, []);
+}
+
 const DOW_KO = ["일", "월", "화", "수", "목", "금", "토"];
 let schedState = { stationId: null, day: 0, view: "list", seq: 0 };
-let reservations = loadJson("fmRadio.reservations", []);
+const storedReservations = loadJson("fmRadio.reservations", []);
+let reservations = normalizeStoredReservations(storedReservations);
+if (JSON.stringify(storedReservations) !== JSON.stringify(reservations)) {
+    saveJson("fmRadio.reservations", reservations);
+}
 let activeResRec = null;                                // 진행 중 예약 녹음 { res, occ, key, endTs, tapeId, started }
-let resFiredOcc = loadJson("fmRadio.resFired", {});     // 회차별 기록 (key: resId:ymd) — 1 발화, 2 사용자 취소, 3 완료.
+// 회차별 기록 (key: resId:ymd) — 1 발화, 2 사용자 취소, 3 완료.
+const storedResFiredOcc = loadJson("fmRadio.resFired", {});
+let resFiredOcc = storedResFiredOcc && typeof storedResFiredOcc === "object" && !Array.isArray(storedResFiredOcc)
+    ? storedResFiredOcc : {};
+if (resFiredOcc !== storedResFiredOcc) saveJson("fmRadio.resFired", resFiredOcc);
                                                         // 1인데 진행 중인 녹음이 없으면 앱이 죽었다 살아난 것 — 남은 시간을 이어 녹음한다.
 const resAlerted = {};                                  // 5분 전 알림 중복 방지 (세션 한정)
 let pendingRecName = null;                              // 다음 toggleRecording()이 쓸 녹음 이름 (프로그램명)
@@ -5090,16 +5157,20 @@ restoreLastStation();
 updateRecButton();
 openRecordingDb();
 initTunerSkin(loadJson("fmRadio.skin", "mr78"));
+// 구성 선택지는 각 SVG 마운트보다 먼저 완성한다. 특정 기기의 저장 데이터나 렌더러가
+// 실패하더라도 '오디오 구성'에서 다른 모델로 복구할 출구까지 함께 사라지지 않는다.
+renderEqPicker();
+renderAmpPicker();
+renderDeckPicker();
+renderTtPicker();
+renderTimerPicker();
+renderRackPresetPicker();
 mountTimer();
 mountEq();
 mountAmp();
 mountDeck();
 mountTurntable();
 applyUnitVisibility();
-renderDeckPicker();
-renderTtPicker();
-renderTimerPicker();
-renderRackPresetPicker();
 startRackAnimationLoop();
 mountCoach();
 
@@ -5202,9 +5273,6 @@ function minutesNow() {
 
 // 예약의 현재(진행 중 포함) 또는 다음 회차. once는 지정 날짜 고정,
 // 반복 예약은 어제(자정 넘김 진행분)부터 일주일 안에서 endTs가 남아 있는 첫 회차.
-const ReservationSchedule = runtimeCore.ReservationSchedule;
-window.MFA_ReservationSchedule = ReservationSchedule;
-
 function resOccurrence(res, nowTs) {
     return ReservationSchedule.occurrence(res, nowTs);
 }
