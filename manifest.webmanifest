@@ -15,14 +15,14 @@
   "screenshots": [
     {
       "src": "docs/screenshots/desktop.png",
-      "sizes": "1280x800",
+      "sizes": "1600x941",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "하이파이 랙 — 튜너·이퀄라이저·앰프"
+      "label": "하이파이 랙 — 튜너·타이머·이퀄라이저·앰프·데크·턴테이블"
     },
     {
       "src": "docs/screenshots/mobile.png",
-      "sizes": "780x1688",
+      "sizes": "850x1534",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "모바일 — 하단 컨트롤 바로 조작"

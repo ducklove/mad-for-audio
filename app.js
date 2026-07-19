@@ -915,9 +915,18 @@ const EQ_MODELS = {
     se9: { pill: "SANSUI SE-9 · COMPU EQ", name: "SE-9", brand: "SANSUI", theme: "black", series: "COMPU-EQUALIZER", architecture: "memory", q: 1.25, capW: 31, range: 12, dualChannel: true,
         freqs: [80, 160, 315, 630, 1250, 2500, 5000, 10000],
         labels: ["80", "160", "315", "630", "1.25k", "2.5k", "5k", "10k"],
-        xs: [780, 935, 1090, 1245, 1400, 1555, 1710, 1865] }
+        xs: [780, 935, 1090, 1245, 1400, 1555, 1710, 1865] },
+    // SH-8065 실기: 채널당 33밴드 ⅓옥타브(16Hz–25kHz), 좌/우 2단 슬라이더 월,
+    // ±12/±3dB 레인지 스위치, NORMAL/INVERSE 특성 스위치. 전용 렌더러(mountEq8065)로
+    // 그리고, 오디오는 다른 EQ와 같이 L/R 링크로 동작한다. Q는 ⅓옥타브 기준(≈4.3).
+    sh8065: { pill: "TECHNICS SH-8065 · 33밴드", name: "SH-8065", brand: "Technics", theme: "silver", series: "STEREO GRAPHIC EQUALIZER", architecture: "technics", bespoke: "sh8065", q: 4.3, capW: 16, range: 12, dualChannel: true,
+        freqs: [16, 20, 25, 31.5, 40, 50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630, 800, 1000, 1250, 1600, 2000, 2500, 3150, 4000, 5000, 6300, 8000, 10000, 12500, 16000, 20000, 25000],
+        labels: ["16", "20", "25", "31.5", "40", "50", "63", "80", "100", "125", "160", "200", "250", "315", "400", "500", "630", "800", "1k", "1.25k", "1.6k", "2k", "2.5k", "3.15k", "4k", "5k", "6.3k", "8k", "10k", "12.5k", "16k", "20k", "25k"],
+        xs: Array.from({ length: 33 }, (_, i) => 512 + i * 43) }
 };
-const EQ_ORDER = ["ge5", "se9"];
+const EQ_ORDER = ["ge5", "se9", "sh8065"];
+// 옥타브 중심(강조 표기)과 SH-8065 레인지 스위치 상태
+const SH8065_OCTAVE = new Set([31.5, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000]);
 
 // ----- EQ 프리셋 — 커브는 (Hz, dB) 포인트로 선언하고 현재 모델 밴드로 리샘플한다 -----
 // 5밴드(GE-5)에서도 10밴드에서도 같은 프리셋이 동작하고, 슬롯도 모델을 넘나든다.
@@ -1122,6 +1131,12 @@ const RACK_PRESETS = [
         desc: "MODEL 10B · DT-540 SILVER · E-303 · CT-F1250 · SL-1200MK2 — 샴페인/실버 빈티지 랙",
         tuner: "m10b", timer: "silver", eq: "ge5", amp: "e303", deck: "ctf1250", tt: "sl1200",
         show: { tuner: true, timer: true, eq: false, amp: true, deck: true, tt: true }
+    },
+    {
+        id: "silverfull", label: "실버 풀세트",
+        desc: "실버 클래식에 TECHNICS SH-8065(33밴드)를 더한 전 유닛 실버 랙",
+        tuner: "m10b", timer: "silver", eq: "sh8065", amp: "e303", deck: "ctf1250", tt: "sl1200",
+        show: { tuner: true, timer: true, eq: true, amp: true, deck: true, tt: true }
     }
 ];
 
@@ -1492,6 +1507,7 @@ function eqGainToY(g) {
 
 function mountEq() {
     const model = EQ_MODELS[eqModelId];
+    if (model && model.bespoke === "sh8065") { mountEq8065(); return; }
     const theme = EQ_THEMES[model.theme] || EQ_THEMES.black;
     const chrome = model.theme === "chrome";
     const silver = model.theme === "silver";
@@ -1747,6 +1763,7 @@ function eqPaintKeys() {
 }
 
 function updateEqVisuals() {
+    if (eqModelId === "sh8065") { updateEqVisuals8065(); return; }
     EQ_FREQS.forEach((f, i) => {
         const h = document.getElementById("eqH" + i);
         const v = document.getElementById("eqV" + i);
@@ -1760,6 +1777,218 @@ function updateEqVisuals() {
     });
     const led = document.getElementById("eqLed");
     if (led) led.style.fill = eqState.on ? "#ff7a3a" : "#3a2012";
+}
+
+// ===== TECHNICS SH-8065 — 채널당 33밴드 ⅓옥타브 그래픽 EQ (전용 렌더러) =====
+// 실기 전면: 실버 브러시드 알루미늄, 좌(위)·우(아래) 2단 33 슬라이더 월,
+// ±12/±3dB 레인지 스위치, NORMAL/INVERSE 특성 스위치, EQ/THROUGH, 입력 감도(150mV/1V).
+// 오디오는 다른 EQ와 같이 L/R 링크(밴드 게인 33개) — 두 단 슬라이더는 같은 커브를 그린다.
+const EQ8_L = { t: 80, b: 166 };   // 좌(상단) 행 캡 이동 범위
+const EQ8_R = { t: 214, b: 300 };  // 우(하단) 행 캡 이동 범위
+const EQ8_FX = 470, EQ8_FW = 1460;  // 슬라이더 필드 x·폭
+function eq8YFor(val, row, range) { return row.t + (range - val) / (range * 2) * (row.b - row.t); }
+
+function mountEq8065() {
+    const model = EQ_MODELS.sh8065;
+    const range = fpGet("eq8065.range", 12);
+    model.range = range;
+    const xs = model.xs, freqs = model.freqs, labels = model.labels;
+    const g = eqState.gains.sh8065;
+    const fieldR = EQ8_FX + EQ8_FW;
+    const Lm = (EQ8_L.t + EQ8_L.b) / 2, Rm = (EQ8_R.t + EQ8_R.b) / 2;
+    const hw = 8, hitHw = 20;
+    const screw = (x, y) => '<g transform="translate(' + x + ' ' + y + ')" pointer-events="none"><circle r="8" fill="url(#eq8Screw)" stroke="#5c5f63" stroke-width="1.2"/><path d="M-4 -1 L4 1" stroke="#2c2e31" stroke-width="1.3"/></g>';
+    const cap = (x) =>
+        '<rect x="' + (x - hw) + '" y="-11" width="' + (hw * 2) + '" height="22" rx="3" fill="url(#eq8Cap)" stroke="#2f3236" stroke-width="1"/>' +
+        '<rect x="' + (x - hw + 2) + '" y="-9" width="' + (hw * 2 - 4) + '" height="4" rx="1.5" fill="#ffffff" opacity=".55"/>' +
+        '<path d="M' + (x - hw + 2) + ' -3.5 H' + (x + hw - 2) + ' M' + (x - hw + 2) + ' -0.5 H' + (x + hw - 2) + ' M' + (x - hw + 2) + ' 2.5 H' + (x + hw - 2) + '" stroke="#2a2c2f" stroke-width=".7" opacity=".5"/>' +
+        '<rect x="' + (x - hw + 1) + '" y="6" width="' + (hw * 2 - 2) + '" height="1.8" fill="#d23a1c"/>';
+
+    let slots = "", caps = "", hits = "", labelStrip = "";
+    freqs.forEach((f, i) => {
+        const x = xs[i];
+        const oct = SH8065_OCTAVE.has(f);
+        slots += '<rect x="' + (x - 2.4) + '" y="66" width="4.8" height="106" rx="2.4" fill="url(#eq8Slot)" stroke="#08090b" stroke-width=".8"/>' +
+                 '<rect x="' + (x - 2.4) + '" y="200" width="4.8" height="106" rx="2.4" fill="url(#eq8Slot)" stroke="#08090b" stroke-width=".8"/>';
+        labelStrip += '<text x="' + x + '" y="190" font-family="Arial" font-size="' + (oct ? 10 : 8) + '" font-weight="' + (oct ? 700 : 600) + '" fill="' + (oct ? "#eff1ed" : "#a2a6a0") + '" text-anchor="middle">' + labels[i] + '</text>';
+        caps += '<g id="eq8capL' + i + '" transform="translate(0,' + eq8YFor(g[i] || 0, EQ8_L, range).toFixed(1) + ')" filter="url(#eq8HandleShadow)">' + cap(x) + '</g>' +
+                '<g id="eq8capR' + i + '" transform="translate(0,' + eq8YFor(g[i] || 0, EQ8_R, range).toFixed(1) + ')" filter="url(#eq8HandleShadow)">' + cap(x) + '</g>';
+        hits += '<rect id="eq8HitL' + i + '" x="' + (x - hitHw) + '" y="68" width="' + (hitHw * 2) + '" height="110" fill-opacity="0" style="cursor:ns-resize;touch-action:none" tabindex="0" role="slider" aria-label="좌 ' + labels[i] + 'Hz" aria-valuemin="-' + range + '" aria-valuemax="' + range + '"><title>L · ' + labels[i] + 'Hz</title></rect>' +
+                '<rect id="eq8HitR' + i + '" x="' + (x - hitHw) + '" y="202" width="' + (hitHw * 2) + '" height="110" fill-opacity="0" style="cursor:ns-resize;touch-action:none" tabindex="0" role="slider" aria-label="우 ' + labels[i] + 'Hz" aria-valuemin="-' + range + '" aria-valuemax="' + range + '"><title>R · ' + labels[i] + 'Hz</title></rect>';
+    });
+    const curveD = (row) => "M " + xs.map((x, i) => x.toFixed(1) + "," + eq8YFor(g[i] || 0, row, range).toFixed(1)).join(" L ");
+    // 행별 눈금(0dB 하이라이트 + 사분 그리드)
+    let rowGrid = "";
+    [EQ8_L, EQ8_R].forEach((row) => {
+        const rm = (row.t + row.b) / 2;
+        [-1, -0.5, 0.5, 1].forEach((k) => {
+            const y = rm + k * (row.b - row.t) / 2;
+            rowGrid += '<path d="M' + (EQ8_FX + 40) + ' ' + y.toFixed(1) + ' H' + (fieldR - 14) + '" stroke="#79b6d8" stroke-width=".8" opacity=".14"/>';
+        });
+        rowGrid += '<path d="M' + (EQ8_FX + 40) + ' ' + rm + ' H' + (fieldR - 14) + '" stroke="#eaf3f8" stroke-width="1.3" opacity=".5"/>';
+    });
+    // 행별 축 레이블 + 채널 태그
+    const axis = (row, tag) =>
+        '<text x="' + (EQ8_FX + 34) + '" y="' + (row.t + 5) + '" font-family="Arial" font-size="11" font-weight="700" fill="#cfe6f1" text-anchor="end">+' + range + '</text>' +
+        '<text x="' + (EQ8_FX + 34) + '" y="' + ((row.t + row.b) / 2 + 4) + '" font-family="Arial" font-size="11" font-weight="700" fill="#eef4f7" text-anchor="end">0</text>' +
+        '<text x="' + (EQ8_FX + 34) + '" y="' + (row.b + 5) + '" font-family="Arial" font-size="11" font-weight="700" fill="#cfe6f1" text-anchor="end">−' + range + '</text>' +
+        '<text x="' + (fieldR - 12) + '" y="' + ((row.t + row.b) / 2 - 8) + '" font-family="Arial" font-size="15" font-weight="800" fill="#8fd0ec" text-anchor="end" opacity=".82">' + tag + '</text>';
+
+    // 좌측 컨트롤 존 — 2단 토글 스위치 헬퍼
+    const swi = (x, y, id, up, down, title, isUp) =>
+        '<text x="' + (x + 20) + '" y="' + (y - 7) + '" font-family="Arial" font-size="9.5" font-weight="700" letter-spacing=".4" fill="#33352f" text-anchor="middle">' + up + '</text>' +
+        '<rect x="' + x + '" y="' + y + '" width="40" height="60" rx="6" fill="#111310" stroke="#7f827b" stroke-width="1.4"/>' +
+        '<rect x="' + (x + 3) + '" y="' + (y + 3) + '" width="34" height="54" rx="4" fill="#08090a"/>' +
+        '<g id="' + id + '_lev" data-up="' + (y + 4) + '" data-down="' + (y + 30) + '" transform="translate(0,' + (isUp ? 0 : 26) + ')">' +
+        '<rect x="' + (x + 5) + '" y="' + (y + 4) + '" width="30" height="26" rx="4" fill="url(#eq8Cap)" stroke="#2f3236" stroke-width="1"/>' +
+        '<path d="M' + (x + 8) + ' ' + (y + 9) + ' H' + (x + 32) + '" stroke="#fff" stroke-width="1.5" opacity=".5"/></g>' +
+        '<text x="' + (x + 20) + '" y="' + (y + 75) + '" font-family="Arial" font-size="9.5" font-weight="700" letter-spacing=".4" fill="#33352f" text-anchor="middle">' + down + '</text>' +
+        '<rect id="' + id + '_hit" x="' + (x - 6) + '" y="' + (y - 18) + '" width="52" height="98" fill-opacity="0" style="cursor:pointer"><title>' + title + '</title></rect>';
+
+    const rangeUp = range === 12, invOn = fpGet("eq8065.inv", false), inputHi = fpGet("eq8065.input", false);
+    const leftZone =
+        '<text x="70" y="86" font-family="Arial, sans-serif" font-size="33" font-weight="800" letter-spacing="1.5" fill="#22241f">Technics</text>' +
+        '<text x="72" y="110" font-family="Arial" font-size="12.5" font-weight="700" letter-spacing="2" fill="#3a3c36">STEREO GRAPHIC EQUALIZER</text>' +
+        '<text x="72" y="130" font-family="Arial" font-size="11" font-weight="700" letter-spacing="1.4" fill="#5a5c55">SH-8065 · 1/3 OCTAVE 33 BAND</text>' +
+        // POWER
+        '<text x="96" y="238" font-family="Arial" font-size="12" font-weight="700" letter-spacing="1.4" fill="#33352f" text-anchor="middle">POWER</text>' +
+        '<rect x="72" y="156" width="48" height="66" rx="6" fill="#0e100c" stroke="#7f827b" stroke-width="1.6"/>' +
+        '<rect x="78" y="162" width="36" height="54" rx="4" fill="url(#eq8Cap)" stroke="#26282b"/><path d="M82 168 H110" stroke="#fff" stroke-width="3" opacity=".55"/>' +
+        '<circle cx="150" cy="176" r="7" fill="#3a2012" stroke="#160c08" stroke-width="1.6"/><circle id="eq8pwrLed" cx="150" cy="176" r="6" fill="#3a2012"/>' +
+        '<text x="150" y="200" font-family="Arial" font-size="10" font-weight="700" letter-spacing="1" fill="#4a4c45" text-anchor="middle">ON</text>' +
+        '<rect id="eq8pwrHit" x="66" y="150" width="60" height="78" fill-opacity="0" style="cursor:pointer"><title>POWER — EQ 회로 전원 (끄면 평탄 통과·패널 소등)</title></rect>' +
+        // 스위치 4종
+        swi(190, 160, "eq8sw_range", "±12dB", "±3dB", "RANGE — 조정 폭 ±12dB / ±3dB (정밀)", rangeUp) +
+        swi(310, 160, "eq8sw_char", "NORMAL", "INVERSE", "CHARACTERISTIC — INVERSE는 설정 커브의 역응답을 겁니다", !invOn) +
+        swi(190, 272, "eq8sw_eq", "EQ", "THROUGH", "EQ / THROUGH — EQ 회로 바이패스(디피트)", eqState.on) +
+        swi(310, 272, "eq8sw_input", "150mV", "1V", "INPUT — 입력 감도 선택(하드웨어 라인 감도)", !inputHi);
+
+    document.getElementById("eqStage").innerHTML =
+        '<svg class="eq-svg" viewBox="0 0 2000 400" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="Technics SH-8065 33밴드 스테레오 그래픽 이퀄라이저">' +
+        '<defs>' +
+        '<linearGradient id="eq8Face" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f3ee"/><stop offset=".16" stop-color="#d5d6d3"/><stop offset=".7" stop-color="#c4c6c4"/><stop offset="1" stop-color="#8f9295"/></linearGradient>' +
+        '<linearGradient id="eq8Field" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a0d10"/><stop offset=".1" stop-color="#12161b"/><stop offset=".9" stop-color="#0b0e12"/><stop offset="1" stop-color="#04060a"/></linearGradient>' +
+        '<linearGradient id="eq8Slot" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000"/><stop offset=".4" stop-color="#040507"/><stop offset=".6" stop-color="#20242b"/><stop offset="1" stop-color="#000"/></linearGradient>' +
+        '<linearGradient id="eq8Cap" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".22" stop-color="#c0c3c5"/><stop offset=".5" stop-color="#eef0ee"/><stop offset=".76" stop-color="#8f9295"/><stop offset="1" stop-color="#54585c"/></linearGradient>' +
+        '<linearGradient id="eq8Screw" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6f6f2"/><stop offset=".45" stop-color="#9a9d9f"/><stop offset="1" stop-color="#4a4c4f"/></linearGradient>' +
+        '<pattern id="eq8Brush" width="9" height="6" patternUnits="userSpaceOnUse"><path d="M0 1 H9 M0 4 H9" stroke="#fff" stroke-width=".5" opacity=".24"/><path d="M0 2.6 H9" stroke="#000" stroke-width=".4" opacity=".1"/></pattern>' +
+        '<filter id="eq8SlotShadow" x="-40%" y="-20%" width="180%" height="140%"><feGaussianBlur stdDeviation="4"/></filter>' +
+        '<filter id="eq8HandleShadow" x="-60%" y="-70%" width="220%" height="240%"><feDropShadow dx="2" dy="4" stdDeviation="2.6" flood-color="#000" flood-opacity=".7"/></filter>' +
+        '</defs>' +
+        '<rect width="2000" height="400" rx="9" fill="url(#eq8Face)"/>' +
+        '<rect x="44" y="7" width="1912" height="386" fill="url(#eq8Brush)"/>' +
+        '<rect x="48" y="10" width="1904" height="380" rx="7" fill="none" stroke="#fdfdf9" stroke-width="2.5" opacity=".7"/>' +
+        '<rect y="390" width="2000" height="10" fill="#000" opacity=".5"/>' +
+        '<rect x="0" y="0" width="44" height="400" rx="8" fill="#aeb1b2"/><rect x="1956" y="0" width="44" height="400" rx="8" fill="#aeb1b2"/>' +
+        screw(22, 52) + screw(22, 348) + screw(1978, 52) + screw(1978, 348) +
+        '<line x1="452" y1="70" x2="452" y2="330" stroke="#6f726c" stroke-width="1.4" opacity=".5"/>' +
+        leftZone +
+        // 슬라이더 필드
+        '<rect x="' + (EQ8_FX + 4) + '" y="64" width="' + EQ8_FW + '" height="256" rx="9" fill="#000" opacity=".5" filter="url(#eq8SlotShadow)"/>' +
+        '<rect x="' + EQ8_FX + '" y="60" width="' + EQ8_FW + '" height="256" rx="8" fill="url(#eq8Field)" stroke="#5c6066" stroke-width="2.2"/>' +
+        '<path d="M' + (EQ8_FX + 10) + ' 70 H' + (fieldR - 10) + '" stroke="#fff" stroke-width="1.6" opacity=".12"/>' +
+        '<rect x="' + (EQ8_FX + 34) + '" y="176" width="' + (EQ8_FW - 48) + '" height="26" fill="#0a0d11" opacity=".55"/>' +
+        rowGrid + slots +
+        '<path id="eq8curveL" d="' + curveD(EQ8_L) + '" fill="none" stroke="#efc169" stroke-width="1.6" stroke-linejoin="round" opacity=".55" pointer-events="none"/>' +
+        '<path id="eq8curveR" d="' + curveD(EQ8_R) + '" fill="none" stroke="#efc169" stroke-width="1.6" stroke-linejoin="round" opacity=".55" pointer-events="none"/>' +
+        axis(EQ8_L, "L") + axis(EQ8_R, "R") +
+        labelStrip +
+        '<text x="' + (fieldR - 12) + '" y="316" font-family="Arial" font-size="12" font-weight="700" letter-spacing="1.2" fill="#8fd0ec" text-anchor="end" opacity=".7">Hz</text>' +
+        caps + hits +
+        '</svg>';
+
+    const svg = document.querySelector("#eqStage svg");
+    applyPanelLighting(svg);
+
+    const paintSwitch = (id, isUp) => {
+        const lev = document.getElementById(id + "_lev");
+        if (lev) lev.setAttribute("transform", "translate(0," + (isUp ? 0 : 26) + ")");
+    };
+    const bindSlider = (hitId, i, row) => {
+        const hit = document.getElementById(hitId);
+        if (!hit) return;
+        let drag = false;
+        const setFromY = (clientY) => {
+            const r = svg.getBoundingClientRect();
+            const yv = (clientY - r.top) / r.height * EQ_VB_H;
+            let val = range - (yv - row.t) / (row.b - row.t) * range * 2;
+            val = Math.max(-range, Math.min(range, val));
+            if (Math.abs(val) < range * 0.06) val = 0;   // 센터 디텐트
+            g[i] = Math.round(val * 2) / 2;
+            applyEq();
+            updateEqVisuals8065();
+        };
+        hit.addEventListener("pointerdown", (e) => { drag = true; try { hit.setPointerCapture(e.pointerId); } catch (err) {} setFromY(e.clientY); e.preventDefault(); });
+        hit.addEventListener("pointermove", (e) => { if (drag) setFromY(e.clientY); });
+        hit.addEventListener("pointerup", () => { drag = false; saveEq(); });
+        hit.addEventListener("pointercancel", () => { drag = false; });
+        hit.addEventListener("keydown", (e) => {
+            const step = e.key === "ArrowUp" ? 0.5 : e.key === "ArrowDown" ? -0.5 : 0;
+            if (!step) return;
+            e.preventDefault();
+            g[i] = Math.max(-range, Math.min(range, g[i] + step));
+            applyEq();
+            updateEqVisuals8065();
+            saveEq();
+        });
+    };
+    freqs.forEach((f, i) => { bindSlider("eq8HitL" + i, i, EQ8_L); bindSlider("eq8HitR" + i, i, EQ8_R); });
+
+    const bindSwi = (id, fn) => {
+        const el = document.getElementById(id + "_hit");
+        if (!el) return;
+        el.addEventListener("click", fn);
+        svgButtonize(el, id);
+    };
+    const pwr = document.getElementById("eq8pwrHit");
+    if (pwr) { pwr.addEventListener("click", eqTogglePower); svgButtonize(pwr, "EQ 전원"); }
+    bindSwi("eq8sw_eq", () => {
+        eqState.on = !eqState.on;
+        applyEq(); updateEqVisuals8065(); paintSwitch("eq8sw_eq", eqState.on); saveEq();
+        fpNote(eqState.on ? "이퀄라이저 ON" : "이퀄라이저 THROUGH (바이패스)");
+    });
+    bindSwi("eq8sw_range", () => {
+        const nr = range === 12 ? 3 : 12;
+        for (let i = 0; i < g.length; i++) g[i] = Math.max(-nr, Math.min(nr, g[i]));
+        fpSet("eq8065.range", nr); saveEq();
+        mountEq();                       // 레인지 눈금·캡 위치를 새 폭으로 다시 그린다
+        applyEq();
+        fpNote("RANGE ±" + nr + "dB — 조정 폭을 바꿨습니다");
+    });
+    bindSwi("eq8sw_char", () => {
+        const ni = !fpGet("eq8065.inv", false);
+        fpSet("eq8065.inv", ni); paintSwitch("eq8sw_char", !ni); applyEq();
+        fpNote(ni ? "CHARACTERISTIC INVERSE — 설정 커브의 역응답" : "CHARACTERISTIC NORMAL");
+    });
+    bindSwi("eq8sw_input", () => {
+        const ni = !fpGet("eq8065.input", false);
+        fpSet("eq8065.input", ni); paintSwitch("eq8sw_input", !ni);
+        fpNote(ni ? "INPUT 1V — 입력 감도(라인)" : "INPUT 150mV — 입력 감도(라인)");
+    });
+
+    renderEqPicker();
+    updateEqVisuals8065();
+}
+
+function updateEqVisuals8065() {
+    const g = eqState.gains.sh8065;
+    const range = EQ_MODELS.sh8065.range || 12;
+    const xs = EQ_MODELS.sh8065.xs;
+    const on = eqState.on;
+    for (let i = 0; i < g.length; i++) {
+        const cl = document.getElementById("eq8capL" + i);
+        const cr = document.getElementById("eq8capR" + i);
+        if (cl) { cl.setAttribute("transform", "translate(0," + eq8YFor(g[i] || 0, EQ8_L, range).toFixed(1) + ")"); cl.style.opacity = on ? 1 : 0.4; }
+        if (cr) { cr.setAttribute("transform", "translate(0," + eq8YFor(g[i] || 0, EQ8_R, range).toFixed(1) + ")"); cr.style.opacity = on ? 1 : 0.4; }
+        const hl = document.getElementById("eq8HitL" + i); if (hl) hl.setAttribute("aria-valuenow", g[i] || 0);
+        const hr = document.getElementById("eq8HitR" + i); if (hr) hr.setAttribute("aria-valuenow", g[i] || 0);
+    }
+    const dL = "M " + xs.map((x, i) => x.toFixed(1) + "," + eq8YFor(g[i] || 0, EQ8_L, range).toFixed(1)).join(" L ");
+    const dR = "M " + xs.map((x, i) => x.toFixed(1) + "," + eq8YFor(g[i] || 0, EQ8_R, range).toFixed(1)).join(" L ");
+    const cvL = document.getElementById("eq8curveL"); if (cvL) { cvL.setAttribute("d", dL); cvL.style.opacity = on ? 0.55 : 0.16; }
+    const cvR = document.getElementById("eq8curveR"); if (cvR) { cvR.setAttribute("d", dR); cvR.style.opacity = on ? 0.55 : 0.16; }
+    const pled = document.getElementById("eq8pwrLed");
+    if (pled) pled.style.fill = eqPowerOn ? "#ff7a3a" : "#3a2012";
 }
 
 // 8B 바이어스 미터 모드 — 0=VU · 1=CH A 바이어스 · 2=CH B 바이어스 (미터 클릭으로 순환)
@@ -2164,6 +2393,7 @@ function eqPaintPower() {
 function bindEqFrontPanel() {
     const svg = document.querySelector("#eqStage svg");
     if (!svg) return;
+    if (eqModelId === "sh8065") { eqPaintPower(); return; }   // SH-8065는 mountEq8065에서 배선
     fpButton(svg, 56, 190, 54, 74, "이퀄라이저 전원", "POWER — EQ 회로 전원 (끄면 평탄 통과)", eqTogglePower);
     eqPaintPower();
     if (eqModelId !== "ge5") return;

@@ -263,8 +263,11 @@ function applyEq() {
     if (!eqNodes) return;
     if (eqBufferShaper) eqBufferShaper.curve = eqLive() ? eqBufferCurve() : null;
     const g = eqState.gains[eqModelId];
+    // SH-8065 CHARACTERISTIC 스위치 — INVERSE는 설정한 커브의 역응답을 건다
+    // (슬라이더 위치는 그대로, 응답만 반전 — 실기 동작).
+    const inv = (eqModelId === "sh8065" && fpGet("eq8065.inv", false)) ? -1 : 1;
     eqNodes.forEach((b, i) => {
-        const v = eqLive() ? (g[i] || 0) : 0;
+        const v = eqLive() ? (g[i] || 0) * inv : 0;
         // 짧은 타임 콘스턴트로 램프 — 프리셋 전환·A/B 비교 시 지퍼 노이즈 방지
         if (audioCtx) b.gain.setTargetAtTime(v, audioCtx.currentTime, 0.03);
         else b.gain.value = v;
