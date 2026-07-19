@@ -1,7 +1,7 @@
 {
   "name": "mad-for-audio-tray",
   "version": "1.0.0",
-  "description": "Mad for Audio — 윈도우 시스템 트레이 라디오 플레이어",
+  "description": "Mad for Audio — 시스템 트레이(Windows)·메뉴바(macOS) 라디오 플레이어",
   "main": "main.js",
   "private": true,
   "author": "ducklove",
@@ -12,6 +12,7 @@
   "scripts": {
     "start": "electron .",
     "dist": "electron-builder --win",
+    "dist:mac": "electron-builder --mac",
     "check": "node --check main.js && node --check preload.js",
     "audit": "npm audit --audit-level=high"
   },
@@ -39,6 +40,14 @@
     "win": {
       "target": ["portable"],
       "icon": "../icons/icon-512.png"
+    },
+    "mac": {
+      "target": ["zip"],
+      "icon": "../icons/icon-512.png",
+      "category": "public.app-category.music",
+      "extendInfo": {
+        "LSUIElement": true
+      }
     }
   }
 }

@@ -13,6 +13,9 @@ const { fileURLToPath, pathToFileURL } = require("url");
 const HOME_URL = "https://ducklove.github.io/mad-for-audio/";
 const VOLUME_PRESETS = [100, 80, 60, 40, 20, 0];
 const DEBUG = !!process.env.MFA_TRAY_DEBUG;
+// macOS에서는 트레이 대신 메뉴바 상주로 동작한다 — 독 숨김, 📻 메뉴바 아이템과
+// 나우플레잉 텍스트 스트립(네이티브 macos/ 앱과 같은 문법), 슬림 바 대신 패널 유지.
+const IS_MAC = process.platform === "darwin";
 
 // 보기별 창 크기 (슬림 바는 곡명 + 재생/정지만)
 // 전체 화면은 랙 페이지의 '⛶ 전체 화면' 버튼(HTML 풀스크린)으로만 진입한다
@@ -249,6 +252,12 @@ function createWindow() {
     systemUrl.searchParams.set("view", "rack");
     systemUrl.searchParams.set("chrome", "tray");
 
+    // 메뉴바 앱은 어느 작업공간(Space)에서 아이콘을 눌러도 그 자리에 패널이 떠야 한다.
+    // skipTransformProcessType: dock.hide()로 만든 LSUIElement 상태를 되돌리지 않는다.
+    if (IS_MAC) {
+        win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true, skipTransformProcessType: true });
+    }
+
     win.loadFile(path.join(__dirname, "shell.html"), {
         query: { tuner: tunerUrl.href, system: systemUrl.href }
     });
@@ -280,7 +289,10 @@ function createWindow() {
 
     win.on("blur", () => {
         if (barMode || !win.isVisible()) return;
-        // 재생 중이면(어느 보기든) 바로 숨기지 않고 슬림 바로 축소한다
+        // macOS: 네이티브 macos/ 앱과 같은 플로팅 패널 — 포커스를 잃어도 그대로 떠서
+        // 미터·랙을 계속 볼 수 있다. 닫기는 메뉴바 아이콘 토글 또는 ESC.
+        if (IS_MAC) return;
+        // Windows: 재생 중이면 바로 숨기지 않고 슬림 바로 축소한다
         if (state.playing) enterBarMode();
         else hideWindow();
     });
@@ -293,9 +305,8 @@ function createWindow() {
             applyViewBounds();
             return;
         }
-        if (barMode) hideWindow();
-        else if (state.playing) enterBarMode();
-        else hideWindow();
+        if (IS_MAC || barMode || !state.playing) hideWindow();
+        else enterBarMode();
     });
 
     // 랙의 '⛶ 전체 화면' 해제(버튼 재클릭·exitFullscreen)로 풀스크린이 풀리면
@@ -397,8 +408,8 @@ function hideWindow() {
 function toggleWindow() {
     if (!win.isVisible()) return showFull();
     if (barMode) return showFull();
-    if (state.playing) enterBarMode();
-    else hideWindow();
+    if (!IS_MAC && state.playing) return enterBarMode();
+    hideWindow();
 }
 
 // 개발 모드에서는 electron.exe가 실행 파일이므로 앱 경로를 인자로 넘겨야 한다
@@ -495,14 +506,25 @@ function refreshTray() {
     const status = state.loading ? "연결 중…" : state.playing ? "재생 중" : "정지";
     const viewLabel = currentView === "system" ? "오디오 시스템" : "튜너";
     tray.setToolTip(`Mad for Audio · ${viewLabel} — ${stationName} ${status}`);
+    if (IS_MAC) {
+        // 메뉴바 나우플레잉 스트립 — 재생 중에만 곡명(채널명)을 붙이고 평소엔 📻만 남긴다
+        const short = stationName.length > 18 ? stationName.slice(0, 17) + "…" : stationName;
+        tray.setTitle(state.loading ? "📻 …" : state.playing ? `📻 ${short}` : "📻");
+    }
     tray.setContextMenu(buildMenu());
 }
 
 function createTray() {
-    const icon = nativeImage
-        .createFromPath(path.join(webRoot, "icons", "icon-192.png"))
-        .resize({ width: 16, height: 16 });
-    tray = new Tray(icon);
+    if (IS_MAC) {
+        // macOS: 아이콘 이미지 대신 📻 텍스트 메뉴바 아이템 — 네이티브 macos/ 앱과 같은 얼굴.
+        // 나우플레잉 스트립은 refreshTray()의 setTitle이 담당한다.
+        tray = new Tray(nativeImage.createEmpty());
+    } else {
+        const icon = nativeImage
+            .createFromPath(path.join(webRoot, "icons", "icon-192.png"))
+            .resize({ width: 16, height: 16 });
+        tray = new Tray(icon);
+    }
     tray.on("click", toggleWindow);
     refreshTray();
 }
@@ -571,7 +593,8 @@ if (!gotLock) {
     });
 
     app.whenReady().then(async () => {
-        app.setAppUserModelId("com.madforaudio.tray");
+        if (IS_MAC) app.dock.hide();                        // 메뉴바 전용 — 독·Cmd+Tab에서 제외
+        else app.setAppUserModelId("com.madforaudio.tray"); // Windows 알림·작업표시줄 식별자
         loadSettings();
         configureSessionSecurity();
         // 시작할 때 웹 캐시·서비스워커 저장소를 비운다 — 온라인 전용이라 캐시 이득이 없고,
