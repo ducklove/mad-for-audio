@@ -565,26 +565,29 @@ test.describe("데스크톱", () => {
             lettering: Number(document.querySelector("#ampStage .ma2375-lettering").style.opacity),
             dark: Number(document.querySelector("#ampStage .meterDark").style.opacity),
         }));
-        await page.waitForFunction(() => Number(document.querySelector("#ampStage .meterDark").style.opacity) > .5);
+        // 유닛 전원 문법(v142): 백라이트는 재생이 아니라 앰프 '전원'을 따른다.
+        // rAF 스로틀과 무관하게 합성 펌프로 웜 보간을 수렴시켜 검증한다.
+        const pump = () => page.evaluate(() => {
+            const t0 = performance.now() - 6000;
+            ttLastTs = t0;
+            for (let i = 1; i <= 120; i++) ttFrame(t0 + i * 50);
+        });
+        await page.evaluate(() => { if (unitPower.amp) ampPowerToggle(); });   // 명시적 OFF
+        await pump();
         const off = await lighting();
         expect(off.meter).toBeLessThan(.1);
         expect(off.lettering).toBeLessThan(.3);
         expect(off.dark).toBeGreaterThan(.5);
 
-        await page.click("#tsRfHit");
-        await page.locator("#kbsList .station").first().click();
-        await page.waitForFunction(() => {
-            const audio = document.getElementById("audioPlayer");
-            return !audio.paused && Number(document.querySelector("#ampStage .ma2375-meter-light").style.opacity) > .42;
-        }, null, { timeout: 15000 });
+        await page.evaluate(() => ampPowerToggle());   // 명시적 ON — 재생 없이도 점등
+        await pump();
         const on = await lighting();
         expect(on.meter).toBeGreaterThan(.42);
         expect(on.lettering).toBeGreaterThan(.7);
         expect(on.dark).toBeLessThan(.1);
 
-        await page.click("#tsPowerHit");
-        // 공유 CI에서는 Chromium과 WebKit이 함께 합성 부하를 만들어 냉각 보간이 로컬보다 늦다.
-        await page.waitForFunction(() => Number(document.querySelector("#ampStage .meterDark").style.opacity) > .45, null, { timeout: 12000 });
+        await page.evaluate(() => ampPowerToggle());   // 다시 OFF — 식는다
+        await pump();
         const cooled = await lighting();
         expect(cooled.meter).toBeLessThan(.22);
         expect(cooled.lettering).toBeLessThan(.36);
@@ -610,6 +613,14 @@ test.describe("데스크톱", () => {
     });
 
     test("예약 녹음: 정지 중 발화 → 백그라운드 무음 녹음, 튜너·데크만 점등, 종료 후 카세트 보관", async ({ page }) => {
+        // 새 문법(v142): 부팅은 전체 통전이라 앰프도 켜져 있다. '예약은 앰프를 쓰지 않는다'는
+        // 의도를 검증하기 위해 앰프를 명시적으로 내려 두고, 예약 내내 꺼진 채인지 본다.
+        await page.evaluate(() => {
+            ampPowerToggle();
+            const t0 = performance.now() - 6000;
+            ttLastTs = t0;
+            for (let i = 1; i <= 120; i++) ttFrame(t0 + i * 50);
+        });
         await page.evaluate(() => {
             const st = window.FMRadio.stations[0];
             // 창을 넉넉히 — 스로틀된 WebKit에서 첫 bg 어태치가 죽으면 재튠(10초 주기

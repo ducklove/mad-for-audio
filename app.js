@@ -574,10 +574,11 @@ function tunerLoop(now) {
 function rackAnimationShouldRun() {
     const playingOrMoving = isPlaying || !!recorder || deckMode !== "stop" || !!deckSegPlaying;
     const busy = audioState === "resolving" || audioState === "buffering" || !!busySince;
-    const listeningTarget = (isPlaying || deckMode === "play" || !!recorder) ? 1 : 0;
-    const ampTarget = (isPlaying || deckMode === "play") ? 1 : 0;
-    const deckTarget = (isPlaying || deckMode !== "stop" || !!recorder) ? 1 : 0;
-    const tunerTarget = ((isPlaying && currentStation) || (recorder && activeResRec)) ? 1 : 0;
+    // ttFrame의 웜 타깃과 반드시 같은 식이어야 한다 — 어긋나면 조명이 얼거나 루프가 공회전한다
+    const listeningTarget = unitOn("amp") ? 1 : 0;
+    const ampTarget = unitOn("amp") ? 1 : 0;
+    const deckTarget = unitOn("deck") ? 1 : 0;
+    const tunerTarget = unitOn("tuner") ? (tunerDim ? 0.38 : 1) : 0;
     const settling = Math.abs(tubeWarm - listeningTarget) > 0.003
         || Math.abs(ampWarm - ampTarget) > 0.003
         || Math.abs(deckWarm - deckTarget) > 0.003
@@ -3534,14 +3535,14 @@ function ttFrame(now) {
         ttScratchEnergy *= Math.exp(-dt * 10);
     }
 
-    // 진공관 웜업: 켜면 ~2초에 걸쳐 달아오르고, 꺼지면 열이 식듯 더 천천히 어두워진다
-    // (테이프 트랜스포트가 도는 동안은 빈 구간이라도 시스템이 켜져 있는 것으로 본다)
-    // 유닛 전원 문법: 앰프가 꺼져 있으면 관은 달아오르지 않는다
-    const warmTarget = (unitOn("amp") && (isPlaying || deckMode === "play" || !!recorder)) ? 1 : 0;
+    // 진공관 웜업: 조명·필라멘트는 '전원'을 따른다 — 실물처럼 통전이면 신호가 없어도
+    // 달아오르고, 미터 바늘만 신호를 기다린다. (재생 여부는 조명과 무관)
+    const warmTarget = unitOn("amp") ? 1 : 0;
     // 91E 정류관 지연 — 차가운 상태에서 소리를 걸면 2.6초간 정류관이 먼저 서고, 그 뒤 페이드인
     if (ampModelId === "300b" && gainNode && warmTarget === 1 && ttFrame.prevWarmTarget === 0 && tubeWarm < 0.05) {
         ampRectUntil = now + 2600;
-        playerSubtext.textContent = "정류관 예열 중 — 잠시 후 소리가 나옵니다 (300B 싱글엔디드의 아침 의식).";
+        // 유휴 통전 웜업에서는 안내가 소음 — 실제로 듣는 중일 때만 예열을 알린다
+        if (isPlaying || deckMode === "play") playerSubtext.textContent = "정류관 예열 중 — 잠시 후 소리가 나옵니다 (300B 싱글엔디드의 아침 의식).";
     }
     ttFrame.prevWarmTarget = warmTarget;
     if (ampRectUntil) {
@@ -3558,20 +3559,20 @@ function ttFrame(now) {
     }
     const warmRate = warmTarget > tubeWarm ? dt / 2.0 : dt / 3.5;
     tubeWarm = Math.max(0, Math.min(1, tubeWarm + (warmTarget > tubeWarm ? 1 : -1) * warmRate));
-    // 앰프·EQ·턴테이블은 실제로 듣고 있을 때만 점등 — 백그라운드 예약 녹음은 앰프를 쓰지 않는다
-    const ampTarget = (unitOn("amp") && (isPlaying || deckMode === "play")) ? 1 : 0;
+    // 앰프 패널 조명도 전원 연동 — 통전이면 켜지고, 미터는 신호가 올 때만 움직인다
+    const ampTarget = unitOn("amp") ? 1 : 0;
     const ampRate = ampTarget > ampWarm ? dt / 2.0 : dt / 3.5;
     ampWarm = Math.max(0, Math.min(1, ampWarm + (ampTarget > ampWarm ? 1 : -1) * ampRate));
-    // 데크 조명: REW/FF 와인딩도 트랜스포트 구동 — 데크는 통전 상태다 (예약은 타이머 아웃렛 통전)
-    const deckTarget = (unitOn("deck") && (isPlaying || deckMode !== "stop" || !!recorder)) ? 1 : 0;
+    // 데크 조명: 전원 연동 (예약은 타이머 아웃렛 통전) — 릴·카운터 구동은 deckMode가 따로 결정
+    const deckTarget = unitOn("deck") ? 1 : 0;
     const deckRate = deckTarget > deckWarm ? dt / 2.0 : dt / 3.5;
     deckWarm = Math.max(0, Math.min(1, deckWarm + (deckTarget > deckWarm ? 1 : -1) * deckRate));
     updateMa2375Display();
 
-    // 튜너 램프: 라디오 수신 중에만 (백열등이라 진공관보다 빠르게 켜지고 꺼진다)
+    // 튜너 램프: 전원 연동 — 실물처럼 통전이면 다이얼이 빛난다 (수신 LED는 별도 게이트).
     // 10B DIM 위치는 조명만 낮춘다 — 수신은 그대로 (실물 3위치 전원의 감광 기능)
     const tnCap = tunerDim ? 0.38 : 1;
-    const tnTarget = (unitOn("tuner") && ((isPlaying && currentStation) || (recorder && activeResRec))) ? tnCap : 0;
+    const tnTarget = unitOn("tuner") ? tnCap : 0;
     const tnRate = tnTarget > tunerWarm ? dt / 0.9 : dt / 1.4;
     tunerWarm = Math.max(0, Math.min(1, tunerWarm + (tnTarget > tunerWarm ? 1 : -1) * tnRate));
 
