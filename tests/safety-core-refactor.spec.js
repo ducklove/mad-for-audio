@@ -194,7 +194,7 @@ test.describe("안전성 코어 경계", () => {
         });
     });
 
-    test("카탈로그 코어가 메타데이터 상속·AND 필터·검색 정규화·셔플백을 결정적으로 제공한다", async ({ context, page }) => {
+    test("카탈로그 코어가 장르 상속·장르+검색 AND 필터·검색 정규화·셔플백을 결정적으로 제공한다", async ({ context, page }) => {
         await loadApp(context, page);
         const result = await page.evaluate(async () => {
             const core = await import("/app-runtime-core.js?catalog-contract=1");
@@ -203,31 +203,30 @@ test.describe("안전성 코어 경계", () => {
                     id: "classic-set",
                     title: "Café Étude",
                     artist: "Soloist",
-                    genre: "CLASSICAL",
-                    moods: ["Calm", "Focus"],
+                    genre: "클래식",
                     tracks: [
                         { id: "prelude", t: "Prélude" },
-                        { id: "swing", t: "Swing Study", genre: "Jazz", moods: ["Energetic"] }
+                        { id: "study", t: "Concert Study" }
                     ]
                 },
                 {
                     id: "jazz-set",
                     title: "Blue Night",
                     artist: "The Trio",
-                    genres: ["Jazz"],
-                    mood: "Calm",
+                    genre: "재즈",
                     tracks: [
                         { id: "blue-train", t: "Blue Train" },
-                        { id: "rush", t: "Rush Hour", moods: ["Energetic"] }
+                        { id: "rush", t: "Rush Hour" }
                     ]
                 }
             ];
 
             const inherited = core.catalogTrackMetadata(records[0], records[0].tracks[0]);
-            const overridden = core.catalogTrackMetadata(records[0], records[0].tracks[1]);
+            const jazzMetadata = core.catalogTrackMetadata(records[1], records[1].tracks[0]);
             const all = core.filterCatalogTracks(records);
-            const calmJazz = core.filterCatalogTracks(records, { genre: "JAZZ", mood: " calm " });
-            const energeticJazz = core.filterCatalogTracks(records, { genre: "jazz", mood: "energetic" });
+            const jazz = core.filterCatalogTracks(records, { genre: " 재즈 " });
+            const classicalPrelude = core.filterCatalogTracks(records, { genre: "클래식", query: "PRELUDE" });
+            const koreanPop = core.filterCatalogTracks(records, { genre: "가요" });
             const search = core.filterCatalogTracks(records, { query: "PRELUDE" });
 
             // 0으로 고정한 RNG는 Fisher-Yates 결과를 완전히 결정한다. 중복 후보도 key로 제거한다.
@@ -249,10 +248,11 @@ test.describe("안전성 코어 경계", () => {
 
             return {
                 normalized: core.normalizeCatalogText("  Café\tPRÉLUDE  "),
-                inherited: { genre: inherited.genre, genres: [...inherited.genres], mood: inherited.mood, moods: [...inherited.moods] },
-                overridden: { genre: overridden.genre, genres: [...overridden.genres], mood: overridden.mood, moods: [...overridden.moods] },
-                calmJazz: calmJazz.map((candidate) => candidate.key),
-                energeticJazz: energeticJazz.map((candidate) => candidate.key),
+                inherited: { genre: inherited.genre },
+                jazzMetadata: { genre: jazzMetadata.genre },
+                jazz: jazz.map((candidate) => candidate.key),
+                classicalPrelude: classicalPrelude.map((candidate) => candidate.key),
+                koreanPop: koreanPop.map((candidate) => candidate.key),
                 search: search.map((candidate) => candidate.key),
                 shuffle: {
                     size: bagSize,
@@ -269,21 +269,22 @@ test.describe("안전성 코어 경계", () => {
 
         expect(result).toEqual({
             normalized: "cafe prelude",
-            inherited: { genre: "classical", genres: ["classical"], mood: "calm", moods: ["calm", "focus"] },
-            overridden: { genre: "jazz", genres: ["jazz"], mood: "energetic", moods: ["energetic"] },
-            calmJazz: ["jazz-set:blue-train"],
-            energeticJazz: ["classic-set:swing", "jazz-set:rush"],
+            inherited: { genre: "클래식" },
+            jazzMetadata: { genre: "재즈" },
+            jazz: ["jazz-set:blue-train", "jazz-set:rush"],
+            classicalPrelude: ["classic-set:prelude"],
+            koreanPop: [],
             search: ["classic-set:prelude"],
             shuffle: {
                 size: 4,
                 firstCycle: [
                     "jazz-set:blue-train",
-                    "classic-set:swing",
+                    "classic-set:study",
                     "jazz-set:rush",
                     "classic-set:prelude"
                 ],
                 remainingAfterCycle: 0,
-                boundaryNext: "classic-set:swing",
+                boundaryNext: "classic-set:study",
                 uniqueFirstCycle: 4,
                 noAdjacentRepeat: true
             },

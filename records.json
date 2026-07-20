@@ -50,12 +50,7 @@
     "id": "classical-001",
     "artist": "John Michel, violoncello",
     "catalogNo": "BWV 1007",
-    "genre": "클래식",
-    "moods": [
-      "조용한",
-      "집중",
-      "우아한"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "무반주 첼로 모음곡 제3번 C장조",
@@ -108,12 +103,7 @@
     "id": "classical-002",
     "artist": "John Michel, violoncello",
     "catalogNo": "BWV 1009",
-    "genre": "클래식",
-    "moods": [
-      "조용한",
-      "집중",
-      "우아한"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "골드베르크 변주곡 — A면",
@@ -176,12 +166,7 @@
     "id": "classical-003",
     "artist": "Kimiko Ishizaka, piano",
     "catalogNo": "BWV 988",
-    "genre": "클래식",
-    "moods": [
-      "조용한",
-      "집중",
-      "우아한"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "골드베르크 변주곡 — B면",
@@ -245,12 +230,7 @@
     "id": "classical-004",
     "artist": "Kimiko Ishizaka, piano",
     "catalogNo": "BWV 988",
-    "genre": "클래식",
-    "moods": [
-      "조용한",
-      "집중",
-      "우아한"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "골드베르크 변주곡 — C면",
@@ -314,12 +294,7 @@
     "id": "classical-005",
     "artist": "Kimiko Ishizaka, piano",
     "catalogNo": "BWV 988",
-    "genre": "클래식",
-    "moods": [
-      "조용한",
-      "집중",
-      "우아한"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "골드베르크 변주곡 — D면",
@@ -378,12 +353,7 @@
     "id": "classical-006",
     "artist": "Kimiko Ishizaka, piano",
     "catalogNo": "BWV 988",
-    "genre": "클래식",
-    "moods": [
-      "조용한",
-      "집중",
-      "우아한"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "평균율 클라비어곡집 1권 — 제1집",
@@ -467,12 +437,7 @@
     "id": "classical-007",
     "artist": "Kimiko Ishizaka, piano",
     "catalogNo": "BWV 846–869",
-    "genre": "클래식",
-    "moods": [
-      "조용한",
-      "집중",
-      "우아한"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "평균율 클라비어곡집 1권 — 제2집",
@@ -556,12 +521,7 @@
     "id": "classical-008",
     "artist": "Kimiko Ishizaka, piano",
     "catalogNo": "BWV 846–869",
-    "genre": "클래식",
-    "moods": [
-      "조용한",
-      "집중",
-      "우아한"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "평균율 클라비어곡집 1권 — 제3집",
@@ -645,12 +605,7 @@
     "id": "classical-009",
     "artist": "Kimiko Ishizaka, piano",
     "catalogNo": "BWV 846–869",
-    "genre": "클래식",
-    "moods": [
-      "조용한",
-      "집중",
-      "우아한"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "평균율 클라비어곡집 1권 — 제4집",
@@ -734,12 +689,7 @@
     "id": "classical-010",
     "artist": "Kimiko Ishizaka, piano",
     "catalogNo": "BWV 846–869",
-    "genre": "클래식",
-    "moods": [
-      "조용한",
-      "집중",
-      "우아한"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "사계",
@@ -823,12 +773,7 @@
     "id": "classical-011",
     "artist": "The Modena Chamber Orchestra",
     "catalogNo": "Op. 8 · RV 269–297",
-    "genre": "클래식",
-    "moods": [
-      "차분한",
-      "집중",
-      "우아한"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "비발디 협주곡집",
@@ -897,12 +842,7 @@
     "id": "classical-012",
     "artist": "The Modena Chamber Orchestra",
     "catalogNo": "RV 498 · 532 · 536",
-    "genre": "클래식",
-    "moods": [
-      "웅장한",
-      "활기찬",
-      "집중"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "교향곡 제5번 '운명'",
@@ -946,12 +886,7 @@
     "id": "classical-013",
     "artist": "Musopen Symphony Orchestra",
     "catalogNo": "Op. 67",
-    "genre": "클래식",
-    "moods": [
-      "웅장한",
-      "활기찬",
-      "집중"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "교향곡 제6번 '전원'",
@@ -1000,12 +935,7 @@
     "id": "classical-014",
     "artist": "Musopen Symphony Orchestra",
     "catalogNo": "Op. 68",
-    "genre": "클래식",
-    "moods": [
-      "웅장한",
-      "활기찬",
-      "집중"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "피아노 소나타 제8번 '비창'",
@@ -1044,12 +974,7 @@
     "id": "classical-015",
     "artist": "Paul Pitman, piano",
     "catalogNo": "Op. 13",
-    "genre": "클래식",
-    "moods": [
-      "차분한",
-      "집중",
-      "우아한"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "피아노 협주곡 제1번",
@@ -1088,12 +1013,7 @@
     "id": "classical-016",
     "artist": "Musopen Orchestra",
     "catalogNo": "Op. 15",
-    "genre": "클래식",
-    "moods": [
-      "웅장한",
-      "활기찬",
-      "집중"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "교향곡 제1번",
@@ -1137,12 +1057,7 @@
     "id": "classical-017",
     "artist": "Musopen Symphony Orchestra",
     "catalogNo": "Op. 68",
-    "genre": "클래식",
-    "moods": [
-      "웅장한",
-      "활기찬",
-      "집중"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "교향곡 제4번",
@@ -1186,12 +1101,7 @@
     "id": "classical-018",
     "artist": "Musopen Symphony Orchestra",
     "catalogNo": "Op. 98",
-    "genre": "클래식",
-    "moods": [
-      "웅장한",
-      "활기찬",
-      "집중"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "교향곡 제6번 '비창'",
@@ -1235,12 +1145,7 @@
     "id": "classical-019",
     "artist": "Symphony Orchestra",
     "catalogNo": "Op. 74",
-    "genre": "클래식",
-    "moods": [
-      "웅장한",
-      "활기찬",
-      "집중"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "피아노 협주곡 제1번",
@@ -1279,12 +1184,7 @@
     "id": "classical-020",
     "artist": "Symphony Orchestra",
     "catalogNo": "Op. 23",
-    "genre": "클래식",
-    "moods": [
-      "웅장한",
-      "활기찬",
-      "집중"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "교향곡 제9번 '신세계로부터'",
@@ -1328,12 +1228,7 @@
     "id": "classical-021",
     "artist": "Musopen Symphony Orchestra",
     "catalogNo": "Op. 95",
-    "genre": "클래식",
-    "moods": [
-      "웅장한",
-      "활기찬",
-      "집중"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "아이네 클라이네 나흐트무지크",
@@ -1377,12 +1272,7 @@
     "id": "classical-022",
     "artist": "Serenade Ensemble",
     "catalogNo": "K. 525",
-    "genre": "클래식",
-    "moods": [
-      "차분한",
-      "집중",
-      "우아한"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "교향곡 제35번 '하프너'",
@@ -1426,12 +1316,7 @@
     "id": "classical-023",
     "artist": "European Archive",
     "catalogNo": "K. 385",
-    "genre": "클래식",
-    "moods": [
-      "웅장한",
-      "활기찬",
-      "집중"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "교향곡 제4번 '이탈리아'",
@@ -1475,12 +1360,7 @@
     "id": "classical-024",
     "artist": "Musopen Symphony Orchestra",
     "catalogNo": "Op. 90",
-    "genre": "클래식",
-    "moods": [
-      "웅장한",
-      "활기찬",
-      "집중"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "피아노 협주곡 a단조",
@@ -1519,12 +1399,7 @@
     "id": "classical-025",
     "artist": "Musopen Orchestra",
     "catalogNo": "Op. 16",
-    "genre": "클래식",
-    "moods": [
-      "웅장한",
-      "활기찬",
-      "집중"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "방랑자 환상곡",
@@ -1568,12 +1443,7 @@
     "id": "classical-026",
     "artist": "Piano solo",
     "catalogNo": "D. 760",
-    "genre": "클래식",
-    "moods": [
-      "차분한",
-      "집중",
-      "우아한"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "어린이 정경",
@@ -1662,12 +1532,7 @@
     "id": "classical-027",
     "artist": "Piano solo",
     "catalogNo": "Op. 15",
-    "genre": "클래식",
-    "moods": [
-      "차분한",
-      "집중",
-      "우아한"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "발라드 전곡",
@@ -1711,12 +1576,7 @@
     "id": "classical-028",
     "artist": "Piano solo",
     "catalogNo": "Op. 23·38·47·52",
-    "genre": "클래식",
-    "moods": [
-      "차분한",
-      "집중",
-      "우아한"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "스케르초 전곡",
@@ -1760,12 +1620,7 @@
     "id": "classical-029",
     "artist": "Alice Gi-Young Hwang, piano",
     "catalogNo": "Op. 20·31·39·54",
-    "genre": "클래식",
-    "moods": [
-      "웅장한",
-      "활기찬",
-      "집중"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "피아노 소나타 제2번 '장송'",
@@ -1809,12 +1664,7 @@
     "id": "classical-030",
     "artist": "Piano solo",
     "catalogNo": "Op. 35",
-    "genre": "클래식",
-    "moods": [
-      "차분한",
-      "집중",
-      "우아한"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "녹턴집",
@@ -1883,12 +1733,7 @@
     "id": "classical-031",
     "artist": "Piano solo",
     "catalogNo": "Op. 9·15·48·55·72",
-    "genre": "클래식",
-    "moods": [
-      "조용한",
-      "집중",
-      "우아한"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "현악 4중주 '종달새'",
@@ -1932,12 +1777,7 @@
     "id": "classical-032",
     "artist": "String Quartet",
     "catalogNo": "Op. 64-5",
-    "genre": "클래식",
-    "moods": [
-      "차분한",
-      "집중",
-      "우아한"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "비엔나 왈츠집",
@@ -1991,12 +1831,7 @@
     "id": "classical-033",
     "artist": "Orchestra",
     "catalogNo": "Waltzes",
-    "genre": "클래식",
-    "moods": [
-      "웅장한",
-      "활기찬",
-      "집중"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "첼로 소품집",
@@ -2065,12 +1900,7 @@
     "id": "classical-034",
     "artist": "John Michel, violoncello",
     "catalogNo": "Cello Encores",
-    "genre": "클래식",
-    "moods": [
-      "조용한",
-      "집중",
-      "우아한"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "교향곡 제3번 '영웅'",
@@ -2114,12 +1944,7 @@
     "id": "classical-035",
     "artist": "Musopen Symphony Orchestra",
     "catalogNo": "Op. 55",
-    "genre": "클래식",
-    "moods": [
-      "웅장한",
-      "활기찬",
-      "집중"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "교향곡 제8번",
@@ -2163,12 +1988,7 @@
     "id": "classical-036",
     "artist": "Musopen Symphony Orchestra",
     "catalogNo": "Op. 93",
-    "genre": "클래식",
-    "moods": [
-      "웅장한",
-      "활기찬",
-      "집중"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "피아노 협주곡 제5번 '황제'",
@@ -2207,12 +2027,7 @@
     "id": "classical-037",
     "artist": "Piano and orchestra",
     "catalogNo": "Op. 73",
-    "genre": "클래식",
-    "moods": [
-      "웅장한",
-      "활기찬",
-      "집중"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "관악 6중주",
@@ -2256,12 +2071,7 @@
     "id": "classical-038",
     "artist": "Wind ensemble",
     "catalogNo": "Op. 71",
-    "genre": "클래식",
-    "moods": [
-      "차분한",
-      "집중",
-      "우아한"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "피아노 소나타 제15번 '전원'",
@@ -2305,12 +2115,7 @@
     "id": "classical-039",
     "artist": "Piano solo",
     "catalogNo": "Op. 28",
-    "genre": "클래식",
-    "moods": [
-      "차분한",
-      "집중",
-      "우아한"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "현악 4중주 제6번",
@@ -2354,12 +2159,7 @@
     "id": "classical-040",
     "artist": "Musopen String Quartet",
     "catalogNo": "Op. 18 No. 6",
-    "genre": "클래식",
-    "moods": [
-      "차분한",
-      "집중",
-      "우아한"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "교향곡 제2번",
@@ -2403,12 +2203,7 @@
     "id": "classical-041",
     "artist": "Musopen Symphony Orchestra",
     "catalogNo": "Op. 73",
-    "genre": "클래식",
-    "moods": [
-      "웅장한",
-      "활기찬",
-      "집중"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "이중 협주곡",
@@ -2447,12 +2242,7 @@
     "id": "classical-042",
     "artist": "Violin, cello and orchestra",
     "catalogNo": "Op. 102",
-    "genre": "클래식",
-    "moods": [
-      "웅장한",
-      "활기찬",
-      "집중"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "교향곡 제29번",
@@ -2496,12 +2286,7 @@
     "id": "classical-043",
     "artist": "Chamber orchestra",
     "catalogNo": "K. 201",
-    "genre": "클래식",
-    "moods": [
-      "웅장한",
-      "활기찬",
-      "집중"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "오보에 협주곡",
@@ -2540,12 +2325,7 @@
     "id": "classical-044",
     "artist": "European Archive",
     "catalogNo": "K. 314",
-    "genre": "클래식",
-    "moods": [
-      "웅장한",
-      "활기찬",
-      "집중"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "피아노 협주곡 제17번",
@@ -2584,12 +2364,7 @@
     "id": "classical-045",
     "artist": "Piano and orchestra",
     "catalogNo": "K. 453",
-    "genre": "클래식",
-    "moods": [
-      "웅장한",
-      "활기찬",
-      "집중"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "피아노 소나타 제13번",
@@ -2628,12 +2403,7 @@
     "id": "classical-046",
     "artist": "Piano solo",
     "catalogNo": "K. 333",
-    "genre": "클래식",
-    "moods": [
-      "차분한",
-      "집중",
-      "우아한"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "교향곡 제3번 '스코틀랜드'",
@@ -2677,12 +2447,7 @@
     "id": "classical-047",
     "artist": "Musopen Symphony Orchestra",
     "catalogNo": "Op. 56",
-    "genre": "클래식",
-    "moods": [
-      "웅장한",
-      "활기찬",
-      "집중"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "한여름 밤의 꿈",
@@ -2731,12 +2496,7 @@
     "id": "classical-048",
     "artist": "European Archive",
     "catalogNo": "Op. 61",
-    "genre": "클래식",
-    "moods": [
-      "웅장한",
-      "활기찬",
-      "집중"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "현악 4중주 제6번",
@@ -2780,12 +2540,7 @@
     "id": "classical-049",
     "artist": "String quartet",
     "catalogNo": "Op. 80",
-    "genre": "클래식",
-    "moods": [
-      "차분한",
-      "집중",
-      "우아한"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "피아노 소나타 제13번",
@@ -2824,12 +2579,7 @@
     "id": "classical-050",
     "artist": "Piano solo",
     "catalogNo": "D. 664",
-    "genre": "클래식",
-    "moods": [
-      "차분한",
-      "집중",
-      "우아한"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "피아노 협주곡",
@@ -2863,12 +2613,7 @@
     "id": "classical-051",
     "artist": "Piano and orchestra",
     "catalogNo": "Op. 54",
-    "genre": "클래식",
-    "moods": [
-      "웅장한",
-      "활기찬",
-      "집중"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "교향곡 제4번",
@@ -2912,12 +2657,7 @@
     "id": "classical-052",
     "artist": "European Archive",
     "catalogNo": "Op. 36",
-    "genre": "클래식",
-    "moods": [
-      "웅장한",
-      "활기찬",
-      "집중"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "백조의 호수 (발췌)",
@@ -2971,12 +2711,7 @@
     "id": "classical-053",
     "artist": "Ballet orchestra",
     "catalogNo": "Op. 20",
-    "genre": "클래식",
-    "moods": [
-      "차분한",
-      "집중",
-      "우아한"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "이탈리아 협주곡",
@@ -3015,12 +2750,7 @@
     "id": "classical-054",
     "artist": "Harpsichord solo",
     "catalogNo": "BWV 971",
-    "genre": "클래식",
-    "moods": [
-      "웅장한",
-      "활기찬",
-      "집중"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "하프시코드 협주곡 제5번",
@@ -3059,12 +2789,7 @@
     "id": "classical-055",
     "artist": "Harpsichord and strings",
     "catalogNo": "BWV 1056",
-    "genre": "클래식",
-    "moods": [
-      "웅장한",
-      "활기찬",
-      "집중"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "합주 협주곡 (Op. 3)",
@@ -3118,12 +2843,7 @@
     "id": "classical-056",
     "artist": "Baroque orchestra",
     "catalogNo": "HWV 312-317",
-    "genre": "클래식",
-    "moods": [
-      "웅장한",
-      "활기찬",
-      "집중"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "첼로 협주곡 제1번",
@@ -3162,12 +2882,7 @@
     "id": "classical-057",
     "artist": "Cello and orchestra",
     "catalogNo": "Op. 33",
-    "genre": "클래식",
-    "moods": [
-      "웅장한",
-      "활기찬",
-      "집중"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "즉흥곡 전곡",
@@ -3211,12 +2926,7 @@
     "id": "classical-058",
     "artist": "Piano solo",
     "catalogNo": "Op. 29·36·51·66",
-    "genre": "클래식",
-    "moods": [
-      "차분한",
-      "집중",
-      "우아한"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "두 개의 아라베스크",
@@ -3274,12 +2984,7 @@
     "id": "classical-059",
     "artist": "Patrizia Prati, piano",
     "catalogNo": "L. 66",
-    "genre": "클래식",
-    "moods": [
-      "조용한",
-      "집중",
-      "우아한"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "영상 제1·2집",
@@ -3404,12 +3109,7 @@
     "id": "classical-060",
     "artist": "Marcelle Meyer, piano",
     "catalogNo": "Images I & II · L. 110·111",
-    "genre": "클래식",
-    "moods": [
-      "차분한",
-      "집중",
-      "우아한"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "소나티네",
@@ -3486,12 +3186,7 @@
     "id": "classical-061",
     "artist": "Marcelle Meyer, piano",
     "catalogNo": "M. 40",
-    "genre": "클래식",
-    "moods": [
-      "조용한",
-      "집중",
-      "우아한"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "교향곡 제2번 ‘부활’",
@@ -3595,12 +3290,7 @@
     "id": "classical-062",
     "artist": "Barbara Schubert · DuPage Symphony Orchestra",
     "catalogNo": "Symphony No. 2",
-    "genre": "클래식",
-    "moods": [
-      "웅장한",
-      "활기찬",
-      "집중"
-    ]
+    "genre": "클래식"
   },
   {
     "title": "피아노 협주곡 제2번",
@@ -3677,12 +3367,7 @@
     "id": "classical-063",
     "artist": "Sviatoslav Richter · Warsaw National Philharmonic Orchestra · Stanisław Wisłocki",
     "catalogNo": "Op. 18",
-    "genre": "클래식",
-    "moods": [
-      "웅장한",
-      "활기찬",
-      "집중"
-    ]
+    "genre": "클래식"
   },
   {
     "id": "commons-jazz-cafe",
@@ -3694,11 +3379,6 @@
     "composer": "Kevin MacLeod",
     "performer": "Kevin MacLeod",
     "genre": "재즈",
-    "moods": [
-      "카페",
-      "세련된",
-      "편안한"
-    ],
     "playbackGain": 1,
     "credit": "음원: Kevin MacLeod · CC BY 3.0 · Wikimedia Commons / Incompetech",
     "source": {
@@ -3834,11 +3514,6 @@
     "composer": "Kevin MacLeod",
     "performer": "Kevin MacLeod",
     "genre": "재즈",
-    "moods": [
-      "카페",
-      "조용한",
-      "세련된"
-    ],
     "playbackGain": 1,
     "credit": "음원: Kevin MacLeod · CC BY 3.0 · Wikimedia Commons / Incompetech",
     "source": {
@@ -3974,11 +3649,6 @@
     "composer": "Kevin MacLeod",
     "performer": "Kevin MacLeod",
     "genre": "재즈",
-    "moods": [
-      "리드미컬",
-      "밝은",
-      "카페"
-    ],
     "playbackGain": 1,
     "credit": "음원: Kevin MacLeod · CC BY 3.0 · Wikimedia Commons / Incompetech",
     "source": {
@@ -4114,11 +3784,6 @@
     "composer": "Various composers",
     "performer": "Historic jazz ensembles",
     "genre": "재즈",
-    "moods": [
-      "빈티지",
-      "그루브",
-      "차분한"
-    ],
     "tags": [
       "스윙",
       "딕시랜드",
@@ -4266,11 +3931,9 @@
     "bwv": "MFA-COMMONS-05",
     "composer": "Kevin MacLeod",
     "performer": "Kevin MacLeod",
-    "genre": "블루스",
-    "moods": [
-      "그루브",
-      "빈티지",
-      "차분한"
+    "genre": "기타",
+    "tags": [
+      "블루스"
     ],
     "playbackGain": 1,
     "credit": "음원: Kevin MacLeod · CC BY 3.0 · Wikimedia Commons / Incompetech",
@@ -4406,11 +4069,9 @@
     "bwv": "MFA-COMMONS-06",
     "composer": "Kevin MacLeod",
     "performer": "Kevin MacLeod",
-    "genre": "록",
-    "moods": [
-      "신나는",
-      "강렬한",
-      "활기찬"
+    "genre": "기타",
+    "tags": [
+      "록"
     ],
     "playbackGain": 1,
     "credit": "음원: Kevin MacLeod · CC BY 3.0 · Wikimedia Commons / Incompetech",
@@ -4546,11 +4207,9 @@
     "bwv": "MFA-COMMONS-07",
     "composer": "Kevin MacLeod",
     "performer": "Kevin MacLeod",
-    "genre": "팝",
-    "moods": [
-      "밝은",
-      "신나는",
-      "가벼운"
+    "genre": "기타",
+    "tags": [
+      "팝"
     ],
     "playbackGain": 1,
     "credit": "음원: Kevin MacLeod · CC BY 3.0 · Wikimedia Commons / Incompetech",
@@ -4686,11 +4345,9 @@
     "bwv": "MFA-COMMONS-08",
     "composer": "Kevin MacLeod",
     "performer": "Kevin MacLeod",
-    "genre": "일렉트로니카",
-    "moods": [
-      "집중",
-      "몽환적인",
-      "리드미컬"
+    "genre": "기타",
+    "tags": [
+      "일렉트로니카"
     ],
     "playbackGain": 1,
     "credit": "음원: Kevin MacLeod · CC BY 3.0 · Wikimedia Commons / Incompetech",
@@ -4826,11 +4483,9 @@
     "bwv": "MFA-COMMONS-09",
     "composer": "Kevin MacLeod",
     "performer": "Kevin MacLeod",
-    "genre": "펑크",
-    "moods": [
-      "그루브",
-      "신나는",
-      "활기찬"
+    "genre": "기타",
+    "tags": [
+      "펑크"
     ],
     "playbackGain": 1,
     "credit": "음원: Kevin MacLeod · CC BY 3.0 · Wikimedia Commons / Incompetech",
@@ -4966,11 +4621,9 @@
     "bwv": "MFA-COMMONS-10",
     "composer": "Kevin MacLeod",
     "performer": "Kevin MacLeod",
-    "genre": "레게",
-    "moods": [
-      "여유로운",
-      "밝은",
-      "리드미컬"
+    "genre": "기타",
+    "tags": [
+      "레게"
     ],
     "playbackGain": 1,
     "credit": "음원: Kevin MacLeod · CC BY 3.0 · Wikimedia Commons / Incompetech",
@@ -5106,11 +4759,9 @@
     "bwv": "MFA-COMMONS-11",
     "composer": "Kevin MacLeod",
     "performer": "Kevin MacLeod",
-    "genre": "라틴",
-    "moods": [
-      "신나는",
-      "따뜻한",
-      "리드미컬"
+    "genre": "기타",
+    "tags": [
+      "라틴"
     ],
     "playbackGain": 1,
     "credit": "음원: Kevin MacLeod · CC BY 3.0 · Wikimedia Commons / Incompetech",
@@ -5246,11 +4897,9 @@
     "bwv": "MFA-COMMONS-12",
     "composer": "Kevin MacLeod",
     "performer": "Kevin MacLeod",
-    "genre": "아프리칸",
-    "moods": [
-      "이국적인",
-      "활기찬",
-      "리드미컬"
+    "genre": "기타",
+    "tags": [
+      "아프리칸"
     ],
     "playbackGain": 1,
     "credit": "음원: Kevin MacLeod · CC BY 3.0 · Wikimedia Commons / Incompetech",
@@ -5386,11 +5035,9 @@
     "bwv": "MFA-COMMONS-13",
     "composer": "Kevin MacLeod",
     "performer": "Kevin MacLeod",
-    "genre": "월드",
-    "moods": [
-      "여행",
-      "이국적인",
-      "따뜻한"
+    "genre": "기타",
+    "tags": [
+      "월드"
     ],
     "playbackGain": 1,
     "credit": "음원: Kevin MacLeod · CC BY 3.0 · Wikimedia Commons / Incompetech",
@@ -5526,11 +5173,9 @@
     "bwv": "MFA-COMMONS-14",
     "composer": "Kevin MacLeod",
     "performer": "Kevin MacLeod",
-    "genre": "디스코",
-    "moods": [
-      "댄스",
-      "신나는",
-      "활기찬"
+    "genre": "기타",
+    "tags": [
+      "디스코"
     ],
     "playbackGain": 1,
     "credit": "음원: Kevin MacLeod · CC BY 3.0 · Wikimedia Commons / Incompetech",
@@ -5666,11 +5311,9 @@
     "bwv": "MFA-COMMONS-15",
     "composer": "Kevin MacLeod",
     "performer": "Kevin MacLeod",
-    "genre": "스카",
-    "moods": [
-      "유쾌한",
-      "신나는",
-      "밝은"
+    "genre": "기타",
+    "tags": [
+      "스카"
     ],
     "playbackGain": 1,
     "credit": "음원: Kevin MacLeod · CC BY 3.0 · Wikimedia Commons / Incompetech",
@@ -5741,11 +5384,9 @@
     "bwv": "MFA-COMMONS-16",
     "composer": "Kevin MacLeod",
     "performer": "Kevin MacLeod",
-    "genre": "컨트리",
-    "moods": [
-      "여행",
-      "따뜻한",
-      "활기찬"
+    "genre": "기타",
+    "tags": [
+      "컨트리"
     ],
     "playbackGain": 1,
     "credit": "음원: Kevin MacLeod · CC BY 3.0 · Wikimedia Commons / Incompetech",
@@ -5881,11 +5522,9 @@
     "bwv": "MFA-COMMONS-17",
     "composer": "Various artists",
     "performer": "Various artists",
-    "genre": "앰비언트",
-    "moods": [
-      "조용한",
-      "집중",
-      "편안한"
+    "genre": "기타",
+    "tags": [
+      "앰비언트"
     ],
     "playbackGain": 1.15,
     "credit": "음원: 개별 트랙 저작자·라이선스 · Wikimedia Commons",
@@ -6002,11 +5641,6 @@
     "composer": "Historical recordings",
     "performer": "Historical recordings",
     "genre": "재즈",
-    "moods": [
-      "빈티지",
-      "차분한",
-      "그루브"
-    ],
     "playbackGain": 1.5,
     "credit": "음원: 개별 트랙 저작자·라이선스 · Wikimedia Commons",
     "source": {
@@ -6086,10 +5720,6 @@
         "id": "commons-historic-grooves-track-05",
         "t": "LostTrainBlues",
         "f": "f/f1/LostTrainBlues.ogg",
-        "genres": [
-          "재즈",
-          "블루스"
-        ],
         "sourceArtist": "PERFORMER(S): Fred Perry (fiddle), Glenn Carver (guitar)",
         "license": "Public domain",
         "commercialUse": true,
@@ -6104,10 +5734,6 @@
         "id": "commons-historic-grooves-track-06",
         "t": "St. Louis Blues March - Shades of Blue - United States Air Force Band of Mid-America",
         "f": "8/86/St._Louis_Blues_March_-_Shades_of_Blue_-_United_States_Air_Force_Band_of_Mid-America.mp3",
-        "genres": [
-          "재즈",
-          "블루스"
-        ],
         "sourceArtist": "Composition: W. C. Handy; Transcription: Cecil T. Pomeroy; Performance: United States Air Force Band of Mid-America, Shades of Blue; Recording: United States Air Force",
         "license": "Public domain",
         "commercialUse": true,
@@ -6122,10 +5748,6 @@
         "id": "commons-historic-grooves-track-07",
         "t": "St Louis Blues - Handy's Memphis Blues Band (1922 sound recording)",
         "f": "0/02/St_Louis_Blues_-_Handy%27s_Memphis_Blues_Band_%281922_sound_recording%29.mp3",
-        "genres": [
-          "재즈",
-          "블루스"
-        ],
         "sourceArtist": "Recording: Handy's Memphis Blues Band Composition: W. C. Handy",
         "license": "Public domain",
         "commercialUse": true,
@@ -6140,10 +5762,6 @@
         "id": "commons-historic-grooves-track-08",
         "t": "See Me Through",
         "f": "3/34/See_Me_Through.ogg",
-        "genres": [
-          "재즈",
-          "록"
-        ],
         "sourceArtist": "R.B. Smith",
         "license": "Public domain",
         "commercialUse": true,
@@ -6165,16 +5783,12 @@
     "bwv": "MFA-COMMONS-19",
     "composer": "Various composers",
     "performer": "Enrico Caruso, tenor",
-    "genre": "성악",
-    "moods": [
-      "웅장한",
-      "드라마틱한",
-      "빈티지"
-    ],
+    "genre": "클래식",
     "tags": [
       "오페라",
       "테너",
-      "아리아"
+      "아리아",
+      "성악"
     ],
     "playbackGain": 1.5,
     "credit": "음원: 개별 트랙 저작자·라이선스 · Wikimedia Commons",
@@ -6317,17 +5931,13 @@
     "bwv": "MFA-COMMONS-20",
     "composer": "Various composers",
     "performer": "Enrico Caruso, tenor",
-    "genre": "성악",
-    "moods": [
-      "웅장한",
-      "드라마틱한",
-      "빈티지"
-    ],
+    "genre": "클래식",
     "tags": [
       "오페라",
       "테너",
       "아리아",
-      "역사 녹음"
+      "역사 녹음",
+      "성악"
     ],
     "playbackGain": 1.5,
     "credit": "음원: 개별 트랙 저작자·라이선스 · Wikimedia Commons",
@@ -6401,17 +6011,13 @@
     "bwv": "MFA-COMMONS-21",
     "composer": "Various composers",
     "performer": "Various vocalists",
-    "genre": "성악",
-    "moods": [
-      "웅장한",
-      "낭만적인",
-      "드라마틱한"
-    ],
+    "genre": "클래식",
     "tags": [
       "오페라",
       "소프라노",
       "메조소프라노",
-      "아리아"
+      "아리아",
+      "성악"
     ],
     "playbackGain": 1.2,
     "credit": "음원: 개별 트랙 저작자·라이선스 · Wikimedia Commons",
@@ -6553,18 +6159,14 @@
     "bwv": "MFA-COMMONS-22",
     "composer": "Franz Schubert",
     "performer": "Hans Duhan, baritone",
-    "genre": "성악",
-    "moods": [
-      "차분한",
-      "쓸쓸한",
-      "집중"
-    ],
+    "genre": "클래식",
     "tags": [
       "가곡",
       "리트",
       "바리톤",
       "슈베르트",
-      "Winterreise"
+      "Winterreise",
+      "성악"
     ],
     "playbackGain": 1.35,
     "credit": "음원: 개별 트랙 저작자·라이선스 · Wikimedia Commons",
@@ -6707,18 +6309,14 @@
     "bwv": "MFA-COMMONS-23",
     "composer": "Franz Schubert",
     "performer": "Various vocalists · Andriy Bondarenko, piano",
-    "genre": "성악",
-    "moods": [
-      "차분한",
-      "쓸쓸한",
-      "집중"
-    ],
+    "genre": "클래식",
     "tags": [
       "가곡",
       "리트",
       "슈베르트",
       "Winterreise",
-      "우크라이나어"
+      "우크라이나어",
+      "성악"
     ],
     "playbackGain": 1.1,
     "credit": "음원: 개별 트랙 저작자·라이선스 · Wikimedia Commons",
@@ -6862,17 +6460,13 @@
     "bwv": "MFA-COMMONS-24",
     "composer": "Various composers",
     "performer": "Various choirs",
-    "genre": "성악",
-    "moods": [
-      "경건한",
-      "차분한",
-      "웅장한"
-    ],
+    "genre": "클래식",
     "tags": [
       "합창",
       "성가",
       "르네상스",
-      "고전"
+      "고전",
+      "성악"
     ],
     "playbackGain": 1.2,
     "credit": "음원: 개별 트랙 저작자·라이선스 · Wikimedia Commons",
@@ -7014,17 +6608,13 @@
     "bwv": "MFA-COMMONS-25",
     "composer": "Traditional",
     "performer": "United States Army Band and Chorus",
-    "genre": "성악",
-    "moods": [
-      "경건한",
-      "따뜻한",
-      "평화로운"
-    ],
+    "genre": "클래식",
     "tags": [
       "합창",
       "성가",
       "캐럴",
-      "코러스"
+      "코러스",
+      "성악"
     ],
     "playbackGain": 1.15,
     "credit": "음원: 개별 트랙 저작자·라이선스 · Wikimedia Commons",
@@ -7152,6 +6742,745 @@
           "bytes": 3360977
         },
         "sourcePage": "https://commons.wikimedia.org/wiki/File:U.S._Army_Band_-_This_Endris_Night.ogg"
+      }
+    ]
+  },
+  {
+    "id": "commons-korean-arirang-pop",
+    "collection": "commons-genres-2026-07",
+    "title": "오늘의 아리랑",
+    "artist": "윤도현 · HUFS 학생들",
+    "catalogNo": "MFA-COMMONS-26",
+    "bwv": "MFA-COMMONS-26",
+    "composer": "전통 민요 · 현대 편곡",
+    "performer": "윤도현 · HUFS 학생들",
+    "genre": "가요",
+    "tags": [
+      "한국",
+      "아리랑",
+      "현대 가창"
+    ],
+    "playbackGain": 1,
+    "credit": "음원: 개별 트랙 저작자·라이선스 · Wikimedia Commons",
+    "source": {
+      "provider": "Wikimedia Commons",
+      "license": "CC BY 4.0 / CC0",
+      "licenseUrl": "https://creativecommons.org/licenses/",
+      "commercialUse": true
+    },
+    "labelBig": "가요",
+    "labelTitle": "오늘의 아리랑",
+    "labelArtist": "윤도현 · HUFS 학생들",
+    "jTitle": "가요",
+    "jSub1": "오늘의 아리랑",
+    "jSub2": "2 TRACKS · COMMONS",
+    "labelBg": "#ead8c5",
+    "jacketBg": "#2d3545",
+    "accent": "#c75d45",
+    "side": "A",
+    "tracks": [
+      {
+        "id": "commons-korean-arirang-pop-track-01",
+        "t": "2021 아리랑 응원가 윤도현 가창 음원",
+        "f": "2/23/2021_%EC%95%84%EB%A6%AC%EB%9E%91_%EC%9D%91%EC%9B%90%EA%B0%80_%EC%9C%A4%EB%8F%84%ED%98%84_%EA%B0%80%EC%B0%BD_%EC%9D%8C%EC%9B%90.flac",
+        "sourceArtist": "윤도현, 성윤용, 김민기, 강규용, 김승남, 박상우, 안도형, 윤정훈",
+        "license": "CC BY 4.0",
+        "commercialUse": true,
+        "quality": {
+          "format": "FLAC",
+          "lossless": true,
+          "bytes": 26206188
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:2021_%EC%95%84%EB%A6%AC%EB%9E%91_%EC%9D%91%EC%9B%90%EA%B0%80_%EC%9C%A4%EB%8F%84%ED%98%84_%EA%B0%80%EC%B0%BD_%EC%9D%8C%EC%9B%90.flac"
+      },
+      {
+        "id": "commons-korean-arirang-pop-track-02",
+        "t": "Arirang, Lyrics in English Adaptation-2 by GSIT at HUFS in 2013, sung by HUFS students",
+        "f": "5/5d/Arirang%2C_Lyrics_in_English_Adaptation-2_by_GSIT_at_HUFS_in_2013%2C_sung_by_HUFS_students.ogg",
+        "sourceArtist": "Sonnets4you",
+        "license": "CC0",
+        "commercialUse": true,
+        "quality": {
+          "format": "Ogg Vorbis",
+          "lossless": false,
+          "bytes": 1914073
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Arirang,_Lyrics_in_English_Adaptation-2_by_GSIT_at_HUFS_in_2013,_sung_by_HUFS_students.ogg"
+      }
+    ]
+  },
+  {
+    "id": "commons-korean-folk",
+    "collection": "commons-genres-2026-07",
+    "title": "한국 민요 선집",
+    "artist": "한국저작권위원회 공개 음원",
+    "catalogNo": "MFA-COMMONS-27",
+    "bwv": "MFA-COMMONS-27",
+    "composer": "한국 전통 민요",
+    "performer": "한국저작권위원회 공개 음원",
+    "genre": "기타",
+    "tags": [
+      "한국",
+      "민요",
+      "아리랑",
+      "타령",
+      "전통 음악"
+    ],
+    "playbackGain": 1,
+    "credit": "음원: 개별 트랙 저작자·라이선스 · Wikimedia Commons",
+    "source": {
+      "provider": "Wikimedia Commons",
+      "license": "CC BY 4.0 / CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/",
+      "commercialUse": true
+    },
+    "labelBig": "기타",
+    "labelTitle": "한국 민요 선집",
+    "labelArtist": "한국저작권위원회 공개 음원",
+    "jTitle": "기타",
+    "jSub1": "한국 민요 선집",
+    "jSub2": "10 TRACKS · COMMONS",
+    "labelBg": "#e4dcc8",
+    "jacketBg": "#30382f",
+    "accent": "#7f8e56",
+    "side": "A",
+    "tracks": [
+      {
+        "id": "commons-korean-folk-track-01",
+        "t": "Miryang Arirang",
+        "f": "e/e9/Miryang_Arirang.wav",
+        "sourceArtist": "한국저작권위원회",
+        "license": "CC BY 4.0",
+        "commercialUse": true,
+        "quality": {
+          "format": "WAV",
+          "lossless": true,
+          "bytes": 8706134
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Miryang_Arirang.wav"
+      },
+      {
+        "id": "commons-korean-folk-track-02",
+        "t": "Old Arirang",
+        "f": "a/a4/Old_Arirang.wav",
+        "sourceArtist": "한국저작권위원회",
+        "license": "CC BY 4.0",
+        "commercialUse": true,
+        "quality": {
+          "format": "WAV",
+          "lossless": true,
+          "bytes": 15453870
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Old_Arirang.wav"
+      },
+      {
+        "id": "commons-korean-folk-track-03",
+        "t": "Jindo Arirang",
+        "f": "4/48/Jindo_Arirang.wav",
+        "sourceArtist": "한국저작권위원회",
+        "license": "CC BY 4.0",
+        "commercialUse": true,
+        "quality": {
+          "format": "WAV",
+          "lossless": true,
+          "bytes": 16294474
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Jindo_Arirang.wav"
+      },
+      {
+        "id": "commons-korean-folk-track-04",
+        "t": "Gangwondo Arirang",
+        "f": "0/09/Gangwondo_Arirang.wav",
+        "sourceArtist": "한국저작권위원회",
+        "license": "CC BY 4.0",
+        "commercialUse": true,
+        "quality": {
+          "format": "WAV",
+          "lossless": true,
+          "bytes": 12727320
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Gangwondo_Arirang.wav"
+      },
+      {
+        "id": "commons-korean-folk-track-05",
+        "t": "Gyeonggi Arirang",
+        "f": "6/6f/Gyeonggi_Arirang.wav",
+        "sourceArtist": "한국저작권위원회",
+        "license": "CC BY 4.0",
+        "commercialUse": true,
+        "quality": {
+          "format": "WAV",
+          "lossless": true,
+          "bytes": 9081850
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Gyeonggi_Arirang.wav"
+      },
+      {
+        "id": "commons-korean-folk-track-06",
+        "t": "Doraji Taryeong",
+        "f": "d/d2/Doraji_Taryeong.wav",
+        "sourceArtist": "한국저작권위원회",
+        "license": "CC BY 4.0",
+        "commercialUse": true,
+        "quality": {
+          "format": "WAV",
+          "lossless": true,
+          "bytes": 17934190
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Doraji_Taryeong.wav"
+      },
+      {
+        "id": "commons-korean-folk-track-07",
+        "t": "Gunbam Taryeong",
+        "f": "b/bc/Gunbam_Taryeong.wav",
+        "sourceArtist": "한국저작권위원회",
+        "license": "CC BY 4.0",
+        "commercialUse": true,
+        "quality": {
+          "format": "WAV",
+          "lossless": true,
+          "bytes": 10661480
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Gunbam_Taryeong.wav"
+      },
+      {
+        "id": "commons-korean-folk-track-08",
+        "t": "Dongdaemun nori",
+        "f": "3/31/Dongdaemun_nori.wav",
+        "sourceArtist": "한국저작권위원회",
+        "license": "CC BY 4.0",
+        "commercialUse": true,
+        "quality": {
+          "format": "WAV",
+          "lossless": true,
+          "bytes": 15340870
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Dongdaemun_nori.wav"
+      },
+      {
+        "id": "commons-korean-folk-track-09",
+        "t": "Ganggangsullae",
+        "f": "4/42/Ganggangsullae.wav",
+        "sourceArtist": "한국저작권위원회",
+        "license": "CC BY 4.0",
+        "commercialUse": true,
+        "quality": {
+          "format": "WAV",
+          "lossless": true,
+          "bytes": 12781150
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Ganggangsullae.wav"
+      },
+      {
+        "id": "commons-korean-folk-track-10",
+        "t": "Baennorae",
+        "f": "2/26/Baennorae.wav",
+        "sourceArtist": "한국저작권위원회",
+        "license": "CC BY-SA 4.0",
+        "commercialUse": true,
+        "quality": {
+          "format": "WAV",
+          "lossless": true,
+          "bytes": 23110754
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Baennorae.wav"
+      }
+    ]
+  },
+  {
+    "id": "commons-jazz-cool-noir",
+    "collection": "commons-genres-2026-07",
+    "title": "쿨 재즈와 누아르",
+    "artist": "Kevin MacLeod",
+    "catalogNo": "MFA-COMMONS-28",
+    "bwv": "MFA-COMMONS-28",
+    "composer": "Kevin MacLeod",
+    "performer": "Kevin MacLeod",
+    "genre": "재즈",
+    "tags": [
+      "쿨 재즈",
+      "누아르",
+      "비브라폰",
+      "카페 재즈"
+    ],
+    "playbackGain": 1,
+    "credit": "음원: Kevin MacLeod · CC BY 3.0 · Wikimedia Commons / Incompetech",
+    "source": {
+      "provider": "Wikimedia Commons",
+      "license": "CC BY 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/",
+      "commercialUse": true
+    },
+    "labelBig": "재즈",
+    "labelTitle": "쿨 재즈와 누아르",
+    "labelArtist": "KEVIN MACLEOD",
+    "jTitle": "재즈",
+    "jSub1": "쿨 재즈와 누아르",
+    "jSub2": "8 TRACKS · COMMONS",
+    "labelBg": "#d8d4ca",
+    "jacketBg": "#202934",
+    "accent": "#6e8398",
+    "side": "A",
+    "tracks": [
+      {
+        "id": "commons-jazz-cool-noir-track-01",
+        "t": "Backed Vibes",
+        "f": "d/d4/Backed_Vibes_%28ISRC_USUAN1100422%29.mp3",
+        "license": "CC BY 3.0",
+        "commercialUse": true,
+        "quality": {
+          "format": "MP3",
+          "lossless": false,
+          "bytes": 9277773
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Backed_Vibes_(ISRC_USUAN1100422).mp3"
+      },
+      {
+        "id": "commons-jazz-cool-noir-track-02",
+        "t": "Bass Vibes",
+        "f": "e/e0/Bass_Vibes_%28ISRC_USUAN1100462%29.mp3",
+        "license": "CC BY 3.0",
+        "commercialUse": true,
+        "quality": {
+          "format": "MP3",
+          "lossless": false,
+          "bytes": 6869613
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Bass_Vibes_(ISRC_USUAN1100462).mp3"
+      },
+      {
+        "id": "commons-jazz-cool-noir-track-03",
+        "t": "Bass Walker",
+        "f": "e/e3/Bass_Walker_%28ISRC_USUAN1200071%29.mp3",
+        "license": "CC BY 3.0",
+        "commercialUse": true,
+        "quality": {
+          "format": "MP3",
+          "lossless": false,
+          "bytes": 6463882
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Bass_Walker_(ISRC_USUAN1200071).mp3"
+      },
+      {
+        "id": "commons-jazz-cool-noir-track-04",
+        "t": "Cool Blast",
+        "f": "6/69/Cool_Blast_%28ISRC_USUAN1100281%29.mp3",
+        "license": "CC BY 3.0",
+        "commercialUse": true,
+        "quality": {
+          "format": "MP3",
+          "lossless": false,
+          "bytes": 3165069
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Cool_Blast_(ISRC_USUAN1100281).mp3"
+      },
+      {
+        "id": "commons-jazz-cool-noir-track-05",
+        "t": "Cool Vibes",
+        "f": "6/68/Cool_Vibes_%28ISRC_USUAN1100863%29.mp3",
+        "license": "CC BY 3.0",
+        "commercialUse": true,
+        "quality": {
+          "format": "MP3",
+          "lossless": false,
+          "bytes": 8737561
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Cool_Vibes_(ISRC_USUAN1100863).mp3"
+      },
+      {
+        "id": "commons-jazz-cool-noir-track-06",
+        "t": "Corncob",
+        "f": "5/53/Corncob_%28ISRC_USUAN1100565%29.mp3",
+        "license": "CC BY 3.0",
+        "commercialUse": true,
+        "quality": {
+          "format": "MP3",
+          "lossless": false,
+          "bytes": 2220458
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Corncob_(ISRC_USUAN1100565).mp3"
+      },
+      {
+        "id": "commons-jazz-cool-noir-track-07",
+        "t": "Covert Affair",
+        "f": "3/32/Covert_Affair_%28ISRC_USUAN1100795%29.mp3",
+        "license": "CC BY 3.0",
+        "commercialUse": true,
+        "quality": {
+          "format": "MP3",
+          "lossless": false,
+          "bytes": 7769896
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Covert_Affair_(ISRC_USUAN1100795).mp3"
+      },
+      {
+        "id": "commons-jazz-cool-noir-track-08",
+        "t": "Crinoline Dreams",
+        "f": "a/ae/Crinoline_Dreams_%28ISRC_USUAN1700073%29.mp3",
+        "license": "CC BY 3.0",
+        "commercialUse": true,
+        "quality": {
+          "format": "MP3",
+          "lossless": false,
+          "bytes": 7888307
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Crinoline_Dreams_(ISRC_USUAN1700073).mp3"
+      }
+    ]
+  },
+  {
+    "id": "commons-vocal-winterreise-part2",
+    "collection": "commons-genres-2026-07",
+    "title": "겨울 나그네 — 가곡 2집",
+    "artist": "Hans Duhan, baritone",
+    "catalogNo": "MFA-COMMONS-29",
+    "bwv": "MFA-COMMONS-29",
+    "composer": "Franz Schubert",
+    "performer": "Hans Duhan, baritone",
+    "genre": "클래식",
+    "tags": [
+      "가곡",
+      "리트",
+      "바리톤",
+      "슈베르트",
+      "Winterreise",
+      "성악"
+    ],
+    "playbackGain": 1.35,
+    "credit": "음원: 개별 트랙 저작자·라이선스 · Wikimedia Commons",
+    "source": {
+      "provider": "Wikimedia Commons",
+      "license": "Public domain",
+      "licenseUrl": "https://creativecommons.org/licenses/",
+      "commercialUse": true
+    },
+    "labelBig": "성악",
+    "labelTitle": "겨울 나그네 — 가곡 2집",
+    "labelArtist": "HANS DUHAN, BARITONE",
+    "jTitle": "성악",
+    "jSub1": "겨울 나그네 — 가곡 2집",
+    "jSub2": "12 TRACKS · COMMONS",
+    "labelBg": "#d4dde3",
+    "jacketBg": "#27313b",
+    "accent": "#718ca0",
+    "side": "A",
+    "tracks": [
+      {
+        "id": "commons-vocal-winterreise-part2-track-01",
+        "t": "Rast (BK 2955-2, ER 271)",
+        "f": "7/75/10_-_Rast_%28BK_2955-2%2C_ER_271%29.flac",
+        "sourceArtist": "Franz Schubert, 1827",
+        "license": "Public domain",
+        "commercialUse": true,
+        "quality": {
+          "format": "FLAC",
+          "lossless": true,
+          "bytes": 20165205
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:10_-_Rast_(BK_2955-2,_ER_271).flac"
+      },
+      {
+        "id": "commons-vocal-winterreise-part2-track-02",
+        "t": "Frühlingstraum (CK 2956-1, ES 386)",
+        "f": "b/b6/11_-_Fr%C3%BChlingstraum_%28CK_2956-1%2C_ES_386%29.flac",
+        "sourceArtist": "Franz Schubert, 1827",
+        "license": "Public domain",
+        "commercialUse": true,
+        "quality": {
+          "format": "FLAC",
+          "lossless": true,
+          "bytes": 25702283
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:11_-_Fr%C3%BChlingstraum_(CK_2956-1,_ES_386).flac"
+      },
+      {
+        "id": "commons-vocal-winterreise-part2-track-03",
+        "t": "Einsamkeit (CK 2957-2, ES 386)",
+        "f": "5/50/12_-_Einsamkeit_%28CK_2957-2%2C_ES_386%29.flac",
+        "sourceArtist": "Franz Schubert, 1827",
+        "license": "Public domain",
+        "commercialUse": true,
+        "quality": {
+          "format": "FLAC",
+          "lossless": true,
+          "bytes": 19363946
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:12_-_Einsamkeit_(CK_2957-2,_ES_386).flac"
+      },
+      {
+        "id": "commons-vocal-winterreise-part2-track-04",
+        "t": "Die Post (CK 2958-2, ER 272)",
+        "f": "a/a4/13_-_Die_Post_%28CK_2958-2%2C_ER_272%29.flac",
+        "sourceArtist": "Franz Schubert, 1827",
+        "license": "Public domain",
+        "commercialUse": true,
+        "quality": {
+          "format": "FLAC",
+          "lossless": true,
+          "bytes": 16537238
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:13_-_Die_Post_(CK_2958-2,_ER_272).flac"
+      },
+      {
+        "id": "commons-vocal-winterreise-part2-track-05",
+        "t": "Der greise Kopf (BK 2959-2, ER 272)",
+        "f": "7/7d/14_-_Der_greise_Kopf_%28BK_2959-2%2C_ER_272%29.flac",
+        "sourceArtist": "Franz Schubert, 1827",
+        "license": "Public domain",
+        "commercialUse": true,
+        "quality": {
+          "format": "FLAC",
+          "lossless": true,
+          "bytes": 18802717
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:14_-_Der_greise_Kopf_(BK_2959-2,_ER_272).flac"
+      },
+      {
+        "id": "commons-vocal-winterreise-part2-track-06",
+        "t": "Die Krähe (CK 2960-2, ER 274)",
+        "f": "7/73/15_-_Die_Kr%C3%A4he_%28CK_2960-2%2C_ER_274%29.flac",
+        "sourceArtist": "Franz Schubert, 1827",
+        "license": "Public domain",
+        "commercialUse": true,
+        "quality": {
+          "format": "FLAC",
+          "lossless": true,
+          "bytes": 16632467
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:15_-_Die_Kr%C3%A4he_(CK_2960-2,_ER_274).flac"
+      },
+      {
+        "id": "commons-vocal-winterreise-part2-track-07",
+        "t": "Letzte Hoffnung (CL 4400-2, ES 392)",
+        "f": "6/6b/16_-_Letzte_Hoffnung_%28CL_4400-2%2C_ES_392%29.flac",
+        "sourceArtist": "Franz Schubert, 1827",
+        "license": "Public domain",
+        "commercialUse": true,
+        "quality": {
+          "format": "FLAC",
+          "lossless": true,
+          "bytes": 18938861
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:16_-_Letzte_Hoffnung_(CL_4400-2,_ES_392).flac"
+      },
+      {
+        "id": "commons-vocal-winterreise-part2-track-08",
+        "t": "Im Dorfe (CL 4399-1, ES 392)",
+        "f": "5/56/17_-_Im_Dorfe_%28CL_4399-1%2C_ES_392%29.flac",
+        "sourceArtist": "Franz Schubert, 1827",
+        "license": "Public domain",
+        "commercialUse": true,
+        "quality": {
+          "format": "FLAC",
+          "lossless": true,
+          "bytes": 20602966
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:17_-_Im_Dorfe_(CL_4399-1,_ES_392).flac"
+      },
+      {
+        "id": "commons-vocal-winterreise-part2-track-09",
+        "t": "Der stürmische Morgen (BK 2963-1, ER 274)",
+        "f": "1/15/18_-_Der_st%C3%BCrmische_Morgen_%28BK_2963-1%2C_ER_274%29.flac",
+        "sourceArtist": "Franz Schubert, 1827",
+        "license": "Public domain",
+        "commercialUse": true,
+        "quality": {
+          "format": "FLAC",
+          "lossless": true,
+          "bytes": 6162232
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:18_-_Der_st%C3%BCrmische_Morgen_(BK_2963-1,_ER_274).flac"
+      },
+      {
+        "id": "commons-vocal-winterreise-part2-track-10",
+        "t": "Täuschung (BL 4398-2, ER 275)",
+        "f": "3/32/19_-_T%C3%A4uschung_%28BL_4398-2%2C_ER_275%29.flac",
+        "sourceArtist": "Franz Schubert, 1827",
+        "license": "Public domain",
+        "commercialUse": true,
+        "quality": {
+          "format": "FLAC",
+          "lossless": true,
+          "bytes": 10290515
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:19_-_T%C3%A4uschung_(BL_4398-2,_ER_275).flac"
+      },
+      {
+        "id": "commons-vocal-winterreise-part2-track-11",
+        "t": "Der Wegweiser (CL 4402-1, ES 393)",
+        "f": "f/f9/20_-_Der_Wegweiser_%28CL_4402-1%2C_ES_393%29.flac",
+        "sourceArtist": "Franz Schubert, 1827",
+        "license": "Public domain",
+        "commercialUse": true,
+        "quality": {
+          "format": "FLAC",
+          "lossless": true,
+          "bytes": 25129152
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:20_-_Der_Wegweiser_(CL_4402-1,_ES_393).flac"
+      },
+      {
+        "id": "commons-vocal-winterreise-part2-track-12",
+        "t": "Das Wirtshaus (CL 4403-1, ES 393)",
+        "f": "c/cc/21_-_Das_Wirtshaus_%28CL_4403-1%2C_ES_393%29.flac",
+        "sourceArtist": "Franz Schubert, 1827",
+        "license": "Public domain",
+        "commercialUse": true,
+        "quality": {
+          "format": "FLAC",
+          "lossless": true,
+          "bytes": 22932979
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:21_-_Das_Wirtshaus_(CL_4403-1,_ES_393).flac"
+      }
+    ]
+  },
+  {
+    "id": "commons-classical-satie",
+    "collection": "commons-genres-2026-07",
+    "title": "사티 — 짐노페디와 그노시엔느",
+    "artist": "Various pianists",
+    "catalogNo": "MFA-COMMONS-30",
+    "bwv": "MFA-COMMONS-30",
+    "composer": "Erik Satie",
+    "performer": "Various pianists",
+    "genre": "클래식",
+    "tags": [
+      "피아노",
+      "사티",
+      "Gymnopédies",
+      "Gnossiennes"
+    ],
+    "playbackGain": 1.1,
+    "credit": "음원: 개별 트랙 저작자·라이선스 · Wikimedia Commons",
+    "source": {
+      "provider": "Wikimedia Commons",
+      "license": "Public domain",
+      "licenseUrl": "https://creativecommons.org/licenses/",
+      "commercialUse": true
+    },
+    "labelBig": "클래식",
+    "labelTitle": "사티 — 짐노페디와 그노시엔느",
+    "labelArtist": "VARIOUS PIANISTS",
+    "jTitle": "클래식",
+    "jSub1": "사티 — 짐노페디와 그노시엔느",
+    "jSub2": "8 TRACKS · COMMONS",
+    "labelBg": "#e2ddcf",
+    "jacketBg": "#2d3332",
+    "accent": "#8b836c",
+    "side": "A",
+    "tracks": [
+      {
+        "id": "commons-classical-satie-track-01",
+        "t": "Satie Gymnopedie No 1 performed by Michael Laucke",
+        "f": "a/a6/Satie_Gymnopedie_No_1_performed_by_Michael_Laucke.flac",
+        "sourceArtist": "Mlaucke",
+        "license": "Public domain",
+        "commercialUse": true,
+        "quality": {
+          "format": "FLAC",
+          "lossless": true,
+          "bytes": 10232304
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Satie_Gymnopedie_No_1_performed_by_Michael_Laucke.flac"
+      },
+      {
+        "id": "commons-classical-satie-track-02",
+        "t": "Satie Gymnopedie No 2 performed by Michael Laucke",
+        "f": "3/3d/Satie_Gymnopedie_No_2_performed_by_Michael_Laucke.flac",
+        "sourceArtist": "Mlaucke",
+        "license": "Public domain",
+        "commercialUse": true,
+        "quality": {
+          "format": "FLAC",
+          "lossless": true,
+          "bytes": 8136884
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Satie_Gymnopedie_No_2_performed_by_Michael_Laucke.flac"
+      },
+      {
+        "id": "commons-classical-satie-track-03",
+        "t": "Satie Gymnopedie No 3 performed by Michael Laucke",
+        "f": "d/db/Satie_Gymnopedie_No_3_performed_by_Michael_Laucke.flac",
+        "sourceArtist": "Mlaucke",
+        "license": "Public domain",
+        "commercialUse": true,
+        "quality": {
+          "format": "FLAC",
+          "lossless": true,
+          "bytes": 6941233
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Satie_Gymnopedie_No_3_performed_by_Michael_Laucke.flac"
+      },
+      {
+        "id": "commons-classical-satie-track-04",
+        "t": "Satie - Gnossienne 1",
+        "f": "9/91/Satie_-_Gnossienne_1.ogg",
+        "sourceArtist": "Composer: Erik Satie Performer: La Pianista",
+        "license": "Public domain",
+        "commercialUse": true,
+        "quality": {
+          "format": "Ogg Vorbis",
+          "lossless": false,
+          "bytes": 3578022
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Satie_-_Gnossienne_1.ogg"
+      },
+      {
+        "id": "commons-classical-satie-track-05",
+        "t": "Gnossienne 2 (Satie)",
+        "f": "c/c8/Gnossienne_2_%28Satie%29.ogg",
+        "sourceArtist": "Composer: Erik Satie Performer: La Pianista",
+        "license": "Public domain",
+        "commercialUse": true,
+        "quality": {
+          "format": "Ogg Vorbis",
+          "lossless": false,
+          "bytes": 1673037
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Gnossienne_2_(Satie).ogg"
+      },
+      {
+        "id": "commons-classical-satie-track-06",
+        "t": "Gnossienne 3 (Satie)",
+        "f": "1/10/Gnossienne_3_%28Satie%29.ogg",
+        "sourceArtist": "Composer: Erik Satie Performer: La Pianista",
+        "license": "Public domain",
+        "commercialUse": true,
+        "quality": {
+          "format": "Ogg Vorbis",
+          "lossless": false,
+          "bytes": 2659757
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Gnossienne_3_(Satie).ogg"
+      },
+      {
+        "id": "commons-classical-satie-track-07",
+        "t": "Gnossienne 4 (Satie)",
+        "f": "e/e9/Gnossienne_4_%28Satie%29.ogg",
+        "sourceArtist": "Composer: Erik Satie Performer: La Pianista",
+        "license": "Public domain",
+        "commercialUse": true,
+        "quality": {
+          "format": "Ogg Vorbis",
+          "lossless": false,
+          "bytes": 2256554
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Gnossienne_4_(Satie).ogg"
+      },
+      {
+        "id": "commons-classical-satie-track-08",
+        "t": "Gnossienne 5 (Satie)",
+        "f": "0/07/Gnossienne_5_%28Satie%29.ogg",
+        "sourceArtist": "Composer: Erik Satie Performer: La Pianista",
+        "license": "Public domain",
+        "commercialUse": true,
+        "quality": {
+          "format": "Ogg Vorbis",
+          "lossless": false,
+          "bytes": 3012321
+        },
+        "sourcePage": "https://commons.wikimedia.org/wiki/File:Gnossienne_5_(Satie).ogg"
       }
     ]
   }

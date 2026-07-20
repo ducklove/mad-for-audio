@@ -19,7 +19,7 @@ const collection = "commons-genres-2026-07";
 const groups = [
     {
         id: "commons-jazz-cafe", title: "재즈 카페 셀렉션", genre: "재즈",
-        moods: ["카페", "세련된", "편안한"], color: ["#d8c9aa", "#263238", "#b66a3c"],
+        color: ["#d8c9aa", "#263238", "#b66a3c"],
         files: [
             "File:Acid Trumpet (ISRC USUAN1100339).mp3",
             "File:Airport Lounge (ISRC USUAN1100806).mp3",
@@ -33,7 +33,7 @@ const groups = [
     },
     {
         id: "commons-jazz-lounge", title: "재즈 라운지 애프터눈", genre: "재즈",
-        moods: ["카페", "조용한", "세련된"], color: ["#d9cfbd", "#253039", "#b88c5a"],
+        color: ["#d9cfbd", "#253039", "#b88c5a"],
         files: [
             "File:Smooth Lovin (ISRC USUAN1700077).mp3",
             "File:Deuces (ISRC USUAN1700075).mp3",
@@ -47,7 +47,7 @@ const groups = [
     },
     {
         id: "commons-jazz-swing-bossa", title: "스윙·보사·비밥", genre: "재즈",
-        moods: ["리드미컬", "밝은", "카페"], color: ["#e0d4b5", "#333028", "#c0793e"],
+        color: ["#e0d4b5", "#333028", "#c0793e"],
         files: [
             "File:Samba Isobel (ISRC USUAN1700071).mp3",
             "File:Modern Jazz Samba (ISRC USUAN1100153).mp3",
@@ -61,7 +61,7 @@ const groups = [
     },
     {
         id: "commons-jazz-archive", title: "재즈 아카이브 1919–1935", genre: "재즈",
-        moods: ["빈티지", "그루브", "차분한"], color: ["#ded1b5", "#352b25", "#93603e"],
+        color: ["#ded1b5", "#352b25", "#93603e"],
         performer: "Historic jazz ensembles", composer: "Various composers", playbackGain: 1.45,
         tags: ["스윙", "딕시랜드", "역사 재즈"],
         files: [
@@ -77,7 +77,7 @@ const groups = [
     },
     {
         id: "commons-blues-groove", title: "블루스 그루브", genre: "블루스",
-        moods: ["그루브", "빈티지", "차분한"], color: ["#d4d7de", "#202838", "#5574a6"],
+        color: ["#d4d7de", "#202838", "#5574a6"],
         files: [
             "File:DD Groove (ISRC USUAN1100492).mp3",
             "File:Dirt Rhodes (ISRC USUAN1100542).mp3",
@@ -91,7 +91,7 @@ const groups = [
     },
     {
         id: "commons-rock-drive", title: "록 드라이브", genre: "록",
-        moods: ["신나는", "강렬한", "활기찬"], color: ["#dfd8ce", "#301f24", "#b8473f"],
+        color: ["#dfd8ce", "#301f24", "#b8473f"],
         files: [
             "File:Aitech (ISRC USUAN1100336).mp3",
             "File:Beach Bum (ISRC USUAN1100347).mp3",
@@ -105,7 +105,7 @@ const groups = [
     },
     {
         id: "commons-pop-sunshine", title: "팝 선샤인", genre: "팝",
-        moods: ["밝은", "신나는", "가벼운"], color: ["#f0ddc2", "#3a3054", "#d78445"],
+        color: ["#f0ddc2", "#3a3054", "#d78445"],
         files: [
             "File:Android Sock Hop (ISRC USUAN1700060).mp3",
             "File:Basic Implosion (ISRC USUAN1600032).mp3",
@@ -119,7 +119,7 @@ const groups = [
     },
     {
         id: "commons-electronica-focus", title: "일렉트로니카 포커스", genre: "일렉트로니카",
-        moods: ["집중", "몽환적인", "리드미컬"], color: ["#d7e5e4", "#162f39", "#3c9a9a"],
+        color: ["#d7e5e4", "#162f39", "#3c9a9a"],
         files: [
             "File:Airship Serenity (ISRC USUAN1600046).mp3",
             "File:Ambler (ISRC USUAN1300019).mp3",
@@ -133,7 +133,7 @@ const groups = [
     },
     {
         id: "commons-funk-party", title: "펑크 파티", genre: "펑크",
-        moods: ["그루브", "신나는", "활기찬"], color: ["#ead9a9", "#3b2838", "#c99724"],
+        color: ["#ead9a9", "#3b2838", "#c99724"],
         files: [
             "File:Aces High (ISRC USUAN1100763).mp3",
             "File:C-Funk (ISRC USUAN1100001).mp3",
@@ -147,7 +147,7 @@ const groups = [
     },
     {
         id: "commons-reggae-island", title: "레게 아일랜드", genre: "레게",
-        moods: ["여유로운", "밝은", "리드미컬"], color: ["#e8dfba", "#263b2b", "#c8862e"],
+        color: ["#e8dfba", "#263b2b", "#c8862e"],
         files: [
             "File:B-Roll (ISRC USUAN1100315).mp3",
             "File:Beach Party (ISRC USUAN1100613).mp3",
@@ -161,7 +161,7 @@ const groups = [
     },
     {
         id: "commons-latin-fiesta", title: "라틴 피에스타", genre: "라틴",
-        moods: ["신나는", "따뜻한", "리드미컬"], color: ["#f0d8bd", "#4b2926", "#d15c36"],
+        color: ["#f0d8bd", "#4b2926", "#d15c36"],
         files: [
             "File:Back on Track (ISRC USUAN1100426).mp3",
             "File:Beachfront Celebration (ISRC USUAN1200022).mp3",
@@ -175,7 +175,7 @@ const groups = [
     },
     {
         id: "commons-african-rhythms", title: "아프리칸 리듬", genre: "아프리칸",
-        moods: ["이국적인", "활기찬", "리드미컬"], color: ["#dfcaa5", "#3d3022", "#a7652d"],
+        color: ["#dfcaa5", "#3d3022", "#a7652d"],
         files: [
             "File:Accralate (ISRC USUAN1100341).mp3",
             "File:Artifact (ISRC USUAN1100324).mp3",
@@ -189,7 +189,7 @@ const groups = [
     },
     {
         id: "commons-world-journey", title: "월드 뮤직 저니", genre: "월드",
-        moods: ["여행", "이국적인", "따뜻한"], color: ["#d8dfd2", "#243b38", "#638c68"],
+        color: ["#d8dfd2", "#243b38", "#638c68"],
         files: [
             "File:Achaidh Cheide (ISRC USUAN1100340).mp3",
             "File:Allada (ISRC USUAN1500001).mp3",
@@ -203,7 +203,7 @@ const groups = [
     },
     {
         id: "commons-disco-night", title: "디스코 나이트", genre: "디스코",
-        moods: ["댄스", "신나는", "활기찬"], color: ["#e9d9e8", "#2b213e", "#a45bb2"],
+        color: ["#e9d9e8", "#2b213e", "#a45bb2"],
         files: [
             "File:Aurea Carmina (ISRC USUAN1400006).mp3",
             "File:Disco con Tutti (ISRC USUAN1200091).mp3",
@@ -217,7 +217,7 @@ const groups = [
     },
     {
         id: "commons-ska-upbeat", title: "스카 업비트", genre: "스카",
-        moods: ["유쾌한", "신나는", "밝은"], color: ["#e4e2c5", "#29342b", "#7d9a43"],
+        color: ["#e4e2c5", "#29342b", "#7d9a43"],
         files: [
             "File:Blue Ska (ISRC USUAN1600011).mp3",
             "File:Sunday Dub (ISRC USUAN1700031).mp3",
@@ -226,7 +226,7 @@ const groups = [
     },
     {
         id: "commons-country-road", title: "컨트리 로드", genre: "컨트리",
-        moods: ["여행", "따뜻한", "활기찬"], color: ["#e3d5bd", "#3e2e22", "#a76d3d"],
+        color: ["#e3d5bd", "#3e2e22", "#a76d3d"],
         files: [
             "File:Guts and Bourbon (ISRC USUAN1400032).mp3",
             "File:Fireflies and Stardust (ISRC USUAN1600061).mp3",
@@ -240,7 +240,7 @@ const groups = [
     },
     {
         id: "commons-ambient-room", title: "앰비언트 룸", genre: "앰비언트",
-        moods: ["조용한", "집중", "편안한"], color: ["#d5e0e2", "#20343d", "#5a8da0"],
+        color: ["#d5e0e2", "#20343d", "#5a8da0"],
         performer: "Various artists",
         files: [
             "File:Ancient Rite by Kevin MacLeod.ogg",
@@ -253,14 +253,8 @@ const groups = [
     },
     {
         id: "commons-historic-grooves", title: "히스토릭 재즈·블루스", genre: "재즈",
-        moods: ["빈티지", "차분한", "그루브"], color: ["#dfd3b9", "#352d28", "#8d5b3b"],
+        color: ["#dfd3b9", "#352d28", "#8d5b3b"],
         performer: "Historical recordings",
-        trackGenres: {
-            "File:LostTrainBlues.ogg": ["재즈", "블루스"],
-            "File:St. Louis Blues March - Shades of Blue - United States Air Force Band of Mid-America.mp3": ["재즈", "블루스"],
-            "File:St Louis Blues - Handy's Memphis Blues Band (1922 sound recording).mp3": ["재즈", "블루스"],
-            "File:See Me Through.ogg": ["재즈", "록"]
-        },
         files: [
             "File:OriginalDixielandJassBand-JazzMeBlues.ogg",
             "File:OriginalDixielandJassBand DixieJassBandOneStep1917.ogg",
@@ -274,7 +268,7 @@ const groups = [
     },
     {
         id: "commons-vocal-caruso", title: "카루소 오페라 아리아", genre: "성악",
-        moods: ["웅장한", "드라마틱한", "빈티지"], color: ["#e5d8c3", "#39282a", "#a34f4a"],
+        color: ["#e5d8c3", "#39282a", "#a34f4a"],
         performer: "Enrico Caruso, tenor", composer: "Various composers", playbackGain: 1.5,
         tags: ["오페라", "테너", "아리아"],
         files: [
@@ -290,7 +284,7 @@ const groups = [
     },
     {
         id: "commons-vocal-caruso-encore", title: "카루소 아리아 앙코르", genre: "성악",
-        moods: ["웅장한", "드라마틱한", "빈티지"], color: ["#e7d6c2", "#3d2824", "#a86148"],
+        color: ["#e7d6c2", "#3d2824", "#a86148"],
         performer: "Enrico Caruso, tenor", composer: "Various composers", playbackGain: 1.5,
         tags: ["오페라", "테너", "아리아", "역사 녹음"],
         files: [
@@ -301,7 +295,7 @@ const groups = [
     },
     {
         id: "commons-vocal-opera-voices", title: "오페라 보이스", genre: "성악",
-        moods: ["웅장한", "낭만적인", "드라마틱한"], color: ["#eadccf", "#34263b", "#925a8d"],
+        color: ["#eadccf", "#34263b", "#925a8d"],
         performer: "Various vocalists", composer: "Various composers", playbackGain: 1.2,
         tags: ["오페라", "소프라노", "메조소프라노", "아리아"],
         files: [
@@ -317,7 +311,7 @@ const groups = [
     },
     {
         id: "commons-vocal-winterreise", title: "겨울 나그네 — 가곡 1집", genre: "성악",
-        moods: ["차분한", "쓸쓸한", "집중"], color: ["#d8e0e4", "#28343e", "#667f99"],
+        color: ["#d8e0e4", "#28343e", "#667f99"],
         performer: "Hans Duhan, baritone", composer: "Franz Schubert", playbackGain: 1.35,
         tags: ["가곡", "리트", "바리톤", "슈베르트", "Winterreise"],
         files: [
@@ -333,7 +327,7 @@ const groups = [
     },
     {
         id: "commons-vocal-winterreise-ukrainian", title: "겨울 나그네 — 현대 우크라이나어 실연", genre: "성악",
-        moods: ["차분한", "쓸쓸한", "집중"], color: ["#d7e1e7", "#273744", "#5d85a0"],
+        color: ["#d7e1e7", "#273744", "#5d85a0"],
         performer: "Various vocalists · Andriy Bondarenko, piano", composer: "Franz Schubert", playbackGain: 1.1,
         tags: ["가곡", "리트", "슈베르트", "Winterreise", "우크라이나어"],
         files: [
@@ -349,7 +343,7 @@ const groups = [
     },
     {
         id: "commons-vocal-choral", title: "합창 명곡", genre: "성악",
-        moods: ["경건한", "차분한", "웅장한"], color: ["#e2dfcf", "#2d3330", "#7b8261"],
+        color: ["#e2dfcf", "#2d3330", "#7b8261"],
         performer: "Various choirs", composer: "Various composers", playbackGain: 1.2,
         tags: ["합창", "성가", "르네상스", "고전"],
         files: [
@@ -365,7 +359,7 @@ const groups = [
     },
     {
         id: "commons-vocal-army-chorus", title: "합창과 캐럴", genre: "성악",
-        moods: ["경건한", "따뜻한", "평화로운"], color: ["#e5e1d0", "#2f3935", "#738d77"],
+        color: ["#e5e1d0", "#2f3935", "#738d77"],
         performer: "United States Army Band and Chorus", composer: "Traditional", playbackGain: 1.15,
         tags: ["합창", "성가", "캐럴", "코러스"],
         files: [
@@ -377,6 +371,85 @@ const groups = [
             "File:Joy To The World.ogg",
             "File:U.S. Army Band - O Tannenbaum.ogg",
             "File:U.S. Army Band - This Endris Night.ogg"
+        ]
+    },
+    {
+        id: "commons-korean-arirang-pop", title: "오늘의 아리랑", genre: "가요",
+        color: ["#ead8c5", "#2d3545", "#c75d45"],
+        performer: "윤도현 · HUFS 학생들", composer: "전통 민요 · 현대 편곡",
+        tags: ["한국", "아리랑", "현대 가창"],
+        files: [
+            "File:2021 아리랑 응원가 윤도현 가창 음원.flac",
+            "File:Arirang, Lyrics in English Adaptation-2 by GSIT at HUFS in 2013, sung by HUFS students.ogg"
+        ]
+    },
+    {
+        id: "commons-korean-folk", title: "한국 민요 선집", genre: "기타",
+        color: ["#e4dcc8", "#30382f", "#7f8e56"],
+        performer: "한국저작권위원회 공개 음원", composer: "한국 전통 민요",
+        tags: ["한국", "민요", "아리랑", "타령", "전통 음악"],
+        files: [
+            "File:Miryang Arirang.wav",
+            "File:Old Arirang.wav",
+            "File:Jindo Arirang.wav",
+            "File:Gangwondo Arirang.wav",
+            "File:Gyeonggi Arirang.wav",
+            "File:Doraji Taryeong.wav",
+            "File:Gunbam Taryeong.wav",
+            "File:Dongdaemun nori.wav",
+            "File:Ganggangsullae.wav",
+            "File:Baennorae.wav"
+        ]
+    },
+    {
+        id: "commons-jazz-cool-noir", title: "쿨 재즈와 누아르", genre: "재즈",
+        color: ["#d8d4ca", "#202934", "#6e8398"],
+        tags: ["쿨 재즈", "누아르", "비브라폰", "카페 재즈"],
+        files: [
+            "File:Backed Vibes (ISRC USUAN1100422).mp3",
+            "File:Bass Vibes (ISRC USUAN1100462).mp3",
+            "File:Bass Walker (ISRC USUAN1200071).mp3",
+            "File:Cool Blast (ISRC USUAN1100281).mp3",
+            "File:Cool Vibes (ISRC USUAN1100863).mp3",
+            "File:Corncob (ISRC USUAN1100565).mp3",
+            "File:Covert Affair (ISRC USUAN1100795).mp3",
+            "File:Crinoline Dreams (ISRC USUAN1700073).mp3"
+        ]
+    },
+    {
+        id: "commons-vocal-winterreise-part2", title: "겨울 나그네 — 가곡 2집", genre: "성악",
+        color: ["#d4dde3", "#27313b", "#718ca0"],
+        performer: "Hans Duhan, baritone", composer: "Franz Schubert", playbackGain: 1.35,
+        tags: ["가곡", "리트", "바리톤", "슈베르트", "Winterreise"],
+        files: [
+            "File:10 - Rast (BK 2955-2, ER 271).flac",
+            "File:11 - Frühlingstraum (CK 2956-1, ES 386).flac",
+            "File:12 - Einsamkeit (CK 2957-2, ES 386).flac",
+            "File:13 - Die Post (CK 2958-2, ER 272).flac",
+            "File:14 - Der greise Kopf (BK 2959-2, ER 272).flac",
+            "File:15 - Die Krähe (CK 2960-2, ER 274).flac",
+            "File:16 - Letzte Hoffnung (CL 4400-2, ES 392).flac",
+            "File:17 - Im Dorfe (CL 4399-1, ES 392).flac",
+            "File:18 - Der stürmische Morgen (BK 2963-1, ER 274).flac",
+            "File:19 - Täuschung (BL 4398-2, ER 275).flac",
+            "File:20 - Der Wegweiser (CL 4402-1, ES 393).flac",
+            "File:21 - Das Wirtshaus (CL 4403-1, ES 393).flac"
+        ]
+    },
+    {
+        id: "commons-classical-satie", title: "사티 — 짐노페디와 그노시엔느", genre: "클래식",
+        color: ["#e2ddcf", "#2d3332", "#8b836c"],
+        performer: "Various pianists", composer: "Erik Satie", playbackGain: 1.1,
+        tags: ["피아노", "사티", "Gymnopédies", "Gnossiennes"],
+        files: [
+            "File:Satie Gymnopedie No 1 performed by Michael Laucke.flac",
+            "File:Satie Gymnopedie No 2 performed by Michael Laucke.flac",
+            "File:Satie Gymnopedie No 3 performed by Michael Laucke.flac",
+            "File:Satie - Gnossienne 1.ogg",
+            "File:Gnossienne 2 (Satie).ogg",
+            "File:Gnossienne 3 (Satie).ogg",
+            "File:Gnossienne 4 (Satie).ogg",
+            "File:Gnossienne 5 (Satie).ogg"
         ]
     }
 ];
@@ -412,15 +485,11 @@ function displayTitle(fileTitle) {
         .trim();
 }
 
-function classicalMoods(record) {
-    const text = `${record.title} ${record.bwv} ${record.composer}`.toLowerCase();
-    if (/녹턴|아다지오|아라베스크|소나티네|무반주|골드베르크|평균율|전주곡|첼로 소품/.test(text)) {
-        return ["조용한", "집중", "우아한"];
-    }
-    if (/교향곡|협주곡|스케르초|왈츠|영웅|부활|한여름|합주/.test(text)) {
-        return ["웅장한", "활기찬", "집중"];
-    }
-    return ["차분한", "집중", "우아한"];
+function fixedCatalogGenre(value) {
+    if (value === "클래식" || value === "성악") return "클래식";
+    if (value === "재즈") return "재즈";
+    if (value === "가요") return "가요";
+    return "기타";
 }
 
 function formatOf(mime, url) {
@@ -470,6 +539,11 @@ const allowedLicense = /^(CC BY(?:-SA)?(?: \d(?:\.\d)?)?|CC0|Public domain)$/i;
 const generated = groups.map((group, groupIndex) => {
     const performer = group.performer || "Kevin MacLeod";
     const composer = group.composer || performer;
+    const genre = fixedCatalogGenre(group.genre);
+    const tags = [...new Set([
+        ...(Array.isArray(group.tags) ? group.tags : []),
+        ...(group.genre !== genre ? [group.genre] : [])
+    ])];
     const tracks = group.files.map((title, trackIndex) => {
         const page = infoByTitle.get(title);
         const info = page?.imageinfo?.[0];
@@ -488,9 +562,6 @@ const generated = groups.map((group, groupIndex) => {
             id: `${group.id}-track-${String(trackIndex + 1).padStart(2, "0")}`,
             t: displayTitle(title),
             f: info.url.slice(markerAt + marker.length),
-            ...(Array.isArray(group.trackGenres?.[title])
-                ? { genres: group.trackGenres[title] }
-                : group.trackGenres?.[title] ? { genre: group.trackGenres[title] } : {}),
             ...(artist !== performer ? { sourceArtist: artist } : {}),
             license,
             commercialUse: true,
@@ -514,9 +585,8 @@ const generated = groups.map((group, groupIndex) => {
         bwv: catalogNo,
         composer,
         performer,
-        genre: group.genre,
-        moods: group.moods,
-        ...(Array.isArray(group.tags) ? { tags: group.tags } : {}),
+        genre,
+        ...(tags.length ? { tags } : {}),
         playbackGain: group.playbackGain || (group.id === "commons-historic-grooves" ? 1.5
             : group.id === "commons-ambient-room" ? 1.15 : 1),
         credit: performer === "Kevin MacLeod"
@@ -545,17 +615,34 @@ const generated = groups.map((group, groupIndex) => {
 const current = JSON.parse(await fs.readFile(catalogPath, "utf8"));
 const base = current.filter((record) => record.collection !== collection).map((record, index) => {
     const id = record.id || `classical-${String(index + 1).padStart(3, "0")}`;
+    const {
+        genre: sourceGenre = "클래식", genres: _genres, genreLabel: _genreLabel,
+        mood: _mood, moods: _moods, moodLabels: _moodLabels,
+        ...cleanRecord
+    } = record;
+    const genre = fixedCatalogGenre(sourceGenre);
+    const tags = [...new Set([
+        ...(Array.isArray(record.tags) ? record.tags : []),
+        ...(sourceGenre !== genre ? [sourceGenre] : [])
+    ])];
     return {
-        ...record,
+        ...cleanRecord,
         id,
         artist: record.artist || record.performer,
         catalogNo: record.catalogNo || record.bwv,
-        genre: record.genre || "클래식",
-        moods: Array.isArray(record.moods) && record.moods.length ? record.moods : classicalMoods(record),
-        tracks: record.tracks.map((track, trackIndex) => ({
-            ...track,
-            id: track.id || `${id}-track-${String(trackIndex + 1).padStart(2, "0")}`
-        }))
+        genre,
+        ...(tags.length ? { tags } : {}),
+        tracks: record.tracks.map((track, trackIndex) => {
+            const {
+                genre: _trackGenre, genres: _trackGenres, genreLabel: _trackGenreLabel,
+                mood: _trackMood, moods: _trackMoods, moodLabels: _trackMoodLabels,
+                ...cleanTrack
+            } = track;
+            return {
+                ...cleanTrack,
+                id: track.id || `${id}-track-${String(trackIndex + 1).padStart(2, "0")}`
+            };
+        })
     };
 });
 const next = [...base, ...generated];

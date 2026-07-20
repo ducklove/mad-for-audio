@@ -54,11 +54,17 @@ test.describe("데스크톱", () => {
         const catalog = await page.evaluate(() => ({
             count: window.MFA_RECORDS.length,
             tracks: window.MFA_RECORDS.reduce((sum, record) => sum + record.tracks.length, 0),
-            valid: window.MFA_RECORDS.every((record) =>
-                record.id && record.title && record.artist && record.composer && record.performer &&
-                record.genre && Array.isArray(record.moods) && record.moods.length && record.credit &&
-                Array.isArray(record.tracks) && record.tracks.length > 0 &&
-                record.tracks.every((track) => track.id && track.t && track.f)),
+            valid: window.MFA_RECORDS.every((record) => {
+                const fixedGenres = new Set(["클래식", "재즈", "가요", "기타"]);
+                const forbiddenRecordFields = ["genres", "genreLabel", "mood", "moods", "moodLabels"];
+                const forbiddenTrackFields = ["genre", "genres", "genreLabel", "mood", "moods", "moodLabels"];
+                return record.id && record.title && record.artist && record.composer && record.performer &&
+                    fixedGenres.has(record.genre) && record.credit &&
+                    forbiddenRecordFields.every((field) => !Object.prototype.hasOwnProperty.call(record, field)) &&
+                    Array.isArray(record.tracks) && record.tracks.length > 0 &&
+                    record.tracks.every((track) => track.id && track.t && track.f &&
+                        forbiddenTrackFields.every((field) => !Object.prototype.hasOwnProperty.call(track, field)));
+            }),
         }));
         expect(catalog.count).toBeGreaterThanOrEqual(88);
         expect(catalog.tracks).toBeGreaterThanOrEqual(515);
@@ -88,7 +94,7 @@ test.describe("데스크톱", () => {
         }
     });
 
-    test("음반 장르·분위기 검색 → 검색 조건 유지·셔플백 경합 방지·라디오 전환", async ({ page }) => {
+    test("음반 장르 검색 → 검색 조건 유지·셔플백 경합 방지·라디오 전환", async ({ page }) => {
         await page.route("https://upload.wikimedia.org/**", (route) =>
             route.fulfill({
                 body: makeWav(30),
@@ -96,17 +102,27 @@ test.describe("데스크톱", () => {
                 headers: { "Access-Control-Allow-Origin": "*" }
             }));
 
+        await expect(page.locator("#headerCrateBtn")).not.toHaveAttribute("title", /클래식|재즈|가요|기타/);
         await page.click("#headerCrateBtn");
         await expect(page.locator("#crateOverlay")).toBeVisible();
-        await expect(page.locator("#crateGenre option", { hasText: "재즈" })).toHaveCount(1);
-        await expect(page.locator("#crateMood option", { hasText: "카페" })).toHaveCount(1);
+        expect(await page.locator("#crateGenre option").evaluateAll((options) =>
+            options.map((option) => option.value))).toEqual(["", "클래식", "재즈", "가요", "기타"]);
+        await expect(page.locator("#crateMood")).toHaveCount(0);
+        await expect(page.locator("#crateGrid .cj-tag")).toHaveCount(0);
 
         await page.selectOption("#crateGenre", { label: "재즈" });
-        await page.selectOption("#crateMood", { label: "카페" });
 
-        const filteredPool = await page.evaluate(() => filteredCatalogTracks(currentCrateFilters()).length);
-        expect(filteredPool, "재즈·카페 전체 셔플 풀").toBe(24);
-        await expect(page.locator("#crateMixStatus")).toContainText("24곡");
+        const jazzFilter = await page.evaluate(() => {
+            const candidates = filteredCatalogTracks(currentCrateFilters());
+            return {
+                tracks: candidates.length,
+                allJazz: candidates.every((candidate) => candidate.genre === "재즈"),
+            };
+        });
+        const filteredPool = jazzFilter.tracks;
+        expect(filteredPool, "재즈 전체 셔플 풀").toBeGreaterThanOrEqual(40);
+        expect(jazzFilter.allJazz).toBe(true);
+        await expect(page.locator("#crateMixStatus")).toContainText(`${filteredPool}곡`);
 
         // 전체 수치에 결합하지 않고, 검색어가 실제 트랙 검색 텍스트와 일치하는지 검증한다.
         await page.fill("#crateSearch", "Airport Lounge");
@@ -128,9 +144,9 @@ test.describe("데스크톱", () => {
         await expect(page.locator("#crateCount")).toHaveText(
             new RegExp(`^${searchResult.records} / \\d+장 · ${searchResult.tracks}곡$`));
 
-        // 활성 검색어도 믹스 조건의 일부다. 'Jazz'는 현재 재즈·카페 24곡 모두와
+        // 활성 검색어도 믹스 조건의 일부다. '재즈'는 현재 재즈 장르의 모든 곡과
         // 의미상 일치하므로 셔플백 크기를 유지하면서 검색어 복원까지 검증할 수 있다.
-        const activeQuery = "Jazz";
+        const activeQuery = "재즈";
         await page.fill("#crateSearch", activeQuery);
         const activePreview = await page.evaluate(() => {
             const candidates = filteredCatalogTracks(currentCrateFilters());
@@ -147,13 +163,11 @@ test.describe("데스크톱", () => {
         const first = await page.evaluate(() => ({
             key: libraryMix.currentKey,
             genre: catalogTrackMetadata(RECORD, RECORD.tracks[phonoTrack]).genre,
-            moods: [...catalogTrackMetadata(RECORD, RECORD.tracks[phonoTrack]).moods],
             pool: libraryMix.candidates.length,
             unique: new Set(libraryMix.candidates.map((candidate) => candidate.key)).size,
             query: libraryMix.query,
         }));
         expect(first.genre).toBe("재즈");
-        expect(first.moods).toContain("카페");
         expect(first.pool).toBe(filteredPool);
         expect(first.unique).toBe(first.pool);
         expect(first.query).toBe(activeQuery);
@@ -163,7 +177,8 @@ test.describe("데스크톱", () => {
         await expect(page.locator("#crateOverlay")).toBeVisible();
         await expect(page.locator("#crateSearch")).toHaveValue(activeQuery);
         await expect(page.locator("#crateGenre")).toHaveValue("재즈");
-        await expect(page.locator("#crateMood")).toHaveValue("카페");
+        await expect(page.locator("#crateMood")).toHaveCount(0);
+        await expect(page.locator("#crateGrid .cj-tag")).toHaveCount(0);
         await expect(page.locator("#crateCount")).toHaveText(
             new RegExp(`^${activePreview.records} / \\d+장 · ${first.pool}곡$`));
         const reopened = await page.evaluate(() => ({
@@ -171,11 +186,23 @@ test.describe("데스크톱", () => {
             filtered: filteredCatalogTracks(currentCrateFilters()).length,
             chipHidden: document.getElementById("libraryMixChip").hidden,
             chipText: document.getElementById("libraryMixChip").textContent,
+            jacket: (() => {
+                const button = document.querySelector("#crateGrid .crate-jacket");
+                const firstRecordIndex = filteredCatalogTracks(currentCrateFilters())[0].recordIndex;
+                const record = RECORDS[firstRecordIndex];
+                return {
+                    ariaLabel: button && button.getAttribute("aria-label"),
+                    expectedAriaLabel: [record.title, record.artist || record.performer].filter(Boolean).join(" · "),
+                    hasTitleTooltip: !!button && button.hasAttribute("title"),
+                };
+            })(),
         }));
         expect(reopened.query).toBe(first.query);
         expect(reopened.filtered).toBe(first.pool);
         expect(reopened.chipHidden).toBe(false);
-        expect(reopened.chipText).toMatch(/재즈.*카페/);
+        expect(reopened.chipText).toMatch(/재즈/);
+        expect(reopened.jacket.ariaLabel).toBe(reopened.jacket.expectedAriaLabel);
+        expect(reopened.jacket.hasTitleTooltip).toBe(false);
         await page.keyboard.press("Escape");
 
         await page.evaluate(() => audio.dispatchEvent(new Event("ended")));
@@ -269,42 +296,48 @@ test.describe("데스크톱", () => {
         expect(count).toBe(expected);
     });
 
-    test("유닛 전원 문법: 첫 설치는 꺼진 랙 → 튜너 POWER 한 번에 93.1, 앰프는 독립 게이트", async ({ page }) => {
-        // 진짜 첫 설치 상태 — 픽스처 init 스크립트는 키가 있으면 건드리지 않으므로
-        // 삭제가 아니라 '전부 꺼짐'을 명시해 재시드를 막는다
-        await page.evaluate(() => {
-            localStorage.setItem("fmRadio.unitPower", JSON.stringify({ tuner: false, amp: false, deck: false }));
-            ["fmRadio.lastStation", "fmRadio.coachDone"].forEach((k) => localStorage.removeItem(k));
-        });
-        await page.reload();
-        await waitForMainApp(page);
-
-        // 첫 설치: 전 유닛 소등 (스테이지 dim 필터)
+    test("유닛 전원 문법: 기동은 전체 통전, 앰프는 명시 조작 전용(자동 점화 금지)", async ({ page }) => {
+        // 기동 = 파워스트립 문법: 항상 전체 통전으로 시작한다 (전원 상태는 세션 한정)
         expect(await page.evaluate(() => JSON.parse(JSON.stringify(unitPower))))
-            .toEqual({ tuner: false, amp: false, deck: false });
-        expect(await page.evaluate(() => document.querySelector("#tunerStage svg").style.filter)).toContain("brightness");
+            .toEqual({ tuner: true, amp: true, deck: true });
+        expect(await page.evaluate(() => document.querySelector("#ampStage svg").style.filter)).toBe("");
 
-        // 튜너 POWER 한 번 → 기본 93.1 KBS 1FM 선국, 앰프는 여전히 OFF (독립)
-        await page.click("#tsPowerHit");
-        await expect.poll(() => page.evaluate(() => currentStation && currentStation.id)).toBe("kbs1fm");
-        expect(await page.evaluate(() => ({ t: unitPower.tuner, a: unitPower.amp })))
-            .toEqual({ t: true, a: false });
+        // 앰프 OFF → 스테이지 소등. 어떤 소스 조작도 앰프를 되켜지 않는다:
+        await page.evaluate(() => ampPowerToggle());
+        expect(await page.evaluate(() => document.querySelector("#ampStage svg").style.filter)).toContain("brightness");
+
+        // ① 채널 목록 클릭(리모컨 경로) — 재생은 시작돼도 앰프는 OFF 유지
+        await page.click("#tsRfHit");
+        await page.locator("#kbsList .station").first().click();
+        await page.waitForFunction(() => !document.getElementById("audioPlayer").paused, null, { timeout: 15000 });
+        expect(await page.evaluate(() => unitPower.amp)).toBe(false);
+
+        // ② 턴테이블 전원 ON→OFF(대기 방송 재연결 포함) — 앰프 OFF 유지 (비일관 회귀 가드)
+        await page.evaluate(() => phonoPower());   // ON — 음반 재생
+        await expect.poll(() => page.evaluate(() => phonoActive)).toBe(true);
+        await page.evaluate(() => phonoPower());   // OFF — 대기 방송 재연결
+        await expect.poll(() => page.evaluate(() => !phonoActive)).toBe(true);
+        expect(await page.evaluate(() => unitPower.amp)).toBe(false);
+
+        // ③ togglePlay(헤더/미디어세션) — 튜너만 깨우고 앰프는 그대로
+        await page.evaluate(() => { unitPower.tuner = false; paintUnitPower(); });
+        await page.evaluate(() => { if (!isPlaying) togglePlay(); });
+        await expect.poll(() => page.evaluate(() => unitPower.tuner)).toBe(true);
+        expect(await page.evaluate(() => unitPower.amp)).toBe(false);
+
+        // 앰프는 명시적으로만 복귀
+        await page.evaluate(() => ampPowerToggle());
+        expect(await page.evaluate(() => unitPower.amp)).toBe(true);
 
         // 데크 가드: 전원 꺼진 데크는 PLAY를 거부한다
-        await page.evaluate(() => deckPlay());
+        await page.evaluate(() => { unitPower.deck = false; paintUnitPower(); deckPlay(); });
         expect(await page.evaluate(() => playerSubtext.textContent)).toContain("데크 전원이 꺼져");
 
-        // 리모컨 문법: 정지 상태에서 togglePlay → 앰프·튜너 자동 점화
-        await page.evaluate(() => { if (isPlaying) togglePlay(); });
-        await page.evaluate(() => { unitPower.tuner = false; unitPower.amp = false; saveUnitPower(); paintUnitPower(); });
-        await page.evaluate(() => togglePlay());
-        await expect.poll(() => page.evaluate(() => unitPower.amp && unitPower.tuner)).toBe(true);
-
-        // 전원 상태 영속: 리로드 후 복원
+        // 리로드 → 다시 전체 통전 (세션 한정 확인)
+        await page.evaluate(() => { unitPower.amp = false; });
         await page.reload();
         await waitForMainApp(page);
-        expect(await page.evaluate(() => ({ t: unitPower.tuner, a: unitPower.amp })))
-            .toEqual({ t: true, a: true });
+        expect(await page.evaluate(() => unitPower.amp)).toBe(true);
     });
 
     test("최초 방문: 재생 버튼 한 번으로 기본 채널 연결", async ({ page }) => {

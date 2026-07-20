@@ -73,8 +73,8 @@ export function createPlaybackController(options) {
 }
 
 // ----- 음반 카탈로그 검색·연속 재생 코어 -----
-// UI 표현과 재생 엘리먼트에서 분리해, 수납장 검색과 랜덤 연속 재생이 같은
-// 장르·분위기 상속 규칙을 사용하도록 한다.
+// UI 표현과 재생 엘리먼트에서 분리해, 수납장 검색과 랜덤 연속 재생이
+// 같은 장르·검색 규칙을 사용하도록 한다.
 export function normalizeCatalogText(value) {
     return String(value == null ? "" : value)
         .normalize("NFKD")
@@ -83,31 +83,6 @@ export function normalizeCatalogText(value) {
         .toLowerCase()
         .replace(/\s+/g, " ")
         .trim();
-}
-
-function catalogValues(value) {
-    const source = Array.isArray(value) ? value : [value];
-    const seen = new Set();
-    const values = [];
-    source.forEach((item) => {
-        const normalized = normalizeCatalogText(item);
-        if (!normalized || seen.has(normalized)) return;
-        seen.add(normalized);
-        values.push(normalized);
-    });
-    return values;
-}
-
-function ownCatalogTags(item, singular, plural) {
-    if (!item || typeof item !== "object") return [];
-    const pluralValues = catalogValues(item[plural]);
-    if (pluralValues.length) return pluralValues;
-    return catalogValues(item[singular]);
-}
-
-function inheritedCatalogTags(record, track, singular, plural) {
-    const trackValues = ownCatalogTags(track, singular, plural);
-    return trackValues.length ? trackValues : ownCatalogTags(record, singular, plural);
 }
 
 function pushSearchValues(target, value) {
@@ -121,31 +96,23 @@ function pushSearchValues(target, value) {
 export function catalogSearchText(record, track) {
     const rec = record && typeof record === "object" ? record : {};
     const tr = track && typeof track === "object" ? track : {};
-    const genres = inheritedCatalogTags(rec, tr, "genre", "genres");
-    const moods = inheritedCatalogTags(rec, tr, "mood", "moods");
     const values = [];
 
     [
         rec.id, rec.title, rec.artist, rec.composer, rec.performer,
         rec.catalogNo, rec.bwv, rec.description, rec.credit,
         rec.jTitle, rec.jSub1, rec.jSub2, rec.labelTitle, rec.labelArtist,
-        rec.genreLabel, rec.moodLabels, rec.tags,
+        rec.genre, rec.tags,
         tr.id, tr.title, tr.t, tr.artist, tr.composer, tr.performer,
-        tr.sourceArtist, tr.description, tr.genreLabel, tr.moodLabels, tr.tags,
-        genres, moods
+        tr.sourceArtist, tr.description, tr.tags
     ].forEach((value) => pushSearchValues(values, value));
 
     return normalizeCatalogText(values.join(" "));
 }
 
 export function catalogTrackMetadata(record, track) {
-    const genres = inheritedCatalogTags(record, track, "genre", "genres");
-    const moods = inheritedCatalogTags(record, track, "mood", "moods");
     return Object.freeze({
-        genre: genres[0] || "",
-        genres: Object.freeze(genres.slice()),
-        mood: moods[0] || "",
-        moods: Object.freeze(moods.slice()),
+        genre: normalizeCatalogText(record && record.genre),
         searchText: catalogSearchText(record, track)
     });
 }
@@ -160,19 +127,11 @@ export function catalogTrackKey(record, track, recordIndex, trackIndex) {
     return `${recordId}:${trackId}`;
 }
 
-function selectedCatalogTags(value) {
-    return catalogValues(value).filter((tag) => tag !== "all" && tag !== "*");
-}
-
-function matchesAnyTag(actual, selected) {
-    return selected.length === 0 || selected.some((tag) => actual.includes(tag));
-}
-
 export function filterCatalogTracks(records, filters) {
     const source = Array.isArray(records) ? records : [];
     const options = filters || {};
-    const selectedGenres = selectedCatalogTags(options.genres != null ? options.genres : options.genre);
-    const selectedMoods = selectedCatalogTags(options.moods != null ? options.moods : options.mood);
+    const normalizedGenre = normalizeCatalogText(options.genre);
+    const selectedGenre = normalizedGenre === "all" || normalizedGenre === "*" ? "" : normalizedGenre;
     const query = normalizeCatalogText(options.query);
     const candidates = [];
 
@@ -181,9 +140,7 @@ export function filterCatalogTracks(records, filters) {
         record.tracks.forEach((track, trackIndex) => {
             if (!track || typeof track !== "object") return;
             const metadata = catalogTrackMetadata(record, track);
-            // 같은 분류 안에서는 하나라도 일치, 분류 사이는 장르 AND 분위기로 결합한다.
-            if (!matchesAnyTag(metadata.genres, selectedGenres)
-                || !matchesAnyTag(metadata.moods, selectedMoods)
+            if ((selectedGenre && metadata.genre !== selectedGenre)
                 || (query && !metadata.searchText.includes(query))) return;
             candidates.push(Object.freeze({
                 record,
@@ -192,9 +149,6 @@ export function filterCatalogTracks(records, filters) {
                 trackIndex,
                 key: catalogTrackKey(record, track, recordIndex, trackIndex),
                 genre: metadata.genre,
-                genres: metadata.genres,
-                mood: metadata.mood,
-                moods: metadata.moods,
                 searchText: metadata.searchText
             }));
         });

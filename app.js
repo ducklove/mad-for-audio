@@ -2328,11 +2328,7 @@ const FP_PCT = (v) => Math.round(v * 100) + "%";
 function bindAmpFrontPanel() {
     const svg = document.querySelector("#ampStage svg");
     if (!svg) return;
-    const power = (x, y, w, h) => {
-        ampPowerBox = [x, y, w, h];   // 코치마크용 — 모델별 전원 위치
-        return fpButton(svg, x, y, w, h, "앰프 전원", "POWER — 앰프 전원 (스피커 관문)", ampPowerToggle);
-    };
-    ampPowerBox = ampModelId === "e303" ? [210, 590, 70, 34] : null;
+    const power = (x, y, w, h) => fpButton(svg, x, y, w, h, "앰프 전원", "POWER — 앰프 전원 (스피커 관문)", ampPowerToggle);
     const phones = (cx, cy) => fpButton(svg, cx - 22, cy - 22, 44, 44, "헤드폰 단자", "PHONES — 단자는 장식이지만, 실물이라면 여기 꽂았을 겁니다", () =>
         fpNote("PHONES — 헤드폰을 꽂으면 스피커가 죽는 단자입니다. 브라우저에서는 시스템 볼륨이 그 역할을 합니다."));
     if (ampModelId === "mc2105") {
@@ -2464,7 +2460,6 @@ function bindEqFrontPanel() {
 // 앰프 = 스피커 관문(마스터), 튜너 = 수신, 데크 = 트랜스포트. 랙(본체)에서만 적용되고,
 // 목록·헤더·미디어세션·트레이 같은 '리모컨' 경로는 필요한 유닛을 자동 점화한다.
 let ampGatePaused = false;   // WebKit(그래프 없음)에서 앰프 게이트로 잠시 멈춘 상태
-let ampPowerBox = null;      // 현재 앰프 모델의 전원 버튼 좌표 — 코치마크가 쓴다
 
 function paintUnitPower() {
     const dim = (stageId, on) => {
@@ -2550,14 +2545,13 @@ function deckPowerToggle() {
     paintUnitPower();
 }
 
-// 리모컨 문법 — 재생 명령이 오면 실물 리모컨의 파워온-플레이처럼 필요한 유닛을 켠다
+// 리모컨 문법 — 재생 명령은 해당 '소스' 유닛(튜너)만 깨운다.
+// 앰프는 절대 자동 점화하지 않는다: 명시적으로 켜고 끄는 스피커 관문이다.
+// (턴테이블·데크도 각자 물리 스위치 전용 — 소스 조작이 다른 유닛을 켜지 않는다)
 function powerOnForListening() {
-    let changed = false;
-    if (!unitPower.amp) { unitPower.amp = true; changed = true; }
-    if (!phonoActive && deckMode !== "play" && !unitPower.tuner) { unitPower.tuner = true; changed = true; }
-    if (changed) {
+    if (!phonoActive && deckMode !== "play" && !unitPower.tuner) {
+        unitPower.tuner = true;
         saveUnitPower();
-        applyAmpPowerGate();
         paintUnitPower();
     }
 }
@@ -4008,7 +4002,7 @@ document.addEventListener("pointerdown", () => {
 });
 
 // ===== 음반 수납장 (레코드 크레이트) =====
-// 전체 카탈로그를 재킷 그리드로 펼쳐 제목·아티스트·트랙·장르·분위기로 검색한다.
+// 전체 카탈로그를 재킷 그리드로 펼쳐 제목·아티스트·트랙·고정 장르로 검색한다.
 // 같은 필터 계약을 카페용 무한 랜덤 재생도 공유한다.
 function jacketCard(rec, idx) {
     const jc = jacketInk(rec.jacketBg);
@@ -4017,8 +4011,7 @@ function jacketCard(rec, idx) {
     btn.className = "crate-jacket" + (idx === recordIdx ? " is-current" : "");
     btn.style.background = rec.jacketBg;
     btn.setAttribute("role", "listitem");
-    btn.setAttribute("aria-label", [rec.title, rec.artist || rec.performer, rec.genre,
-        ...(Array.isArray(rec.moods) ? rec.moods : [])].filter(Boolean).join(" · "));
+    btn.setAttribute("aria-label", [rec.title, rec.artist || rec.performer].filter(Boolean).join(" · "));
     if (rec.cover) {
         // 턴테이블 큰 재킷과 같은 구성 — 위쪽은 커버 이미지, 글자는 아래 단색 밴드에만 얹는다
         btn.classList.add("has-cover");
@@ -4042,15 +4035,6 @@ function jacketCard(rec, idx) {
         el.textContent = text;
         btn.appendChild(el);
     }
-    const tagWrap = document.createElement("span");
-    tagWrap.className = "cj-tags";
-    [rec.genre, Array.isArray(rec.moods) ? rec.moods[0] : rec.mood].filter(Boolean).forEach((text) => {
-        const tag = document.createElement("span");
-        tag.className = "cj-tag";
-        tag.textContent = text;
-        tagWrap.appendChild(tag);
-    });
-    btn.appendChild(tagWrap);
     const bar = document.createElement("span");
     bar.className = "cj-bar";
     bar.style.background = rec.accent;
@@ -4068,11 +4052,11 @@ function jacketCard(rec, idx) {
 }
 
 const savedLibraryMix = loadJson("fmRadio.libraryMix", {});
+const CATALOG_GENRES = Object.freeze(["클래식", "재즈", "가요", "기타"]);
 const LIBRARY_MIX_STALL_MS = 15000;
 const libraryMix = {
     active: false,
     genre: savedLibraryMix && typeof savedLibraryMix.genre === "string" ? savedLibraryMix.genre : "",
-    mood: savedLibraryMix && typeof savedLibraryMix.mood === "string" ? savedLibraryMix.mood : "",
     query: "",
     candidates: [],
     bag: null,
@@ -4085,27 +4069,6 @@ const libraryMix = {
     watchdogTimer: null,
     lastCurrentTime: 0
 };
-
-function rawCatalogTags(item, singular, plural) {
-    if (!item || typeof item !== "object") return [];
-    const source = Array.isArray(item[plural]) && item[plural].length ? item[plural] : [item[singular]];
-    return source.map((value) => String(value || "").trim()).filter(Boolean);
-}
-
-function catalogFilterValues() {
-    const genres = new Set();
-    const moods = new Set();
-    // 트랙의 명시 태그가 음반 태그를 덮어쓰는 상속 규칙까지 적용한 실제 후보에서만
-    // 옵션을 만든다. 선택해도 결과가 0곡인 유령 장르/분위기를 노출하지 않는다.
-    filterCatalogTracks(RECORDS, {}).forEach((candidate) => {
-        candidate.genres.forEach((value) => genres.add(value));
-        candidate.moods.forEach((value) => moods.add(value));
-    });
-    return {
-        genres: [...genres].sort((a, b) => a.localeCompare(b, "ko")),
-        moods: [...moods].sort((a, b) => a.localeCompare(b, "ko"))
-    };
-}
 
 function fillCatalogSelect(select, allLabel, values, savedValue) {
     select.innerHTML = "";
@@ -4125,13 +4088,12 @@ function fillCatalogSelect(select, allLabel, values, savedValue) {
 function currentCrateFilters() {
     return {
         genre: document.getElementById("crateGenre").value,
-        mood: document.getElementById("crateMood").value,
         query: document.getElementById("crateSearch").value.trim()
     };
 }
 
 function catalogFilterLabel(filters) {
-    const parts = [filters.genre || "모든 장르", filters.mood || "모든 분위기"];
+    const parts = [filters.genre || "모든 장르"];
     if (filters.query) parts.push(`“${filters.query}”`);
     return parts.join(" · ");
 }
@@ -4156,7 +4118,7 @@ function renderCrate(q) {
     });
     empty.hidden = shown > 0;
     document.getElementById("crateCount").textContent =
-        (filters.query || filters.genre || filters.mood)
+        (filters.query || filters.genre)
             ? `${shown} / ${RECORDS.length}장 · ${candidates.length}곡`
             : `${RECORDS.length}장 · ${candidates.length}곡`;
     const mixButton = document.getElementById("crateMixBtn");
@@ -4164,7 +4126,7 @@ function renderCrate(q) {
     if (!libraryMix.active) {
         document.getElementById("crateMixStatus").textContent = candidates.length
             ? `${catalogFilterLabel(filters)} · ${candidates.length}곡을 중복 없이 섞을 수 있습니다.`
-            : "이 조건에 맞는 곡이 없습니다. 장르·분위기·검색어를 바꿔 주세요.";
+            : "이 조건에 맞는 곡이 없습니다. 장르·검색어를 바꿔 주세요.";
     }
 }
 
@@ -4211,7 +4173,7 @@ function updateLibraryMixUi(message) {
             const count = filteredCatalogTracks(filters).length;
             status.textContent = count
                 ? `${catalogFilterLabel(filters)} · ${count}곡을 중복 없이 섞을 수 있습니다.`
-                : "이 조건에 맞는 곡이 없습니다. 장르·분위기·검색어를 바꿔 주세요.";
+                : "이 조건에 맞는 곡이 없습니다. 장르·검색어를 바꿔 주세요.";
         }
     }
 }
@@ -4251,14 +4213,6 @@ function noteLibraryMixProgress() {
         libraryMix.lastCurrentTime = currentTime;
         armLibraryMixWatchdog();
     }
-}
-
-function powerOnForPhono() {
-    if (unitPower.amp) return;
-    unitPower.amp = true;
-    saveUnitPower();
-    applyAmpPowerGate();
-    paintUnitPower();
 }
 
 function stopLibraryMix(options) {
@@ -4325,10 +4279,9 @@ function playLibraryMixNext() {
     libraryMix.generation = playPhonoTrack(candidate.trackIndex, true, true) || 0;
     armLibraryMixWatchdog();
     const meta = catalogTrackMetadata(RECORD, candidate.track);
-    const mood = meta.moods[0] || libraryMix.mood || "랜덤";
-    playerSubtext.textContent = `♾ ${meta.genre || libraryMix.genre || "모든 장르"} · ${mood} · ${RECORD.title}`;
+    playerSubtext.textContent = `♾ ${meta.genre || libraryMix.genre || "모든 장르"} · ${RECORD.title}`;
     updateLibraryMixUi();
-    gtag("event", "library_mix_next", { genre: meta.genre, mood, track: candidate.track.t });
+    gtag("event", "library_mix_next", { genre: meta.genre, track: candidate.track.t });
     return true;
 }
 
@@ -4345,20 +4298,18 @@ function startLibraryMix() {
     }
 
     stopPlay();
-    powerOnForPhono();
     libraryMix.active = true;
     libraryMix.genre = filters.genre;
-    libraryMix.mood = filters.mood;
     libraryMix.query = filters.query;
     libraryMix.candidates = candidates;
     libraryMix.failed.clear();
     libraryMix.bag = createCatalogShuffleBag(candidates);
-    saveJson("fmRadio.libraryMix", { genre: libraryMix.genre, mood: libraryMix.mood });
+    saveJson("fmRadio.libraryMix", { genre: libraryMix.genre });
     updateLibraryMixUi();
     closeCrate();
     playLibraryMixNext();
     gtag("event", "library_mix_start", {
-        genre: libraryMix.genre || "all", mood: libraryMix.mood || "all", tracks: candidates.length
+        genre: libraryMix.genre || "all", tracks: candidates.length
     });
 }
 
@@ -4396,7 +4347,7 @@ function handleLibraryMixFailure(failedKey, failedGeneration) {
 function onCrateFilterChange(message) {
     if (libraryMix.active) stopLibraryMix({ stopAudio: false, silent: true });
     const filters = currentCrateFilters();
-    saveJson("fmRadio.libraryMix", { genre: filters.genre, mood: filters.mood });
+    saveJson("fmRadio.libraryMix", { genre: filters.genre });
     renderCrate(filters.query);
     if (message) {
         const count = filteredCatalogTracks(filters).length;
@@ -4404,16 +4355,12 @@ function onCrateFilterChange(message) {
     }
 }
 
-const catalogValues = catalogFilterValues();
-fillCatalogSelect(document.getElementById("crateGenre"), "모든 장르", catalogValues.genres, libraryMix.genre);
-fillCatalogSelect(document.getElementById("crateMood"), "모든 분위기", catalogValues.moods, libraryMix.mood);
+fillCatalogSelect(document.getElementById("crateGenre"), "모든 장르", CATALOG_GENRES, libraryMix.genre);
 document.getElementById("crateSearch").addEventListener("input", (e) => {
     onCrateFilterChange(libraryMix.active ? "검색 조건이 바뀌어 무한 재생을 멈췄습니다." : "");
 });
 document.getElementById("crateGenre").addEventListener("change", () =>
     onCrateFilterChange("장르 조건을 적용했습니다."));
-document.getElementById("crateMood").addEventListener("change", () =>
-    onCrateFilterChange("분위기 조건을 적용했습니다."));
 document.getElementById("crateMixBtn").addEventListener("click", startLibraryMix);
 document.getElementById("crateOverlay").addEventListener("click", (e) => {
     if (e.target === e.currentTarget) closeCrate();
@@ -5876,7 +5823,7 @@ function mountCoach() {
     const layer = document.createElement("div");
     layer.className = "coach-layer";
     [
-        { key: "power", label: "① 튜너 POWER — 켜면 93.1에 연결" },
+        { key: "power", label: "전원 — 기기별 ON/OFF (앰프는 스피커 관문)" },
         { key: "dial", label: "다이얼을 드래그해 선국" },
         { key: "rec", label: "편성표·예약 녹음" },
         { key: "rf", label: "채널 목록 열기" }
@@ -5898,21 +5845,7 @@ function mountCoach() {
     layer.appendChild(done);
     stage.appendChild(layer);
 
-    // 앰프 전원 힌트 — 실물 동선(튜너 → 앰프)의 두 번째 단계
-    const ampStage = document.getElementById("ampStage");
-    const ampSvg = ampStage && ampStage.querySelector("svg");
-    if (ampSvg && ampPowerBox) {
-        const avb = (ampSvg.getAttribute("viewBox") || "0 0 2000 460").split(/\s+/).map(Number);
-        const alayer = document.createElement("div");
-        alayer.className = "coach-layer";
-        const chip = document.createElement("div");
-        chip.className = "coach-chip";
-        chip.textContent = "② 앰프 POWER — 켜야 소리가 납니다";
-        chip.style.left = ((ampPowerBox[0] + ampPowerBox[2] / 2) / avb[2] * 100).toFixed(1) + "%";
-        chip.style.top = (((ampPowerBox[1] + ampPowerBox[3]) / avb[3] * 100) + 4).toFixed(1) + "%";
-        alayer.appendChild(chip);
-        ampStage.appendChild(alayer);
-    }
+    // 기동은 전체 통전이라 별도의 전원 안내 단계는 없다 — 선국이 곧 첫 동선이다
     svg.addEventListener("pointerdown", dismissCoach, { once: true });
 }
 
@@ -5928,9 +5861,7 @@ function restoreLastStation() {
 
     currentStation = station;
     nowStation.textContent = station.name;
-    playerSubtext.textContent = unitOn("tuner")
-        ? "마지막으로 듣던 채널입니다. 다이얼이나 재생 버튼을 누르면 이어집니다."
-        : "마지막으로 듣던 채널입니다. 튜너 POWER를 켜면 연결합니다.";
+    playerSubtext.textContent = "마지막으로 듣던 채널입니다. 다이얼이나 재생 버튼을 누르면 이어집니다.";
     applyStationTheme(station);
     reapplyStationState();
 }

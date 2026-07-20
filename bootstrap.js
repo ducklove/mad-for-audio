@@ -25,12 +25,15 @@
 
     function validateCatalog(records) {
         if (!Array.isArray(records) || records.length === 0) return false;
+        const allowedGenres = new Set(["클래식", "재즈", "가요", "기타"]);
+        const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
         return records.every((record) =>
             record &&
             typeof record.id === "string" && record.id.length > 0 &&
             typeof record.title === "string" && record.title.length > 0 &&
-            typeof record.genre === "string" && record.genre.length > 0 &&
-            Array.isArray(record.moods) && record.moods.length > 0 &&
+            allowedGenres.has(record.genre) &&
+            !hasOwn(record, "genres") && !hasOwn(record, "genreLabel") &&
+            !hasOwn(record, "mood") && !hasOwn(record, "moods") && !hasOwn(record, "moodLabels") &&
             typeof record.composer === "string" && record.composer.length > 0 &&
             typeof record.performer === "string" && record.performer.length > 0 &&
             typeof record.credit === "string" && record.credit.length > 0 &&
@@ -38,7 +41,9 @@
             record.tracks.every((track) =>
                 track && typeof track.id === "string" && track.id.length > 0 &&
                 typeof track.t === "string" && track.t.length > 0 &&
-                typeof track.f === "string" && track.f.length > 0));
+                typeof track.f === "string" && track.f.length > 0 &&
+                !hasOwn(track, "genre") && !hasOwn(track, "genres") && !hasOwn(track, "genreLabel") &&
+                !hasOwn(track, "mood") && !hasOwn(track, "moods") && !hasOwn(track, "moodLabels")));
     }
 
     function loadApp() {

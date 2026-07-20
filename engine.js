@@ -176,10 +176,12 @@ let eqPowerOn = loadJson("fmRadio.frontPanel", {})["eq.power"] !== false;
 // 앰프 = 마스터(스피커 관문) · 튜너/데크 = 개별 전원. EQ(eqPowerOn)·턴테이블(phonoActive)은
 // 기존 자체 전원을 유지한다. timerOutlet은 DT-540 스위치드 아웃렛 — 예약 녹음이 도는 동안
 // 튜너·데크를 임시 통전한다 (패널의 SWITCHED OUTLETS · TUNER/CASSETTE DECK 각인 그대로).
-let unitPower = Object.assign({ tuner: false, amp: false, deck: false }, loadJson("fmRadio.unitPower", {}));
+// 기동은 항상 전체 통전 — 파워스트립에 물린 실기처럼 켜진 채 시작하고(부팅 마찰 없음),
+// 전원 상태는 세션 한정이다. 특히 앰프는 어떤 경로도 자동 점화하지 않는다(명시 조작 전용).
+let unitPower = { tuner: true, amp: true, deck: true };
 let timerOutlet = false;
 function unitOn(kind) { return !!unitPower[kind] || (timerOutlet && (kind === "tuner" || kind === "deck")); }
-function saveUnitPower() { saveJson("fmRadio.unitPower", unitPower); }
+function saveUnitPower() { /* 세션 한정 — 영속하지 않는다 (기동 = 전체 통전) */ }
 // 녹음 경로 유저 컨트롤 — MPX 필터·BIAS 틸트·REC LEVEL L/R. 예약 녹음(원본 바이트 캡처)은 통과하지 않는다.
 let recMpx = null;
 let recBias = null;

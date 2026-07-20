@@ -22,7 +22,7 @@
 
 .crate-toolbar {
     display: grid;
-    grid-template-columns: minmax(220px, 1fr) auto auto auto;
+    grid-template-columns: minmax(220px, 1fr) auto auto;
     align-items: end;
     gap: 10px;
     margin-bottom: 8px;
@@ -221,28 +221,6 @@
     color: #f0e8d0;
 }
 
-.cj-tags {
-    position: absolute;
-    left: 8px;
-    bottom: 25px;
-    display: flex;
-    max-width: calc(100% - 16px);
-    gap: 4px;
-    pointer-events: none;
-}
-
-.cj-tag {
-    padding: 2px 6px;
-    border-radius: 999px;
-    background: rgba(12, 10, 9, 0.68);
-    color: #f3e9dc;
-    font-size: 0.52rem;
-    font-style: normal;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
 .library-mix-chip {
     display: inline-flex;
     align-items: center;
@@ -317,6 +295,7 @@
     }
 
     .crate-search,
+    .crate-filter-label,
     .crate-mix-btn {
         grid-column: 1 / -1;
     }

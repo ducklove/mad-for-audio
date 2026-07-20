@@ -16,6 +16,8 @@ const qualityNumberFields = [
 const errors = [];
 const recordIds = new Set();
 const trackIds = new Set();
+const allowedGenres = new Set(["클래식", "재즈", "가요", "기타"]);
+const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
 
 if (!Array.isArray(records) || records.length === 0) {
     errors.push("catalog must be a non-empty array");
@@ -30,9 +32,11 @@ for (const [recordIndex, record] of records.entries()) {
     }
     if (recordIds.has(record.id)) errors.push(`${at}.id must be unique (${record.id})`);
     recordIds.add(record.id);
-    if (!Array.isArray(record.moods) || record.moods.length === 0
-        || record.moods.some((mood) => typeof mood !== "string" || mood.trim() === "")) {
-        errors.push(`${at}.moods must be a non-empty string array`);
+    if (!allowedGenres.has(record.genre)) {
+        errors.push(`${at}.genre must be one of ${[...allowedGenres].join(", ")}`);
+    }
+    for (const field of ["genres", "genreLabel", "mood", "moods", "moodLabels"]) {
+        if (hasOwn(record, field)) errors.push(`${at}.${field} is not allowed in the simplified catalog`);
     }
     for (const field of colorFields) {
         if (typeof record[field] === "string" && !/^#[0-9a-f]{6}$/i.test(record[field])) {
@@ -78,6 +82,9 @@ for (const [recordIndex, record] of records.entries()) {
         }
         if (!track || typeof track.f !== "string" || track.f.trim() === "" || /^https?:\/\//i.test(track.f)) {
             errors.push(`${trackAt}.f must be a relative Wikimedia Commons path`);
+        }
+        for (const field of ["genre", "genres", "genreLabel", "mood", "moods", "moodLabels"]) {
+            if (track && hasOwn(track, field)) errors.push(`${trackAt}.${field} must inherit from its record`);
         }
         if (track.performer != null && (typeof track.performer !== "string" || track.performer.trim() === "")) {
             errors.push(`${trackAt}.performer must be a non-empty string when present`);
