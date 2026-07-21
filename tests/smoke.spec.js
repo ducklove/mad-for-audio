@@ -66,8 +66,8 @@ test.describe("데스크톱", () => {
                         forbiddenTrackFields.every((field) => !Object.prototype.hasOwnProperty.call(track, field)));
             }),
         }));
-        expect(catalog.count).toBeGreaterThanOrEqual(88);
-        expect(catalog.tracks).toBeGreaterThanOrEqual(515);
+        expect(catalog.count).toBeGreaterThanOrEqual(85);
+        expect(catalog.tracks).toBeGreaterThanOrEqual(491);
         expect(catalog.valid).toBe(true);
     });
 
@@ -106,7 +106,7 @@ test.describe("데스크톱", () => {
         await page.click("#headerCrateBtn");
         await expect(page.locator("#crateOverlay")).toBeVisible();
         expect(await page.locator("#crateGenre option").evaluateAll((options) =>
-            options.map((option) => option.value))).toEqual(["", "클래식", "재즈", "가요", "기타"]);
+            options.map((option) => option.value))).toEqual(["", "클래식", "재즈"]);
         await expect(page.locator("#crateMood")).toHaveCount(0);
         await expect(page.locator("#crateGrid .cj-tag")).toHaveCount(0);
 

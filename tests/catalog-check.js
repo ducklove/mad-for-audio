@@ -92,8 +92,13 @@ for (const [recordIndex, record] of records.entries()) {
         if (track.recordingYear != null && (!Number.isInteger(track.recordingYear) || track.recordingYear < 1877)) {
             errors.push(`${trackAt}.recordingYear must be an integer no earlier than 1877`);
         }
-        if (track.sourcePage != null && !/^https:\/\/commons\.wikimedia\.org\/wiki\/File:/i.test(track.sourcePage)) {
-            errors.push(`${trackAt}.sourcePage must be a Wikimedia Commons file page`);
+        if (track.host != null && track.host !== "commons" && track.host !== "archive") {
+            errors.push(`${trackAt}.host must be "commons" or "archive" when present`);
+        }
+        if (track.sourcePage != null
+            && !/^https:\/\/commons\.wikimedia\.org\/wiki\/File:/i.test(track.sourcePage)
+            && !/^https:\/\/archive\.org\/details\//i.test(track.sourcePage)) {
+            errors.push(`${trackAt}.sourcePage must be a Wikimedia Commons file page or Internet Archive details page`);
         }
         if (track.quality != null) {
             if (typeof track.quality !== "object" || Array.isArray(track.quality)) {

@@ -2688,6 +2688,11 @@ function renderAmpPicker() {
 
 // ----- 턴테이블 — 실물 고유 구동계와 조작계 재현 -----
 const PHONO_BASE = "https://upload.wikimedia.org/wikipedia/commons/";
+// 두 번째 음원 소스 — Internet Archive(Great 78 등)도 upload.wikimedia.org처럼
+// Access-Control-Allow-Origin:* 을 리다이렉트·최종 응답 양쪽에서 보내므로
+// crossorigin 오디오와 Web Audio 체인(EQ·앰프·크랙클)을 그대로 통과한다.
+// 트랙이 host:"archive"면 f는 "{identifier}/{URL인코딩된 파일명}" 상대 경로다.
+const ARCHIVE_BASE = "https://archive.org/download/";
 // 기존 클래식 녹음은 방송 스트림보다 레벨이 낮아 포노 재생 시 체인 게인을 보정한다.
 // 현대 장르 음원은 records.json의 playbackGain으로 별도 정규화해 2배 증폭 클리핑을 피한다.
 const PHONO_GAIN = 2.0;
@@ -3014,7 +3019,11 @@ document.addEventListener("keydown", (e) => {
 // 엔진으로 판단한다 — 크롬/파이어폭스 계열만 Vorbis를 정말 재생한다.
 const CAN_OGG = !SAFARI_LIKE;
 
-function phonoSrc(f) {
+function phonoSrc(track) {
+    // 문자열(과거 호출부)과 트랙 객체 양쪽을 받는다 — 객체면 host로 소스를 고른다.
+    const f = typeof track === "string" ? track : (track && track.f) || "";
+    const host = track && typeof track === "object" ? track.host : "commons";
+    if (host === "archive") return ARCHIVE_BASE + f;  // archive는 mp3라 WebKit도 그대로 재생
     if (CAN_OGG || !/\.(ogg|oga)$/i.test(f)) return PHONO_BASE + f;
     const name = f.split("/").pop();
     return PHONO_BASE + "transcoded/" + f + "/" + name + ".mp3";
@@ -3364,7 +3373,7 @@ function playPhonoTrack(i, auto, fromLibraryMix) {
     document.querySelectorAll(".station").forEach((el) => el.classList.remove("active", "playing", "loading"));
     streamLoaded = true;
     try { audio.preservesPitch = false; audio.webkitPreservesPitch = false; } catch (e) {}
-    const src = phonoSrc(RECORD.tracks[i].f);
+    const src = phonoSrc(RECORD.tracks[i]);
     const playbackToken = PlaybackController.begin("phono", RECORD.tracks[i].t);
     setAudioState("resolving", "PHONO");
     audio.src = src;
@@ -4053,7 +4062,7 @@ function jacketCard(rec, idx) {
 }
 
 const savedLibraryMix = loadJson("fmRadio.libraryMix", {});
-const CATALOG_GENRES = Object.freeze(["클래식", "재즈", "가요", "기타"]);
+const CATALOG_GENRES = Object.freeze(["클래식", "재즈"]);
 const LIBRARY_MIX_STALL_MS = 15000;
 const libraryMix = {
     active: false,
