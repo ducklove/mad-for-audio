@@ -133,6 +133,10 @@ cd tests && npm run catalog
 **Windows 배포본**: [Releases에서 포터블 exe 내려받기](https://github.com/ducklove/mad-for-audio/releases/latest)
 — 설치 없이 실행하면 트레이에 상주한다 (서명이 없어 SmartScreen 경고가 뜨면 '추가 정보 → 실행').
 
+**macOS 배포본 (Apple Silicon)**: [Releases에서 zip 내려받기](https://github.com/ducklove/mad-for-audio/releases/latest)
+— 압축을 풀고 `Mad for Audio.app`을 응용 프로그램 폴더로 옮겨 실행하면 메뉴바에 상주한다
+(서명이 없어 처음 열 때 차단되면 시스템 설정 → 개인정보 보호 및 보안 → '확인 없이 열기').
+
 시스템 트레이(Windows)·메뉴바(macOS)에 상주하며 라디오를 재생하는 Electron 앱.
 크로미엄 엔진이라 **EQ·진공관 앰프 음색과 파워미터·스펙트럼 계기가 데스크톱에서 완전 동작**한다.
 하나의 창 안에서
