@@ -140,8 +140,13 @@ let blendFilter = null;
 let voiceLow = null;
 let voiceHigh = null;
 let monoGain = null;
-// 하이파이 랙 체인: EQ → 전압증폭관 → 톤 → 출력관 → 전원 새그 → 출력트랜스/스피커 부하
+// 하이파이 랙 체인: EQ → 안전 리미터 → 전압증폭관 → 톤 → 출력관 → 전원 새그 → 출력트랜스/스피커 부하
 let eqNodes = null;
+// 안전 리미터 — ampShaper(WaveShaper)의 커브는 [-1,1]에만 정의돼 있어 그보다 큰 입력은
+// 통째로 납작하게 잘린다(하드 클리핑). 음반별 playbackGain은 피크 0.75를 목표로 실측
+// 보정돼 있지만, EQ 부스트·같은 음반 내 더 큰 트랙·프런트패널 트림이 겹치면 1.0을 넘길 수
+// 있다. 파형기 바로 앞에서 그 초과분만 부드럽게 눌러 준다(평상시에는 스레숄드 아래라 무개입).
+let phonoLimiter = null;
 let ampDrive = null;
 let ampShaper = null;
 let ampBass = null;
@@ -291,6 +296,7 @@ function buildEqChain() {
     if (!audioCtx || !monoGain || !ampDrive) return;
     try { monoGain.disconnect(); } catch (e) {}
     if (eqNodes) eqNodes.forEach((n) => { try { n.disconnect(); } catch (e) {} });
+    if (phonoLimiter) { try { phonoLimiter.disconnect(); } catch (e) {} }
     if (crackleGain) { try { crackleGain.disconnect(); } catch (e) {} }
     if (scratchGain) { try { scratchGain.disconnect(); } catch (e) {} }
     if (hissGain) { try { hissGain.disconnect(); } catch (e) {} }
@@ -305,7 +311,9 @@ function buildEqChain() {
     let head = monoGain;
     eqNodes.forEach((b) => { head = head.connect(b); });
     eqBufferShaper = null;
-    head.connect(ampDrive);
+    // 리미터는 EQ 뒤·파형기 앞 — EQ 부스트까지 받은 뒤의 실제 레벨을 보고 눌러야 한다.
+    if (phonoLimiter) head.connect(phonoLimiter).connect(ampDrive);
+    else head.connect(ampDrive);
     if (crackleGain) crackleGain.connect(eqNodes[0]);
     if (scratchGain) scratchGain.connect(eqNodes[0]);
     if (hissGain) hissGain.connect(eqNodes[0]);
@@ -755,6 +763,13 @@ function ensureAudioGraph() {
         ampSpeakerFeedback = audioCtx.createGain();
         ampSpeakerWet = audioCtx.createGain();
         ampOut = audioCtx.createGain();
+        // 스레숄드 -1dB — 보정된 음반 피크(0.75 ≈ -2.5dB)는 건드리지 않고 그 위만 잡는다.
+        phonoLimiter = audioCtx.createDynamicsCompressor();
+        phonoLimiter.threshold.value = -1;
+        phonoLimiter.knee.value = 3;
+        phonoLimiter.ratio.value = 20;
+        phonoLimiter.attack.value = .003;
+        phonoLimiter.release.value = .12;
         voiceLow = audioCtx.createBiquadFilter();
         voiceLow.type = "lowshelf";
         voiceLow.frequency.value = 130;
@@ -895,6 +910,7 @@ function ensureAudioGraph() {
         ampSpeakerFeedback = null;
         ampSpeakerWet = null;
         ampOut = null;
+        phonoLimiter = null;
         voiceLow = null;
         voiceHigh = null;
         fp = null;
