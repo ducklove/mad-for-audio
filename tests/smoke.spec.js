@@ -1769,15 +1769,21 @@ test.describe("데스크톱", () => {
     });
 
     test("테이프 보관함: 라벨 개명 영속·트랙 점프 재생·삭제 연동", async ({ page }) => {
-        // 짧은 예약 녹음으로 수록곡 있는 테이프를 만든다
+        // 짧은 예약 녹음으로 수록곡 있는 테이프를 만든다. 창을 넉넉히 — 스로틀된
+        // WebKit CI에서 튠→첫 청크→REC가 늦어지면 짧은 창은 회차가 미시작으로
+        // 만료되어 recorder가 영영 안 선다. 타이머 테스트와 같은 패턴으로
+        // 실제 종료는 시작 확인 후 endTs를 당겨 만든다.
         await page.evaluate(() => {
             const st = window.FMRadio.stations[0];
             fireReservation({ id: 989, stationId: st.id, title: "보관함 테스트", repeat: "once", enabled: true },
-                { ymd: "tc", startTs: Date.now(), endTs: Date.now() + 6000 }, "989:tc");
+                { ymd: "tc", startTs: Date.now(), endTs: Date.now() + 45000 }, "989:tc");
         });
-        await page.waitForFunction(() => !!recorder, null, { timeout: 15000 });
-        await page.waitForFunction(() => !recorder && !activeResRec, null, { timeout: 20000 });
-        await page.waitForFunction(() => tapes.some((t) => t.segments.length), null, { timeout: 10000 });
+        // 대기 22초 = 재튠 한 번까지 흡수. rAF 폴링은 미디어 처리 중 멈출 수 있어 interval로 재평가
+        await page.waitForFunction(() => !!recorder, null, { timeout: 22000, polling: 120 });
+        // 시작이 확인됐다 — 종료 시각을 당겨 마감한다 (캡처 시드가 실데이터를 채운다)
+        await page.evaluate(() => { activeResRec.endTs = Date.now() + 2000; });
+        await page.waitForFunction(() => !recorder && !activeResRec, null, { timeout: 20000, polling: 120 });
+        await page.waitForFunction(() => tapes.some((t) => t.segments.length), null, { timeout: 10000, polling: 120 });
         await page.evaluate(() => openTapeCase());
         await expect(page.locator("#tapeCaseOverlay")).toBeVisible();
         // 케이스 메타에 생성일시 표기 (예: "7/17 01:23 생성")
@@ -1795,7 +1801,7 @@ test.describe("데스크톱", () => {
             "개명 라벨이 메타에 영속").toBe(true);
         // J-카드 트랙 점프 재생 — 케이스가 닫히고 그 위치부터 재생된다
         await page.locator(".tapecase-item", { hasText: "명반 모음" }).locator(".tapecase-track").first().click();
-        await page.waitForFunction(() => deckMode === "play", null, { timeout: 8000 });
+        await page.waitForFunction(() => deckMode === "play", null, { timeout: 8000, polling: 120 });
         await expect(page.locator("#tapeCaseOverlay")).toBeHidden();
         await page.evaluate(() => deckStopTransport());
         // 삭제(2단계 확인 — confirm은 WKWebView에서 무시된다) → 테이프·녹음 파일 목록 함께 정리
@@ -1805,7 +1811,7 @@ test.describe("데스크톱", () => {
         await expect(delBtn, "1차: 확인 대기").toHaveText("정말 삭제?");
         expect(await page.evaluate(() => tapes.some((t) => t.label === "명반 모음")), "1차에는 안 지워짐").toBe(true);
         await delBtn.click();
-        await page.waitForFunction(() => !tapes.some((t) => t.label === "명반 모음"), null, { timeout: 10000 });
+        await page.waitForFunction(() => !tapes.some((t) => t.label === "명반 모음"), null, { timeout: 10000, polling: 120 });
         expect(await page.evaluate(() => tapes.some((t) => t.label === "명반 모음")), "테이프 제거").toBe(false);
         await expect(page.locator("#recordingList .recording"), "녹음 목록 정리").toHaveCount(0);
     });
