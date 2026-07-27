@@ -131,9 +131,10 @@ cd tests && npm run catalog
 ## 트레이·메뉴바 앱 (Electron · Windows/macOS)
 
 **Windows 배포본**: [Releases에서 포터블 exe 내려받기](https://github.com/ducklove/mad-for-audio/releases/latest)
-— 설치 없이 실행하면 트레이에 상주한다 (서명이 없어 SmartScreen 경고가 뜨면 '추가 정보 → 실행').
+— 설치 없이 실행하면 기본 튜너 창을 바로 열고 트레이에 상주한다
+(서명이 없어 SmartScreen 경고가 뜨면 '추가 정보 → 실행').
 
-**macOS 배포본 (Apple Silicon)**: [Releases에서 zip 내려받기](https://github.com/ducklove/mad-for-audio/releases/latest)
+**macOS 배포본 (Apple Silicon)**: [1.0.0 zip 내려받기](https://github.com/ducklove/mad-for-audio/releases/download/tray-v1.0.0/MadForAudio-tray-1.0.0-mac-arm64.zip)
 — 압축을 풀고 `Mad for Audio.app`을 응용 프로그램 폴더로 옮겨 실행하면 메뉴바에 상주한다
 (서명이 없어 처음 열 때 차단되면 시스템 설정 → 개인정보 보호 및 보안 → '확인 없이 열기').
 

@@ -16,6 +16,7 @@ const DEBUG = !!process.env.MFA_TRAY_DEBUG;
 // macOS에서는 트레이 대신 메뉴바 상주로 동작한다 — 독 숨김, 📻 메뉴바 아이템과
 // 나우플레잉 텍스트 스트립(네이티브 macos/ 앱과 같은 문법), 슬림 바 대신 패널 유지.
 const IS_MAC = process.platform === "darwin";
+const IS_WINDOWS = process.platform === "win32";
 
 // 보기별 창 크기 (슬림 바는 곡명 + 재생/정지만)
 // 전체 화면은 랙 페이지의 '⛶ 전체 화면' 버튼(HTML 풀스크린)으로만 진입한다
@@ -648,6 +649,9 @@ if (!gotLock) {
         }
         createWindow();
         createTray();
+        // Windows는 실행 성공을 바로 알 수 있도록 기본 튜너 창을 먼저 보여 준다.
+        // 이후에는 기존처럼 트레이 좌클릭·포커스 아웃으로 표시 상태를 제어한다.
+        if (IS_WINDOWS) showFull();
     });
 }
 

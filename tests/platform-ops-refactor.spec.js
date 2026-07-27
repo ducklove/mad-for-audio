@@ -56,6 +56,17 @@ test.describe("플랫폼 운영 리팩토링", () => {
         expect(main).toContain('if (!IS_MAC) tray.setContextMenu(buildMenu())');
     });
 
+    test("Windows 트레이 앱은 첫 실행에서 기본 튜너 창을 표시한다", () => {
+        const main = read("tray/main.js");
+        const startup = main.slice(main.indexOf("app.whenReady().then"));
+
+        expect(main).toContain('const IS_WINDOWS = process.platform === "win32"');
+        expect(startup).toContain("createWindow();");
+        expect(startup).toContain("createTray();");
+        expect(startup).toContain("if (IS_WINDOWS) showFull();");
+        expect(startup.indexOf("createTray();")).toBeLessThan(startup.indexOf("if (IS_WINDOWS) showFull();"));
+    });
+
     test("트레이 셸은 현재 iframe의 source·origin·generation·nonce만 IPC로 전달한다", async ({ page }) => {
         await page.addInitScript(() => {
             window.__trayEvents = { states: [], views: [] };

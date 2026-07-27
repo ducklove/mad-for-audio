@@ -1,6 +1,6 @@
 {
   "name": "mad-for-audio-tray",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Mad for Audio — 시스템 트레이(Windows)·메뉴바(macOS) 라디오 플레이어",
   "main": "main.js",
   "private": true,
