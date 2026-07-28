@@ -4,7 +4,7 @@
  * 네트워크로 그대로 통과시킨다 — 오디오 range 요청과 실시간성을 깨지 않기 위함.
  */
 const CACHE_PREFIX = "fm-radio-";
-const CACHE = "fm-radio-v153";
+const CACHE = "fm-radio-v154";
 // 일반 URL과 분리한 합성 키를 사용한다. manual.html 같은 다른 내비게이션 응답이
 // 오프라인 앱 셸을 덮어쓰지 못하게 하기 위함이다.
 const NAVIGATION_CACHE_KEY = new URL("__mfa_navigation_shell__", self.registration.scope).href;
@@ -17,27 +17,27 @@ const CORE = [
     "widget.html",
     "turntable.html",
     "embed.html",
-    "styles.css?v=153",
-    "styles-foundation.css?v=153",
-    "styles-library.css?v=153",
-    "styles-schedule.css?v=153",
-    "styles-tape.css?v=153",
-    "stations.js?v=153",
-    "player-core.js?v=153",
-    "app-runtime-core.js?v=153",
-    "native-hls-capture.js?v=153",
-    "store.js?v=153",
-    "schedule.js?v=153",
-    "model-registry.js?v=153",
-    "skins.js?v=153",
-    "component-skins.js?v=153",
-    "engine.js?v=153",
-    "animation-scheduler.js?v=153",
-    "deck.js?v=153",
-    "ui-controls.js?v=153",
-    "records.json?v=153",
-    "bootstrap.js?v=153",
-    "app.js?v=153",
+    "styles.css?v=154",
+    "styles-foundation.css?v=154",
+    "styles-library.css?v=154",
+    "styles-schedule.css?v=154",
+    "styles-tape.css?v=154",
+    "stations.js?v=154",
+    "player-core.js?v=154",
+    "app-runtime-core.js?v=154",
+    "native-hls-capture.js?v=154",
+    "store.js?v=154",
+    "schedule.js?v=154",
+    "model-registry.js?v=154",
+    "skins.js?v=154",
+    "component-skins.js?v=154",
+    "engine.js?v=154",
+    "animation-scheduler.js?v=154",
+    "deck.js?v=154",
+    "ui-controls.js?v=154",
+    "records.json?v=154",
+    "bootstrap.js?v=154",
+    "app.js?v=154",
     "manifest.webmanifest",
     "icons/icon.svg",
     "icons/icon-192.png",
@@ -56,7 +56,7 @@ const CDN = [
 // 특정 셸에서만 쓰는 자산은 설치 실패를 유발하지 않게 best-effort로 캐싱한다.
 // 트레이 iframe이 오프라인으로 열릴 때는 캐시가 있으면 그대로 사용할 수 있다.
 const OPTIONAL = [
-    "tray-bridge.js?v=153"
+    "tray-bridge.js?v=154"
 ];
 
 const CORE_PATHS = new Set(CORE.map((asset) => new URL(asset, self.registration.scope).pathname));
