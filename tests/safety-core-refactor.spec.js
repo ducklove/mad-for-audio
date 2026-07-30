@@ -61,12 +61,11 @@ test.describe("안전성 코어 경계", () => {
             hls.emit("error", { fatal: true, type: "network", details: "outage-a" });
             timers.shift()();
             hls.emit("frag-buffered", {}); // 연속 장애가 끝났으므로 예산 충전
-            hls.emit("error", { fatal: true, type: "network", details: "outage-b" });
-            timers.shift()();
-            hls.emit("error", { fatal: true, type: "network", details: "outage-b2" });
-            timers.shift()();
-            hls.emit("error", { fatal: true, type: "network", details: "outage-b3" });
-            timers.shift()();
+            // 예산은 1·2·4·8·16·30초 백오프의 6회 — 회선 순단·절전 복귀를 넘기기 위한 길이다
+            for (let i = 0; i < 6; i++) {
+                hls.emit("error", { fatal: true, type: "network", details: "outage-b" + i });
+                if (timers.length) timers.shift()();
+            }
             hls.emit("error", { fatal: true, type: "network", details: "exhausted" });
 
             window.setTimeout = nativeSetTimeout;
@@ -75,9 +74,133 @@ test.describe("안전성 코어 경계", () => {
             second.destroy();
             return { retries, fatals: fatals.map((x) => x.details), starts: hls.starts || 0 };
         });
-        expect(result.retries).toEqual([1, 1, 1, 2, 3]);
+        expect(result.retries).toEqual([1, 1, 1, 2, 3, 4, 5, 6]);
         expect(result.fatals).toEqual(["exhausted"]);
-        expect(result.starts).toBe(4);
+        expect(result.starts).toBe(7);
+    });
+
+    test("재접속은 만료된 서명 주소 대신 새 주소를 받아 다시 붙는다", async ({ context, page }) => {
+        await loadApp(context, page);
+        const result = await page.evaluate(async () => {
+            const nativeSetTimeout = window.setTimeout;
+            const nativeClearTimeout = window.clearTimeout;
+            const timers = [];
+            window.setTimeout = (fn) => { timers.push(fn); return timers.length; };
+            window.clearTimeout = () => {};
+
+            class FakeHls {
+                static Events = { MANIFEST_PARSED: "manifest", FRAG_BUFFERED: "frag-buffered", ERROR: "error" };
+                static ErrorTypes = { NETWORK_ERROR: "network", MEDIA_ERROR: "media" };
+                static isSupported() { return true; }
+                constructor() { this.handlers = new Map(); this.sources = []; FakeHls.instances.push(this); }
+                on(name, fn) { this.handlers.set(name, fn); }
+                emit(name, data) { const fn = this.handlers.get(name); if (fn) fn(name, data); }
+                loadSource(url) { this.sources.push(url); }
+                attachMedia() {}
+                startLoad() { this.starts = (this.starts || 0) + 1; }
+                recoverMediaError() {}
+                destroy() { this.destroyed = true; }
+            }
+            FakeHls.instances = [];
+            const originalHls = window.Hls;
+            window.Hls = FakeHls;
+            const audio = new EventTarget();
+            audio.play = () => Promise.resolve();
+            audio.canPlayType = () => "";
+            audio.error = null;
+
+            let issued = 0;
+            const reconnects = [];
+            const handle = PlayerCore.attach(audio, "https://test/live.m3u8?token=expired", {
+                resolveUrl: () => Promise.resolve("https://test/live.m3u8?token=fresh" + (++issued)),
+                onReconnect: (info) => reconnects.push(info),
+                stallMs: 0
+            });
+            const hls = FakeHls.instances[0];
+            // 토큰 만료로 플레이리스트 갱신이 막힌 상황
+            hls.emit("error", { fatal: true, type: "network", details: "levelLoadError" });
+            timers.shift()();
+            await new Promise((resolve) => nativeSetTimeout(resolve, 0));
+
+            const snapshot = { sources: hls.sources.slice(), starts: hls.starts || 0, reconnects: reconnects.slice() };
+            window.setTimeout = nativeSetTimeout;
+            window.clearTimeout = nativeClearTimeout;
+            handle.destroy();
+            window.Hls = originalHls;
+            return snapshot;
+        });
+        // 최초 주소 + 재접속 때 새로 받은 주소. 만료된 주소로 startLoad만 반복하지 않는다.
+        expect(result.sources).toEqual([
+            "https://test/live.m3u8?token=expired",
+            "https://test/live.m3u8?token=fresh1"
+        ]);
+        expect(result.starts).toBe(0);
+        expect(result.reconnects).toHaveLength(1);
+        expect(result.reconnects[0].renewed).toBe(true);
+        expect(result.reconnects[0].reason).toBe("network");
+    });
+
+    test("오류 없이 멈춘 스트림은 정지 감시가 재접속을 건다", async ({ context, page }) => {
+        await loadApp(context, page);
+        const result = await page.evaluate(async () => {
+            const nativeSetTimeout = window.setTimeout;
+            const nativeClearTimeout = window.clearTimeout;
+            const nativeSetInterval = window.setInterval;
+            const nativeClearInterval = window.clearInterval;
+            const timers = [];
+            const intervals = [];
+            window.setTimeout = (fn) => { timers.push(fn); return timers.length; };
+            window.clearTimeout = () => {};
+            window.setInterval = (fn) => { intervals.push(fn); return intervals.length; };
+            window.clearInterval = () => {};
+
+            class FakeHls {
+                static Events = { MANIFEST_PARSED: "manifest", FRAG_BUFFERED: "frag-buffered", ERROR: "error" };
+                static ErrorTypes = { NETWORK_ERROR: "network", MEDIA_ERROR: "media" };
+                static isSupported() { return true; }
+                constructor() { this.handlers = new Map(); this.sources = []; FakeHls.instances.push(this); }
+                on(name, fn) { this.handlers.set(name, fn); }
+                emit(name, data) { const fn = this.handlers.get(name); if (fn) fn(name, data); }
+                loadSource(url) { this.sources.push(url); }
+                attachMedia() {}
+                startLoad() { this.starts = (this.starts || 0) + 1; }
+                recoverMediaError() {}
+                destroy() { this.destroyed = true; }
+            }
+            FakeHls.instances = [];
+            const originalHls = window.Hls;
+            window.Hls = FakeHls;
+            // 재생 중인데 currentTime이 전혀 늘지 않는다 — fatal은 오지 않는 조용한 정지
+            const audio = new EventTarget();
+            audio.play = () => Promise.resolve();
+            audio.canPlayType = () => "";
+            audio.error = null;
+            audio.paused = false;
+            audio.ended = false;
+            audio.currentTime = 12.5;
+
+            const retries = [];
+            const handle = PlayerCore.attach(audio, "https://test/live.m3u8", {
+                onRetry: (n, max, reason) => retries.push([n, max, reason]),
+                stallMs: 1
+            });
+            await new Promise((resolve) => nativeSetTimeout(resolve, 10));
+            intervals[0]();          // 진행이 없으므로 정지로 판정 → 재접속 예약
+            const scheduled = timers.length;
+            if (timers.length) timers.shift()();
+
+            const snapshot = { retries: retries.slice(), scheduled, starts: handle.hls.starts || 0 };
+            window.setTimeout = nativeSetTimeout;
+            window.clearTimeout = nativeClearTimeout;
+            window.setInterval = nativeSetInterval;
+            window.clearInterval = nativeClearInterval;
+            handle.destroy();
+            window.Hls = originalHls;
+            return snapshot;
+        });
+        expect(result.retries).toEqual([[1, 6, "stall"]]);
+        expect(result.scheduled).toBe(1);
+        expect(result.starts).toBe(1);
     });
 
     test("재생 성공은 playing 이벤트에서만 확정되고 이전 요청 콜백은 폐기된다", async ({ context, page }) => {

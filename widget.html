@@ -1123,9 +1123,14 @@
 
         function startStream(url) {
             // 재생 경로(HLS/네이티브/파일)와 오류 복구는 본체와 공유하는 PlayerCore가 처리한다
+            const station = current;
             player = PlayerCore.attach(audio, url, {
+                // 방송사 서명 URL은 만료된다 — 재접속은 주소를 새로 받는 것부터 시작한다
+                resolveUrl: station ? () => FMRadio.getStreamUrl(station) : null,
                 onBlocked: playBlocked,
-                onRetry: (n, max) => setStatus(`연결이 불안정합니다. 다시 시도 중… (${n}/${max})`),
+                onRetry: (n, max, reason) => setStatus(reason === "stall"
+                    ? `소리가 멈춰 다시 연결하고 있습니다… (${n}/${max})`
+                    : `연결이 불안정합니다. 다시 시도 중… (${n}/${max})`),
                 onFatal: () => {
                     stopStream();
                     isLoading = false;
@@ -1528,6 +1533,16 @@
             }
             updateUi();
             broadcastState();
+        });
+
+        // 네트워크가 돌아오면 백오프를 기다리지 않고 즉시 다시 붙는다
+        window.addEventListener("online", () => {
+            if (media || !current || isPlaying) return;
+            if (player && typeof player.reconnect === "function" && player.reconnect("online")) {
+                setStatus("네트워크가 복구되어 다시 연결합니다.");
+                return;
+            }
+            if (loadedId === current.id) play();
         });
 
         if ("mediaSession" in navigator) {

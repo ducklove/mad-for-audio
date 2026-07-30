@@ -4617,6 +4617,57 @@ function shadeColor(hex, amount) {
     return `#${(r << 16 | g << 8 | b).toString(16).padStart(6, "0")}`;
 }
 
+// ----- 라이브 라디오 자동 재접속 -----
+// PlayerCore의 재접속 예산(주소 재해석·지수 백오프·정지 감시)까지 소진되면 마지막
+// 수단으로 선국 자체를 다시 건다 — 새 주소·새 hls 인스턴스로 처음부터 붙는 것이라
+// 핸들이 완전히 망가진 경우에도 살아난다. 무한 루프를 막기 위해 마지막 정상 재생
+// 이후의 횟수에 상한을 두고, 재생이 성사되면(playing) 예산이 다시 찬다.
+const RADIO_RECONNECT_BACKOFF_MS = [3000, 6000, 12000, 30000, 60000];
+const RADIO_RECONNECT_MAX = RADIO_RECONNECT_BACKOFF_MS.length;
+const radioReconnect = { attempts: 0, timer: null, stationId: "", auto: false };
+
+function clearRadioReconnect() {
+    if (radioReconnect.timer !== null) clearTimeout(radioReconnect.timer);
+    radioReconnect.timer = null;
+}
+
+function resetRadioReconnect() {
+    clearRadioReconnect();
+    radioReconnect.attempts = 0;
+    radioReconnect.stationId = "";
+}
+
+// 재접속을 예약했으면 true — 호출부는 오류 표시를 하지 않고 그대로 물러난다.
+function scheduleRadioReconnect(token, reason) {
+    if (!PlaybackController.isCurrent(token)) return false;
+    if (!currentStation || phonoActive || deckMode === "play") return false;
+    if (radioReconnect.stationId !== currentStation.id) {
+        radioReconnect.stationId = currentStation.id;
+        radioReconnect.attempts = 0;
+    }
+    if (radioReconnect.attempts >= RADIO_RECONNECT_MAX) return false;
+    if (radioReconnect.timer !== null) return true;
+    const attempt = ++radioReconnect.attempts;
+    const stationId = currentStation.id;
+    PlaybackController.transition(token, "buffering");
+    setAudioState("buffering", `재접속 ${attempt}/${RADIO_RECONNECT_MAX}`);
+    playerSubtext.textContent = `연결이 끊겼습니다. 다시 잡는 중… (${attempt}/${RADIO_RECONNECT_MAX})`;
+    gtag('event', 'stream_reconnect', {
+        station_id: stationId,
+        attempt: attempt,
+        reason: String(reason || "fatal").slice(0, 40)
+    });
+    radioReconnect.timer = setTimeout(() => {
+        radioReconnect.timer = null;
+        // 그 사이 사용자가 껐거나 다른 소스로 옮겨 갔으면 되살리지 않는다
+        if (!streamLoaded || phonoActive || deckMode === "play") return;
+        if (!currentStation || currentStation.id !== stationId) return;
+        radioReconnect.auto = true;
+        selectStation(stationId);
+    }, RADIO_RECONNECT_BACKOFF_MS[attempt - 1]);
+    return true;
+}
+
 function handlePlaybackFailure(token, info) {
     if (!PlaybackController.isCurrent(token)) return;
     const detail = info || {};
@@ -4651,8 +4702,14 @@ function playStream(url, token) {
         ensureAudioGraph();
     }
 
+    // 재접속 때 방송사 API를 다시 물어야 하는 채널은 지금 고른 이 채널이다 —
+    // 늦게 도착한 재접속이 그 사이 바뀐 currentStation을 따라가지 않도록 붙잡아 둔다.
+    const station = currentStation;
     streamLoaded = true;
     const nextPlayer = PlayerCore.attach(audio, url, {
+        // KBS·SBS·MBC는 토큰이 박힌 서명 URL을 준다 — 만료된 주소로 다시 붙으면
+        // 401/403으로 예산만 태우므로, 재접속은 주소를 새로 받는 것부터 시작한다.
+        resolveUrl: station ? () => getStreamUrl(station) : null,
         onBlocked: () => {
             if (!PlaybackController.isCurrent(token)) return;
             PlaybackController.transition(token, "blocked");
@@ -4660,25 +4717,31 @@ function playStream(url, token) {
             updatePlayButton();
             setAudioState("blocked");
         },
-        onRetry: (n, max) => {
+        onRetry: (n, max, reason) => {
             if (!PlaybackController.isCurrent(token)) return;
             PlaybackController.transition(token, "buffering");
             setAudioState("buffering", `재시도 ${n}/${max}`);
-            playerSubtext.textContent = `연결이 불안정합니다. 다시 시도 중… (${n}/${max})`;
+            playerSubtext.textContent = reason === "stall"
+                ? `소리가 멈춰 다시 연결하고 있습니다… (${n}/${max})`
+                : `연결이 불안정합니다. 다시 시도 중… (${n}/${max})`;
         },
         onFatal: (data) => {
+            const reason = data && data.details ? data.details : "fatal";
+            if (scheduleRadioReconnect(token, reason)) return;
             handlePlaybackFailure(token, {
                 label: "스트림 중단",
                 message: "스트림이 중단되었습니다. 채널을 다시 선택해 주세요.",
-                reason: data && data.details ? data.details : "fatal"
+                reason: reason
             });
         },
         onError: (data) => {
+            const reason = data && data.mediaError && data.mediaError.code
+                ? "media-error-" + data.mediaError.code : "media-error";
+            if (scheduleRadioReconnect(token, reason)) return;
             handlePlaybackFailure(token, {
                 label: "미디어 오류",
                 message: "오디오를 재생하지 못했습니다. 채널을 다시 선택해 주세요.",
-                reason: data && data.mediaError && data.mediaError.code
-                    ? "media-error-" + data.mediaError.code : "media-error"
+                reason: reason
             });
         },
         onUnsupported: () => {
@@ -4708,6 +4771,15 @@ let selectSeq = 0;
 async function selectStation(id, viaDial) {
     const station = stations.find((item) => item.id === id);
     if (!station) return;
+
+    // 사용자가 직접 고른 선국은 재접속 예산을 새로 준다. 자동 재접속이 부른 선국이면
+    // 소진 상태를 그대로 이어받아야 상한(RADIO_RECONNECT_MAX)이 의미를 갖는다.
+    if (radioReconnect.auto) {
+        radioReconnect.auto = false;
+        clearRadioReconnect();
+    } else {
+        resetRadioReconnect();
+    }
 
     // 카페 무한 재생 중 명시적으로 방송국을 고르면 대기 선국이 아니라 즉시 라디오로 전환한다.
     if (libraryMix.active) stopLibraryMix({ stopAudio: true, silent: true });
@@ -4808,6 +4880,7 @@ function togglePlay() {
                 player.destroy();
                 player = null;
             }
+            resetRadioReconnect();   // 사용자가 끈 것 — 자동 재접속이 되살리면 안 된다
             PlaybackController.invalidate();
             streamLoaded = false;
             audio.pause();
@@ -4864,6 +4937,7 @@ function togglePlay() {
 
 function stopPlay() {
     if (!recIsMic) stopRecording();   // MIC 녹음은 본체 정지와 무관 — 계속 담는다
+    resetRadioReconnect();
     PlaybackController.invalidate();
     stopPhono();
     stopDeck();
@@ -4905,6 +4979,7 @@ function updateActiveStation() {
 
 function playEasterEgg() {
     if (!recIsMic) stopRecording();
+    resetRadioReconnect();
     stopPhono();
     stopDeck();
 
@@ -5793,6 +5868,8 @@ audio.addEventListener("playing", () => {
     if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "playing";
     tunerSetLeds(true);
     if (libraryMix.active && phonoActive) armLibraryMixWatchdog();
+    // 소리가 실제로 나왔다 — 다음 장애를 위해 자동 재접속 예산을 충전한다
+    if (currentStation) resetRadioReconnect();
     if (audioCtx && audioCtx.state === "suspended") {
         audioCtx.resume();
     }
@@ -5817,6 +5894,20 @@ audio.addEventListener("error", () => {
         message: "오디오 파일을 재생하지 못했습니다. 다른 소스를 선택해 주세요.",
         reason: audio.error && audio.error.code ? "media-error-" + audio.error.code : "media-error"
     });
+});
+
+// 네트워크가 돌아오면 백오프가 끝나기를 기다리지 않고 즉시 다시 붙는다 —
+// WiFi 로밍·절전 복귀·회선 순단에서 가장 빠른 복구 경로다.
+window.addEventListener("online", () => {
+    if (!currentStation || phonoActive || deckMode === "play") return;
+    if (!streamLoaded && audioState !== "error") return;
+    if (audioState !== "error" && audioState !== "buffering") return;
+    clearRadioReconnect();
+    radioReconnect.attempts = 0;
+    playerSubtext.textContent = "네트워크가 복구되어 다시 연결합니다.";
+    // 핸들이 살아 있으면 그 자리에서 새 주소로 다시 붙고, 이미 죽었으면 선국부터 다시.
+    if (player && typeof player.reconnect === "function" && player.reconnect("online")) return;
+    selectStation(currentStation.id);
 });
 
 function openWidget() {
@@ -6773,7 +6864,9 @@ function bgRecStartHlsCapture(url, generation) {
         },
         // 녹음용 수신기 정책: 라이브 엣지 추격(배속 캐치업)을 끄고, 장시간 녹음의
         // MSE 메모리를 재생 지점 뒤 90초로 제한한다 (바이트는 붙는 순간 이미 떠 놓았다)
-        hlsConfig: { lowLatencyMode: false, backBufferLength: 90 }
+        hlsConfig: { lowLatencyMode: false, backBufferLength: 90 },
+        // 예약 수신기는 serviceReservationRecording이 자체 재튠 워치독을 돌린다 — 이중 감시 금지
+        stallMs: 0
     });
     if (!BackgroundCaptureSession.isCurrent(generation)) {
         nextPlayer.destroy();
