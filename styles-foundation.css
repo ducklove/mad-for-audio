@@ -937,6 +937,20 @@ body.mode-simple #stationMain.collapsed {
         0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
+/* 단독 기기 — 랙에 끼우는 패널이 아니라 그 자체로 바닥에 서는 물건이다.
+   랙 유닛 사이의 붙임 간격을 없애고, 모서리도 섀시가 아닌 가구처럼 둥글게 둔다. */
+.solo-stage {
+    margin-top: 0;
+}
+
+#soloStage svg {
+    border-radius: 14px;
+    box-shadow:
+        0 40px 72px rgba(0, 0, 0, 0.6),
+        0 14px 26px rgba(0, 0, 0, 0.5),
+        0 2px 4px rgba(0, 0, 0, 0.45);
+}
+
 /* 52 mm급 슬림 타이머에는 대형 앰프용 그림자가 과하다. 랙 사이에 붙는 얕은 섀시로 보이게 한다. */
 #timerStage {
     margin-top: 12px;

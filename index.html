@@ -32,7 +32,7 @@
     </script>
     <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-    <link rel="stylesheet" href="styles.css?v=155">
+    <link rel="stylesheet" href="styles.css?v=156">
 </head>
 <body>
     <div class="page-shell">
@@ -69,6 +69,8 @@
                 <div class="rack-unit" id="ampStage" aria-label="앰프"></div>
                 <div class="rack-unit" id="deckStage" aria-label="카세트 데크"></div>
                 <div class="rack-unit" id="ttStage" aria-label="턴테이블"></div>
+                <!-- 단독 기기(축음기·라디오) — 고르면 위 랙 유닛은 통째로 내려간다 -->
+                <div class="rack-unit solo-stage" id="soloStage" aria-label="단독 기기" hidden></div>
             </div>
             <img class="focus-speaker focus-speaker-right" id="speakerR" src="images/side-speaker.webp" alt="" aria-hidden="true">
             <canvas class="vu-canvas" id="vuCanvas" aria-hidden="true"></canvas>
@@ -162,6 +164,11 @@
                 <div class="settings-title">추천 세트</div>
                 <div class="settings-note">완성된 랙을 한 번에 구성합니다. 대표 기본은 신규 설치의 기본 조합입니다.</div>
                 <div class="skin-picker rack-preset-picker" id="rackPresetPicker" role="group" aria-label="추천 오디오 세트 선택"></div>
+            </div>
+            <div class="settings-sec">
+                <div class="settings-title">단독 기기</div>
+                <div class="settings-note">혼자 소리를 내던 시대의 기기입니다. 하나를 고르면 아래 랙은 화면에서 내려가고, 소리도 EQ·앰프를 거치지 않고 그 기기의 음향 경로로만 흐릅니다.</div>
+                <div class="skin-picker" id="soloPicker" role="group" aria-label="단독 기기 선택"></div>
             </div>
             <div class="settings-sec">
                 <div class="settings-title">튜너</div>
@@ -277,23 +284,24 @@
 
     <audio id="audioPlayer" crossorigin="anonymous"></audio>
 
-    <script src="stations.js?v=155"></script>
-    <script src="player-core.js?v=155"></script>
-    <script src="native-hls-capture.js?v=155"></script>
-    <script src="store.js?v=155"></script>
-    <script src="schedule.js?v=155"></script>
-    <script src="skins.js?v=155"></script>
-    <script src="component-skins.js?v=155"></script>
-    <script src="model-registry.js?v=155"></script>
-    <script src="animation-scheduler.js?v=155"></script>
-    <script src="engine.js?v=155"></script>
-    <script src="deck.js?v=155"></script>
-    <script src="bootstrap.js?v=155"></script>
-    <script src="ui-controls.js?v=155"></script>
+    <script src="stations.js?v=156"></script>
+    <script src="player-core.js?v=156"></script>
+    <script src="native-hls-capture.js?v=156"></script>
+    <script src="store.js?v=156"></script>
+    <script src="schedule.js?v=156"></script>
+    <script src="skins.js?v=156"></script>
+    <script src="component-skins.js?v=156"></script>
+    <script src="solo-skins.js?v=156"></script>
+    <script src="model-registry.js?v=156"></script>
+    <script src="animation-scheduler.js?v=156"></script>
+    <script src="engine.js?v=156"></script>
+    <script src="deck.js?v=156"></script>
+    <script src="bootstrap.js?v=156"></script>
+    <script src="ui-controls.js?v=156"></script>
     <script>
         // 실행 중 버전 — 자산 링크의 ?v=가 단일 진실 (bump-version.py가 올린다)
         const RUNNING_ASSET_VERSION = (() => {
-            const link = document.querySelector('link[rel="stylesheet"][href^="styles.css?v=155"]');
+            const link = document.querySelector('link[rel="stylesheet"][href^="styles.css?v=156"]');
             const m = link && /[?&]v=(\d+)/.exec(link.getAttribute("href"));
             return m ? Number(m[1]) : null;
         })();

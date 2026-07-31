@@ -456,6 +456,65 @@ test.describe("데스크톱", () => {
         expect(await page.evaluate(() => JSON.parse(localStorage.getItem("fmRadio.reservations")))).toEqual([]);
     });
 
+    test("단독 기기: 축음기·라디오가 랙을 대신하고 고유 음향 경로로 흐른다", async ({ page }) => {
+        await expect(page.locator("#soloStage")).toBeHidden();
+        await page.click('button:has-text("오디오 구성")');
+        await expect(page.locator("#soloPicker .skin-btn")).toHaveCount(4);   // 사용 안 함 + 축음기 + 라디오 2색
+
+        // 축음기 — 랙 여섯 유닛이 내려가고 어쿠스틱 경로가 선다
+        await page.locator("#soloPicker .skin-btn", { hasText: "VICTOR V" }).click();
+        await page.click(".settings-close");
+        await expect(page.locator('#soloStage svg[aria-label*="Victor V"]')).toHaveCount(1);
+        for (const id of ["tunerStage", "timerStage", "eqStage", "ampStage", "deckStage", "ttStage"]) {
+            await expect(page.locator("#" + id)).toBeHidden();
+        }
+        await expect(page.locator("#gvTrackHit0")).toHaveCount(1);
+        await page.click("#gvTrackHit0");
+        await page.waitForFunction(() => phonoActive && gvSpin > 0.2, null, { timeout: 15000 });
+        // 필터는 setTargetAtTime으로 램프한다 — 목표 대역에 안착할 때까지 기다린다
+        await page.waitForFunction(() => {
+            const dsp = window.MFA_SoloDSP.inspect();
+            return dsp && dsp.band[1] < 3200;
+        }, null, { timeout: 15000 });
+        // 태엽은 풀리고 바늘은 닳는다 (프레임 루프가 갱신하므로 값이 설 때까지 기다린다)
+        await page.waitForFunction(() => gvWind < 1 && gvNeedleWear > 0, null, { timeout: 15000 });
+        const gramophone = await page.evaluate(() => window.MFA_SoloDSP.inspect());
+        expect(gramophone.kind).toBe("phono");
+        expect(gramophone.band[0]).toBeGreaterThan(150);          // 저음이 물리적으로 안 나온다
+        expect(gramophone.band[1]).toBeLessThan(3200);            // 고음도 마찬가지
+        expect(gramophone.evenHarmonics).toBe(0);
+        await page.click("#gvTinHit");                            // 새 바늘
+        expect(await page.evaluate(() => gvNeedleWear)).toBeLessThan(0.02);
+        await page.evaluate(() => { gvWind = 0.4; });
+        await page.click("#gvCrankHit");                          // 태엽 감기 (+0.34)
+        expect(await page.evaluate(() => gvWind)).toBeGreaterThan(0.7);
+
+        // 라디오 — 진공관 보이싱과 SC·PU·SW 셀렉터
+        await page.click('button:has-text("오디오 구성")');
+        await page.locator("#soloPicker .skin-btn", { hasText: "차콜" }).click();
+        await page.click(".settings-close");
+        await expect(page.locator('#soloStage svg[aria-label*="금성 A-501"]')).toHaveCount(1);
+        await expect(page.locator("#a5Marks rect")).not.toHaveCount(0);
+        const radio = await page.evaluate(() => window.MFA_SoloDSP.inspect());
+        expect(radio.kind).toBe("radio");
+        expect(radio.evenHarmonics).toBeGreaterThan(0);           // 2차 배음
+        expect(radio.ring[2]).toBeGreaterThan(0);                 // 캐비닛 잔향
+        expect(radio.resonance[0]).toBeLessThan(220);             // 중저음 공진
+        expect(await page.evaluate(() => a5Band)).toBe("SC");
+        await page.click("#a5SelHit");
+        expect(await page.evaluate(() => a5Band)).toBe("PU");
+        await page.click("#a5SelHit");
+        expect(await page.evaluate(() => a5Band)).toBe("SW");
+
+        // 랙 복귀 — 저장값도 함께 지워진다
+        await page.click('button:has-text("오디오 구성")');
+        await page.locator("#soloPicker .skin-btn", { hasText: "사용 안 함" }).click();
+        await page.click(".settings-close");
+        await expect(page.locator("#soloStage")).toBeHidden();
+        await expect(page.locator("#tunerStage svg")).toBeVisible();
+        expect(await page.evaluate(() => JSON.parse(localStorage.getItem("fmRadio.solo")))).toBe("");
+    });
+
     test("실물 정체성 선별 20종: 피커 등록·기기군별 스킨 전환", async ({ page }) => {
         await page.click('button:has-text("오디오 구성")');
         await expect(page.locator("#skinPicker .skin-btn")).toHaveCount(4);

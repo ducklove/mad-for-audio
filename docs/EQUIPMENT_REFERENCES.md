@@ -1,4 +1,4 @@
-# 하이파이 컴포넌트 SVG 레퍼런스 — v136
+# 하이파이 컴포넌트 SVG 레퍼런스 — v156
 
 현재 공개 카탈로그 20종과 단일 타이머 DT-540의 외형·조작 근거다. 사진과 설명서는
 비례, 재질, 계기와 대표 조작을 확인하는 용도로만 사용하며 원본 이미지를 배포 파일에
@@ -70,9 +70,26 @@ W-990RX의 투명 릴 창 길이와 좌우 카세트 중심은 실물 사진에�
 |---|---|---|
 | Pioneer DT-540 | [HiFi Engine](https://www.hifiengine.com/manual_library/pioneer/dt-540.shtml), [SpenCertified 사진](https://spencertified.com/products/pioneer-dt-540-audio-digital-timer-1983-85) | 420×52mm급 초슬림 실버 패널, 중앙 VFD 시계, 우측 PROGRAM·SLEEP 버튼과 TIMER 스위치 문법 |
 
+## 단독 기기 2종
+
+| 기기 | 사진·자료 | SVG에 반영한 식별 포인트 |
+|---|---|---|
+| Victor V (1905–1921) | [Victor V 실물 사진 · Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Victor_V_1910SVelez.jpg), [The Victor-Victrola Page · 나팔 자료](http://www.victor-victrola.com/Horns.htm) | 사분할 오크 케이스와 코너 기둥·2단 굽도리 몰딩, 상판의 니켈 플래터와 녹색 융, 뒤 왼쪽 뒷마운트에서 판을 가로지르는 테이퍼드 니켈 톤암, Exhibition 사운드박스, 주철 크레인이 받치는 놋쇠 나팔관, 우측면 태엽 크랭크, 금박 Victor 스크립트 데칼 |
+| 금성 A-501 (1959) | [Gold Star A-501 · Google Arts &amp; Culture](https://artsandculture.google.com/asset/gold-star-a-501-the-first-radio-assembled-in-korea-gold-star/XAFGiJy6ZGCqYQ), [Encyves Wiki · 금성 라디오 A-501](https://dh.aks.ac.kr/Encyves/wiki/index.php/%EA%B8%88%EC%84%B1_%EB%9D%BC%EB%94%94%EC%98%A4_A-501), [국가유산포털 · 국가등록문화유산](https://www.heritage.go.kr/heri/cul/culSelectDetail.do?ccbaCpno=4413105590100) | 40×17×17cm 비례, 위로 좁아지며 완만히 휜 캐비닛 상단, 크롬 테를 두른 상아색 인서트(좌 타공 그릴 + 우 다이얼 유리), 그릴 좌상단 금색 왕관 엠블럼, 전면을 가로지르는 뾰족한 크롬 스피어 몰딩, 두 줄 눈금과 `TWO BAND SUPER HETERODYNE` 각인, 우상단 초록 `10KC` 배지, 하단 어두운 띠의 GoldStar 금박 스크립트와 VOLUME·SELECT(SC·PU·SW)·TUNER 3노브, 아래로 벌어진 두 다리 |
+
+Victor V의 나팔은 실물 옵션이었던 놋쇠 벨로 그렸다(참고 사진의 오크 스피어포인트 대신).
+어느 쪽도 실물 옵션이며, 벡터에서 금속 반사와 관 내부의 명암 단계를 표현하기 위해 놋쇠를 골랐다.
+
+A-501은 실기가 MW/SW 2밴드 수신기이지만, 앱은 한국 FM을 듣는 도구이므로 **상단 눈금 행만
+FM 88–108MHz로 재해석**했다. 하단 SW 행의 숫자·미터밴드 표기와 `TWO BAND SUPER HETERODYNE`,
+`10KC` 배지는 실물 인쇄를 그대로 유지하고, 배지는 앱에서 동조 표시등을 겸한다. SELECT 노브의
+SC·PU·SW 각인도 실물 그대로이며 각 위치에 앱 동작(방송·픽업·단파)을 배선했다.
+색상은 출시 5색 중 사진으로 확인되는 차콜과 민트 두 가지만 제공한다.
+
 ## 구현 원칙
 
-- 공개 모델 표에는 현재 설정 화면에서 선택 가능한 20종만 싣는다. DT-540은 단일 고정 유닛이다.
+- 공개 모델 표에는 현재 설정 화면에서 선택 가능한 20종만 싣는다. DT-540은 단일 고정 유닛이고,
+  단독 기기 2종은 랙 컴포넌트가 아니므로 별도 표로 둔다.
 - 퇴역 ID는 저장값 마이그레이션 대상일 뿐 현재 모델 설명이나 사진 표에 포함하지 않는다.
 - 상표와 모델명은 기기 식별을 위한 설명적 표기로 사용한다.
 - 기존 재생 기능이 의존하는 SVG ID는 공개 스킨에서 같은 역할을 유지한다.

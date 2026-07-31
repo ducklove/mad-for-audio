@@ -44,7 +44,7 @@ test.describe("모델 런타임 리팩토링", () => {
             };
         });
 
-        expect(result.kinds).toEqual(["tuner", "amplifier", "deck", "turntable", "timer"]);
+        expect(result.kinds).toEqual(["tuner", "amplifier", "deck", "turntable", "timer", "solo"]);
         for (const count of Object.values(result.counts)) expect(count).toBeGreaterThan(0);
         expect(result.tunerLabel).toBeTruthy();
         expect(result.tunerControls).toContain("tsFreq");

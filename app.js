@@ -406,6 +406,9 @@ function tsFreqToX(f) {
 }
 
 function tunerSetStation(station) {
+    // 단독 라디오가 서 있으면 선국 결과는 그 기기의 다이얼에도 반영한다
+    // (채널 목록·마지막 채널 복원·이전/다음 등 다이얼 밖에서 들어온 선국까지)
+    if (soloIsRadio()) a5SyncStation();
     if (!tunerCfg || !tsDialPtr) return;
     // 슬라이더 역할(다이얼·노브)의 현재값을 주파수로 노출
     ["tsDialHit", "tsKnobHit"].forEach((id) => {
@@ -586,7 +589,14 @@ function rackAnimationShouldRun() {
         || Math.abs(ttSpin - ((phonoActive && isPlaying && !ttBraking) ? 1 : 0)) > 0.003
         || Math.abs(tsSignal) > 0.003
         || Math.abs(tsTune - ((isPlaying && currentStation) ? 0 : 0.85)) > 0.003;
-    return playingOrMoving || busy || settling || ttArmDrag || ttScratchEnergy > 0.002
+    // 단독 기기 — 플래터 런다운·크랭크 회전·톤암 조작·진공관 예열·단파 잡음이 남아 있으면 계속 돈다
+    const soloSettling = soloActive() && (
+        (soloIsPhono() && (Math.abs(gvSpin - (gvRunning() ? 1 : 0)) > 0.003
+            || gvCrankLeft > 0 || gvArmDrag || gvScratch > 0.002))
+        || (soloIsRadio() && (Math.abs(a5Warm - (a5PowerOn() ? 1 : 0)) > 0.003
+            || (a5Band === "SW" && a5Warm > 0.01)))
+    );
+    return playingOrMoving || busy || settling || soloSettling || ttArmDrag || ttScratchEnergy > 0.002
         || performance.now() < ttCleanUntil || performance.now() < ampRectUntil;
 }
 
@@ -892,6 +902,7 @@ function renderSkinPicker() {
         b.className = "skin-btn" + (unitShow.tuner && id === tunerSkinId ? " active" : "");
         b.textContent = TUNER_SKINS[id].label;
         b.addEventListener("click", () => {
+            soloYieldToRack();
             if (!unitShow.tuner) setUnitShow("tuner", true);
             if (id !== tunerSkinId) initTunerSkin(id);
             renderSkinPicker();
@@ -1137,6 +1148,22 @@ if (!unitShow || typeof unitShow !== "object") {
 }
 Object.keys(UNIT_STAGES).forEach((k) => { if (typeof unitShow[k] !== "boolean") unitShow[k] = k !== "eq"; });
 
+// ----- 단독 기기 (축음기 · 라디오) -----
+// 랙에 물리지 않고 혼자 소리를 내던 시대의 물건이다. 하나를 고르면 랙 여섯 유닛은
+// 통째로 내려가고 화면에는 그 기기만 남으며, 오디오도 앰프·EQ 체인을 건너뛰고
+// 기기 고유의 음향 경로(engine.js의 solo 체인)로 흐른다. 기본값은 '사용 안 함'.
+let soloModelId = loadJson("fmRadio.solo", "");
+if (!SOLO_ORDER.includes(soloModelId)) soloModelId = "";
+let soloFinish = loadJson("fmRadio.soloFinish", "charcoal");
+if (!A501_FINISHES[soloFinish]) soloFinish = "charcoal";
+function soloActive() { return !!soloModelId; }
+function soloKind() { return soloModelId ? SOLO_MODELS[soloModelId].kind : ""; }
+function soloLabel() {
+    if (!soloModelId) return "";
+    const model = SOLO_MODELS[soloModelId];
+    return model.finishes && model.finishes[soloFinish] ? model.finishes[soloFinish].label : model.label;
+}
+
 // 개별 스킨 목록과 별개로, 한 덩어리의 제품처럼 보이는 검증된 랙 구성을 제공한다.
 // 대표 기본은 신규 설치의 초기값과 같고, 기존 사용자의 저장 구성은 그대로 존중한다.
 const RACK_PRESETS = [
@@ -1170,13 +1197,18 @@ const RACK_PRESETS = [
 let deckStageLive = false;
 
 function applyUnitVisibility() {
+    // 단독 기기가 서 있는 동안에는 랙 유닛을 전부 내린다 — 같이 쓰이지 않는 물건이다
+    const solo = soloActive();
+    document.body.classList.toggle("mode-solo", solo);
+    const soloStage = document.getElementById("soloStage");
+    if (soloStage) soloStage.hidden = !solo;
     Object.entries(UNIT_STAGES).forEach(([key, id]) => {
         const el = document.getElementById(id);
-        if (el) el.hidden = !unitShow[key] && !(key === "deck" && deckStageLive);
+        if (el) el.hidden = solo || (!unitShow[key] && !(key === "deck" && deckStageLive));
     });
     // 정체성: 편성표는 튜너에서(REC/CAL 스위치), 보관함은 데크에서(랙 서랍) 들어간다.
-    // 헤더 버튼은 해당 기기가 화면에 없을 때(간편 모드·기기 숨김)만 나타나는 비상구다.
-    const unitsOnScreen = viewMode !== "simple";
+    // 헤더 버튼은 해당 기기가 화면에 없을 때(간편 모드·기기 숨김·단독 기기)만 나타나는 비상구다.
+    const unitsOnScreen = viewMode !== "simple" && !solo;
     const schedBtn = document.getElementById("headerSchedBtn");
     if (schedBtn) schedBtn.hidden = unitsOnScreen && unitShow.tuner;
     const tapeBtn = document.getElementById("headerTapeBtn");
@@ -1211,7 +1243,7 @@ function hidePill(key) {
     b.type = "button";
     b.className = "skin-btn" + (unitShow[key] ? "" : " active");
     b.textContent = "숨김";
-    b.addEventListener("click", () => setUnitShow(key, false));
+    b.addEventListener("click", () => { soloYieldToRack(); setUnitShow(key, false); });
     return b;
 }
 
@@ -1245,6 +1277,7 @@ function renderDeckPicker() {
         b.className = "skin-btn" + (unitShow.deck && id === deckModelId ? " active" : "");
         b.textContent = DECK_MODELS[id].label;
         b.addEventListener("click", () => {
+            soloYieldToRack();
             if (!unitShow.deck) setUnitShow("deck", true);
             if (id !== deckModelId) {
                 deckModelId = id;
@@ -1271,6 +1304,7 @@ function renderTtPicker() {
         b.className = "skin-btn" + (unitShow.tt && id === ttModelId ? " active" : "");
         b.textContent = TT_MODELS[id].label;
         b.addEventListener("click", () => {
+            soloYieldToRack();
             if (!unitShow.tt) setUnitShow("tt", true);
             if (id !== ttModelId) {
                 ttModelId = id;
@@ -1286,6 +1320,75 @@ function renderTtPicker() {
     el.appendChild(hidePill("tt"));
 }
 
+// 단독 기기 피커 — '사용 안 함' + 축음기 + 라디오 마감 2종
+function renderSoloPicker() {
+    const el = document.getElementById("soloPicker");
+    if (!el) return;
+    el.innerHTML = "";
+    const pill = (label, active, title, onClick) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "skin-btn" + (active ? " active" : "");
+        b.textContent = label;
+        if (title) b.title = title;
+        b.setAttribute("aria-pressed", String(active));
+        b.addEventListener("click", onClick);
+        el.appendChild(b);
+    };
+    pill("사용 안 함", !soloActive(), "랙(튜너·앰프·데크·턴테이블)으로 돌아갑니다", () => setSoloModel(""));
+    SOLO_ORDER.forEach((id) => {
+        const model = SOLO_MODELS[id];
+        if (!model.finishes) {
+            pill(model.label, soloModelId === id, model.desc, () => setSoloModel(id));
+            return;
+        }
+        Object.entries(model.finishes).forEach(([finishId, finish]) => {
+            pill(finish.label, soloModelId === id && soloFinish === finishId, model.desc,
+                () => setSoloModel(id, finishId));
+        });
+    });
+}
+
+// 기기를 갈아 끼우면 돌던 소리는 내려놓는다 — 실물처럼 한 번에 하나만 선다
+function setSoloModel(id, finish, options) {
+    if (!SOLO_ORDER.includes(id)) id = "";
+    const silent = !!(options && options.silent);
+    const changed = id !== soloModelId || (finish && finish !== soloFinish);
+    if (changed && (isPlaying || phonoActive || deckMode === "play")) stopPlay();
+    soloModelId = id;
+    if (finish && A501_FINISHES[finish]) soloFinish = finish;
+    saveJson("fmRadio.solo", soloModelId);
+    saveJson("fmRadio.soloFinish", soloFinish);
+    gvResetTransport();
+    a5ResetTransport();
+    mountSolo();
+    applyUnitVisibility();
+    if (typeof buildEqChain === "function") buildEqChain();
+    if (typeof applySoloVoice === "function") applySoloVoice();
+    if (typeof applyGainStaging === "function") applyGainStaging();
+    if (typeof applySourceVoice === "function") applySourceVoice();
+    renderSoloPicker();
+    renderSkinPicker();
+    renderEqPicker();
+    renderAmpPicker();
+    renderDeckPicker();
+    renderTtPicker();
+    renderTimerPicker();
+    renderRackPresetPicker();
+    if (!silent && changed) {
+        playerSubtext.textContent = soloActive()
+            ? soloLabel() + " — 단독으로 동작하는 기기입니다. 랙은 잠시 내려두었습니다."
+            : "단독 기기를 내리고 랙으로 돌아왔습니다.";
+    }
+    if (soloActive()) gtag('event', 'solo_device', { model: soloModelId });
+}
+
+// 랙 컴포넌트를 고르면 단독 기기는 내려간다 — 한 화면에 같이 설 수 없는 물건이다
+function soloYieldToRack() {
+    if (!soloActive()) return;
+    setSoloModel("", null, { silent: true });
+}
+
 function renderEqPicker() {
     const el = document.getElementById("eqPicker");
     if (!el) return;
@@ -1296,6 +1399,7 @@ function renderEqPicker() {
         b.className = "skin-btn" + (unitShow.eq && id === eqModelId ? " active" : "");
         b.textContent = EQ_MODELS[id].pill;
         b.addEventListener("click", () => {
+            soloYieldToRack();
             if (!unitShow.eq) setUnitShow("eq", true);
             setEqModel(id);
             renderEqPicker();
@@ -1324,6 +1428,7 @@ function renderTimerPicker() {
         b.className = "skin-btn" + (unitShow.timer && timerFinish === id ? " active" : "");
         b.textContent = finish.label;
         b.addEventListener("click", () => {
+            soloYieldToRack();
             if (!unitShow.timer) setUnitShow("timer", true);
             if (id !== timerFinish) {
                 timerFinish = id;
@@ -1451,6 +1556,7 @@ function timerPaint() {
 }
 
 function rackPresetMatches(preset) {
+    if (soloActive()) return false;   // 단독 기기가 서 있는 동안에는 어떤 랙 구성도 일치하지 않는다
     if (!preset || tunerSkinId !== preset.tuner || timerFinish !== preset.timer ||
         ampModelId !== preset.amp || deckModelId !== preset.deck || ttModelId !== preset.tt) return false;
     if (preset.show.eq && eqModelId !== preset.eq) return false;
@@ -1477,6 +1583,7 @@ function renderRackPresetPicker() {
 function applyRackPreset(id) {
     const preset = RACK_PRESETS.find((item) => item.id === id);
     if (!preset) return;
+    soloYieldToRack();
 
     unitShow = Object.assign({}, preset.show);
     saveJson("fmRadio.units", unitShow);
@@ -2477,6 +2584,14 @@ function paintUnitPower() {
 // WebKit 폴백: Web Audio 게이트가 없어 요소 자체를 세운다 (iOS는 volume 대입이 무시되므로)
 function applyAmpPowerGate() {
     if (gainNode) { applyGainStaging(); return; }
+    // 단독 기기에는 외부 앰프가 없다 — 앰프 스위치가 소리를 끊지 않는다
+    if (soloActive()) {
+        if (ampGatePaused) {
+            ampGatePaused = false;
+            if (streamLoaded || phonoActive) audio.play().catch(() => {});
+        }
+        return;
+    }
     if (!unitOn("amp")) {
         if (!audio.paused) { ampGatePaused = true; audio.pause(); }
     } else if (ampGatePaused) {
@@ -2743,6 +2858,13 @@ function setRecord(i) {
     if (RECORD.id) saveJson("fmRadio.recordId", RECORD.id);
     if (phonoActive) stopPlay();
     mountTurntable();
+    // 축음기가 서 있으면 그 위의 판과 종이 봉투도 함께 갈아 끼운다
+    if (soloIsPhono()) {
+        gvArmFr = GV_REST;
+        mountSolo();
+    } else if (soloIsRadio()) {
+        a5SyncStation();   // PU(픽업) 위치면 다이얼에 인쇄된 음반 이름도 갱신
+    }
     playerSubtext.textContent = "음반 교체: " + RECORD.title + " (" + RECORD.performer + ")";
     gtag('event', 'change_record', { record: RECORD.bwv });
 }
@@ -3452,6 +3574,700 @@ function updatePhonoVisuals() {
 
 
 
+// ===================================================================
+// 단독 기기 — VICTOR V 축음기 · 금성 A-501 라디오
+// ===================================================================
+// 랙 컴포넌트와 달리 이 둘은 다른 기기와 함께 쓰이지 않는다. 화면·오디오·조작이
+// 기기 하나로 완결되고, 소리는 engine.js의 solo 체인(EQ·앰프 우회)으로 흐른다.
+
+function soloEsc(value) {
+    return String(value == null ? "" : value)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function soloIsPhono() { return soloActive() && soloKind() === "phono"; }
+function soloIsRadio() { return soloActive() && soloKind() === "radio"; }
+
+function mountSolo() {
+    const stage = document.getElementById("soloStage");
+    if (!stage) return;
+    if (!soloActive()) { stage.innerHTML = ""; return; }
+    stage.innerHTML = SOLO_MODELS[soloModelId].render(soloFinish);
+    applyPanelLighting(stage.querySelector("svg"));
+    if (soloModelId === "victorv") mountVictorV();
+    else mountA501();
+}
+
+// SVG 요소에 클릭 + 키보드를 함께 물린다 (랙 컨트롤과 같은 계약)
+function soloOn(id, fn, label) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener("click", fn);
+    svgButtonize(el, label);
+}
+
+// viewBox 좌표로 포인터 위치 환산 — 단독 기기 SVG는 뷰박스가 저마다 다르다
+function soloPointAt(e) {
+    const svg = document.querySelector("#soloStage svg");
+    if (!svg) return { x: 0, y: 0 };
+    const r = svg.getBoundingClientRect();
+    const vb = (svg.getAttribute("viewBox") || "0 0 2000 1000").split(/\s+/).map(Number);
+    return {
+        x: vb[0] + (e.clientX - r.left) / r.width * vb[2],
+        y: vb[1] + (e.clientY - r.top) / r.height * vb[3]
+    };
+}
+
+// ----- VICTOR V (1907) -----
+// 조작 문법은 실물 그대로다: 태엽을 감고, 조속기로 회전수를 맞추고, 브레이크로 세우고,
+// 한 면이 끝나면 강철 바늘을 간다. 태엽이 풀리면 회전이 처지며 음정이 내려간다.
+const GV_REST = GV_ARM_REST;   // 톤암 거치 위치 (판 바깥의 크러치)
+const GV_OUT = 0.95;       // 첫 홈
+const GV_IN = 0.35;        // 마지막 홈 (라벨 바로 앞)
+const GV_STYLUS_A = -0.30; // 바늘이 놓이는 각도(라디안) — 판의 오른쪽 위
+const GV_WIND_SEC = 190;   // 가득 감은 태엽이 버티는 시간
+const GV_NEEDLE_SEC = 205; // 강철 바늘 한 개의 수명 (한 면)
+
+let gvWind = 1;
+let gvNeedleWear = 0;
+let gvSpeed = 78;
+let gvSpin = 0;
+let gvAngle = 0;
+let gvCrankAng = 0;
+let gvCrankLeft = 0;
+let gvArmFr = GV_REST;
+let gvArmDrag = false;
+let gvRubLast = null;
+let gvScratch = 0;
+let gvRunDown = false;     // 태엽이 다 풀려 스스로 멎었다
+
+function gvResetTransport() {
+    gvWind = 1;
+    gvNeedleWear = 0;
+    gvSpeed = 78;
+    gvSpin = 0;
+    gvAngle = 0;
+    gvCrankLeft = 0;
+    gvArmFr = GV_REST;
+    gvArmDrag = false;
+    gvRunDown = false;
+    gvScratch = 0;
+}
+
+function gvRunning() { return phonoActive && isPlaying && gvWind > 0; }
+
+// 바늘 반경비 → 화면 좌표 (판은 원근으로 눕혀 있다)
+function gvStylusAt(fr) {
+    return {
+        x: GV_PC.x + GV_DISC * fr * Math.cos(GV_STYLUS_A),
+        y: GV_PC.y + GV_DISC * GV_K * fr * Math.sin(GV_STYLUS_A)
+    };
+}
+
+function gvTrackRows() {
+    const tracks = (RECORD.tracks || []);
+    const n = Math.max(1, tracks.length);
+    const step = n > 11 ? 30 : n > 8 ? 34 : n > 5 ? 40 : 48;
+    const font = n > 11 ? 14 : n > 8 ? 15 : 16;
+    return tracks.map((tr, i) => {
+        const y = 668 + i * step;
+        const title = soloEsc(tr.t);
+        return '<rect id="gvTrackBg' + i + '" x="1466" y="' + (y - 22) + '" width="472" height="' + (step - 6) + '" rx="6" fill="#c98a3a" opacity="0"/>' +
+            '<text x="1480" y="' + y + '" font-family="Arial" font-size="' + (font - 2) + '" font-weight="700" fill="#8f7546">' + (i + 1) + '</text>' +
+            '<text x="1514" y="' + y + '" font-family="Georgia, serif" font-size="' + font + '" fill="#ddcda6">' + title + '</text>' +
+            '<rect id="gvTrackHit' + i + '" x="1466" y="' + (y - 22) + '" width="472" height="' + (step - 4) + '" fill="#000" fill-opacity="0" style="cursor:pointer"><title>' + title + ' 재생</title></rect>';
+    }).join("");
+}
+
+// 음반이 바뀌면 라벨·종이 봉투 인쇄를 다시 찍는다
+function gvPaintRecord() {
+    const set = (id, text) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = text;
+    };
+    const paint = (id, color) => {
+        const el = document.getElementById(id);
+        if (el) el.setAttribute("fill", color);
+    };
+    const label = RECORD.labelBg || "#b7472f";
+    paint("gvLabelDisc", label);
+    paint("gvSleeveLabel", label);
+    set("gvLabelBig", RECORD.labelBig || "78");
+    set("gvLabelTitle", RECORD.labelTitle || RECORD.jTitle || "");
+    set("gvLabelArtist", RECORD.labelArtist || RECORD.performer || "");
+    set("gvSleeveBig", RECORD.labelBig || "78");
+    set("gvSleeveTitle", RECORD.jTitle || RECORD.title || "");
+    set("gvSleeveArtist", RECORD.performer || "");
+    set("gvSleeveNote", (RECORD.composer || "") + (RECORD.recordingYear ? " · " + RECORD.recordingYear : ""));
+    set("gvCredit", RECORD.credit || "");
+    const crate = document.getElementById("gvCrateLabel");
+    if (crate) crate.textContent = "▤ 음반 수납장 · " + (recordIdx + 1) + " / " + Math.max(1, RECORDS.length);
+}
+
+function gvPaintGauges() {
+    const wind = document.getElementById("gvWindBar");
+    if (wind) {
+        wind.setAttribute("width", (gvWind * 200).toFixed(1));
+        wind.setAttribute("fill", gvWind < 0.18 ? "#c1502a" : "#d7a24a");
+    }
+    const windText = document.getElementById("gvWindText");
+    if (windText) windText.textContent = Math.round(gvWind * 100) + "%";
+    const needle = document.getElementById("gvNeedleBar");
+    if (needle) {
+        needle.setAttribute("width", (gvNeedleWear * 200).toFixed(1));
+        needle.setAttribute("fill", gvNeedleWear > 0.7 ? "#c1502a" : "#8d7b4e");
+    }
+    const needleText = document.getElementById("gvNeedleText");
+    if (needleText) {
+        needleText.textContent = gvNeedleWear < 0.05 ? "새 바늘"
+            : gvNeedleWear > 0.85 ? "교체 필요" : Math.round(gvNeedleWear * 100) + "% 마모";
+    }
+    const speedText = document.getElementById("gvSpeedText");
+    if (speedText) speedText.textContent = String(Math.round(gvSpeed));
+    const speedPtr = document.getElementById("gvSpeedPtr");
+    if (speedPtr) speedPtr.setAttribute("transform", "rotate(" + ((gvSpeed - 78) * 4.6).toFixed(1) + " 284 876)");
+    (RECORD.tracks || []).forEach((tr, i) => {
+        const bg = document.getElementById("gvTrackBg" + i);
+        if (bg) bg.setAttribute("opacity", i === phonoTrack ? "0.24" : "0");
+    });
+}
+
+function gvPlayTrack(i) {
+    if (gvWind <= 0.02) {
+        playerSubtext.textContent = "태엽이 다 풀렸습니다 — 크랭크를 돌려 감아 주세요.";
+        return;
+    }
+    gvRunDown = false;
+    gvArmFr = GV_OUT;
+    playPhonoTrack(i);
+}
+
+function gvToggleBrake() {
+    if (gvWind <= 0.02) {
+        playerSubtext.textContent = "태엽이 다 풀렸습니다 — 크랭크를 돌려 감아 주세요.";
+        return;
+    }
+    if (phonoActive) {
+        togglePlay();
+        playerSubtext.textContent = isPlaying ? "브레이크 — 플래터를 세웠습니다." : "브레이크를 풀었습니다.";
+    } else {
+        gvPlayTrack(0);
+    }
+}
+
+function gvWindUp() {
+    const before = gvWind;
+    gvWind = Math.min(1, gvWind + 0.34);
+    gvCrankLeft += 1080;               // 세 바퀴
+    gvRunDown = false;
+    gvPaintGauges();
+    playerSubtext.textContent = before >= 1
+        ? "태엽이 이미 가득 감겨 있습니다."
+        : "태엽을 감았습니다 — " + Math.round(gvWind * 100) + "%";
+    gtag('event', 'gramophone_wind', { level: Math.round(gvWind * 100) });
+}
+
+function gvChangeNeedle() {
+    gvNeedleWear = 0;
+    gvPaintGauges();
+    soloPhonoNeedleSafe(0);
+    playerSubtext.textContent = "새 강철 바늘로 갈았습니다 — 잡음이 줄고 고음이 살아납니다.";
+    gtag('event', 'gramophone_needle', {});
+}
+
+function soloPhonoNeedleSafe(wear) {
+    if (typeof soloPhonoNeedle === "function") soloPhonoNeedle(wear);
+}
+
+function gvBindSpeed() {
+    const hit = document.getElementById("gvSpeedHit");
+    if (!hit) return;
+    let dragging = false, startY = 0, startSpeed = 78;
+    hit.addEventListener("pointerdown", (e) => {
+        dragging = true;
+        startY = e.clientY;
+        startSpeed = gvSpeed;
+        try { hit.setPointerCapture(e.pointerId); } catch (err) {}
+        e.preventDefault();
+    });
+    hit.addEventListener("pointermove", (e) => {
+        if (!dragging) return;
+        gvSpeed = Math.max(60, Math.min(88, startSpeed + (startY - e.clientY) / 6));
+        gvPaintGauges();
+        playerSubtext.textContent = "조속기 " + Math.round(gvSpeed) + " rpm";
+    });
+    const end = () => { dragging = false; };
+    hit.addEventListener("pointerup", end);
+    hit.addEventListener("pointercancel", end);
+    svgButtonize(hit, "SPEED — 조속기 회전수 조절");
+    hit.setAttribute("role", "slider");
+    hit.setAttribute("aria-valuemin", "60");
+    hit.setAttribute("aria-valuemax", "88");
+    hit.addEventListener("keydown", (e) => {
+        if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+        e.preventDefault();
+        gvSpeed = Math.max(60, Math.min(88, gvSpeed + (e.key === "ArrowUp" ? 1 : -1)));
+        gvPaintGauges();
+    });
+}
+
+// 톤암 — 잡아서 원하는 홈 위에 바늘을 내려놓는다 (반경비가 곧 재생 위치)
+function gvBindArm() {
+    const hit = document.getElementById("gvArmHit");
+    if (!hit) return;
+    const frAt = (e) => {
+        const p = soloPointAt(e);
+        const fr = (p.x - GV_PC.x) / (GV_DISC * Math.cos(GV_STYLUS_A));
+        return Math.max(0.28, Math.min(GV_REST + 0.06, fr));
+    };
+    const trackAt = (fr) => {
+        const tracks = RECORD.tracks || [];
+        if (!tracks.length || fr > GV_OUT + 0.06) return -1;
+        const p = Math.max(0, Math.min(0.999, (GV_OUT - fr) / (GV_OUT - GV_IN)));
+        return Math.min(tracks.length - 1, Math.floor(p * tracks.length));
+    };
+    hit.addEventListener("pointerdown", (e) => {
+        gvArmDrag = true;
+        try { hit.setPointerCapture(e.pointerId); } catch (err) {}
+        if (phonoActive && isPlaying) audio.pause();   // 바늘을 들면 소리도 멎는다
+        e.preventDefault();
+    });
+    hit.addEventListener("pointermove", (e) => {
+        if (!gvArmDrag) return;
+        gvArmFr = frAt(e);
+        const i = trackAt(gvArmFr);
+        playerSubtext.textContent = i >= 0
+            ? "여기 놓으면 재생: " + RECORD.tracks[i].t
+            : "톤암 거치대 — 놓으면 연주를 멈춥니다";
+    });
+    const drop = (e) => {
+        if (!gvArmDrag) return;
+        gvArmDrag = false;
+        const i = trackAt(frAt(e));
+        if (i >= 0) {
+            gvPlayTrack(i);
+        } else {
+            gvArmFr = GV_REST;
+            if (phonoActive) {
+                stopPhono();
+                isPlaying = false;
+                updatePlayButton();
+            }
+            playerSubtext.textContent = "톤암을 거치대에 올렸습니다.";
+        }
+    };
+    hit.addEventListener("pointerup", drop);
+    hit.addEventListener("pointercancel", () => { gvArmDrag = false; });
+}
+
+// 도는 판을 손으로 문지르면 강철 바늘이 홈을 긁는다 — 잡음이 커지고 바늘이 상한다
+function gvBindDisc() {
+    const hit = document.getElementById("gvDiscHit");
+    if (!hit) return;
+    hit.addEventListener("pointerdown", (e) => {
+        try { hit.setPointerCapture(e.pointerId); } catch (err) {}
+        hit.style.cursor = "grabbing";
+        gvRubLast = { x: e.clientX, y: e.clientY };
+    });
+    hit.addEventListener("pointermove", (e) => {
+        if (!gvRubLast) return;
+        const dist = Math.hypot(e.clientX - gvRubLast.x, e.clientY - gvRubLast.y);
+        gvRubLast = { x: e.clientX, y: e.clientY };
+        ttDust = Math.min(1, ttDust + dist * 0.0016);
+        gvNeedleWear = Math.min(1, gvNeedleWear + dist * 0.0006);
+        if (gvRunning() && gvSpin > 0.5) gvScratch = Math.min(1, gvScratch + dist * 0.012);
+    });
+    const end = () => { gvRubLast = null; hit.style.cursor = "grab"; };
+    hit.addEventListener("pointerup", end);
+    hit.addEventListener("pointercancel", end);
+}
+
+function mountVictorV() {
+    const list = document.getElementById("gvTrackList");
+    if (list) list.innerHTML = gvTrackRows();
+    gvPaintRecord();
+    soloOn("gvBrakeHit", gvToggleBrake, "브레이크 — 재생과 정지");
+    soloOn("gvCrankHit", gvWindUp, "태엽 크랭크 — 스프링 모터 감기");
+    soloOn("gvTinHit", gvChangeNeedle, "바늘통 — 새 강철 바늘로 교체");
+    soloOn("gvCrateBtn", openCrate, "음반 수납장 열기");
+    soloOn("gvPrevRec", () => setRecord(recordIdx - 1), "이전 음반");
+    soloOn("gvNextRec", () => setRecord(recordIdx + 1), "다음 음반");
+    (RECORD.tracks || []).forEach((tr, i) =>
+        soloOn("gvTrackHit" + i, () => gvPlayTrack(i), tr.t + " 재생"));
+    gvBindSpeed();
+    gvBindArm();
+    gvBindDisc();
+    gvPaintGauges();
+    soloPhonoNeedleSafe(gvNeedleWear);
+}
+
+function gvFrame(now, dt) {
+    const spinG = document.getElementById("gvSpinG");
+    if (!spinG) return;
+    const running = gvRunning();
+
+    // 태엽 — 도는 동안만 풀린다. 다 풀리면 스스로 멎는다.
+    if (running) {
+        gvWind = Math.max(0, gvWind - dt / GV_WIND_SEC);
+        gvNeedleWear = Math.min(1, gvNeedleWear + dt / GV_NEEDLE_SEC);
+        if (gvWind <= 0 && !gvRunDown) {
+            gvRunDown = true;
+            audio.pause();
+            playerSubtext.textContent = "태엽이 다 풀려 축음기가 멎었습니다 — 크랭크를 돌려 감아 주세요.";
+        }
+    }
+    // 남은 태엽이 적으면 회전이 처지고 음정이 함께 내려간다
+    const sag = gvWind < 0.18 ? 0.62 + 0.38 * (gvWind / 0.18) : 1;
+    const spinTarget = running ? 1 : 0;
+    const rate = spinTarget > gvSpin ? dt / 1.1 : dt / 1.7;
+    gvSpin = Math.max(0, Math.min(1, gvSpin + (spinTarget > gvSpin ? 1 : -1) * rate));
+    if (gvSpin > 0.002) {
+        gvAngle = (gvAngle + gvSpeed * sag / 60 * 360 * gvSpin * dt) % 360;
+        spinG.setAttribute("transform",
+            "translate(" + GV_PC.x + " " + GV_PC.y + ") scale(1 " + GV_K.toFixed(4) + ") rotate(" + gvAngle.toFixed(2) + ")");
+    }
+
+    // 스프링 모터의 와우 — 현대 턴테이블과 비교할 수 없이 크다
+    if (phonoActive && isPlaying && !SAFARI_LIKE) {
+        const t = now / 1000;
+        const wow = 1 + 0.0062 * Math.sin(t * 2 * Math.PI * 0.68) + 0.0024 * Math.sin(t * 2 * Math.PI * 2.7);
+        const spinPitch = gvSpin < 0.999 ? (0.45 + 0.55 * gvSpin) : 1;
+        try { audio.playbackRate = (gvSpeed / 78) * sag * wow * spinPitch; } catch (e) {}
+    }
+
+    // 바늘 위치 — 재생 진행에 따라 안쪽으로 파고든다
+    if (!gvArmDrag) {
+        let target = GV_REST;
+        if (phonoActive && phonoTrack >= 0) {
+            const tracks = RECORD.tracks || [];
+            const p = (audio.duration > 0 && isFinite(audio.duration))
+                ? Math.min(1, audio.currentTime / audio.duration) : 0;
+            const seg = 1 / Math.max(1, tracks.length);
+            target = GV_OUT - (GV_OUT - GV_IN) * Math.min(1, seg * (phonoTrack + p));
+        }
+        gvArmFr += (target - gvArmFr) * Math.min(1, dt * 3.2);
+    }
+    const stylus = gvStylusAt(gvArmFr);
+    const boxY = stylus.y - 56;
+    const arm = document.getElementById("gvArm");
+    const armHi = document.getElementById("gvArmHi");
+    const d = "M" + GV_ARM.x + " " + GV_ARM.y + " L" + stylus.x.toFixed(1) + " " + boxY.toFixed(1);
+    if (arm) arm.setAttribute("d", d);
+    if (armHi) armHi.setAttribute("d", d);
+    const box = document.getElementById("gvBoxG");
+    if (box) {
+        const tilt = Math.atan2(boxY - GV_ARM.y, stylus.x - GV_ARM.x) * 180 / Math.PI * 0.5;
+        box.setAttribute("transform", "translate(" + stylus.x.toFixed(1) + " " + boxY.toFixed(1) + ") rotate(" + tilt.toFixed(1) + ")");
+    }
+    const armHit = document.getElementById("gvArmHit");
+    if (armHit) {
+        armHit.setAttribute("cx", stylus.x.toFixed(1));
+        armHit.setAttribute("cy", boxY.toFixed(1));
+    }
+
+    // 크랭크 회전 애니메이션
+    if (gvCrankLeft > 0) {
+        const step = Math.min(gvCrankLeft, dt * 620);
+        gvCrankLeft -= step;
+        gvCrankAng = (gvCrankAng + step) % 360;
+        const crank = document.getElementById("gvCrankG");
+        if (crank) crank.setAttribute("transform", "rotate(" + gvCrankAng.toFixed(1) + " 1214 936)");
+    }
+    // 브레이크 레버 — 멎어 있으면 젖혀진다
+    const lever = document.getElementById("gvBrakeLever");
+    if (lever) lever.setAttribute("transform", "rotate(" + (running ? 0 : 34) + " 1058 800)");
+
+    // 표면 잡음 — 바늘이 닳을수록, 먼지가 쌓일수록 커진다. 한 바퀴마다 스치는 결까지.
+    const swish = 1 + 0.28 * Math.sin(gvAngle * Math.PI / 180);
+    const noise = gvSpin > 0.01
+        ? (0.016 + gvNeedleWear * 0.055 + ttDust * 0.02) * gvSpin * swish + gvScratch * 0.25
+        : 0;
+    if (typeof soloNoiseSet === "function") soloNoiseSet(noise, 0, 0);
+    soloPhonoNeedleSafe(gvNeedleWear);
+    gvScratch *= Math.exp(-dt * 9);
+
+    // 바늘이 다 닳으면 한 번만 알린다
+    if (gvNeedleWear >= 1 && running && !gvFrame.wornNoted) {
+        gvFrame.wornNoted = true;
+        playerSubtext.textContent = "바늘이 다 닳았습니다 — 바늘통을 눌러 새 바늘로 갈아 주세요.";
+    } else if (gvNeedleWear < 0.9) {
+        gvFrame.wornNoted = false;
+    }
+    gvPaintGauges();
+}
+
+// ----- 금성 A-501 (1959) -----
+// SELECT 노브가 SC(방송) · PU(음반 픽업) · SW(단파)를 고른다. 실물의 2밴드 눈금 중
+// 상단 행만 앱의 FM으로 바꿔 읽고, 하단 SW 행은 실물 눈금 그대로 남겨 SW에서 쓴다.
+const A5_BANDS = ["SC", "PU", "SW"];
+const A5_BAND_ANGLE = { SC: -34, PU: 0, SW: 34 };
+let a5Band = "SC";
+let a5Freq = 98;
+let a5Warm = 0;
+let a5Lamp = 0;
+
+function a5ResetTransport() {
+    a5Band = "SC";
+    a5Warm = 0;
+    a5Lamp = 0;
+    a5Freq = currentStation ? currentStation.freq : 98;
+}
+
+function a5PowerOn() { return volumeLevel > 0.02; }
+function a5FreqToX(f) { return A5_DIAL.x88 + (Math.max(88, Math.min(108, f)) - 88) * A5_DIAL.px; }
+
+function a5SetPointer(f) {
+    const ptr = document.getElementById("a5Ptr");
+    if (ptr) ptr.setAttribute("transform", "translate(" + (a5FreqToX(f) - A5_DIAL.drawX).toFixed(1) + ",0)");
+    const knob = document.getElementById("a5TunePtr");
+    if (knob) {
+        const ang = (Math.max(88, Math.min(108, f)) - 88) / 20 * 300 - 150;
+        knob.setAttribute("transform", "rotate(" + ang.toFixed(1) + " 1694 716)");
+    }
+    ["a5DialHit", "a5TuneHit"].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.setAttribute("aria-valuenow", f.toFixed(1));
+    });
+}
+
+function a5HighlightMark(id) {
+    const marks = document.getElementById("a5Marks");
+    if (!marks) return;
+    marks.querySelectorAll("rect").forEach((el) => {
+        const on = el.getAttribute("data-station") === id;
+        el.setAttribute("fill", on ? "#b5341f" : "#6d6450");
+        el.setAttribute("height", on ? "20" : "12");
+    });
+}
+
+function a5StationLabel(text) {
+    const el = document.getElementById("a5StationText");
+    if (el) el.textContent = text;
+}
+
+function a5SyncStation() {
+    if (!soloIsRadio()) return;
+    if (a5Band === "PU") {
+        a5StationLabel("PU · 픽업 입력 — " + (RECORD.title || "음반"));
+        a5HighlightMark(null);
+        return;
+    }
+    if (a5Band === "SW") {
+        a5StationLabel("SW · 단파 — 수신되는 방송이 없습니다");
+        a5HighlightMark(null);
+        return;
+    }
+    if (currentStation) {
+        a5Freq = currentStation.freq;
+        a5SetPointer(a5Freq);
+        a5HighlightMark(currentStation.id);
+        a5StationLabel(currentStation.name + " · " + currentStation.freq.toFixed(1) + " MHz");
+    } else {
+        a5HighlightMark(null);
+        a5StationLabel("");
+    }
+}
+
+function a5Preview(f) {
+    a5Freq = Math.max(88, Math.min(108, f));
+    a5SetPointer(a5Freq);
+    if (a5Band !== "SC") {
+        a5StationLabel(a5Band === "SW" ? "SW · " + a5Freq.toFixed(1) + " — 잡음뿐입니다" : "PU · 픽업 입력");
+        return;
+    }
+    const near = nearestStation(a5Freq);
+    a5StationLabel(near.name + " · " + near.freq.toFixed(1) + " MHz");
+    playerSubtext.textContent = near.name + " — 손을 떼면 선택됩니다.";
+}
+
+function a5Release(f) {
+    a5Freq = Math.max(88, Math.min(108, f));
+    if (a5Band !== "SC") {
+        a5SetPointer(a5Freq);
+        return;
+    }
+    if (!a5PowerOn()) {
+        playerSubtext.textContent = "VOLUME이 꺼져 있습니다 — 노브를 오른쪽으로 돌려 켜 주세요.";
+        a5SetPointer(a5Freq);
+        return;
+    }
+    const station = nearestStation(a5Freq);
+    selectStation(station.id, true);
+    a5SyncStation();
+}
+
+function a5CycleBand() {
+    const next = A5_BANDS[(A5_BANDS.indexOf(a5Band) + 1) % A5_BANDS.length];
+    a5SetBand(next);
+}
+
+function a5SetBand(band) {
+    if (!A5_BANDS.includes(band) || band === a5Band) return;
+    a5Band = band;
+    const ptr = document.getElementById("a5SelPtr");
+    if (ptr) ptr.setAttribute("transform", "rotate(" + A5_BAND_ANGLE[band] + " 1420 716)");
+    ["a5SelSc", "a5SelPu", "a5SelSw"].forEach((id, i) => {
+        const el = document.getElementById(id);
+        if (el) el.setAttribute("opacity", A5_BANDS[i] === band ? "1" : "0.32");
+    });
+    if (band === "SC") {
+        stopPhono();
+        playerSubtext.textContent = "SC — 방송 수신. 다이얼이나 TUNER 노브로 선국하세요.";
+        if (a5PowerOn()) {
+            const station = currentStation || nearestStation(a5Freq);
+            if (station) selectStation(station.id, true);
+        }
+    } else if (band === "PU") {
+        if (!PHONO_AVAILABLE) {
+            playerSubtext.textContent = "PU — 음반 카탈로그를 불러오지 못해 픽업 입력을 쓸 수 없습니다.";
+        } else {
+            playerSubtext.textContent = "PU — 픽업 입력. 음반을 라디오의 진공관 앰프로 듣습니다.";
+            if (a5PowerOn()) playPhonoTrack(0);
+        }
+    } else {
+        stopPhono();
+        stopPlay();
+        playerSubtext.textContent = "SW — 단파. 국내 단파 방송은 제공되지 않아 잡음과 헤테로다인 휘슬만 들립니다.";
+    }
+    if (typeof ensureAudioGraph === "function") ensureAudioGraph();
+    a5SyncStation();
+    gtag('event', 'a501_band', { band: a5Band });
+}
+
+function a5BindDial() {
+    const bind = (id, toFreq) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        let dragging = false, startX = 0, startFreq = 98;
+        el.addEventListener("pointerdown", (e) => {
+            dragging = true;
+            startX = e.clientX;
+            startFreq = a5Freq;
+            try { el.setPointerCapture(e.pointerId); } catch (err) {}
+            a5Preview(toFreq(e, startX, startFreq));
+            e.preventDefault();
+        });
+        el.addEventListener("pointermove", (e) => {
+            if (dragging) a5Preview(toFreq(e, startX, startFreq));
+        });
+        el.addEventListener("pointerup", (e) => {
+            if (!dragging) return;
+            dragging = false;
+            a5Release(toFreq(e, startX, startFreq));
+        });
+        el.addEventListener("pointercancel", () => { dragging = false; });
+        el.addEventListener("keydown", (e) => {
+            if (e.key === "ArrowLeft" || e.key === "ArrowDown") { e.preventDefault(); stepStation(-1); }
+            else if (e.key === "ArrowRight" || e.key === "ArrowUp") { e.preventDefault(); stepStation(1); }
+        });
+    };
+    // 다이얼 유리는 절대 위치, TUNER 노브는 상대 이동 (실물의 감속 기어 느낌)
+    bind("a5DialHit", (e) => 88 + (soloPointAt(e).x - A5_DIAL.x88) / A5_DIAL.px);
+    bind("a5TuneHit", (e, startX, startFreq) => startFreq + (e.clientX - startX) / 16);
+}
+
+function a5BindVolume() {
+    const hit = document.getElementById("a5VolHit");
+    if (!hit) return;
+    let dragging = false, startX = 0, startVol = 1;
+    const paint = () => {
+        const ptr = document.getElementById("a5VolPtr");
+        if (ptr) ptr.setAttribute("transform", "rotate(" + (-140 + volumeLevel * 280).toFixed(1) + " 1146 716)");
+        hit.setAttribute("aria-valuenow", Math.round(volumeLevel * 100));
+    };
+    const apply = (v) => {
+        const wasOn = a5PowerOn();
+        setVolume(Math.max(0, Math.min(1, v)));
+        paint();
+        const isOn = a5PowerOn();
+        if (wasOn && !isOn) {
+            stopPlay();
+            playerSubtext.textContent = "VOLUME을 끝까지 돌려 전원을 껐습니다.";
+        } else if (!wasOn && isOn) {
+            playerSubtext.textContent = "전원을 켰습니다 — 진공관이 달아오르는 데 몇 초 걸립니다.";
+            if (a5Band === "SC") {
+                const station = currentStation || nearestStation(a5Freq);
+                if (station) selectStation(station.id, true);
+            }
+        }
+    };
+    hit.addEventListener("pointerdown", (e) => {
+        dragging = true;
+        startX = e.clientX;
+        startVol = volumeLevel;
+        try { hit.setPointerCapture(e.pointerId); } catch (err) {}
+        e.preventDefault();
+    });
+    hit.addEventListener("pointermove", (e) => {
+        if (dragging) apply(startVol + (e.clientX - startX) / 280);
+    });
+    const end = () => { dragging = false; };
+    hit.addEventListener("pointerup", end);
+    hit.addEventListener("pointercancel", end);
+    hit.addEventListener("keydown", (e) => {
+        if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+        e.preventDefault();
+        apply(volumeLevel + (e.key === "ArrowRight" ? 0.05 : -0.05));
+    });
+    paint();
+}
+
+function mountA501() {
+    const marks = document.getElementById("a5Marks");
+    if (marks) {
+        marks.innerHTML = stations.map((st) =>
+            '<rect x="' + (a5FreqToX(st.freq) - 1.5).toFixed(1) + '" y="' + (A5_DIAL.y0 + 40) +
+            '" width="3" height="12" rx="1.5" fill="#6d6450" data-station="' + soloEsc(st.id) + '"/>').join("");
+    }
+    a5Freq = currentStation ? currentStation.freq : a5Freq;
+    a5SetPointer(a5Freq);
+    const selPtr = document.getElementById("a5SelPtr");
+    if (selPtr) selPtr.setAttribute("transform", "rotate(" + A5_BAND_ANGLE[a5Band] + " 1420 716)");
+    ["a5SelSc", "a5SelPu", "a5SelSw"].forEach((id, i) => {
+        const el = document.getElementById(id);
+        if (el) el.setAttribute("opacity", A5_BANDS[i] === a5Band ? "1" : "0.32");
+    });
+    a5BindDial();
+    a5BindVolume();
+    soloOn("a5SelHit", a5CycleBand, "SELECT — SC(방송)·PU(음반)·SW(단파) 전환");
+    a5SyncStation();
+}
+
+function a5Frame(now, dt) {
+    const lampEl = document.getElementById("a5DialLamp");
+    if (!lampEl) return;
+    // 진공관 예열 — 전원을 넣으면 서서히 달아오르고, 끄면 더 천천히 식는다
+    const target = a5PowerOn() ? 1 : 0;
+    const rate = target > a5Warm ? dt / 2.4 : dt / 3.6;
+    a5Warm = Math.max(0, Math.min(1, a5Warm + (target > a5Warm ? 1 : -1) * rate));
+    lampEl.setAttribute("opacity", (a5Warm * 0.95).toFixed(3));
+    const glow = document.getElementById("a5TubeGlow");
+    if (glow) glow.setAttribute("opacity", (a5Warm * (0.55 + Math.max(0, tsSignal) * 0.45)).toFixed(3));
+    // 10KC 배지 = 동조 표시등 — 방송이 잡히면 초록으로 밝아진다
+    const lampTarget = (a5Band === "SC" && isPlaying && currentStation) ? 1 : 0;
+    a5Lamp += (lampTarget * a5Warm - a5Lamp) * Math.min(1, dt * 4);
+    const lamp = document.getElementById("a5Lamp");
+    if (lamp) {
+        lamp.setAttribute("fill", a5Lamp > 0.05 ? "#4fd07a" : "#204a2f");
+        lamp.style.opacity = (0.45 + a5Lamp * 0.55).toFixed(2);
+        lamp.style.filter = a5Lamp > 0.05 ? "drop-shadow(0 0 " + (5 + a5Lamp * 9).toFixed(1) + "px rgba(79,208,122," + a5Lamp.toFixed(2) + "))" : "none";
+    }
+    // 단파는 잡음과 헤테로다인 휘슬만 — 다이얼 위치에 따라 휘슬 음정이 흐른다
+    if (typeof soloNoiseSet === "function") {
+        if (a5Band === "SW") {
+            const drift = 1 + 0.12 * Math.sin(now / 2600);
+            soloNoiseSet(0.05 * a5Warm, 0.008 * a5Warm, (620 + (a5Freq - 88) * 210) * drift);
+        } else {
+            soloNoiseSet(0.0035 * a5Warm, 0, 0);
+        }
+    }
+}
+
+function soloFrame(now, dt) {
+    if (!soloActive()) return;
+    if (soloModelId === "victorv") gvFrame(now, dt);
+    else a5Frame(now, dt);
+}
+
 // ----- 랙 프레임 루프 (플래터 회전·톤암·와우플러터·크랙클·진공관 글로우·VU) -----
 function ttFrame(now) {
     const dt = Math.min(0.05, ttLastTs ? (now - ttLastTs) / 1000 : 0.016);
@@ -3478,6 +4294,9 @@ function ttFrame(now) {
             playerSubtext.textContent = "스트림 응답이 없습니다 — 채널을 다시 선택해 주세요.";
         }
     }
+
+    // 단독 기기가 서 있으면 그 기기가 회전·바늘·잡음을 전담한다 (랙 턴테이블은 화면에 없다)
+    soloFrame(now, dt);
 
     const ttSpec = TT_MODELS[ttModelId] || TT_MODELS.sl1200;
     const rpm = (ttRpm45 ? 45 : 100 / 3) * ttSpeedTrim;
@@ -3516,7 +4335,7 @@ function ttFrame(now) {
     // 주의(실측 webprobe): WebKit은 playbackRate를 대입하는 것만으로 스트림을 리셋하고,
     // 리셋이 pause 이벤트를 불러 스핀업이 재계산되는 피드백 루프에 빠진다.
     // 사파리 계열에서는 프레임 루프에서 절대 건드리지 않는다 (45회전은 전환 시 1회 대입).
-    if (phonoActive && isPlaying && !SAFARI_LIKE) {
+    if (phonoActive && isPlaying && !SAFARI_LIKE && !soloActive()) {
         const t = now / 1000;
         const wow = 1 + 0.0022 * Math.sin(t * 2 * Math.PI * 0.43) + 0.0007 * Math.sin(t * 2 * Math.PI * 3.1);
         const spinPitch = ttSpin < 0.999 ? (0.5 + 0.5 * ttSpin) : 1;
@@ -3539,14 +4358,14 @@ function ttFrame(now) {
     const brushPad = document.getElementById("ttBrushPad");
     if (brushPad) brushPad.setAttribute("opacity", cleaning ? "1" : "0");
 
-    if (phonoActive && crackleGain) {
+    if (phonoActive && crackleGain && !soloActive()) {
         ensureCrackle();
         // 크랙클(장작 소리)은 먼지량에 비례 — 깨끗한 판은 은은하게, 먼지 낀 판은 타닥거린다
         const target = (isPlaying && !audio.muted) ? (0.006 + ttDust * 0.048) * ttSpec.noise : 0;
         crackleGain.gain.value += (target - crackleGain.gain.value) * 0.08;
     }
     // 바이닐 문지름 — 드래그로 쌓인 에너지가 마찰음 게인으로, 손을 멈추면 빠르게 잦아든다
-    if (scratchGain) {
+    if (scratchGain && !soloActive()) {
         if (ttScratchEnergy > 0.001) ensureScratch();
         const sTarget = (phonoActive && isPlaying && !audio.muted) ? Math.min(0.3, ttScratchEnergy * 0.3) : 0;
         scratchGain.gain.value += (sTarget - scratchGain.gain.value) * 0.5;
@@ -5990,12 +6809,14 @@ renderAmpPicker();
 renderDeckPicker();
 renderTtPicker();
 renderTimerPicker();
+renderSoloPicker();
 renderRackPresetPicker();
 mountTimer();
 mountEq();
 mountAmp();
 mountDeck();
 mountTurntable();
+mountSolo();
 applyUnitVisibility();
 startRackAnimationLoop();
 mountCoach();

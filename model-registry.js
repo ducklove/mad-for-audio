@@ -26,6 +26,11 @@
         timer: Object.freeze([
             "dtClockH", "dtClockM", "dtClockSec", "dtProgText",
             "dtSwTimer", "dtBtnProg", "dtBtnSleep"
+        ]),
+        // 단독 기기는 랙 컨트롤 계약을 공유하지 않는다 — 기기별 고유 조작만 갖는다.
+        solo: Object.freeze([
+            "gvSpinG", "gvArm", "gvBoxG", "gvCrankG", "gvBrakeHit", "gvTinHit",
+            "a5Ptr", "a5Marks", "a5DialHit", "a5VolHit", "a5SelHit", "a5TuneHit"
         ])
     });
 
@@ -34,7 +39,8 @@
         amplifier: Object.freeze({ models: AMP_MODELS, order: AMP_ORDER, defaultId: "mc2105" }),
         deck: Object.freeze({ models: DECK_MODELS, order: DECK_ORDER, defaultId: "dragon" }),
         turntable: Object.freeze({ models: TT_MODELS, order: TT_ORDER, defaultId: "lp12" }),
-        timer: Object.freeze({ models: TIMER_MODELS, order: Object.keys(TIMER_MODELS), defaultId: "dt540" })
+        timer: Object.freeze({ models: TIMER_MODELS, order: Object.keys(TIMER_MODELS), defaultId: "dt540" }),
+        solo: Object.freeze({ models: SOLO_MODELS, order: SOLO_ORDER, defaultId: "victorv" })
     });
 
     function svgDimensions(svg) {

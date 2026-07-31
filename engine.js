@@ -228,6 +228,15 @@ let voiceSigLast = null;
 function applySourceVoice() {
     if (!voiceLow || !voiceHigh || !audioCtx) return;
     let low = 0, high = 0, sig = "none";
+    // 단독 기기는 랙 모델의 음색표를 쓰지 않는다 — 착색은 solo 체인이 전담한다
+    if (typeof soloActive === "function" && soloActive()) {
+        sig = "solo:" + soloModelId;
+        if (sig === voiceSigLast) return;
+        voiceSigLast = sig;
+        voiceLow.gain.setTargetAtTime(0, audioCtx.currentTime, 0.08);
+        voiceHigh.gain.setTargetAtTime(0, audioCtx.currentTime, 0.08);
+        return;
+    }
     if (typeof phonoActive !== "undefined" && phonoActive) {
         const v = TT_VOICE[ttModelId] || { low: 0, high: 0 };
         low = v.low; high = v.high; sig = "tt:" + ttModelId;
@@ -300,6 +309,15 @@ function buildEqChain() {
     if (crackleGain) { try { crackleGain.disconnect(); } catch (e) {} }
     if (scratchGain) { try { scratchGain.disconnect(); } catch (e) {} }
     if (hissGain) { try { hissGain.disconnect(); } catch (e) {} }
+    // 단독 기기가 서 있으면 EQ·앰프·프런트패널을 통째로 건너뛴다 (랙에 물리지 않는 물건)
+    if (soloNodes && typeof soloActive === "function" && soloActive()) {
+        monoGain.connect(soloNodes.in);
+        if (crackleGain) crackleGain.connect(soloNodes.in);
+        if (scratchGain) scratchGain.connect(soloNodes.in);
+        if (hissGain) hissGain.connect(soloNodes.in);
+        applySoloVoice();
+        return;
+    }
     const m = EQ_MODELS[eqModelId];
     eqNodes = m.freqs.map((f) => {
         const b = audioCtx.createBiquadFilter();
@@ -528,7 +546,9 @@ function applyGainStaging() {
         (phonoActive ? (typeof phonoPlaybackGain === "function" ? phonoPlaybackGain() : PHONO_GAIN) : 1) * fpSourceTrim(), .02);
     // 앰프 전원 = 스피커 관문 — 청취 경로만 끊는다. 녹음 탭(recDest)은 이 앞에서 갈라지므로
     // 앰프가 꺼져 있어도 실물처럼 소스 신호는 데크에 계속 흐른다.
-    setAudioParam(gainNode.gain, volumeLevel * (unitOn("amp") ? 1 : 0), .012);
+    // 단독 기기에는 외부 앰프가 없다 — 자기 볼륨(volumeLevel)만이 관문이다.
+    const soloOn = typeof soloActive === "function" && soloActive();
+    setAudioParam(gainNode.gain, volumeLevel * (soloOn || unitOn("amp") ? 1 : 0), .012);
 }
 
 // ----- 프런트패널 상태 (모델별 노브·스위치 영속) -----
@@ -696,6 +716,257 @@ function ensureScratch() {
     } catch (e) { scratchSrc = null; }
 }
 
+// ----- 단독 기기(SOLO) 음향 경로 -----
+// 축음기와 라디오는 랙의 EQ·앰프·프런트패널을 통과하지 않는다. monoGain 바로 뒤에서
+// 갈라져 기기 고유의 대역·공명·포화를 지나 곧장 gainNode로 나간다.
+//
+//  · VICTOR V — 전기 증폭이 없다. 168Hz 아래와 3kHz 위가 물리적으로 재생되지 않고,
+//    나팔관의 관 공명(약 380·790·1900Hz)이 중음에 얹히며, 짧은 되울림이 금속성
+//    잔향을 만든다. 강철 바늘이 셸락 홈을 긁는 표면 잡음은 바늘이 닳을수록 커진다.
+//  · 금성 A-501 — 5극관의 비대칭 전달함수가 2차(짝수) 배음을 만들고, 한계치에서
+//    모서리 없이 둥글게 뭉개진다(소프트 클리핑). 220Hz 로우셸프와 캐비닛 공진으로
+//    중저음을 두껍게 채우고, 짧은 캐비닛 잔향이 공간감을 만든다.
+let soloNodes = null;
+let soloNoiseSrc = null;
+let soloWhistleOsc = null;
+let soloCurveCache = {};
+
+// 짝수 배음 위주의 진공관 전달함수 — 부드러운 니(모서리 없는 포화) + x² 성분
+function soloTubeCurve(even, knee) {
+    const key = "tube:" + even + ":" + knee;
+    if (soloCurveCache[key]) return soloCurveCache[key];
+    const n = 4096;
+    const c = new Float32Array(n);
+    const ceiling = 0.95;
+    for (let i = 0; i < n; i++) {
+        const x = i / (n - 1) * 2 - 1;
+        const sign = x < 0 ? -1 : 1;
+        const mag = Math.abs(x);
+        let shaped;
+        if (mag <= knee) {
+            shaped = mag;
+        } else {
+            const width = 1 - knee;
+            const t = (mag - knee) / width;
+            const q = (ceiling - knee) / width;
+            shaped = knee + width * (t + (10 * q - 6) * t ** 3 + (8 - 15 * q) * t ** 4 + (6 * q - 3) * t ** 5);
+        }
+        c[i] = (sign * shaped + even * shaped * shaped) / (1 + even);
+    }
+    soloCurveCache[key] = c;
+    return c;
+}
+
+// 운모 진동판 — 큰 진폭에서 딱딱하게 압축되는 어쿠스틱 재생기의 성격
+function soloMicaCurve() {
+    if (soloCurveCache.mica) return soloCurveCache.mica;
+    const n = 4096;
+    const c = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+        const x = i / (n - 1) * 2 - 1;
+        const sign = x < 0 ? -1 : 1;
+        const mag = Math.abs(x);
+        const shaped = Math.tanh(mag * 1.75) / Math.tanh(1.75);
+        c[i] = sign * shaped + 0.055 * shaped * shaped;
+    }
+    soloCurveCache.mica = c;
+    return c;
+}
+
+// 2차 배음 생성기(패러렐) — 원신호의 제곱을 낮은 레벨로 섞어 배음을 살린다
+function soloSquareCurve() {
+    if (soloCurveCache.square) return soloCurveCache.square;
+    const n = 2048;
+    const c = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+        const x = i / (n - 1) * 2 - 1;
+        c[i] = x * x * 2 - 1;
+    }
+    soloCurveCache.square = c;
+    return c;
+}
+
+function buildSoloNodes() {
+    if (!audioCtx || soloNodes) return;
+    const bq = (type, freq, q) => {
+        const node = audioCtx.createBiquadFilter();
+        node.type = type;
+        node.frequency.value = freq;
+        if (q != null) node.Q.value = q;
+        return node;
+    };
+    const n = {
+        in: audioCtx.createGain(),
+        mono: audioCtx.createGain(),
+        hp1: bq("highpass", 60, 0.7),
+        hp2: bq("highpass", 60, 0.7),
+        body: bq("peaking", 200, 1.1),
+        res1: bq("peaking", 790, 3),
+        res2: bq("peaking", 1900, 3.4),
+        drive: audioCtx.createGain(),
+        shaper: audioCtx.createWaveShaper(),
+        lp1: bq("lowpass", 12000, 0.7),
+        lp2: bq("lowpass", 12000, 0.7),
+        tilt: bq("highshelf", 6000, null),
+        ringDelay: audioCtx.createDelay(0.2),
+        ringFb: audioCtx.createGain(),
+        ringTone: bq("lowpass", 3000, 0.7),
+        ringWet: audioCtx.createGain(),
+        evenIn: audioCtx.createGain(),
+        evenShaper: audioCtx.createWaveShaper(),
+        evenBp: bq("bandpass", 1200, 0.6),
+        evenGain: audioCtx.createGain(),
+        noiseBp: bq("bandpass", 2400, 0.55),
+        noiseGain: audioCtx.createGain(),
+        whistleGain: audioCtx.createGain(),
+        out: audioCtx.createGain()
+    };
+    n.shaper.oversample = "4x";
+    n.evenShaper.oversample = "2x";
+    n.evenShaper.curve = soloSquareCurve();
+    n.noiseGain.gain.value = 0;
+    n.whistleGain.gain.value = 0;
+    n.in.connect(n.mono).connect(n.hp1).connect(n.hp2).connect(n.body)
+        .connect(n.res1).connect(n.res2).connect(n.drive).connect(n.shaper)
+        .connect(n.lp1).connect(n.lp2).connect(n.tilt);
+    n.tilt.connect(n.out);
+    // 관 공명·캐비닛 잔향 — 짧은 되울림 루프
+    n.tilt.connect(n.ringDelay);
+    n.ringDelay.connect(n.ringTone).connect(n.ringWet).connect(n.out);
+    n.ringDelay.connect(n.ringFb).connect(n.ringDelay);
+    // 짝수 배음 패러렐 — 라디오에서만 게인을 올린다
+    n.tilt.connect(n.evenIn).connect(n.evenShaper).connect(n.evenBp).connect(n.evenGain).connect(n.out);
+    // 기계·수신 잡음은 기기 착색을 함께 받아야 하므로 체인 맨 앞으로 들어간다
+    n.noiseBp.connect(n.noiseGain).connect(n.in);
+    n.whistleGain.connect(n.in);
+    n.out.connect(gainNode);
+    soloNodes = n;
+}
+
+function ensureSoloNoise() {
+    if (!audioCtx || !soloNodes || soloNoiseSrc) return;
+    try {
+        const sr = audioCtx.sampleRate;
+        const buf = audioCtx.createBuffer(1, sr * 3, sr);
+        const d = buf.getChannelData(0);
+        let grain = 0;
+        for (let i = 0; i < d.length; i++) {
+            let v = (Math.random() * 2 - 1) * 0.5;
+            // 홈을 긁는 알갱이 — 표면 잡음의 결을 만든다
+            if (Math.random() < 0.0009) grain = 0.3 + Math.random() * 0.7;
+            if (grain > 0.005) { v += (Math.random() * 2 - 1) * grain; grain *= 0.8; }
+            d[i] = v;
+        }
+        soloNoiseSrc = audioCtx.createBufferSource();
+        soloNoiseSrc.buffer = buf;
+        soloNoiseSrc.loop = true;
+        soloNoiseSrc.connect(soloNodes.noiseBp);
+        soloNoiseSrc.start();
+    } catch (e) { soloNoiseSrc = null; }
+}
+
+function ensureSoloWhistle() {
+    if (!audioCtx || !soloNodes || soloWhistleOsc) return;
+    try {
+        soloWhistleOsc = audioCtx.createOscillator();
+        soloWhistleOsc.type = "sine";
+        soloWhistleOsc.frequency.value = 2600;
+        soloWhistleOsc.connect(soloNodes.whistleGain);
+        soloWhistleOsc.start();
+    } catch (e) { soloWhistleOsc = null; }
+}
+
+// 기기·밴드가 바뀔 때 한 번씩 — 프레임 루프는 soloNoiseSet만 건드린다
+function applySoloVoice() {
+    if (!soloNodes || !audioCtx) return;
+    const kind = typeof soloKind === "function" ? soloKind() : "";
+    const t = audioCtx.currentTime;
+    const set = (param, value) => { try { param.setTargetAtTime(value, t, 0.05); } catch (e) { param.value = value; } };
+    if (kind === "phono") {
+        // 축음기 — 168Hz~3kHz의 좁은 중음, 나팔 공명 세 봉우리, 금속성 되울림
+        soloNodes.mono.channelCount = 1;
+        soloNodes.mono.channelCountMode = "explicit";
+        set(soloNodes.hp1.frequency, 172); soloNodes.hp1.Q.value = 0.85;
+        set(soloNodes.hp2.frequency, 158); soloNodes.hp2.Q.value = 0.7;
+        set(soloNodes.body.frequency, 380); soloNodes.body.Q.value = 2.2; set(soloNodes.body.gain, 3.4);
+        set(soloNodes.res1.frequency, 790); soloNodes.res1.Q.value = 3.1; set(soloNodes.res1.gain, 6.5);
+        set(soloNodes.res2.frequency, 1900); soloNodes.res2.Q.value = 3.6; set(soloNodes.res2.gain, 5);
+        set(soloNodes.drive.gain, 1.5);
+        soloNodes.shaper.curve = soloMicaCurve();
+        set(soloNodes.lp1.frequency, 3050); soloNodes.lp1.Q.value = 1.05;
+        set(soloNodes.lp2.frequency, 3600); soloNodes.lp2.Q.value = 0.7;
+        set(soloNodes.tilt.frequency, 2200); set(soloNodes.tilt.gain, -2);
+        set(soloNodes.ringDelay.delayTime, 0.0042);
+        set(soloNodes.ringFb.gain, 0.44);
+        set(soloNodes.ringTone.frequency, 2600);
+        set(soloNodes.ringWet.gain, 0.3);
+        set(soloNodes.evenGain.gain, 0);
+        set(soloNodes.noiseBp.frequency, 2500); soloNodes.noiseBp.Q.value = 0.5;
+        set(soloNodes.out.gain, 1.65);
+    } else if (kind === "radio") {
+        // 진공관 라디오 — 두툼한 중저음, 2차 배음, 부드러운 포화, 캐비닛 잔향
+        soloNodes.mono.channelCount = 2;
+        soloNodes.mono.channelCountMode = "max";
+        set(soloNodes.hp1.frequency, 66); soloNodes.hp1.Q.value = 0.7;
+        set(soloNodes.hp2.frequency, 52); soloNodes.hp2.Q.value = 0.6;
+        set(soloNodes.body.frequency, 168); soloNodes.body.Q.value = 1.05; set(soloNodes.body.gain, 4.6);
+        set(soloNodes.res1.frequency, 320); soloNodes.res1.Q.value = 0.9; set(soloNodes.res1.gain, 2.4);
+        set(soloNodes.res2.frequency, 2400); soloNodes.res2.Q.value = 1.1; set(soloNodes.res2.gain, -1.6);
+        set(soloNodes.drive.gain, 1.62);
+        soloNodes.shaper.curve = soloTubeCurve(0.11, 0.66);
+        set(soloNodes.lp1.frequency, 9200); soloNodes.lp1.Q.value = 0.72;
+        set(soloNodes.lp2.frequency, 13000); soloNodes.lp2.Q.value = 0.6;
+        set(soloNodes.tilt.frequency, 5600); set(soloNodes.tilt.gain, -2.6);
+        set(soloNodes.ringDelay.delayTime, 0.0265);
+        set(soloNodes.ringFb.gain, 0.33);
+        set(soloNodes.ringTone.frequency, 3100);
+        set(soloNodes.ringWet.gain, 0.17);
+        set(soloNodes.evenBp.frequency, 1250);
+        set(soloNodes.evenGain.gain, 0.075);
+        set(soloNodes.noiseBp.frequency, 1900); soloNodes.noiseBp.Q.value = 0.35;
+        set(soloNodes.out.gain, 0.92);
+    }
+}
+
+// 프레임 루프에서 부르는 잡음 제어 — 표면 잡음(축음기)·대역 잡음과 휘슬(라디오 SW)
+function soloNoiseSet(level, whistleLevel, whistleHz) {
+    if (!soloNodes || !audioCtx) return;
+    if (level > 0.0005 || whistleLevel > 0.0005) {
+        ensureSoloNoise();
+        if (whistleLevel > 0.0005) ensureSoloWhistle();
+    }
+    soloNodes.noiseGain.gain.value += (level - soloNodes.noiseGain.gain.value) * 0.12;
+    soloNodes.whistleGain.gain.value += ((whistleLevel || 0) - soloNodes.whistleGain.gain.value) * 0.14;
+    if (soloWhistleOsc && whistleHz) {
+        try { soloWhistleOsc.frequency.setTargetAtTime(whistleHz, audioCtx.currentTime, 0.06); } catch (e) {}
+    }
+}
+
+// 바늘이 닳으면 고역이 먼저 죽고 표면 잡음이 커진다 (프레임 루프가 마모율로 호출)
+function soloPhonoNeedle(wear) {
+    if (!soloNodes || !audioCtx) return;
+    const w = Math.max(0, Math.min(1, wear));
+    try {
+        soloNodes.lp1.frequency.setTargetAtTime(3050 - w * 1180, audioCtx.currentTime, 0.15);
+        soloNodes.res2.gain.setTargetAtTime(5 - w * 3.4, audioCtx.currentTime, 0.15);
+    } catch (e) {}
+}
+
+window.MFA_SoloDSP = Object.freeze({
+    inspect() {
+        if (!soloNodes) return null;
+        return {
+            kind: typeof soloKind === "function" ? soloKind() : "",
+            band: [soloNodes.hp1.frequency.value, soloNodes.lp1.frequency.value],
+            resonance: [soloNodes.body.frequency.value, soloNodes.res1.frequency.value, soloNodes.res2.frequency.value],
+            drive: soloNodes.drive.gain.value,
+            ring: [soloNodes.ringDelay.delayTime.value, soloNodes.ringFb.gain.value, soloNodes.ringWet.gain.value],
+            evenHarmonics: soloNodes.evenGain.gain.value,
+            noise: soloNodes.noiseGain.gain.value
+        };
+    }
+});
+
 // WebKit(사파리·맥 앱 WKWebView)의 MediaElementSource는 크로스오리진 미디어에서
 // CORS가 열려 있어도 무음을 내는 문제가 있다. 크롬 계열에서만 Web Audio 체인을 쓰고,
 // 그 외에는 iOS처럼 네이티브 직결 경로로 소리를 보장한다 (음색·이펙트는 계기 표시만).
@@ -828,6 +1099,8 @@ function ensureAudioGraph() {
         crackleGain.gain.value = 0;
         scratchGain = audioCtx.createGain();
         scratchGain.gain.value = 0;
+        // 단독 기기 경로 — 랙을 건너뛰고 monoGain에서 곧장 gainNode로 나가는 갈래
+        buildSoloNodes();
         // EQ 밴드는 현재 모델(GE-5/GE-10)로 구성 — monoGain→EQ→ampDrive + 크랙클/히스 연결
         buildEqChain();
         recSatShaper = audioCtx.createWaveShaper();
