@@ -3596,10 +3596,39 @@ function soloEsc(value) {
 function soloIsPhono() { return soloActive() && soloKind() === "phono"; }
 function soloIsRadio() { return soloActive() && soloKind() === "radio"; }
 
+// 값이 그대로인데도 매 프레임 속성을 쓰면, 그 요소가 속한 그룹의 필터(에이징 오버레이)가
+// 통째로 다시 래스터라이즈된다. 실제로 라디오가 60→46fps로 떨어졌다. 바뀔 때만 쓴다.
+const soloAttrCache = new Map();
+function soloAttr(id, name, value) {
+    const key = id + "|" + name;
+    if (soloAttrCache.get(key) === value) return;
+    const el = document.getElementById(id);
+    if (!el) return;
+    soloAttrCache.set(key, value);
+    el.setAttribute(name, value);
+}
+function soloStyle(id, name, value) {
+    const key = id + "|s|" + name;
+    if (soloAttrCache.get(key) === value) return;
+    const el = document.getElementById(id);
+    if (!el) return;
+    soloAttrCache.set(key, value);
+    el.style[name] = value;
+}
+function soloText(id, value) {
+    const key = id + "|t";
+    if (soloAttrCache.get(key) === value) return;
+    const el = document.getElementById(id);
+    if (!el) return;
+    soloAttrCache.set(key, value);
+    el.textContent = value;
+}
+
 function mountSolo() {
     const stage = document.getElementById("soloStage");
     if (!stage) return;
     if (!soloActive()) { stage.innerHTML = ""; return; }
+    soloAttrCache.clear();
     stage.innerHTML = SOLO_MODELS[soloModelId].render(soloFinish);
     applyPanelLighting(stage.querySelector("svg"));
     if (soloModelId === "victorv") mountVictorV();
@@ -3713,31 +3742,17 @@ function gvPaintRecord() {
 }
 
 function gvPaintGauges() {
-    const wind = document.getElementById("gvWindBar");
-    if (wind) {
-        wind.setAttribute("width", (gvWind * 200).toFixed(1));
-        wind.setAttribute("fill", gvWind < 0.18 ? "#c1502a" : "#d7a24a");
-    }
-    const windText = document.getElementById("gvWindText");
-    if (windText) windText.textContent = Math.round(gvWind * 100) + "%";
-    const needle = document.getElementById("gvNeedleBar");
-    if (needle) {
-        needle.setAttribute("width", (gvNeedleWear * 200).toFixed(1));
-        needle.setAttribute("fill", gvNeedleWear > 0.7 ? "#c1502a" : "#8d7b4e");
-    }
-    const needleText = document.getElementById("gvNeedleText");
-    if (needleText) {
-        needleText.textContent = gvNeedleWear < 0.05 ? "새 바늘"
-            : gvNeedleWear > 0.85 ? "교체 필요" : Math.round(gvNeedleWear * 100) + "% 마모";
-    }
-    const speedText = document.getElementById("gvSpeedText");
-    if (speedText) speedText.textContent = String(Math.round(gvSpeed));
-    const speedPtr = document.getElementById("gvSpeedPtr");
-    if (speedPtr) speedPtr.setAttribute("transform", "rotate(" + ((gvSpeed - 78) * 4.6).toFixed(1) + " 284 876)");
-    (RECORD.tracks || []).forEach((tr, i) => {
-        const bg = document.getElementById("gvTrackBg" + i);
-        if (bg) bg.setAttribute("opacity", i === phonoTrack ? "0.24" : "0");
-    });
+    soloAttr("gvWindBar", "width", (gvWind * 200).toFixed(1));
+    soloAttr("gvWindBar", "fill", gvWind < 0.18 ? "#c1502a" : "#d7a24a");
+    soloText("gvWindText", Math.round(gvWind * 100) + "%");
+    soloAttr("gvNeedleBar", "width", (gvNeedleWear * 200).toFixed(1));
+    soloAttr("gvNeedleBar", "fill", gvNeedleWear > 0.7 ? "#c1502a" : "#8d7b4e");
+    soloText("gvNeedleText", gvNeedleWear < 0.05 ? "새 바늘"
+        : gvNeedleWear > 0.85 ? "교체 필요" : Math.round(gvNeedleWear * 100) + "% 마모");
+    soloText("gvSpeedText", String(Math.round(gvSpeed)));
+    soloAttr("gvSpeedPtr", "transform", "rotate(" + ((gvSpeed - 78) * 4.6).toFixed(1) + " 284 876)");
+    (RECORD.tracks || []).forEach((tr, i) =>
+        soloAttr("gvTrackBg" + i, "opacity", i === phonoTrack ? "0.24" : "0"));
 }
 
 function gvPlayTrack(i) {
@@ -4241,18 +4256,16 @@ function a5Frame(now, dt) {
     const target = a5PowerOn() ? 1 : 0;
     const rate = target > a5Warm ? dt / 2.4 : dt / 3.6;
     a5Warm = Math.max(0, Math.min(1, a5Warm + (target > a5Warm ? 1 : -1) * rate));
-    lampEl.setAttribute("opacity", (a5Warm * 0.95).toFixed(3));
-    const glow = document.getElementById("a5TubeGlow");
-    if (glow) glow.setAttribute("opacity", (a5Warm * (0.55 + Math.max(0, tsSignal) * 0.45)).toFixed(3));
+    soloAttr("a5DialLamp", "opacity", (a5Warm * 0.95).toFixed(2));
+    soloAttr("a5TubeGlow", "opacity", (a5Warm * (0.55 + Math.max(0, tsSignal) * 0.45)).toFixed(2));
     // 10KC 배지 = 동조 표시등 — 방송이 잡히면 초록으로 밝아진다
     const lampTarget = (a5Band === "SC" && isPlaying && currentStation) ? 1 : 0;
     a5Lamp += (lampTarget * a5Warm - a5Lamp) * Math.min(1, dt * 4);
-    const lamp = document.getElementById("a5Lamp");
-    if (lamp) {
-        lamp.setAttribute("fill", a5Lamp > 0.05 ? "#4fd07a" : "#204a2f");
-        lamp.style.opacity = (0.45 + a5Lamp * 0.55).toFixed(2);
-        lamp.style.filter = a5Lamp > 0.05 ? "drop-shadow(0 0 " + (5 + a5Lamp * 9).toFixed(1) + "px rgba(79,208,122," + a5Lamp.toFixed(2) + "))" : "none";
-    }
+    soloAttr("a5Lamp", "fill", a5Lamp > 0.05 ? "#4fd07a" : "url(#a5LampGlass)");
+    soloStyle("a5Lamp", "opacity", (0.45 + a5Lamp * 0.55).toFixed(2));
+    soloStyle("a5Lamp", "filter", a5Lamp > 0.05
+        ? "drop-shadow(0 0 " + (5 + a5Lamp * 9).toFixed(0) + "px rgba(79,208,122," + a5Lamp.toFixed(1) + "))"
+        : "none");
     // 단파는 잡음과 헤테로다인 휘슬만 — 다이얼 위치에 따라 휘슬 음정이 흐른다
     if (typeof soloNoiseSet === "function") {
         if (a5Band === "SW") {

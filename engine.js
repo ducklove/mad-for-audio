@@ -824,8 +824,13 @@ function buildSoloNodes() {
     n.shaper.oversample = "4x";
     n.evenShaper.oversample = "2x";
     n.evenShaper.curve = soloSquareCurve();
+    // GainNode의 기본 게인은 1이다 — 배음 생성기와 잔향은 0에서 출발해야
+    // 기기를 고르기 전까지 아무것도 새어 나가지 않는다.
     n.noiseGain.gain.value = 0;
     n.whistleGain.gain.value = 0;
+    n.evenGain.gain.value = 0;
+    n.ringWet.gain.value = 0;
+    n.ringFb.gain.value = 0;
     n.in.connect(n.mono).connect(n.hp1).connect(n.hp2).connect(n.body)
         .connect(n.res1).connect(n.res2).connect(n.drive).connect(n.shaper)
         .connect(n.lp1).connect(n.lp2).connect(n.tilt);

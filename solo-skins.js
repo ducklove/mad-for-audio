@@ -46,8 +46,8 @@ function soloKnob(cx, cy, r, id, o) {
         '<ellipse cx="' + (cx - r * 0.34) + '" cy="' + (cy - r * 0.38) + '" rx="' + (r * 0.3) + '" ry="' + (r * 0.2) + '" fill="#ffffff" opacity=".07"/>' +
         (ptr ? '<g id="' + id + 'Ptr" transform="rotate(0 ' + cx + ' ' + cy + ')">' +
             '<rect x="' + (cx - r * 0.075) + '" y="' + (cy - capR + r * 0.02) + '" width="' + (r * 0.15) + '" height="' + (capR * 0.86) + '" rx="' + (r * 0.075) + '" fill="#05060a" opacity=".55"/>' +
-            '<rect x="' + (cx - r * 0.06) + '" y="' + (cy - capR + r * 0.04) + '" width="' + (r * 0.12) + '" height="' + (capR * 0.82) + '" rx="' + (r * 0.06) + '" fill="#eef0ee"/>' +
-            '<rect x="' + (cx - r * 0.022) + '" y="' + (cy - capR + r * 0.07) + '" width="' + (r * 0.044) + '" height="' + (capR * 0.76) + '" fill="#ffffff" opacity=".85"/>' +
+            '<rect x="' + (cx - r * 0.06) + '" y="' + (cy - capR + r * 0.04) + '" width="' + (r * 0.12) + '" height="' + (capR * 0.82) + '" rx="' + (r * 0.06) + '" fill="#ddd9cd"/>' +
+            '<rect x="' + (cx - r * 0.022) + '" y="' + (cy - capR + r * 0.07) + '" width="' + (r * 0.044) + '" height="' + (capR * 0.76) + '" fill="#f2eee0" opacity=".62"/>' +
             '</g>' : "") +
         '</g>';
 }
@@ -63,6 +63,41 @@ function soloScrew(x, y, r, dark) {
         '</g>';
 }
 
+// ── 세월의 흔적을 만드는 프랙탈 노이즈 오버레이 ────────────────────────────
+// 손으로 찍은 얼룩은 규칙이 보여 금세 그림이 된다. feTurbulence로 불규칙한
+// 마스크를 만들고 feColorMatrix의 알파 행으로 문턱값을 잘라 얼룩덜룩한 때·변색·
+// 부식을 만든다. RGB 행은 상수로 고정해 '무슨 색의 때인지'만 지정한다.
+//   alpha = aR·R + aG·G + off  (노이즈 평균 0.5 → off로 밀도를 조절)
+// 비용: 필터당 한 번만 래스터라이즈된다. 회전하는 요소 위에는 절대 걸지 않는다.
+function soloGrime(id, rgb, aR, aG, off, freq, octaves, seed) {
+    return '<filter id="' + id + '" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">' +
+        '<feTurbulence type="fractalNoise" baseFrequency="' + freq + '" numOctaves="' + octaves + '" seed="' + seed + '" result="t"/>' +
+        // 난류 출력은 알파도 노이즈다(프리멀티플라이드). 알파를 1로 눕히지 않으면
+        // R·G 채널값이 엔진마다 달라져 크로미움과 WebKit의 임계값이 어긋난다.
+        '<feColorMatrix in="t" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0 1" result="n"/>' +
+        '<feColorMatrix in="n" type="matrix" values="' +
+        '0 0 0 0 ' + rgb[0] + ' 0 0 0 0 ' + rgb[1] + ' 0 0 0 0 ' + rgb[2] + ' ' +
+        aR + ' ' + aG + ' 0 0 ' + off + '"/>' +
+        '</filter>';
+}
+
+// ── 오래된 물건을 찍은 사진의 색과 빛 ──────────────────────────────────
+// 골동품 사진에는 순수한 검정도 순수한 흰색도 없다. 검정은 들리고 흰색은 눌리며,
+// 전체가 앰버로 치우치고 채도가 낮다. 여기에 렌즈 비네팅과 필름 그레인이 얹힌다.
+// SVG 루트 전체에 필터를 걸면 회전 갱신마다 다시 래스터라이즈되므로, 같은 결과를
+// 정적 오버레이 레이어로만 만든다. (applyPanelLighting이 얹는 조명과 충돌하지 않는다)
+function soloFilmGrade(x, y, w, h) {
+    return '<g class="solo-grade" pointer-events="none">' +
+        // 리프티드 블랙 + 앰버 시프트 — 그늘에 공기가 낀다
+        '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" fill="#6b4f2e" opacity=".07"/>' +
+        // 렌즈 비네팅
+        '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" fill="url(#soVignette)"/>' +
+        // 필름 그레인 — 벡터 특유의 무결점 면을 깨는 마지막 한 겹
+        '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" filter="url(#soGrainL)" opacity=".05"/>' +
+        '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" filter="url(#soGrainD)" opacity=".07"/>' +
+        '</g>';
+}
+
 // 문서 전역에서 한 번만 정의하면 되는 공통 재질 defs (기기별 SVG 안에 삽입)
 function soloMaterialDefs(prefix) {
     return '<linearGradient id="soChrome" x1="0" y1="0" x2="1" y2="1">' +
@@ -72,6 +107,10 @@ function soloMaterialDefs(prefix) {
         '<linearGradient id="soChromeV" x1="0" y1="0" x2="0" y2="1">' +
         '<stop offset="0" stop-color="#fbfcfd"/><stop offset=".18" stop-color="#aeb5bd"/><stop offset=".38" stop-color="#f2f5f7"/>' +
         '<stop offset=".62" stop-color="#79808a"/><stop offset=".84" stop-color="#cdd3d9"/><stop offset="1" stop-color="#3a3f47"/></linearGradient>' +
+        // 세월 먹은 크롬 — 흰 하이라이트가 눌리고 전체가 회색 쪽으로 내려앉는다
+        '<linearGradient id="soChromeAged" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0" stop-color="#cfd2d1"/><stop offset=".2" stop-color="#8d918f"/><stop offset=".42" stop-color="#dcdedb"/>' +
+        '<stop offset=".64" stop-color="#6a6e6d"/><stop offset=".86" stop-color="#a9aeac"/><stop offset="1" stop-color="#34383a"/></linearGradient>' +
         '<radialGradient id="soCapDark" cx=".34" cy=".28" r=".92">' +
         '<stop offset="0" stop-color="#454951"/><stop offset=".38" stop-color="#25282e"/><stop offset=".76" stop-color="#141619"/><stop offset="1" stop-color="#08090b"/></radialGradient>' +
         '<pattern id="soKnurl" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(28)">' +
@@ -79,7 +118,12 @@ function soloMaterialDefs(prefix) {
         '<path d="M2.5 0V7 M6 0V7" stroke="#050608" stroke-width="1.2" opacity=".7"/></pattern>' +
         '<filter id="soSoft" x="-45%" y="-45%" width="200%" height="200%"><feGaussianBlur stdDeviation="7"/></filter>' +
         '<filter id="soWide" x="-60%" y="-60%" width="240%" height="240%"><feGaussianBlur stdDeviation="26"/></filter>' +
-        '<filter id="soTight" x="-30%" y="-30%" width="170%" height="170%"><feGaussianBlur stdDeviation="2.6"/></filter>';
+        '<filter id="soTight" x="-30%" y="-30%" width="170%" height="170%"><feGaussianBlur stdDeviation="2.6"/></filter>' +
+        '<radialGradient id="soVignette" cx=".48" cy=".44" r=".78">' +
+        '<stop offset=".5" stop-color="#000000" stop-opacity="0"/><stop offset=".82" stop-color="#0a0603" stop-opacity=".16"/>' +
+        '<stop offset="1" stop-color="#070402" stop-opacity=".42"/></radialGradient>' +
+        soloGrime("soGrainL", [0.72, 0.66, 0.54], 2.4, 1.1, -1.86, "0.75", 1, 3) +
+        soloGrime("soGrainD", [0.06, 0.04, 0.02], 2.4, 1.1, -1.86, "0.82", 1, 9);
 }
 
 // ===================================================================
@@ -186,28 +230,36 @@ function mfaVictorVSvg() {
 
     return '<svg class="solo-svg gv-svg" viewBox="0 0 2000 1240" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="Victor V 축음기 — 나팔관 어쿠스틱 재생">' +
         '<defs>' + soloMaterialDefs("gv") +
-        // ── 오크: 니스를 먹인 사분할 참나무. 결·도관·레이 플렉·광택을 따로 쌓는다
+        // ── 오크: 100년 묵은 셸락 니스. 니스가 산화해 훨씬 어둡고 붉어졌고, 결의 대비도
+        //    커졌다(도관에 때가 끼어 검게 가라앉는다). 실물 사진의 명암 폭을 그대로 따른다.
         '<linearGradient id="gvOakFace" x1="0" y1="0" x2="0" y2="1">' +
-        '<stop offset="0" stop-color="#c58c4e"/><stop offset=".06" stop-color="#a56c34"/><stop offset=".34" stop-color="#8b5628"/>' +
-        '<stop offset=".72" stop-color="#6f4220"/><stop offset=".92" stop-color="#4a2911"/><stop offset="1" stop-color="#31190a"/></linearGradient>' +
+        '<stop offset="0" stop-color="#7e4d23"/><stop offset=".06" stop-color="#693c1b"/><stop offset=".34" stop-color="#543015"/>' +
+        '<stop offset=".72" stop-color="#3d2210"/><stop offset=".92" stop-color="#26140a"/><stop offset="1" stop-color="#170c05"/></linearGradient>' +
         '<linearGradient id="gvOakTopFace" x1="0" y1="0" x2="1" y2="1">' +
-        '<stop offset="0" stop-color="#d59d5c"/><stop offset=".28" stop-color="#a97038"/><stop offset=".58" stop-color="#bd8144"/>' +
-        '<stop offset=".82" stop-color="#8a5527"/><stop offset="1" stop-color="#5e3616"/></linearGradient>' +
+        '<stop offset="0" stop-color="#8a5729"/><stop offset=".28" stop-color="#6a3f1d"/><stop offset=".58" stop-color="#764824"/>' +
+        '<stop offset=".82" stop-color="#4e2c14"/><stop offset="1" stop-color="#331b0b"/></linearGradient>' +
         '<linearGradient id="gvOakSide" x1="0" y1="0" x2="1" y2="0">' +
-        '<stop offset="0" stop-color="#6b401d"/><stop offset=".4" stop-color="#7d4c23"/><stop offset=".78" stop-color="#4e2c12"/><stop offset="1" stop-color="#2c1707"/></linearGradient>' +
+        '<stop offset="0" stop-color="#40240f"/><stop offset=".4" stop-color="#4c2b13"/><stop offset=".78" stop-color="#2a1608"/><stop offset="1" stop-color="#130903"/></linearGradient>' +
         // 사분할 참나무의 결 — 가로로 길게 흐르는 도관선. 무늬가 눈에 띄게 반복되면
         // 즉시 '그림'으로 읽히므로 타일을 크게 잡고 대비를 낮춘다 (사선 플렉 없음).
+        // 사분할 참나무의 도관 — 참나무는 환공재라 도관이 굵고, 사분할 판재에서는
+        // 연속 선이 아니라 짧게 끊긴 파선으로 드러난다. 100년이 지나면 그 도관에
+        // 먼지와 왁스가 차서 필드보다 훨씬 어두워지고, 밝던 결은 산화로 사라진다.
+        // 레이 플렉도 은빛에서 필드보다 어두운 색으로 뒤집힌다.
         '<pattern id="gvGrain" width="437" height="53" patternUnits="userSpaceOnUse">' +
-        '<path d="M0 5 C104 1 186 11 288 5 S392 2 437 8" fill="none" stroke="#f0c68a" stroke-width="1.1" opacity=".1"/>' +
-        '<path d="M0 12 C118 17 202 6 312 14 S404 18 437 13" fill="none" stroke="#261407" stroke-width="1.2" opacity=".2"/>' +
-        '<path d="M0 20 C92 15 174 25 282 19 S396 15 437 22" fill="none" stroke="#e8b878" stroke-width=".9" opacity=".07"/>' +
-        '<path d="M0 27 C126 32 206 22 322 29 S412 33 437 28" fill="none" stroke="#261407" stroke-width="1" opacity=".16"/>' +
-        '<path d="M0 35 C84 31 168 40 268 34 S388 31 437 37" fill="none" stroke="#f0c68a" stroke-width=".9" opacity=".08"/>' +
-        '<path d="M0 44 C112 49 196 39 306 46 S400 50 437 45" fill="none" stroke="#261407" stroke-width="1.1" opacity=".18"/>' +
+        '<path d="M0 5 C104 1 186 11 288 5 S392 2 437 8" fill="none" stroke="#c79a5e" stroke-width="1.2" opacity=".1" stroke-dasharray="34 9 18 13 52 7 26"/>' +
+        '<path d="M0 12 C118 17 202 6 312 14 S404 18 437 13" fill="none" stroke="#0e0602" stroke-width="2.6" opacity=".46" stroke-dasharray="46 11 22 8 64 14 30"/>' +
+        '<path d="M0 20 C92 15 174 25 282 19 S396 15 437 22" fill="none" stroke="#0e0602" stroke-width="1.5" opacity=".28" stroke-dasharray="28 16 52 9 40"/>' +
+        '<path d="M0 27 C126 32 206 22 322 29 S412 33 437 28" fill="none" stroke="#0e0602" stroke-width="2" opacity=".38" stroke-dasharray="58 12 26 10 44 8 36"/>' +
+        '<path d="M0 35 C84 31 168 40 268 34 S388 31 437 37" fill="none" stroke="#b98a52" stroke-width="1" opacity=".09" stroke-dasharray="24 14 40 8 30"/>' +
+        '<path d="M0 44 C112 49 196 39 306 46 S400 50 437 45" fill="none" stroke="#0e0602" stroke-width="2.3" opacity=".42" stroke-dasharray="40 9 62 15 24 11 48"/>' +
+        // 레이 플렉 — 사분할 오크의 서명. 100년 지나면 필드보다 어둡다.
+        '<path d="M62 6 L70 47 M198 4 L190 49 M330 8 L338 45" stroke="#1a0d04" stroke-width="5" opacity=".13"/>' +
+        '<path d="M118 10 L112 42 M268 12 L274 44 M396 6 L390 46" stroke="#1a0d04" stroke-width="3.4" opacity=".1"/>' +
         '</pattern>' +
         '<radialGradient id="gvWoodBlotch" cx=".3" cy=".3" r=".8">' +
-        '<stop offset="0" stop-color="#d9a25e" stop-opacity=".12"/><stop offset=".6" stop-color="#8a5628" stop-opacity=".04"/>' +
-        '<stop offset="1" stop-color="#3a2009" stop-opacity=".1"/></radialGradient>' +
+        '<stop offset="0" stop-color="#d9a25e" stop-opacity=".14"/><stop offset=".6" stop-color="#5c3413" stop-opacity=".06"/>' +
+        '<stop offset="1" stop-color="#1d0f04" stop-opacity=".2"/></radialGradient>' +
         '<linearGradient id="gvVarnish" x1="0" y1="0" x2="1" y2="1">' +
         '<stop offset="0" stop-color="#ffe6bd" stop-opacity=".26"/><stop offset=".2" stop-color="#ffdfb0" stop-opacity=".08"/>' +
         '<stop offset=".46" stop-color="#ffffff" stop-opacity="0"/><stop offset=".78" stop-color="#000000" stop-opacity=".1"/>' +
@@ -215,41 +267,43 @@ function mfaVictorVSvg() {
         // ── 놋쇠 원뿔: (1) 좌상단 광원의 방향성 명암을 리니어로 깔고
         //    (2) 목에서 퍼지는 폐색을 라디얼로 덮은 뒤 (3) 등고선과 이음매를 얹는다.
         '<linearGradient id="gvConeKey" x1=".14" y1="0" x2=".86" y2="1">' +
-        '<stop offset="0" stop-color="#3f2708"/><stop offset=".16" stop-color="#644410"/><stop offset=".34" stop-color="#966c1c"/>' +
-        '<stop offset=".52" stop-color="#c69434"/><stop offset=".7" stop-color="#e8bc5e"/><stop offset=".86" stop-color="#fadf95"/>' +
-        '<stop offset="1" stop-color="#fff6d6"/></linearGradient>' +
+        '<stop offset="0" stop-color="#33200a"/><stop offset=".16" stop-color="#553a12"/><stop offset=".34" stop-color="#82601c"/>' +
+        '<stop offset=".52" stop-color="#ac7f2e"/><stop offset=".7" stop-color="#cfa64c"/><stop offset=".86" stop-color="#dcc078"/>' +
+        '<stop offset="1" stop-color="#e6cf93"/></linearGradient>' +
         '<radialGradient id="gvConeThroat" cx=".16" cy=".78" r="1.02">' +
         '<stop offset="0" stop-color="#000000" stop-opacity=".97"/><stop offset=".1" stop-color="#000000" stop-opacity=".9"/>' +
         '<stop offset=".26" stop-color="#000000" stop-opacity=".7"/><stop offset=".46" stop-color="#000000" stop-opacity=".4"/>' +
         '<stop offset=".68" stop-color="#000000" stop-opacity=".16"/><stop offset="1" stop-color="#000000" stop-opacity="0"/></radialGradient>' +
         '<linearGradient id="gvBrassRing" x1="0" y1="0" x2="1" y2="1">' +
-        '<stop offset="0" stop-color="#33200a"/><stop offset=".1" stop-color="#fbeec2"/><stop offset=".24" stop-color="#8e6821"/>' +
-        '<stop offset=".42" stop-color="#fff4d2"/><stop offset=".58" stop-color="#a37a2c"/><stop offset=".74" stop-color="#f4dfa6"/>' +
-        '<stop offset=".9" stop-color="#6b4d18"/><stop offset="1" stop-color="#241505"/></linearGradient>' +
+        '<stop offset="0" stop-color="#2a1a07"/><stop offset=".1" stop-color="#d8c08a"/><stop offset=".24" stop-color="#6f5118"/>' +
+        '<stop offset=".42" stop-color="#e8d7a4"/><stop offset=".58" stop-color="#7d5c20"/><stop offset=".74" stop-color="#cbb279"/>' +
+        '<stop offset=".9" stop-color="#584010"/><stop offset="1" stop-color="#1c1004"/></linearGradient>' +
         '<linearGradient id="gvBrassTube" x1="0" y1="1" x2=".7" y2="0">' +
-        '<stop offset="0" stop-color="#2b1a06"/><stop offset=".16" stop-color="#7a561b"/><stop offset=".38" stop-color="#f2dda2"/>' +
-        '<stop offset=".54" stop-color="#fff8e2"/><stop offset=".72" stop-color="#a67c2c"/><stop offset=".9" stop-color="#4d360f"/>' +
+        '<stop offset="0" stop-color="#221405"/><stop offset=".16" stop-color="#664614"/><stop offset=".38" stop-color="#d9bf82"/>' +
+        '<stop offset=".54" stop-color="#f0dcaa"/><stop offset=".72" stop-color="#8c6725"/><stop offset=".9" stop-color="#402c0c"/>' +
         '<stop offset="1" stop-color="#241605"/></linearGradient>' +
         '<linearGradient id="gvRimSpec" x1="0" y1="0" x2="1" y2="1">' +
         '<stop offset="0" stop-color="#fffdf2" stop-opacity=".9"/><stop offset=".16" stop-color="#ffeec4" stop-opacity=".32"/>' +
         '<stop offset=".44" stop-color="#ffffff" stop-opacity="0"/><stop offset=".8" stop-color="#170e02" stop-opacity=".3"/>' +
         '<stop offset="1" stop-color="#0d0801" stop-opacity=".62"/></linearGradient>' +
-        // ── 니켈 도금(톤암·플래터 림·사운드박스)
+        // ── 니켈 도금(톤암·플래터 림·사운드박스) — 100년 지난 도금은 거울이 아니다.
+        //    중성 회색이 아니라 주변 나무의 호박색을 머금은 따뜻한 회색이고, 최고 명도가 눌려 있다.
         '<linearGradient id="gvNickel" x1="0" y1="0" x2=".4" y2="1">' +
-        '<stop offset="0" stop-color="#20242a"/><stop offset=".12" stop-color="#f3f6f8"/><stop offset=".3" stop-color="#7d848d"/>' +
-        '<stop offset=".48" stop-color="#fdfefe"/><stop offset=".66" stop-color="#8b929b"/><stop offset=".84" stop-color="#dfe4e8"/>' +
-        '<stop offset="1" stop-color="#1d2126"/></linearGradient>' +
+        '<stop offset="0" stop-color="#23201c"/><stop offset=".12" stop-color="#ded7c9"/><stop offset=".3" stop-color="#76706a"/>' +
+        '<stop offset=".48" stop-color="#efe8d9"/><stop offset=".66" stop-color="#837c74"/><stop offset=".84" stop-color="#cbc4b6"/>' +
+        '<stop offset="1" stop-color="#1d1a17"/></linearGradient>' +
         '<radialGradient id="gvNickelBall" cx=".32" cy=".26" r=".92">' +
-        '<stop offset="0" stop-color="#ffffff"/><stop offset=".2" stop-color="#dfe3e7"/><stop offset=".52" stop-color="#959ba3"/>' +
-        '<stop offset=".8" stop-color="#4e545c"/><stop offset="1" stop-color="#1b1e23"/></radialGradient>' +
+        '<stop offset="0" stop-color="#f4efe2"/><stop offset=".2" stop-color="#cdc6b8"/><stop offset=".52" stop-color="#8a847c"/>' +
+        '<stop offset=".8" stop-color="#484440"/><stop offset="1" stop-color="#1a1815"/></radialGradient>' +
         // ── 셸락판·융
         '<radialGradient id="gvShellac" cx=".4" cy=".36" r=".76">' +
         '<stop offset="0" stop-color="#2b2622"/><stop offset=".5" stop-color="#191614"/><stop offset=".86" stop-color="#100e0e"/><stop offset="1" stop-color="#231f1c"/></radialGradient>' +
         '<linearGradient id="gvDiscSpec" x1="0" y1="0" x2="1" y2="1">' +
         '<stop offset="0" stop-color="#fff3d8" stop-opacity=".3"/><stop offset=".38" stop-color="#e8cfa4" stop-opacity=".07"/>' +
         '<stop offset="1" stop-color="#ffffff" stop-opacity="0"/></linearGradient>' +
+        // 융은 색이 바래고 먼지를 먹어 탁해졌다
         '<radialGradient id="gvFelt" cx=".38" cy=".3" r=".85">' +
-        '<stop offset="0" stop-color="#3a6b4c"/><stop offset=".55" stop-color="#26492f"/><stop offset="1" stop-color="#122a1b"/></radialGradient>' +
+        '<stop offset="0" stop-color="#3c5342"/><stop offset=".55" stop-color="#2a3a2c"/><stop offset="1" stop-color="#16211a"/></radialGradient>' +
         // ── 종이 봉투·명판
         '<linearGradient id="gvPaper" x1="0" y1="0" x2=".3" y2="1">' +
         '<stop offset="0" stop-color="#e9dcbe"/><stop offset=".4" stop-color="#d6c49e"/><stop offset=".8" stop-color="#c2ad86"/><stop offset="1" stop-color="#a8926b"/></linearGradient>' +
@@ -260,7 +314,34 @@ function mfaVictorVSvg() {
         '<stop offset="0" stop-color="#3d2f21"/><stop offset=".45" stop-color="#241b14"/><stop offset="1" stop-color="#0e0b09"/></radialGradient>' +
         '<linearGradient id="gvFloor" x1="0" y1="0" x2="0" y2="1">' +
         '<stop offset="0" stop-color="#000000" stop-opacity="0"/><stop offset=".55" stop-color="#120b06" stop-opacity=".5"/><stop offset="1" stop-color="#080505" stop-opacity=".85"/></linearGradient>' +
+        // 세월의 때 — 놋쇠 변색, 목 근처의 녹청, 니스에 낀 그을음
+        soloGrime("gvTarnish", [0.13, 0.095, 0.04], 1.7, 1.0, -1.24, "0.021 0.017", 5, 11) +
+        soloGrime("gvVerdigris", [0.15, 0.21, 0.15], 1.9, 0.6, -1.62, "0.035", 4, 5) +
+        soloGrime("gvGrime", [0.07, 0.045, 0.02], 1.4, 0.9, -1.18, "0.026 0.019", 5, 23) +
+        soloGrime("gvBloom", [0.82, 0.74, 0.6], 1.5, 0.9, -1.42, "0.009 0.014", 4, 19) +
+        soloGrime("gvDecalErode", [0, 0, 0], 2.2, 1.1, -1.48, "0.055 0.045", 4, 37) +
+        // 폭싱 — 종이 속 철 이온과 곰팡이가 습기와 반응해 만든 산화 반점. 군집을 이룬다.
+        soloGrime("gvFoxing", [0.42, 0.26, 0.11], 2.4, 1.0, -2.05, "0.045 0.05", 4, 61) +
+        // 종이 가장자리 갈변 — 사각형 종이에 원형 감쇠를 걸면 네 모서리가 가장 진해진다
+        '<radialGradient id="gvPaperEdge" cx=".5" cy=".48" r=".72">' +
+        '<stop offset=".42" stop-color="#8a6428" stop-opacity="0"/><stop offset=".78" stop-color="#8a6428" stop-opacity=".12"/>' +
+        '<stop offset="1" stop-color="#6b4a1a" stop-opacity=".34"/></radialGradient>' +
+        // 셸락 니스의 크레이징 — turbulence(=|합|)는 0 근처에 골이 생긴다. 그 골만 남기면
+        // 손으로 그릴 수 없는 유기적인 균열망이 된다 (fractalNoise로는 안 나온다).
+        '<filter id="gvCrazeF" x="-2%" y="-2%" width="104%" height="104%" color-interpolation-filters="sRGB">' +
+        '<feTurbulence type="turbulence" baseFrequency="0.052 0.068" numOctaves="2" seed="31" result="n"/>' +
+        '<feColorMatrix in="n" type="matrix" values="0 0 0 0 0.08 0 0 0 0 0.045 0 0 0 0 0.018 -11 0 0 0 0.86"/>' +
+        '</filter>' +
+        // 마감이 닳아 생나무가 비치는 가장자리
+        '<radialGradient id="gvRubEdge" cx=".5" cy=".5" r=".74">' +
+        '<stop offset=".52" stop-color="#c9924f" stop-opacity="0"/><stop offset=".86" stop-color="#c9924f" stop-opacity=".09"/>' +
+        '<stop offset="1" stop-color="#e2ae6c" stop-opacity=".24"/></radialGradient>' +
         '<clipPath id="gvBellClip"><ellipse cx="' + GV_BELL.cx + '" cy="' + GV_BELL.cy + '" rx="' + (GV_BELL.rx - 18) + '" ry="' + (GV_BELL.ry - 17) + '"/></clipPath>' +
+        '<mask id="gvWornDecal"><rect x="420" y="960" width="400" height="180" fill="#fff"/>' +
+        '<rect x="420" y="960" width="400" height="180" filter="url(#gvDecalErode)"/></mask>' +
+        '<clipPath id="gvCabClip"><path d="M190 930 H1010 V1150 H190 Z M190 930 L350 740 H1170 L1010 930 Z"/></clipPath>' +
+        '<clipPath id="gvFrontClip"><rect x="190" y="930" width="820" height="220"/></clipPath>' +
+        '<clipPath id="gvTopClip"><polygon points="190,930 350,740 1170,740 1010,930"/></clipPath>' +
         '<clipPath id="gvSleeveClip"><rect x="1470" y="112" width="462" height="462" rx="5"/></clipPath>' +
         '<clipPath id="gvListClip"><rect x="1462" y="600" width="480" height="430"/></clipPath>' +
         '<path id="gvLabelArc" d="M -60 0 A 60 60 0 0 1 60 0" fill="none"/>' +
@@ -275,8 +356,8 @@ function mfaVictorVSvg() {
 
         // ── 나팔 목 (벨 뒤로 지나간다)
         '<path d="M330 728 C316 672 344 622 400 596 C482 558 566 558 648 574 L672 646 C588 628 500 630 440 666 C398 690 378 710 372 742 Z" fill="url(#gvBrassTube)" stroke="#201304" stroke-width="2.5"/>' +
-        '<path d="M348 722 C338 676 364 640 414 618 C482 588 556 586 632 598" fill="none" stroke="#fff8e0" stroke-width="6" opacity=".5"/>' +
-        '<path d="M356 726 C346 680 372 644 420 622 C486 594 558 592 632 604" fill="none" stroke="#fffdf2" stroke-width="2" opacity=".55"/>' +
+        '<path d="M348 722 C338 676 364 640 414 618 C482 588 556 586 632 598" fill="none" stroke="#f0dca6" stroke-width="6" opacity=".42" stroke-dasharray="86 12 54 9 120"/>' +
+        '<path d="M356 726 C346 680 372 644 420 622 C486 594 558 592 632 604" fill="none" stroke="#ffeec0" stroke-width="2" opacity=".45" stroke-dasharray="60 14 92"/>' +
         '<path d="M370 742 C362 702 386 670 432 650 C502 618 574 618 654 632" fill="none" stroke="#2a1904" stroke-width="6" opacity=".45"/>' +
 
         // ── 니켈 엘보 (톤암 뒷마운트 ↔ 나팔)
@@ -302,35 +383,62 @@ function mfaVictorVSvg() {
         '<ellipse cx="' + GV_BELL.cx + '" cy="' + GV_BELL.cy + '" rx="' + (GV_BELL.rx - 18) + '" ry="' + (GV_BELL.ry - 17) + '" fill="url(#gvConeThroat)"/>' +
         gvHornContours() +
         gvHornSeams() +
+        // 백 년 된 놋쇠 — 라커가 벗겨지며 얼룩덜룩 변색한다. 변색은 광택보다 아래에 깔려야
+        // 한다: 닦인 곳은 여전히 반사하고, 변색한 곳만 빛을 잃는다.
+        '<rect x="500" y="20" width="820" height="700" fill="#000" filter="url(#gvTarnish)" opacity=".34"/>' +
+        // 녹청은 목 둘레의 골에만 아주 얇게 — 넓게 깔면 곰팡이처럼 보인다
+        '<ellipse cx="' + GV_THROAT.x + '" cy="' + GV_THROAT.y + '" rx="120" ry="100" fill="#000" filter="url(#gvVerdigris)" opacity=".22"/>' +
         // 원뿔 안쪽 벽에 고인 빛 — 목 반대편(오른쪽 아래) 곡면이 키 라이트를 받는다.
-        // 테두리를 따라 흐르는 넓은 반사이므로 벨 안쪽 가장자리에 붙여 둔다.
-        '<path d="' + gvBellArc(330, 278, -50, 96) + '" fill="none" stroke="#ffeec0" stroke-width="122" opacity=".17" filter="url(#soWide)"/>' +
-        '<path d="' + gvBellArc(316, 266, -30, 78) + '" fill="none" stroke="#fff6dc" stroke-width="52" opacity=".14" filter="url(#soWide)"/>' +
-        // 림 바로 안쪽의 하드 스펙큘러 — 금속의 결정적 신호
-        '<path d="' + gvBellArc(354, 298, -26, 74) + '" fill="none" stroke="#fffdf3" stroke-width="15" opacity=".5" filter="url(#soSoft)" stroke-linecap="round"/>' +
-        '<path d="' + gvBellArc(354, 298, -22, 16) + '" fill="none" stroke="#fffef8" stroke-width="8" opacity=".55" filter="url(#soTight)" stroke-linecap="round"/>' +
-        '<path d="' + gvBellArc(300, 252, 30, 80) + '" fill="none" stroke="#fff6da" stroke-width="7" opacity=".28" filter="url(#soSoft)" stroke-linecap="round"/>' +
-        // 목: 소리가 빨려 들어가는 구멍
-        '<ellipse cx="' + GV_THROAT.x + '" cy="' + GV_THROAT.y + '" rx="38" ry="33" fill="none" stroke="#b98c33" stroke-width="7" opacity=".7"/>' +
-        '<ellipse cx="' + (GV_THROAT.x + 2) + '" cy="' + (GV_THROAT.y + 2) + '" rx="35" ry="30" fill="none" stroke="#ffe9b0" stroke-width="2.4" opacity=".38"/>' +
-        '<ellipse id="gvHornMouth" cx="' + GV_THROAT.x + '" cy="' + GV_THROAT.y + '" rx="31" ry="26" fill="#080401"/>' +
-        '<ellipse cx="' + (GV_THROAT.x + 5) + '" cy="' + (GV_THROAT.y - 8) + '" rx="17" ry="11" fill="#301d05"/>' +
-        // 백 년 된 놋쇠의 얼룩과 자잘한 흠 — 완벽하게 매끈하면 그림으로 보인다
-        '<g opacity=".34" filter="url(#soWide)">' +
-        '<ellipse cx="1020" cy="212" rx="86" ry="44" fill="#8a6a2c" opacity=".3"/>' +
-        '<ellipse cx="812" cy="470" rx="104" ry="48" fill="#f3dda2" opacity=".16"/>' +
-        '<ellipse cx="1146" cy="452" rx="70" ry="96" fill="#7a5a22" opacity=".26"/>' +
-        '<ellipse cx="700" cy="238" rx="64" ry="40" fill="#6a4c1c" opacity=".28"/></g>' +
-        '<g stroke="#fff6dc" stroke-width="1.1" opacity=".2" fill="none">' +
-        '<path d="M760 300 Q900 262 1120 292"/><path d="M700 420 Q880 402 1080 440"/>' +
-        '<path d="M840 172 Q950 160 1046 186"/></g>' +
-        '<g stroke="#241505" stroke-width="1" opacity=".22" fill="none">' +
-        '<path d="M772 310 Q912 272 1132 302"/><path d="M712 432 Q892 414 1092 452"/></g>' +
+        '<path d="' + gvBellArc(330, 278, -50, 96) + '" fill="none" stroke="#ffeec0" stroke-width="122" opacity=".16" filter="url(#soWide)"/>' +
+        '<path d="' + gvBellArc(316, 266, -30, 78) + '" fill="none" stroke="#fff6dc" stroke-width="52" opacity=".13" filter="url(#soWide)"/>' +
+        // 림 바로 안쪽의 하드 스펙큘러 — 변색 위에서도 살아남는 금속의 신호.
+        // 다만 백 년 된 도금이라 좁고 날카롭지 않고 조금 뿌옇게 퍼진다.
+        // 놋쇠는 스펙큘러조차 따뜻하다 — 채도 0의 순백은 그 자체로 '새로 도금한 크롬' 신호다
+        '<path d="' + gvBellArc(354, 298, -26, 74) + '" fill="none" stroke="#f4e0ac" stroke-width="17" opacity=".4" filter="url(#soSoft)" stroke-linecap="round"/>' +
+        '<path d="' + gvBellArc(354, 298, -22, 16) + '" fill="none" stroke="#ffeec0" stroke-width="9" opacity=".46" filter="url(#soTight)" stroke-linecap="round"/>' +
+        '<path d="' + gvBellArc(300, 252, 30, 80) + '" fill="none" stroke="#eeda9e" stroke-width="8" opacity=".2" filter="url(#soSoft)" stroke-linecap="round"/>' +
+        // 손이 닿는 림 안쪽은 닳아 오히려 밝게 남는다
+        '<path d="' + gvBellArc(346, 292, 100, 250) + '" fill="none" stroke="#f6e3b4" stroke-width="34" opacity=".09" filter="url(#soWide)"/>' +
+        // 긁힘과 얕은 찍힘 — 오래된 금속은 결코 매끈하지 않다
+        // 긁힘은 파인 홈이다 — 바닥은 어둡고 광원 쪽 입술 한 줄만 밝다.
+        // 밝은 선만 그으면 홈이 아니라 표면에 그은 광택 자국으로 읽힌다.
+        '<g stroke="#1f1204" stroke-width="1.4" opacity=".34" fill="none">' +
+        '<path d="M760 300 Q900 262 1120 292" stroke-dasharray="180 22 90 16 210"/>' +
+        '<path d="M700 420 Q880 402 1080 440" stroke-dasharray="120 18 240"/>' +
+        '<path d="M840 172 Q950 160 1046 186" stroke-dasharray="90 14 130"/>' +
+        '<path d="M660 360 Q820 336 960 358" stroke-dasharray="160 20 110"/>' +
+        '<path d="M772 310 Q912 272 1132 302" stroke-dasharray="70 26 190 18 90"/>' +
+        '<path d="M712 432 Q892 414 1092 452" stroke-dasharray="210 16 130"/></g>' +
+        '<g stroke="#e8d5a2" stroke-width=".9" opacity=".26" fill="none" transform="translate(0 -1.6)">' +
+        '<path d="M760 300 Q900 262 1120 292" stroke-dasharray="180 22 90 16 210"/>' +
+        '<path d="M700 420 Q880 402 1080 440" stroke-dasharray="120 18 240"/>' +
+        '<path d="M840 172 Q950 160 1046 186" stroke-dasharray="90 14 130"/>' +
+        '<path d="M660 360 Q820 336 960 358" stroke-dasharray="160 20 110"/>' +
+        '<path d="M772 310 Q912 272 1132 302" stroke-dasharray="70 26 190 18 90"/>' +
+        '<path d="M712 432 Q892 414 1092 452" stroke-dasharray="210 16 130"/></g>' +
+        '<g pointer-events="none" filter="url(#soTight)">' +
+        '<ellipse cx="1042" cy="330" rx="20" ry="12" fill="#241505" opacity=".22" transform="rotate(-18 1042 330)"/>' +
+        '<ellipse cx="1045" cy="335" rx="18" ry="9" fill="#f7e6b6" opacity=".12" transform="rotate(-18 1045 335)"/>' +
+        '<ellipse cx="782" cy="212" rx="15" ry="9" fill="#241505" opacity=".2" transform="rotate(12 782 212)"/>' +
+        '<ellipse cx="784" cy="216" rx="13" ry="7" fill="#f7e6b6" opacity=".1" transform="rotate(12 784 216)"/>' +
+        '<ellipse cx="900" cy="602" rx="24" ry="10" fill="#241505" opacity=".18"/>' +
+        '<ellipse cx="902" cy="605" rx="21" ry="8" fill="#f7e6b6" opacity=".09"/></g>' +
+        // 나팔 최심부는 100년치 응결수와 먼지가 씻겨 나가지 않는 자리다 — 가장 더러워야 한다.
+        // 광량이 아니라 물성이 다르므로(광택이 죽은 검은 산화막) 그림자와 다르게 읽혀야 한다.
+        '<ellipse cx="' + (GV_THROAT.x + 4) + '" cy="' + (GV_THROAT.y - 2) + '" rx="96" ry="82" fill="#120b03" opacity=".5" filter="url(#soWide)"/>' +
+        '<ellipse cx="' + (GV_THROAT.x + 2) + '" cy="' + GV_THROAT.y + '" rx="62" ry="53" fill="#0d0803" opacity=".55" filter="url(#soSoft)"/>' +
+        '<ellipse cx="' + GV_THROAT.x + '" cy="' + GV_THROAT.y + '" rx="120" ry="100" fill="#000" filter="url(#gvVerdigris)" opacity=".3"/>' +
+        // 목은 구멍이다 — 아무것도 반사하지 않으므로 모든 겹의 맨 위에 온다
+        '<ellipse cx="' + GV_THROAT.x + '" cy="' + GV_THROAT.y + '" rx="38" ry="33" fill="none" stroke="#6d5119" stroke-width="7" opacity=".8"/>' +
+        '<ellipse cx="' + (GV_THROAT.x + 2) + '" cy="' + (GV_THROAT.y + 3) + '" rx="35" ry="30" fill="none" stroke="#c9ac6e" stroke-width="2" opacity=".22" stroke-dasharray="26 18 40"/>' +
+        '<ellipse id="gvHornMouth" cx="' + GV_THROAT.x + '" cy="' + GV_THROAT.y + '" rx="31" ry="26" fill="#050200"/>' +
+        '<ellipse cx="' + (GV_THROAT.x + 5) + '" cy="' + (GV_THROAT.y - 8) + '" rx="17" ry="11" fill="#1c1103"/>' +
         '</g>' +
         // 벨 입구 테 — 두께가 있는 롤드 브라스. 좌상단은 흰 하이라이트, 우하단은 그늘.
         '<ellipse cx="' + GV_BELL.cx + '" cy="' + GV_BELL.cy + '" rx="' + (GV_BELL.rx - 9) + '" ry="' + (GV_BELL.ry - 8.5) + '" fill="none" stroke="url(#gvBrassRing)" stroke-width="20"/>' +
-        '<path d="' + gvBellArc(381, 322, 196, 300) + '" fill="none" stroke="#fffdf4" stroke-width="8" opacity=".9" stroke-linecap="round"/>' +
-        '<path d="' + gvBellArc(381, 322, 212, 284) + '" fill="none" stroke="#ffffff" stroke-width="3.4" opacity=".9" stroke-linecap="round"/>' +
+        // 림 하이라이트도 따뜻하게, 그리고 끊기게 — 백 년 된 도금은 한 줄로 매끈하게 이어지지 않는다
+        '<path d="' + gvBellArc(381, 322, 196, 300) + '" fill="none" stroke="#f2ddab" stroke-width="8" opacity=".72" stroke-linecap="round" stroke-dasharray="118 9 62 14 96 7 140"/>' +
+        '<path d="' + gvBellArc(381, 322, 212, 284) + '" fill="none" stroke="#fff0c6" stroke-width="3.4" opacity=".78" stroke-linecap="round" stroke-dasharray="74 11 44 8 92"/>' +
         '<path d="' + gvBellArc(381, 322, 34, 116) + '" fill="none" stroke="#1a0f02" stroke-width="7" opacity=".5" stroke-linecap="round"/>' +
         '<path d="' + gvBellArc(381, 322, 120, 168) + '" fill="none" stroke="#e2c88e" stroke-width="5" opacity=".4" stroke-linecap="round"/>' +
         '<ellipse cx="' + GV_BELL.cx + '" cy="' + GV_BELL.cy + '" rx="' + (GV_BELL.rx - 18) + '" ry="' + (GV_BELL.ry - 17) + '" fill="none" stroke="#180e02" stroke-width="3.4" opacity=".55"/>' +
@@ -343,7 +451,9 @@ function mfaVictorVSvg() {
         // 나팔이 상판에 떨구는 그림자와, 니스 먹은 상판에 비친 놋쇠의 반사
         '<ellipse cx="760" cy="812" rx="330" ry="90" fill="#0a0602" opacity=".45" filter="url(#soWide)"/>' +
         '<ellipse cx="880" cy="798" rx="210" ry="46" fill="#e0aa55" opacity=".16" filter="url(#soWide)"/>' +
-        '<polygon points="206,922 ' + off(206, 922) + ' ' + off(994, 922) + ' 994,922" fill="none" stroke="#dfae6c" stroke-width="2" opacity=".35"/>' +
+        '<polygon points="206,922 ' + off(206, 922) + ' ' + off(994, 922) + ' 994,922" fill="none" stroke="#c79658" stroke-width="2" opacity=".22" stroke-dasharray="120 26 210 18 160"/>' +
+        // 공기 원근 — 뒤로 물러난 면일수록 대비가 낮고 대기색이 낀다. 앞면과 똑같이 선명하면 원근이 죽는다.
+        '<polygon points="190,930 ' + off(190, 930) + ' ' + off(1010, 930) + ' 1010,930" fill="#6b5334" opacity=".1"/>' +
 
         // ── 플래터: 니켈 림 + 녹색 융
         '<ellipse cx="686" cy="852" rx="308" ry="86" fill="#000" opacity=".6" filter="url(#soSoft)"/>' +
@@ -368,6 +478,13 @@ function mfaVictorVSvg() {
         '<text id="gvLabelTitle" x="0" y="22" font-family="Arial" font-size="14" fill="#f2e6c8" text-anchor="middle"></text>' +
         '<text id="gvLabelArtist" x="0" y="44" font-family="Arial" font-size="12" fill="#e6d5ae" text-anchor="middle"></text>' +
         '<text x="0" y="70" font-family="Arial" font-size="12.5" font-weight="700" letter-spacing="1.6" fill="#f8f0da" text-anchor="middle">78 R.P.M.</text>' +
+        // 물때 조수선 — 물이 스미고 마르며 가장자리에만 광물이 침착된다. 얼룩 안쪽보다
+        // 경계선이 진한 것이 물때의 결정적 신호다. 그리고 리드아웃을 넘은 바늘이 라벨을 긁었다.
+        '<path d="M-96 -22 Q-52 26 6 44 Q62 60 98 26" fill="none" stroke="#6b5330" stroke-width="3" opacity=".3"/>' +
+        '<path d="M-96 -22 Q-52 26 6 44 Q62 60 98 26 L98 100 L-96 100 Z" fill="#6b5330" opacity=".1"/>' +
+        '<path d="M-70 -68 A96 96 0 0 1 34 -92" fill="none" stroke="#2c2118" stroke-width="1.6" opacity=".4"/>' +
+        '<path d="M-62 -74 A96 96 0 0 1 30 -96" fill="none" stroke="#f6ecd4" stroke-width="1" opacity=".2"/>' +
+        '<circle r="13" fill="none" stroke="#3a2c1c" stroke-width="4" opacity=".3"/>' +
         '<circle r="7" fill="#0a0807"/>' +
         '</g>' +
         '<ellipse id="gvDiscHit" cx="' + GV_PC.x + '" cy="' + GV_PC.y + '" rx="' + GV_DISC + '" ry="' + (GV_DISC * GV_K).toFixed(0) + '" fill="#000" fill-opacity="0" style="cursor:grab"><title>도는 판을 문지르면 바늘이 긁힙니다</title></ellipse>' +
@@ -410,8 +527,27 @@ function mfaVictorVSvg() {
         '<rect x="190" y="930" width="820" height="220" fill="url(#gvGrain)" opacity=".8"/>' +
         '<ellipse cx="430" cy="1010" rx="270" ry="120" fill="url(#gvWoodBlotch)"/>' +
         '<ellipse cx="880" cy="1080" rx="220" ry="100" fill="url(#gvWoodBlotch)"/>' +
+        // 100년치 그을음과 손때 — 니스 표면에 얼룩덜룩 앉는다
+        '<g clip-path="url(#gvFrontClip)">' +
+        '<rect x="190" y="930" width="820" height="220" fill="#000" filter="url(#gvGrime)" opacity=".38"/>' +
+        // 셸락 니스의 크레이징 — 표면에 그물처럼 얽힌 미세 균열망
+        '<rect x="190" y="930" width="820" height="220" fill="#000" filter="url(#gvCrazeF)" opacity=".62"/>' +
+        // 모서리와 기둥 각은 마감이 닳아 생나무가 비친다
+        '<rect x="190" y="930" width="820" height="220" fill="url(#gvRubEdge)"/>' +
+        // 물잔 자국 — 찬 잔 밑의 물이 셸락막에 스며 미세 공극을 만들고 빛을 산란시킨다.
+        // 테두리는 물이 오래 고여 하얗게 뿌옇고 안쪽은 옅다.
+        '<g pointer-events="none" opacity=".5">' +
+        '<circle cx="742" cy="1064" r="41" fill="none" stroke="#d8c3a0" stroke-width="5" opacity=".3" filter="url(#soTight)"/>' +
+        '<circle cx="742" cy="1064" r="38" fill="#cbb695" opacity=".08"/>' +
+        '<circle cx="806" cy="1092" r="29" fill="none" stroke="#d8c3a0" stroke-width="4" opacity=".2" filter="url(#soTight)"/></g>' +
+        // 블룸 — 습기가 셸락막 안에 만든 우윳빛 구름 얼룩 (경계가 없어 그라데이션으론 못 낸다)
+        '<rect x="190" y="930" width="820" height="220" fill="#000" filter="url(#gvBloom)" opacity=".3"/>' +
+        '</g>' +
         '<rect x="190" y="930" width="820" height="220" fill="url(#gvVarnish)"/>' +
-        '<path d="M194 934 H1006" stroke="#ffd79a" stroke-width="3" opacity=".4"/>' +
+        // 모서리 각(아리스)의 마감은 균일하게 닳지 않는다 — 100년 된 가구의 모서리 광선은
+        // 반드시 끊겨 있다. 이어진 한 줄은 그 자체로 '새 물건' 신호다.
+        '<path d="M194 934 H1006" stroke="#e8b877" stroke-width="3" opacity=".32" stroke-dasharray="96 14 42 9 168 22 74 11 210"/>' +
+        '<path d="M194 936 H1006" stroke="#3a2109" stroke-width="1.6" opacity=".3" stroke-dasharray="40 120 60 90 180"/>' +
         '<path d="M194 1147 H1006" stroke="#0d0603" stroke-width="4" opacity=".6"/>' +
         // 코너 기둥
         '<rect x="190" y="930" width="74" height="220" fill="url(#gvOakFace)" stroke="#241306" stroke-width="2"/>' +
@@ -423,12 +559,14 @@ function mfaVictorVSvg() {
         '<rect x="184" y="1128" width="86" height="24" rx="4" fill="url(#gvOakFace)" stroke="#241306" stroke-width="2"/>' +
         '<rect x="930" y="1128" width="86" height="24" rx="4" fill="url(#gvOakFace)" stroke="#241306" stroke-width="2"/>' +
         // 금박 데칼 — 니스 아래 인쇄된 것처럼 그림자와 하이라이트를 함께
+        '<g mask="url(#gvWornDecal)">' +
         '<text x="602" y="1024" font-family="Georgia, serif" font-size="64" font-style="italic" font-weight="700" fill="#1c0d03" opacity=".55" text-anchor="middle">Victor</text>' +
         '<text x="600" y="1021" font-family="Georgia, serif" font-size="64" font-style="italic" font-weight="700" fill="#e8bd6e" text-anchor="middle">Victor</text>' +
         '<text x="600" y="1019" font-family="Georgia, serif" font-size="64" font-style="italic" font-weight="700" fill="#fff0c8" opacity=".35" text-anchor="middle">Victor</text>' +
         '<path d="M462 1040 Q600 1062 738 1040" fill="none" stroke="#d8ab5c" stroke-width="2.4" opacity=".75"/>' +
         '<text x="600" y="1084" font-family="Arial" font-size="16" font-weight="600" letter-spacing="3.2" fill="#f0c583" text-anchor="middle" opacity=".92">VICTOR TALKING MACHINE CO.</text>' +
         '<text x="600" y="1112" font-family="Arial" font-size="13" letter-spacing="2.8" fill="#c79a58" text-anchor="middle" opacity=".8">CAMDEN, N.J. &#183; VICTOR V</text>' +
+        '</g>' +
         // 굽도리 2단 + 바닥 접지
         molding(168, 1032, 1148, 1176) +
         molding(146, 1054, 1174, 1210) +
@@ -507,6 +645,12 @@ function mfaVictorVSvg() {
         '<path d="M1470 112 H1932 M1470 574 H1932" stroke="#8a7752" stroke-width="1" opacity=".5"/>' +
         '<text x="1494" y="154" font-family="Georgia, serif" font-size="20" font-style="italic" fill="#5f4f33">Victor Record</text>' +
         '<text id="gvSleeveNote" x="1494" y="546" font-family="Arial" font-size="13" fill="#5f4f33"></text>' +
+        // 100년 묵은 종이 — 갈색 폭싱 반점, 가장자리 갈변, 접힌 자국, 안에 든 판이 눌러 만든 원형 자국
+        '<rect x="1470" y="112" width="462" height="462" fill="#000" filter="url(#gvFoxing)" opacity=".3"/>' +
+        '<rect x="1470" y="112" width="462" height="462" fill="url(#gvPaperEdge)"/>' +
+        '<path d="M1470 236 H1932" stroke="#8a7146" stroke-width="2.4" opacity=".22"/>' +
+        '<path d="M1470 233 H1932" stroke="#efe4c8" stroke-width="1.6" opacity=".2"/>' +
+        '<circle cx="1701" cy="343" r="146" fill="none" stroke="#7d6540" stroke-width="3" opacity=".2"/>' +
         '</g>' +
         '<g id="gvCrateBtn" style="cursor:pointer"><title>음반 수납장 열기</title>' +
         '<rect x="1470" y="600" width="296" height="42" rx="8" fill="#000" opacity=".5"/>' +
@@ -532,6 +676,7 @@ function mfaVictorVSvg() {
         '<rect x="1616" y="1122" width="200" height="5" rx="2.5" fill="#ffffff" opacity=".08" pointer-events="none"/>' +
         '<text id="gvNeedleText" x="1912" y="1134" font-family="Arial" font-size="12" font-weight="700" fill="#e0c99b" text-anchor="end">새 바늘</text>' +
         '<text id="gvCredit" x="60" y="1226" font-family="Arial" font-size="12" fill="#7d6747"></text>' +
+        soloFilmGrade(0, 0, 2000, 1240) +
         '</svg>';
 }
 
@@ -547,33 +692,35 @@ const A5_DIAL = { x88: 1002, px: 29.5, drawX: 1297, y0: 300, y1: 430 };   // FM 
 const A501_FINISHES = {
     charcoal: {
         label: "금성 A-501 · 차콜",
-        shell: ["#6a635b", "#3b3630", "#211e1c", "#100e0d"],
-        shellEdge: "#080707",
-        rim: "#8b8378",
-        band: ["#332f2b", "#1a1817", "#0c0b0b"],
-        ivory: ["#f6f1e2", "#e9dfc6", "#cdc0a0"],
-        grille: "#eae2cc",
-        perf: "#5f5847",
-        ink: "#2b2721",
-        sub: "#6b6353",
-        bandInk: "#b3ac9d",
-        script: "#d19a45",
-        leg: "#161514"
+        // 70년 된 사출 플라스틱 — 광택이 죽어 반들거리지 않고, 색은 올리브 쪽으로 바랬다
+        shell: ["#57524a", "#38342e", "#22201d", "#131211"],
+        shellEdge: "#0a0908",
+        rim: "#8a8172",
+        band: ["#2f2c27", "#1c1a17", "#0e0d0c"],
+        // 상아색 전면은 자외선과 담배 연기로 누렇게 변했다
+        ivory: ["#eee4c4", "#ddd0aa", "#bfae85"],
+        grille: "#e0d4b4",
+        perf: "#4e483a",
+        ink: "#3a3327",
+        sub: "#7a6f57",
+        bandInk: "#a49b8a",
+        script: "#b98a3f",
+        leg: "#151413"
     },
     mint: {
         label: "금성 A-501 · 민트",
-        shell: ["#b6dbca", "#8cbcaa", "#5f9483", "#356d5c"],
-        shellEdge: "#254e42",
-        rim: "#c8e4d8",
-        band: ["#5d8e7d", "#43705f", "#2c5348"],
-        ivory: ["#f8f3e5", "#ece4cd", "#d5cbad"],
-        grille: "#f2ebd8",
-        perf: "#6b6f5f",
-        ink: "#28322c",
-        sub: "#5a6a61",
-        bandInk: "#dcecdf",
-        script: "#d19a45",
-        leg: "#2b4b40"
+        shell: ["#8fb0a0", "#6b9384", "#456d5f", "#284f41"],
+        shellEdge: "#17352c",
+        rim: "#a9c4b7",
+        band: ["#4e786a", "#3a5f51", "#26473d"],
+        ivory: ["#f0e7ca", "#e0d4b1", "#c3b58e"],
+        grille: "#e6dbbe",
+        perf: "#5b5c4a",
+        ink: "#36382c",
+        sub: "#6c7160",
+        bandInk: "#c6d6c8",
+        script: "#b98a3f",
+        leg: "#28453b"
     }
 };
 
@@ -592,7 +739,7 @@ function mfaA501Svg(finish) {
         }
         for (let f = 88; f <= 108; f += 4) {
             const x = (A5_DIAL.x88 + (f - 88) * A5_DIAL.px).toFixed(1);
-            out += '<text x="' + (Number(x) + 1.5) + '" y="' + (A5_DIAL.y0 + 3.5) + '" font-family="Arial" font-size="34" font-weight="700" fill="#ffffff" opacity=".5" text-anchor="middle">' + f + '</text>' +
+            out += '<text x="' + (Number(x) + 1.5) + '" y="' + (A5_DIAL.y0 + 3.5) + '" font-family="Arial" font-size="34" font-weight="700" fill="#f6eeda" opacity=".28" text-anchor="middle">' + f + '</text>' +
                 '<text x="' + x + '" y="' + (A5_DIAL.y0 + 2) + '" font-family="Arial" font-size="34" font-weight="700" fill="' + t.ink + '" text-anchor="middle">' + f + '</text>';
         }
         return out;
@@ -631,7 +778,7 @@ function mfaA501Svg(finish) {
         '<linearGradient id="a5Ivory" x1="0" y1="0" x2="0" y2="1">' +
         '<stop offset="0" stop-color="' + t.ivory[0] + '"/><stop offset=".5" stop-color="' + t.ivory[1] + '"/><stop offset="1" stop-color="' + t.ivory[2] + '"/></linearGradient>' +
         '<linearGradient id="a5Glass" x1="0" y1="0" x2="0" y2="1">' +
-        '<stop offset="0" stop-color="#fffbef"/><stop offset=".34" stop-color="#f4ecd6"/><stop offset=".78" stop-color="#e6dabb"/><stop offset="1" stop-color="#cfc19d"/></linearGradient>' +
+        '<stop offset="0" stop-color="#f2e8c8"/><stop offset=".34" stop-color="#e6d9b2"/><stop offset=".78" stop-color="#d4c398"/><stop offset="1" stop-color="#b8a67c"/></linearGradient>' +
         '<linearGradient id="a5GlassSheen" x1="0" y1="0" x2=".8" y2="1">' +
         '<stop offset="0" stop-color="#ffffff" stop-opacity=".5"/><stop offset=".14" stop-color="#ffffff" stop-opacity=".16"/>' +
         '<stop offset=".26" stop-color="#ffffff" stop-opacity=".02"/><stop offset=".54" stop-color="#ffffff" stop-opacity=".12"/>' +
@@ -639,6 +786,9 @@ function mfaA501Svg(finish) {
         '<linearGradient id="a5InsetTop" x1="0" y1="0" x2="0" y2="1">' +
         '<stop offset="0" stop-color="#3a3226" stop-opacity=".45"/><stop offset=".2" stop-color="#3a3226" stop-opacity=".1"/>' +
         '<stop offset="1" stop-color="#3a3226" stop-opacity="0"/></linearGradient>' +
+        '<radialGradient id="a5Yellow" cx=".46" cy=".62" r=".78">' +
+        '<stop offset="0" stop-color="#b9873a" stop-opacity="0"/><stop offset=".5" stop-color="#b9873a" stop-opacity=".07"/>' +
+        '<stop offset=".82" stop-color="#a9762e" stop-opacity=".17"/><stop offset="1" stop-color="#8e5f22" stop-opacity=".3"/></radialGradient>' +
         '<radialGradient id="a5GrilleShade" cx=".38" cy=".34" r=".85">' +
         '<stop offset=".4" stop-color="#000000" stop-opacity="0"/><stop offset=".8" stop-color="#241f14" stop-opacity=".16"/>' +
         '<stop offset="1" stop-color="#1a160e" stop-opacity=".38"/></radialGradient>' +
@@ -647,12 +797,28 @@ function mfaA501Svg(finish) {
         '<radialGradient id="a5FilGlow" cx=".5" cy=".5" r=".5">' +
         '<stop offset="0" stop-color="#ff9d3c" stop-opacity=".55"/><stop offset=".5" stop-color="#e8722a" stop-opacity=".2"/><stop offset="1" stop-color="#c85a1e" stop-opacity="0"/></radialGradient>' +
         // 타공판 — 구멍 아래에 밝은 립을 두면 두께가 생긴다
-        '<pattern id="a5Perf" width="13" height="13" patternUnits="userSpaceOnUse">' +
-        '<circle cx="6.5" cy="7.6" r="2.9" fill="#ffffff" opacity=".55"/>' +
-        '<circle cx="6.5" cy="6.5" r="2.9" fill="' + t.perf + '"/>' +
-        '<circle cx="6.5" cy="6.1" r="2.4" fill="#000000" opacity=".3"/></pattern>' +
+        '<pattern id="a5Perf" width="26" height="26" patternUnits="userSpaceOnUse">' +
+        '<g fill="#efe9d6" opacity=".4"><circle cx="6.5" cy="7.6" r="2.9"/><circle cx="19.5" cy="7.4" r="2.8"/>' +
+        '<circle cx="6.5" cy="20.7" r="2.85"/><circle cx="19.5" cy="20.5" r="2.75"/></g>' +
+        '<g fill="' + t.perf + '"><circle cx="6.5" cy="6.5" r="2.9"/><circle cx="19.5" cy="6.5" r="2.8"/>' +
+        '<circle cx="6.5" cy="19.5" r="2.85"/><circle cx="19.5" cy="19.5" r="2.75"/></g>' +
+        '<g fill="#000000"><circle cx="6.5" cy="6.1" r="2.4" opacity=".34"/><circle cx="19.5" cy="6.2" r="2.3" opacity=".22"/>' +
+        '<circle cx="6.5" cy="19.2" r="2.3" opacity=".28"/><circle cx="19.5" cy="19.1" r="2.4" opacity=".4"/></g></pattern>' +
         '<radialGradient id="a5LampGlass" cx=".34" cy=".3" r=".85">' +
-        '<stop offset="0" stop-color="#8ef0b0"/><stop offset=".45" stop-color="#3fae6b"/><stop offset="1" stop-color="#123a22"/></radialGradient>' +
+        '<stop offset="0" stop-color="#5ea877"/><stop offset=".45" stop-color="#2c6b45"/><stop offset="1" stop-color="#0e2718"/></radialGradient>' +
+        // 70년치 노후 — 크롬 몰딩의 점 부식과 벗겨짐, 상아 전면의 때, 인쇄의 마모
+        soloGrime("a5Corrode", [0.15, 0.14, 0.12], 1.85, 1.0, -1.18, "0.014 0.052", 4, 3) +
+        soloGrime("a5Flake", [0.86, 0.85, 0.79], 2.0, 0.9, -1.72, "0.02 0.07", 3, 13) +
+        soloGrime("a5Soil", [0.3, 0.24, 0.12], 1.45, 0.95, -1.42, "0.019 0.014", 5, 29) +
+        soloGrime("a5Erode", [0, 0, 0], 2.1, 1.1, -1.42, "0.09 0.075", 4, 41) +
+        soloGrime("a5Pit", [0.19, 0.18, 0.16], 1.6, 1.0, -1.2, "0.14 0.16", 3, 7) +
+        '<filter id="a5CrazeF" x="-2%" y="-2%" width="104%" height="104%" color-interpolation-filters="sRGB">' +
+        '<feTurbulence type="turbulence" baseFrequency="0.034 0.028" numOctaves="2" seed="17" result="n"/>' +
+        '<feColorMatrix in="n" type="matrix" values="0 0 0 0 0.24 0 0 0 0 0.2 0 0 0 0 0.15 -9 0 0 0 0.72"/>' +
+        '</filter>' +
+        '<mask id="a5WornInk"><rect x="200" y="640" width="700" height="160" fill="#fff"/>' +
+        '<rect x="200" y="640" width="700" height="160" filter="url(#a5Erode)"/></mask>' +
+        '<clipPath id="a5SpearClip"><path d="M256 566 L1000 538 L1744 566 L1000 594 Z"/></clipPath>' +
         '<clipPath id="a5GlassClip"><rect x="905" y="243" width="845" height="392" rx="7"/></clipPath>' +
         '<clipPath id="a5GrilleClip"><rect x="250" y="243" width="643" height="392" rx="7"/></clipPath>' +
         '<clipPath id="a5ShellClip"><path d="M150 800 H1850 L1795 200 Q1000 96 205 200 Z"/></clipPath>' +
@@ -668,26 +834,43 @@ function mfaA501Svg(finish) {
         '<g clip-path="url(#a5ShellClip)">' +
         '<rect x="150" y="96" width="1700" height="704" fill="url(#a5ShellSide)"/>' +
         // 상단 곡면을 따라 흐르는 넓은 광택 띠
-        '<path d="M205 214 Q1000 112 1795 214 L1790 268 Q1000 168 210 268 Z" fill="#ffffff" opacity=".16" filter="url(#soSoft)"/>' +
+        '<path d="M205 214 Q1000 112 1795 214 L1790 268 Q1000 168 210 268 Z" fill="#e8e4d6" opacity=".09" filter="url(#soSoft)"/>' +
+        // 70년치 잔 스크래치와 손때 — 광택이 죽고 표면이 고르지 않다
+        '<rect x="150" y="96" width="1700" height="704" fill="#000" filter="url(#a5Soil)" opacity=".22"/>' +
+        '<rect x="150" y="96" width="1700" height="704" fill="#000" filter="url(#a5CrazeF)" opacity=".22"/>' +
         '<path d="M150 800 H1850 L1795 200 Q1000 96 205 200 Z" fill="url(#a5Gloss)"/>' +
         '</g>' +
         // 윗면 — 뒤로 넘어간 곡면
         '<path d="M205 200 Q1000 96 1795 200 Q1000 128 205 200 Z" fill="' + t.shellEdge + '" opacity=".85"/>' +
         '<path d="M209 197 Q1000 100 1791 197" fill="none" stroke="' + t.rim + '" stroke-width="3.2" opacity=".7"/>' +
-        '<path d="M209 193 Q1000 96 1791 193" fill="none" stroke="#ffffff" stroke-width="1.6" opacity=".3"/>' +
+        '<path d="M209 193 Q1000 96 1791 193" fill="none" stroke="#e6e2d4" stroke-width="1.6" opacity=".2" stroke-dasharray="240 30 420 22 380"/>' +
 
         // ── 상아색 인서트 — 크롬 베젤 안에 앉힌다
         '<rect x="228" y="221" width="1544" height="436" rx="16" fill="#000" opacity=".5" filter="url(#soTight)"/>' +
-        '<rect x="234" y="227" width="1528" height="420" rx="13" fill="url(#soChromeV)"/>' +
-        '<rect x="240" y="233" width="1516" height="408" rx="10" fill="none" stroke="#ffffff" stroke-width="1.6" opacity=".45"/>' +
+        '<rect x="234" y="227" width="1528" height="420" rx="13" fill="url(#soChromeAged)"/>' +
+        // 크롬 테도 70년치 점 부식을 먹었다. 테 폭이 12px뿐이라 큰 반점은 얼룩처럼 보이므로
+        // 잘게 흐려 광택만 죽인다 (안쪽은 곧 상아 인서트가 덮는다).
+        '<rect x="234" y="227" width="1528" height="420" rx="13" fill="#000" filter="url(#a5Pit)" opacity=".3"/>' +
+        '<rect x="240" y="233" width="1516" height="408" rx="10" fill="none" stroke="#e6e2d4" stroke-width="1.6" opacity=".2"/>' +
         '<rect x="246" y="239" width="1508" height="400" rx="9" fill="url(#a5Ivory)"/>' +
+        // 황변은 균일하지 않다 — 빛과 담배 연기가 먼저 닿는 위·가장자리부터 진해지고,
+        // 손이 자주 닿아 닦이는 가운데 앞면은 덜하다.
+        '<rect x="246" y="239" width="1508" height="400" rx="9" fill="url(#a5Yellow)"/>' +
 
         // ── 좌: 타공 스피커 그릴
         '<rect x="250" y="243" width="643" height="392" rx="7" fill="' + t.grille + '"/>' +
+        // 진공관 불빛은 프레임마다 밝기가 바뀐다. 필터가 걸린 노후 레이어와 같은 그룹에 두면
+        // 그 그룹이 매 프레임 다시 래스터라이즈된다(실측 60→50fps). 그래서 그룹을 나눈다.
         '<g clip-path="url(#a5GrilleClip)">' +
         '<rect x="250" y="243" width="643" height="392" fill="url(#a5Perf)"/>' +
         '<ellipse id="a5TubeGlow" cx="572" cy="440" rx="300" ry="210" fill="url(#a5FilGlow)" opacity="0"/>' +
+        '</g>' +
+        '<g clip-path="url(#a5GrilleClip)" pointer-events="none">' +
         '<rect x="250" y="243" width="643" height="392" fill="url(#a5GrilleShade)"/>' +
+        // 구멍마다 앉은 70년치 때 — 얼룩덜룩 번져 그릴 톤을 고르지 않게 만든다
+        '<rect x="250" y="243" width="643" height="392" fill="#000" filter="url(#a5Soil)" opacity=".55"/>' +
+        '<rect x="250" y="243" width="643" height="392" fill="#000" filter="url(#a5Pit)" opacity=".3"/>' +
+        '<rect x="250" y="243" width="643" height="392" fill="#000" filter="url(#a5CrazeF)" opacity=".22"/>' +
         '<rect x="250" y="243" width="643" height="18" fill="url(#a5InsetTop)"/>' +
         '</g>' +
         '<rect x="250" y="243" width="643" height="392" rx="7" fill="none" stroke="#8f8770" stroke-width="1.8" opacity=".6"/>' +
@@ -725,29 +908,37 @@ function mfaA501Svg(finish) {
         '</g>' +
         // 현재 방송 이름 — 다이얼 유리에 인쇄된 국명 자리
         '<text id="a5StationText" x="1330" y="516" font-family="Arial" font-size="24" font-weight="600" letter-spacing="1.6" fill="' + t.ink + '" text-anchor="middle" opacity=".88"></text>' +
-        '<text x="1332" y="614" font-family="Georgia, serif" font-size="27" font-style="italic" font-weight="700" letter-spacing="3" fill="#ffffff" opacity=".45" text-anchor="middle">TWO BAND SUPER HETERODYNE</text>' +
+        '<text x="1332" y="614" font-family="Georgia, serif" font-size="27" font-style="italic" font-weight="700" letter-spacing="3" fill="#f6eeda" opacity=".26" text-anchor="middle">TWO BAND SUPER HETERODYNE</text>' +
         '<text x="1330" y="612" font-family="Georgia, serif" font-size="27" font-style="italic" font-weight="700" letter-spacing="3" fill="' + t.sub + '" text-anchor="middle" opacity=".95">TWO BAND SUPER HETERODYNE</text>' +
         // 유리면 반사
+        // 유리 뒷면 인쇄는 바래고, 앞면에는 먼지 필름과 얼룩이 앉았다
+        '<rect x="905" y="243" width="845" height="392" fill="#000" filter="url(#a5Soil)" opacity=".3" pointer-events="none"/>' +
+        '<rect x="905" y="243" width="845" height="392" fill="#000" filter="url(#a5CrazeF)" opacity=".16" pointer-events="none"/>' +
         '<rect x="905" y="243" width="845" height="392" fill="url(#a5GlassSheen)" pointer-events="none"/>' +
         '<rect x="905" y="243" width="845" height="20" fill="url(#a5InsetTop)" pointer-events="none"/>' +
-        '<path d="M918 256 H1738" stroke="#ffffff" stroke-width="2.4" opacity=".5" pointer-events="none"/>' +
+        '<path d="M918 256 H1738" stroke="#efe9d6" stroke-width="2.4" opacity=".26" pointer-events="none" stroke-dasharray="180 40 300 26 240"/>' +
         '</g>' +
         // 10KC 배지 — 앱에서는 동조(신호) 표시등으로 켜진다
         '<circle cx="1702" cy="292" r="33" fill="#000" opacity=".45"/>' +
         '<circle cx="1702" cy="290" r="33" fill="url(#soChromeV)"/>' +
         '<circle cx="1702" cy="290" r="28" fill="#12291b"/>' +
         '<circle id="a5Lamp" cx="1702" cy="290" r="26" fill="url(#a5LampGlass)"/>' +
-        '<ellipse cx="1693" cy="279" rx="10" ry="6" fill="#ffffff" opacity=".35" pointer-events="none"/>' +
+        '<ellipse cx="1693" cy="279" rx="10" ry="6" fill="#e8f0e6" opacity=".22" pointer-events="none"/>' +
         '<text x="1702" y="296" font-family="Arial" font-size="15" font-weight="700" fill="#e2f4e6" text-anchor="middle" pointer-events="none">10KC</text>' +
         '<rect x="905" y="243" width="845" height="392" rx="7" fill="none" stroke="#8f8770" stroke-width="1.8" opacity=".6"/>' +
 
         // ── 스피어 몰딩 — 양 끝이 뾰족하게 좁아지며 전면을 가로지르는 크롬 장식
         '<path d="M256 574 L1000 550 L1744 574 L1000 600 Z" fill="#000" opacity=".35" filter="url(#soTight)"/>' +
-        '<path d="M256 566 L1000 538 L1744 566 L1000 594 Z" fill="url(#soChromeV)" stroke="#3c4247" stroke-width="2"/>' +
-        '<path d="M320 562 L1000 544 L1680 562" fill="none" stroke="#ffffff" stroke-width="5" opacity=".95"/>' +
+        '<path d="M256 566 L1000 538 L1744 566 L1000 594 Z" fill="url(#soChromeAged)" stroke="#2f3437" stroke-width="2"/>' +
+        '<path d="M320 562 L1000 544 L1680 562" fill="none" stroke="#dfe2dd" stroke-width="5" opacity=".62" stroke-dasharray="140 18 76 24 210 14 120"/>' +
         '<path d="M320 572 L1000 558 L1680 572" fill="none" stroke="#9aa1a8" stroke-width="2" opacity=".7"/>' +
         '<path d="M320 580 L1000 568 L1680 580" fill="none" stroke="#22282f" stroke-width="2.4" opacity=".65"/>' +
-        '<path d="M256 566 L372 558 M1628 558 L1744 566" stroke="#eef1f3" stroke-width="1.8" opacity=".85"/>' +
+        '<path d="M256 566 L372 558 M1628 558 L1744 566" stroke="#cdd0cb" stroke-width="1.8" opacity=".5"/>' +
+        // 70년 된 크롬은 거울이 아니다 — 점 부식으로 검게 얼룩지고 도금이 벗겨져 흰 각질이 인다
+        '<g clip-path="url(#a5SpearClip)">' +
+        '<rect x="256" y="530" width="1490" height="72" fill="#000" filter="url(#a5Corrode)" opacity=".72"/>' +
+        '<rect x="256" y="530" width="1490" height="72" fill="#000" filter="url(#a5Flake)" opacity=".5"/>' +
+        '</g>' +
 
         // 다이얼 드래그 히트존
         '<rect id="a5DialHit" x="930" y="252" width="800" height="230" fill="#000" fill-opacity="0" style="cursor:ew-resize;touch-action:none" tabindex="0" role="slider" aria-label="주파수 다이얼 — 드래그하여 선국" aria-valuemin="88" aria-valuemax="108" aria-valuenow="98"><title>드래그하여 주파수를 맞추세요</title></rect>' +
@@ -759,10 +950,13 @@ function mfaA501Svg(finish) {
         '<rect x="262" y="690" width="54" height="32" rx="4" fill="#000" opacity=".4"/>' +
         '<rect x="262" y="688" width="54" height="32" rx="4" fill="url(#soChromeV)" stroke="#0d0d0e" stroke-width="1.5"/>' +
         '<rect x="277" y="694" width="11" height="20" rx="2" fill="#16171a"/>' +
+        // 금박 스크립트는 70년 동안 닳아 조각조각 남았다 (실물 사진에서도 끝 글자가 거의 사라졌다)
+        '<g mask="url(#a5WornInk)">' +
         '<text x="382" y="744" font-family="Georgia, serif" font-size="52" font-style="italic" font-weight="700" fill="#3a2609" opacity=".55">GoldStar</text>' +
         '<text x="380" y="742" font-family="Georgia, serif" font-size="52" font-style="italic" font-weight="700" fill="' + t.script + '">GoldStar</text>' +
-        '<text x="380" y="740" font-family="Georgia, serif" font-size="52" font-style="italic" font-weight="700" fill="#ffe6ad" opacity=".3">GoldStar</text>' +
+        '<text x="380" y="740" font-family="Georgia, serif" font-size="52" font-style="italic" font-weight="700" fill="#ffe6ad" opacity=".26">GoldStar</text>' +
         '<path d="M382 752 Q520 768 660 748" fill="none" stroke="' + t.script + '" stroke-width="2.4" opacity=".7"/>' +
+        '</g>' +
         soloKnob(1146, 716, 42, "a5Vol") +
         soloKnob(1420, 716, 42, "a5Sel") +
         soloKnob(1694, 716, 42, "a5Tune") +
@@ -780,12 +974,13 @@ function mfaA501Svg(finish) {
 
         // ── 다리 — 아래로 벌어진 두 발
         '<path d="M404 798 L472 798 L440 866 L344 866 Z" fill="' + t.leg + '" stroke="#08080a" stroke-width="2.5"/>' +
-        '<path d="M410 802 L462 802 L437 856" fill="none" stroke="#ffffff" stroke-width="2.4" opacity=".14"/>' +
+        '<path d="M410 802 L462 802 L437 856" fill="none" stroke="#e6e2d4" stroke-width="2.4" opacity=".1"/>' +
         '<path d="M1528 798 L1596 798 L1656 866 L1560 866 Z" fill="' + t.leg + '" stroke="#08080a" stroke-width="2.5"/>' +
-        '<path d="M1538 802 L1590 802 L1628 856" fill="none" stroke="#ffffff" stroke-width="2.4" opacity=".14"/>' +
+        '<path d="M1538 802 L1590 802 L1628 856" fill="none" stroke="#e6e2d4" stroke-width="2.4" opacity=".1"/>' +
         '<ellipse cx="392" cy="868" rx="64" ry="10" fill="#000" opacity=".65" filter="url(#soTight)"/>' +
         '<ellipse cx="1608" cy="868" rx="64" ry="10" fill="#000" opacity=".65" filter="url(#soTight)"/>' +
         '<text x="1804" y="838" font-family="Arial" font-size="13" letter-spacing="1.6" fill="' + t.bandInk + '" opacity=".5" text-anchor="end">金星社 &#183; A-501 &#183; AC 5球 &#183; 1959</text>' +
+        soloFilmGrade(0, 0, 2000, 880) +
         '</svg>';
 }
 

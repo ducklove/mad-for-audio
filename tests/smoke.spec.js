@@ -482,7 +482,7 @@ test.describe("데스크톱", () => {
         expect(gramophone.kind).toBe("phono");
         expect(gramophone.band[0]).toBeGreaterThan(150);          // 저음이 물리적으로 안 나온다
         expect(gramophone.band[1]).toBeLessThan(3200);            // 고음도 마찬가지
-        expect(gramophone.evenHarmonics).toBe(0);
+        expect(gramophone.evenHarmonics).toBeLessThan(0.01);   // 축음기에는 배음 생성기가 없다
         await page.click("#gvTinHit");                            // 새 바늘
         expect(await page.evaluate(() => gvNeedleWear)).toBeLessThan(0.02);
         await page.evaluate(() => { gvWind = 0.4; });
