@@ -3750,7 +3750,7 @@ function gvPaintGauges() {
     soloText("gvNeedleText", gvNeedleWear < 0.05 ? "새 바늘"
         : gvNeedleWear > 0.85 ? "교체 필요" : Math.round(gvNeedleWear * 100) + "% 마모");
     soloText("gvSpeedText", String(Math.round(gvSpeed)));
-    soloAttr("gvSpeedPtr", "transform", "rotate(" + ((gvSpeed - 78) * 4.6).toFixed(1) + " 284 876)");
+    soloAttr("gvSpeedPtr", "transform", "rotate(" + ((gvSpeed - 78) * 4.6).toFixed(1) + " 310 884)");
     (RECORD.tracks || []).forEach((tr, i) =>
         soloAttr("gvTrackBg" + i, "opacity", i === phonoTrack ? "0.24" : "0"));
 }
