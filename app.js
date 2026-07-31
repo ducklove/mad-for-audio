@@ -3500,6 +3500,7 @@ function playPhonoTrack(i, auto, fromLibraryMix) {
     if (libraryMix.active && !fromLibraryMix) {
         stopLibraryMix({ stopAudio: false, silent: true });
     }
+    gvCoast = 0;                       // 새로 걸면 늘어지던 관성은 없던 일이 된다
     if (!recIsMic) stopRecording();   // MIC 녹음은 본체 소스와 무관 — 계속 담는다
     stopDeck();
     if (player) { player.destroy(); player = null; }
@@ -3660,8 +3661,8 @@ function soloPointAt(e) {
 // 한 면이 끝나면 강철 바늘을 간다. 태엽이 풀리면 회전이 처지며 음정이 내려간다.
 const GV_REST = GV_ARM_REST;   // 톤암 거치 위치 (판 바깥의 크러치)
 const GV_OUT = 0.95;       // 첫 홈
-const GV_IN = 0.35;        // 마지막 홈 (라벨 바로 앞)
-const GV_STYLUS_A = -0.30; // 바늘이 놓이는 각도(라디안) — 판의 오른쪽 위
+const GV_IN = 0.45;        // 마지막 홈 (라벨 바로 앞)
+const GV_STYLUS_A = 0.95;  // 바늘이 놓이는 각도(라디안) — 뒷오른쪽 피벗에서 판의 앞오른쪽으로 내려온다
 const GV_WIND_SEC = 190;   // 가득 감은 태엽이 버티는 시간
 const GV_NEEDLE_SEC = 205; // 강철 바늘 한 개의 수명 (한 면)
 
@@ -3677,6 +3678,7 @@ let gvArmDrag = false;
 let gvRubLast = null;
 let gvScratch = 0;
 let gvRunDown = false;     // 태엽이 다 풀려 스스로 멎었다
+let gvCoast = 0;           // 0=없음 1=브레이크 2=태엽 소진 — 플래터가 관성으로 늘어지며 멎는 중
 
 function gvResetTransport() {
     gvWind = 1;
@@ -3688,10 +3690,12 @@ function gvResetTransport() {
     gvArmFr = GV_REST;
     gvArmDrag = false;
     gvRunDown = false;
+    gvCoast = 0;
     gvScratch = 0;
 }
 
-function gvRunning() { return phonoActive && isPlaying && gvWind > 0; }
+// 관성으로 멎는 중에는 오디오가 아직 흐르지만 플래터는 이미 힘을 잃었다
+function gvRunning() { return phonoActive && isPlaying && gvWind > 0 && !gvCoast; }
 
 // 바늘 반경비 → 화면 좌표 (판은 원근으로 눕혀 있다)
 function gvStylusAt(fr) {
@@ -3761,18 +3765,26 @@ function gvPlayTrack(i) {
         return;
     }
     gvRunDown = false;
+    gvCoast = 0;
     gvArmFr = GV_OUT;
     playPhonoTrack(i);
 }
 
 function gvToggleBrake() {
+    if (gvCoast) return;                   // 이미 늘어지며 멎는 중
+    if (phonoActive && isPlaying) {
+        // 브레이크는 판을 즉시 세우지 못한다 — 관성이 남아 음이 늘어지다 끊긴다
+        gvCoast = 1;
+        playerSubtext.textContent = "브레이크 — 플래터가 관성으로 늘어지며 멎습니다.";
+        return;
+    }
     if (gvWind <= 0.02) {
         playerSubtext.textContent = "태엽이 다 풀렸습니다 — 크랭크를 돌려 감아 주세요.";
         return;
     }
     if (phonoActive) {
         togglePlay();
-        playerSubtext.textContent = isPlaying ? "브레이크 — 플래터를 세웠습니다." : "브레이크를 풀었습니다.";
+        playerSubtext.textContent = "브레이크를 풀었습니다.";
     } else {
         gvPlayTrack(0);
     }
@@ -3935,15 +3947,24 @@ function gvFrame(now, dt) {
         gvNeedleWear = Math.min(1, gvNeedleWear + dt / GV_NEEDLE_SEC);
         if (gvWind <= 0 && !gvRunDown) {
             gvRunDown = true;
-            audio.pause();
-            playerSubtext.textContent = "태엽이 다 풀려 축음기가 멎었습니다 — 크랭크를 돌려 감아 주세요.";
+            gvCoast = 2;                   // 태엽이 끊겨도 판은 관성으로 몇 바퀴 더 돈다
+            playerSubtext.textContent = "태엽이 다 풀려 축음기가 늘어지며 멎습니다 — 크랭크를 돌려 감아 주세요.";
         }
     }
     // 남은 태엽이 적으면 회전이 처지고 음정이 함께 내려간다
     const sag = gvWind < 0.18 ? 0.62 + 0.38 * (gvWind / 0.18) : 1;
     const spinTarget = running ? 1 : 0;
-    const rate = spinTarget > gvSpin ? dt / 1.1 : dt / 1.7;
+    // 브레이크는 패드가 물어 빨리, 태엽 소진은 마찰만 남아 천천히 잦아든다
+    const down = gvCoast === 1 ? 1.25 : gvCoast === 2 ? 2.4 : 1.7;
+    const rate = spinTarget > gvSpin ? dt / 1.1 : dt / down;
     gvSpin = Math.max(0, Math.min(1, gvSpin + (spinTarget > gvSpin ? 1 : -1) * rate));
+    if (gvCoast && gvSpin <= 0.045) {      // 다 늘어졌다 — 여기서 소리를 끊는다
+        gvCoast = 0;
+        gvSpin = 0;
+        if (isPlaying) togglePlay();
+    } else if (gvCoast && (!phonoActive || !isPlaying)) {
+        gvCoast = 0;                       // 다른 경로로 이미 멎었다 — 관성 감속만 이어 간다
+    }
     if (gvSpin > 0.002) {
         gvAngle = (gvAngle + gvSpeed * sag / 60 * 360 * gvSpin * dt) % 360;
         spinG.setAttribute("transform",
@@ -3954,7 +3975,9 @@ function gvFrame(now, dt) {
     if (phonoActive && isPlaying && !SAFARI_LIKE) {
         const t = now / 1000;
         const wow = 1 + 0.0062 * Math.sin(t * 2 * Math.PI * 0.68) + 0.0024 * Math.sin(t * 2 * Math.PI * 2.7);
-        const spinPitch = gvSpin < 0.999 ? (0.45 + 0.55 * gvSpin) : 1;
+        // 멎을 때는 더 깊게 처진다 — 태엽 축이 풀리며 음이 주저앉는 소리
+        const spinPitch = gvSpin >= 0.999 ? 1
+            : gvCoast ? (0.34 + 0.66 * gvSpin) : (0.45 + 0.55 * gvSpin);
         try { audio.playbackRate = (gvSpeed / 78) * sag * wow * spinPitch; } catch (e) {}
     }
 
@@ -3979,7 +4002,7 @@ function gvFrame(now, dt) {
     });
     const box = document.getElementById("gvBoxG");
     if (box) {
-        const tilt = Math.atan2(boxY - GV_ARM.y, stylus.x - GV_ARM.x) * 180 / Math.PI * 0.5;
+        const tilt = Math.atan2(boxY - GV_ARM.y, GV_ARM.x - stylus.x) * 180 / Math.PI * 0.5;
         box.setAttribute("transform", "translate(" + stylus.x.toFixed(1) + " " + boxY.toFixed(1) + ") rotate(" + tilt.toFixed(1) + ")");
     }
     const armHit = document.getElementById("gvArmHit");
@@ -3998,7 +4021,8 @@ function gvFrame(now, dt) {
     }
     // 브레이크 레버 — 멎어 있으면 젖혀진다
     const lever = document.getElementById("gvBrakeLever");
-    if (lever) lever.setAttribute("transform", "rotate(" + (running ? 0 : 42) + " 1108 776)");
+    // 태엽 소진(coast 2)은 브레이크를 쓴 게 아니다 — 레버는 멎은 뒤에야 제자리로 눕는다
+    if (lever) lever.setAttribute("transform", "rotate(" + (running || gvCoast === 2 ? 0 : 42) + " 378 800)");
 
     // 표면 잡음 — 바늘이 닳을수록, 먼지가 쌓일수록 커진다. 한 바퀴마다 스치는 결까지.
     const swish = 1 + 0.28 * Math.sin(gvAngle * Math.PI / 180);

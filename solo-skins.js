@@ -134,11 +134,14 @@ function soloMaterialDefs(prefix) {
 // 톤암 브래킷 (352,766), 거치 반경비 1.28.
 const GV_PC = { x: 680, y: 835, rx: 300, ry: 82 };
 const GV_K = GV_PC.ry / GV_PC.rx;          // 원근 압축비 — 원판을 눕혀 보는 각도
-const GV_ARM = { x: 392, y: 782 };         // 톤암 뒷마운트(피벗) — 상판 뒤 왼쪽 모서리 안쪽
-const GV_DISC = 252;                       // 10인치 셸락판 반지름 (원형 좌표계)
-const GV_ARM_REST = 1.34;                  // 톤암 거치 반경비 (판 바깥의 크러치)
-const GV_BELL = { cx: 900, cy: 370, rx: 390, ry: 330 };
-const GV_THROAT = { x: 645, y: 548 };
+// 실물 배치: 톤암 뒷마운트는 상판 뒤 '오른쪽' 기둥 위에 서 있고, 거기서 나팔 목이
+// 왼쪽 위로 뻗어 벨이 캐비닛 왼편 공중에 걸린다. 팔과 나팔은 같은 관절에서 갈라진다.
+const GV_ARM = { x: 1062, y: 754 };        // 톤암 피벗(볼 조인트) — 기둥 위, 상판보다 높다
+const GV_ARM_POST = { x: 1032, y: 846 };   // 그 기둥이 상판에 박힌 자리
+const GV_DISC = 285;                       // 12인치 셸락판 반지름 — 판이 융을 거의 덮는다
+const GV_ARM_REST = 1.15;                  // 톤암 거치 반경비 (판 바깥의 크러치)
+const GV_BELL = { cx: 505, cy: 372, rx: 420, ry: 356 };
+const GV_THROAT = { x: 762, y: 566 };      // 벨 안쪽 소실점 — 목이 붙은 오른쪽 아래
 
 // 벨 타원 위의 정확한 호 — 반지름과 끝점이 어긋나면 SVG가 반지름을 늘려 엉뚱한 곳에 그린다.
 // deg는 시계방향(화면 좌표계), 0°는 오른쪽.
@@ -359,8 +362,8 @@ function mfaVictorVSvg() {
         '<polygon points="190,930 ' + off(190, 930) + ' ' + off(1010, 930) + ' 1010,930" fill="url(#gvGrain)" opacity=".6"/>' +
         '<polygon points="190,930 ' + off(190, 930) + ' ' + off(1010, 930) + ' 1010,930" fill="url(#gvVarnish)" opacity=".9"/>' +
         // 나팔이 상판에 떨구는 그림자와, 니스 먹은 상판에 비친 놋쇠의 반사
-        '<ellipse cx="760" cy="812" rx="330" ry="90" fill="#0a0602" opacity=".45" filter="url(#soWide)"/>' +
-        '<ellipse cx="880" cy="798" rx="210" ry="46" fill="#e0aa55" opacity=".16" filter="url(#soWide)"/>' +
+        '<ellipse cx="560" cy="808" rx="330" ry="90" fill="#0a0602" opacity=".45" filter="url(#soWide)"/>' +
+        '<ellipse cx="470" cy="796" rx="200" ry="46" fill="#e0aa55" opacity=".16" filter="url(#soWide)"/>' +
         '<polygon points="206,922 ' + off(206, 922) + ' ' + off(994, 922) + ' 994,922" fill="none" stroke="#c79658" stroke-width="2" opacity=".22" stroke-dasharray="120 26 210 18 160"/>' +
         // 공기 원근 — 뒤로 물러난 면일수록 대비가 낮고 대기색이 낀다. 앞면과 똑같이 선명하면 원근이 죽는다.
         '<polygon points="190,930 ' + off(190, 930) + ' ' + off(1010, 930) + ' 1010,930" fill="#6b5334" opacity=".1"/>' +
@@ -398,29 +401,12 @@ function mfaVictorVSvg() {
         '<circle r="7" fill="#0a0807"/>' +
         '</g>' +
         '<ellipse id="gvDiscHit" cx="' + GV_PC.x + '" cy="' + GV_PC.y + '" rx="' + GV_DISC + '" ry="' + (GV_DISC * GV_K).toFixed(0) + '" fill="#000" fill-opacity="0" style="cursor:grab"><title>도는 판을 문지르면 바늘이 긁힙니다</title></ellipse>' +
-        // ── 나팔 목 (벨 뒤로 지나간다)
-        '<path d="M370 754 C356 698 384 648 440 622 C522 584 606 584 688 600 L712 672 C628 654 540 656 480 692 C438 716 418 736 412 768 Z" fill="url(#gvBrassTube)" stroke="#201304" stroke-width="2.5"/>' +
-        '<path d="M388 748 C378 702 404 666 454 644 C522 614 596 612 672 624" fill="none" stroke="#f0dca6" stroke-width="6" opacity=".42" stroke-dasharray="86 12 54 9 120"/>' +
-        '<path d="M396 752 C386 706 412 670 460 648 C526 620 598 618 672 630" fill="none" stroke="#ffeec0" stroke-width="2" opacity=".45" stroke-dasharray="60 14 92"/>' +
-        '<path d="M410 768 C402 728 426 696 472 676 C542 644 614 644 694 658" fill="none" stroke="#2a1904" stroke-width="6" opacity=".45"/>' +
-
-        // ── 니켈 엘보 (톤암 뒷마운트 ↔ 나팔)
-        '<path d="M392 782 C370 792 352 780 352 760 C352 740 368 730 388 736 L404 750 Z" fill="url(#gvNickel)" stroke="#181b1f" stroke-width="2"/>' +
-        '<ellipse cx="380" cy="760" rx="26" ry="23" fill="url(#gvNickelBall)" stroke="#15181c" stroke-width="2"/>' +
-        '<ellipse cx="373" cy="753" rx="9" ry="7" fill="#f4efe2" opacity=".5"/>' +
-
-        // ── 주철 크레인 (나팔 지지대)
-        // 상판에 볼트로 고정된 주철 받침 — 기둥이 그냥 바닥에 닿아 있으면 떠 보인다
-        '<ellipse cx="336" cy="828" rx="34" ry="13" fill="#000" opacity=".5" filter="url(#soTight)"/>' +
-        '<ellipse cx="334" cy="822" rx="32" ry="12" fill="#141416" stroke="#3c3c42" stroke-width="1.6"/>' +
-        '<ellipse cx="334" cy="818" rx="26" ry="9" fill="#1d1d21"/>' +
-        '<ellipse cx="326" cy="815" rx="9" ry="3.4" fill="#6a6c72" opacity=".55"/>' +
-        '<path d="M334 822 V682 L486 654" fill="none" stroke="#0c0c0e" stroke-width="13" stroke-linecap="round"/>' +
-        '<path d="M331 816 V686" stroke="#5a5c62" stroke-width="2.6" opacity=".55" stroke-linecap="round"/>' +
-        '<circle cx="334" cy="666" r="22" fill="url(#soCapDark)" stroke="#4a4b50" stroke-width="2"/>' +
-        '<circle cx="334" cy="666" r="9" fill="url(#gvNickelBall)"/>' +
-        '<circle cx="486" cy="654" r="17" fill="url(#soCapDark)" stroke="#45464b" stroke-width="2"/>' +
-        '<circle cx="483" cy="649" r="5" fill="#8b9099" opacity=".7"/>' +
+        // ── 나팔 목 — 상판 뒤 오른쪽 관절에서 왼쪽 위로 뻗어 벨 뒤로 들어간다.
+        // 시작점 두 개는 벨 안쪽 타원 안에 들어가 있어야 잘린 단면이 드러나지 않는다.
+        '<path d="M790 528 C898 546 1014 606 1084 742 L1040 774 C984 664 894 620 784 612 Z" fill="url(#gvBrassTube)" stroke="#201304" stroke-width="2.5"/>' +
+        '<path d="M802 552 C906 572 1008 628 1070 744" fill="none" stroke="#f0dca6" stroke-width="6" opacity=".42" stroke-dasharray="86 12 54 9 120"/>' +
+        '<path d="M808 562 C910 582 1010 636 1066 746" fill="none" stroke="#ffeec0" stroke-width="2" opacity=".45" stroke-dasharray="60 14 92"/>' +
+        '<path d="M792 600 C894 626 978 676 1036 768" fill="none" stroke="#2a1904" stroke-width="6" opacity=".45"/>' +
 
         // ── 벨: 접지 그림자 → 바깥 테 → 안쪽 원뿔 → 이음매 → 방향광 → 스펙큘러 → 림
         '<ellipse cx="' + (GV_BELL.cx + 16) + '" cy="' + (GV_BELL.cy + 28) + '" rx="' + (GV_BELL.rx + 6) + '" ry="' + (GV_BELL.ry + 6) + '" fill="#000" opacity=".55" filter="url(#soWide)"/>' +
@@ -434,44 +420,44 @@ function mfaVictorVSvg() {
         gvHornSeams() +
         // 백 년 된 놋쇠 — 라커가 벗겨지며 얼룩덜룩 변색한다. 변색은 광택보다 아래에 깔려야
         // 한다: 닦인 곳은 여전히 반사하고, 변색한 곳만 빛을 잃는다.
-        '<rect x="500" y="20" width="820" height="700" fill="#000" filter="url(#gvTarnish)" opacity=".34"/>' +
+        '<rect x="80" y="10" width="860" height="730" fill="#000" filter="url(#gvTarnish)" opacity=".34"/>' +
         // 녹청은 목 둘레의 골에만 아주 얇게 — 넓게 깔면 곰팡이처럼 보인다
         '<ellipse cx="' + GV_THROAT.x + '" cy="' + GV_THROAT.y + '" rx="120" ry="100" fill="#000" filter="url(#gvVerdigris)" opacity=".22"/>' +
         // 원뿔 안쪽 벽에 고인 빛 — 목 반대편(오른쪽 아래) 곡면이 키 라이트를 받는다.
-        '<path d="' + gvBellArc(330, 278, -50, 96) + '" fill="none" stroke="#ffeec0" stroke-width="122" opacity=".16" filter="url(#soWide)"/>' +
-        '<path d="' + gvBellArc(316, 266, -30, 78) + '" fill="none" stroke="#fff6dc" stroke-width="52" opacity=".13" filter="url(#soWide)"/>' +
+        '<path d="' + gvBellArc(330, 278, 130, 286) + '" fill="none" stroke="#ffeec0" stroke-width="122" opacity=".16" filter="url(#soWide)"/>' +
+        '<path d="' + gvBellArc(316, 266, 150, 268) + '" fill="none" stroke="#fff6dc" stroke-width="52" opacity=".13" filter="url(#soWide)"/>' +
         // 림 바로 안쪽의 하드 스펙큘러 — 변색 위에서도 살아남는 금속의 신호.
         // 다만 백 년 된 도금이라 좁고 날카롭지 않고 조금 뿌옇게 퍼진다.
         // 놋쇠는 스펙큘러조차 따뜻하다 — 채도 0의 순백은 그 자체로 '새로 도금한 크롬' 신호다
-        '<path d="' + gvBellArc(354, 298, -26, 74) + '" fill="none" stroke="#f4e0ac" stroke-width="17" opacity=".4" filter="url(#soSoft)" stroke-linecap="round"/>' +
-        '<path d="' + gvBellArc(354, 298, -22, 16) + '" fill="none" stroke="#ffeec0" stroke-width="9" opacity=".46" filter="url(#soTight)" stroke-linecap="round"/>' +
-        '<path d="' + gvBellArc(300, 252, 30, 80) + '" fill="none" stroke="#eeda9e" stroke-width="8" opacity=".2" filter="url(#soSoft)" stroke-linecap="round"/>' +
+        '<path d="' + gvBellArc(354, 298, 154, 254) + '" fill="none" stroke="#f4e0ac" stroke-width="17" opacity=".4" filter="url(#soSoft)" stroke-linecap="round"/>' +
+        '<path d="' + gvBellArc(354, 298, 196, 238) + '" fill="none" stroke="#ffeec0" stroke-width="9" opacity=".46" filter="url(#soTight)" stroke-linecap="round"/>' +
+        '<path d="' + gvBellArc(300, 252, 210, 260) + '" fill="none" stroke="#eeda9e" stroke-width="8" opacity=".2" filter="url(#soSoft)" stroke-linecap="round"/>' +
         // 손이 닿는 림 안쪽은 닳아 오히려 밝게 남는다
-        '<path d="' + gvBellArc(346, 292, 100, 250) + '" fill="none" stroke="#f6e3b4" stroke-width="34" opacity=".09" filter="url(#soWide)"/>' +
+        '<path d="' + gvBellArc(346, 292, -76, 74) + '" fill="none" stroke="#f6e3b4" stroke-width="34" opacity=".09" filter="url(#soWide)"/>' +
         // 긁힘과 얕은 찍힘 — 오래된 금속은 결코 매끈하지 않다
         // 긁힘은 파인 홈이다 — 바닥은 어둡고 광원 쪽 입술 한 줄만 밝다.
         // 밝은 선만 그으면 홈이 아니라 표면에 그은 광택 자국으로 읽힌다.
         '<g stroke="#1f1204" stroke-width="1.4" opacity=".34" fill="none">' +
-        '<path d="M760 300 Q900 262 1120 292" stroke-dasharray="180 22 90 16 210"/>' +
-        '<path d="M700 420 Q880 402 1080 440" stroke-dasharray="120 18 240"/>' +
-        '<path d="M840 172 Q950 160 1046 186" stroke-dasharray="90 14 130"/>' +
-        '<path d="M660 360 Q820 336 960 358" stroke-dasharray="160 20 110"/>' +
-        '<path d="M772 310 Q912 272 1132 302" stroke-dasharray="70 26 190 18 90"/>' +
-        '<path d="M712 432 Q892 414 1092 452" stroke-dasharray="210 16 130"/></g>' +
+        '<path d="M360 300 Q500 262 720 292" stroke-dasharray="180 22 90 16 210"/>' +
+        '<path d="M300 420 Q480 402 680 440" stroke-dasharray="120 18 240"/>' +
+        '<path d="M440 172 Q550 160 646 186" stroke-dasharray="90 14 130"/>' +
+        '<path d="M260 360 Q420 336 560 358" stroke-dasharray="160 20 110"/>' +
+        '<path d="M372 310 Q512 272 732 302" stroke-dasharray="70 26 190 18 90"/>' +
+        '<path d="M312 432 Q492 414 692 452" stroke-dasharray="210 16 130"/></g>' +
         '<g stroke="#e8d5a2" stroke-width=".9" opacity=".26" fill="none" transform="translate(0 -1.6)">' +
-        '<path d="M760 300 Q900 262 1120 292" stroke-dasharray="180 22 90 16 210"/>' +
-        '<path d="M700 420 Q880 402 1080 440" stroke-dasharray="120 18 240"/>' +
-        '<path d="M840 172 Q950 160 1046 186" stroke-dasharray="90 14 130"/>' +
-        '<path d="M660 360 Q820 336 960 358" stroke-dasharray="160 20 110"/>' +
-        '<path d="M772 310 Q912 272 1132 302" stroke-dasharray="70 26 190 18 90"/>' +
-        '<path d="M712 432 Q892 414 1092 452" stroke-dasharray="210 16 130"/></g>' +
+        '<path d="M360 300 Q500 262 720 292" stroke-dasharray="180 22 90 16 210"/>' +
+        '<path d="M300 420 Q480 402 680 440" stroke-dasharray="120 18 240"/>' +
+        '<path d="M440 172 Q550 160 646 186" stroke-dasharray="90 14 130"/>' +
+        '<path d="M260 360 Q420 336 560 358" stroke-dasharray="160 20 110"/>' +
+        '<path d="M372 310 Q512 272 732 302" stroke-dasharray="70 26 190 18 90"/>' +
+        '<path d="M312 432 Q492 414 692 452" stroke-dasharray="210 16 130"/></g>' +
         '<g pointer-events="none" filter="url(#soTight)">' +
-        '<ellipse cx="1042" cy="330" rx="20" ry="12" fill="#241505" opacity=".22" transform="rotate(-18 1042 330)"/>' +
-        '<ellipse cx="1045" cy="335" rx="18" ry="9" fill="#f7e6b6" opacity=".12" transform="rotate(-18 1045 335)"/>' +
-        '<ellipse cx="782" cy="212" rx="15" ry="9" fill="#241505" opacity=".2" transform="rotate(12 782 212)"/>' +
-        '<ellipse cx="784" cy="216" rx="13" ry="7" fill="#f7e6b6" opacity=".1" transform="rotate(12 784 216)"/>' +
-        '<ellipse cx="900" cy="602" rx="24" ry="10" fill="#241505" opacity=".18"/>' +
-        '<ellipse cx="902" cy="605" rx="21" ry="8" fill="#f7e6b6" opacity=".09"/></g>' +
+        '<ellipse cx="642" cy="330" rx="20" ry="12" fill="#241505" opacity=".22" transform="rotate(-18 642 330)"/>' +
+        '<ellipse cx="645" cy="335" rx="18" ry="9" fill="#f7e6b6" opacity=".12" transform="rotate(-18 645 335)"/>' +
+        '<ellipse cx="382" cy="212" rx="15" ry="9" fill="#241505" opacity=".2" transform="rotate(12 382 212)"/>' +
+        '<ellipse cx="384" cy="216" rx="13" ry="7" fill="#f7e6b6" opacity=".1" transform="rotate(12 384 216)"/>' +
+        '<ellipse cx="470" cy="600" rx="24" ry="10" fill="#241505" opacity=".18"/>' +
+        '<ellipse cx="472" cy="603" rx="21" ry="8" fill="#f7e6b6" opacity=".09"/></g>' +
         // 나팔 최심부는 100년치 응결수와 먼지가 씻겨 나가지 않는 자리다 — 가장 더러워야 한다.
         // 광량이 아니라 물성이 다르므로(광택이 죽은 검은 산화막) 그림자와 다르게 읽혀야 한다.
         '<ellipse cx="' + (GV_THROAT.x + 4) + '" cy="' + (GV_THROAT.y - 2) + '" rx="96" ry="82" fill="#120b03" opacity=".5" filter="url(#soWide)"/>' +
@@ -494,24 +480,31 @@ function mfaVictorVSvg() {
         '<ellipse cx="' + GV_BELL.cx + '" cy="' + GV_BELL.cy + '" rx="' + GV_BELL.rx + '" ry="' + GV_BELL.ry + '" fill="none" stroke="#120a01" stroke-width="3" opacity=".92"/>' +
 
 
-        // ── 톤암 크러치
-        '<ellipse cx="1005" cy="888" rx="30" ry="11" fill="#000" opacity=".5" filter="url(#soTight)"/>' +
-        '<ellipse cx="1003" cy="884" rx="27" ry="9" fill="url(#gvNickel)" stroke="#191c20" stroke-width="1.5"/>' +
-        '<path d="M1003 882 V820" stroke="url(#gvNickel)" stroke-width="10" stroke-linecap="round"/>' +
-        '<path d="M1000 878 V822" stroke="#ffffff" stroke-width="2.2" opacity=".45" stroke-linecap="round"/>' +
-        '<path d="M985 812 Q1003 794 1021 812" fill="none" stroke="url(#gvNickel)" stroke-width="9" stroke-linecap="round"/>' +
+        // ── 톤암 크러치 — 판 오른쪽 바깥, 상판 위의 낮은 니켈 받침
+        '<ellipse cx="873" cy="912" rx="28" ry="10" fill="#000" opacity=".5" filter="url(#soTight)"/>' +
+        '<ellipse cx="871" cy="908" rx="26" ry="9" fill="url(#gvNickel)" stroke="#191c20" stroke-width="1.5"/>' +
+        '<ellipse cx="871" cy="905" rx="19" ry="6" fill="#0f1114"/>' +
+        '<path d="M850 902 Q871 886 892 902" fill="none" stroke="url(#gvNickel)" stroke-width="8" stroke-linecap="round"/>' +
+        '<path d="M854 898 Q871 886 888 898" fill="none" stroke="#ffffff" stroke-width="2" opacity=".4" stroke-linecap="round"/>' +
 
         // ── 톤암 (프레임마다 다시 그린다) + 판에 지는 그림자
-        '<path id="gvArmShadow" d="M392 782 L1003 752" transform="translate(6 26)" stroke="#000" stroke-width="16" stroke-linecap="round" fill="none" opacity=".34" filter="url(#soSoft)"/>' +
-        '<path id="gvArm" d="M392 782 L1003 752" stroke="url(#gvNickel)" stroke-width="14" stroke-linecap="round" fill="none"/>' +
-        '<path id="gvArmLo" d="M392 782 L1003 752" transform="translate(0 3.6)" stroke="#1a1d21" stroke-width="3" stroke-linecap="round" fill="none" opacity=".5"/>' +
-        '<path id="gvArmHi" d="M392 782 L1003 752" transform="translate(0 -2.8)" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" fill="none" opacity=".6"/>' +
-        '<ellipse cx="' + GV_ARM.x + '" cy="' + (GV_ARM.y + 10) + '" rx="42" ry="16" fill="#000" opacity=".5" filter="url(#soSoft)"/>' +
-        '<ellipse cx="' + GV_ARM.x + '" cy="' + GV_ARM.y + '" rx="39" ry="35" fill="url(#gvNickelBall)" stroke="#14171b" stroke-width="2.5"/>' +
+        '<path id="gvArmShadow" d="M1062 754 L871 852" transform="translate(12 30)" stroke="#000" stroke-width="16" stroke-linecap="round" fill="none" opacity=".34" filter="url(#soSoft)"/>' +
+        '<path id="gvArm" d="M1062 754 L871 852" stroke="url(#gvNickel)" stroke-width="14" stroke-linecap="round" fill="none"/>' +
+        '<path id="gvArmLo" d="M1062 754 L871 852" transform="translate(0 3.6)" stroke="#1a1d21" stroke-width="3" stroke-linecap="round" fill="none" opacity=".5"/>' +
+        '<path id="gvArmHi" d="M1062 754 L871 852" transform="translate(0 -2.8)" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" fill="none" opacity=".6"/>' +
+        // 뒷마운트 기둥 — 볼 조인트가 상판보다 높이 서 있어야 팔이 판 위를 넘어간다.
+        // 받침이 상판에 닿아 있지 않으면 관절 전체가 공중에 뜬 것으로 읽힌다.
+        '<ellipse cx="' + (GV_ARM_POST.x + 4) + '" cy="' + (GV_ARM_POST.y + 6) + '" rx="42" ry="15" fill="#000" opacity=".5" filter="url(#soSoft)"/>' +
+        '<ellipse cx="' + GV_ARM_POST.x + '" cy="' + GV_ARM_POST.y + '" rx="40" ry="14" fill="url(#gvNickel)" stroke="#191c20" stroke-width="2"/>' +
+        '<ellipse cx="' + GV_ARM_POST.x + '" cy="' + (GV_ARM_POST.y - 3) + '" rx="32" ry="10" fill="url(#gvNickelBall)"/>' +
+        '<path d="M' + (GV_ARM_POST.x - 15) + ' ' + (GV_ARM_POST.y - 4) + ' L' + (GV_ARM.x - 19) + ' ' + (GV_ARM.y + 6) +
+        ' L' + (GV_ARM.x + 19) + ' ' + (GV_ARM.y + 6) + ' L' + (GV_ARM_POST.x + 15) + ' ' + (GV_ARM_POST.y - 4) + ' Z" fill="url(#gvNickel)" stroke="#181b1f" stroke-width="2"/>' +
+        '<path d="M' + (GV_ARM_POST.x - 9) + ' ' + (GV_ARM_POST.y - 6) + ' L' + (GV_ARM.x - 13) + ' ' + (GV_ARM.y + 6) + '" stroke="#ffffff" stroke-width="2.4" opacity=".45" stroke-linecap="round"/>' +
+        '<ellipse cx="' + GV_ARM.x + '" cy="' + GV_ARM.y + '" rx="37" ry="34" fill="url(#gvNickelBall)" stroke="#14171b" stroke-width="2.5"/>' +
         '<ellipse cx="' + (GV_ARM.x - 12) + '" cy="' + (GV_ARM.y - 12) + '" rx="13" ry="10" fill="#ffffff" opacity=".5"/>' +
         '<ellipse cx="' + GV_ARM.x + '" cy="' + GV_ARM.y + '" rx="15" ry="13" fill="url(#soCapDark)"/>' +
         // 사운드박스(Exhibition reproducer)
-        '<g id="gvBoxG" transform="translate(1003 752)">' +
+        '<g id="gvBoxG" transform="translate(871 852)">' +
         '<ellipse cx="2" cy="14" rx="47" ry="24" fill="#000" opacity=".5" filter="url(#soSoft)"/>' +
         '<circle cx="0" cy="0" r="45" fill="url(#gvNickel)" stroke="#15181c" stroke-width="3"/>' +
         '<circle cx="0" cy="0" r="38" fill="url(#gvNickelBall)"/>' +
@@ -523,7 +516,7 @@ function mfaVictorVSvg() {
         '<path id="gvNeedle" d="M0 45 L0 59" stroke="#e8ebee" stroke-width="3.6" stroke-linecap="round"/>' +
         '<circle cx="27" cy="25" r="6.5" fill="url(#soCapDark)" stroke="#949aa1" stroke-width="1.2"/>' +
         '</g>' +
-        '<ellipse id="gvArmHit" cx="1003" cy="752" rx="66" ry="52" fill="#000" fill-opacity="0" style="cursor:grab"><title>톤암 — 잡아서 원하는 곡 위에 바늘을 내려놓으세요</title></ellipse>' +
+        '<ellipse id="gvArmHit" cx="871" cy="852" rx="66" ry="52" fill="#000" fill-opacity="0" style="cursor:grab"><title>톤암 — 잡아서 원하는 곡 위에 바늘을 내려놓으세요</title></ellipse>' +
 
         // ── 캐비닛 우측면 + 앞면
         '<polygon points="1010,930 ' + off(1010, 930) + ' ' + off(1010, 1150) + ' 1010,1150" fill="url(#gvOakSide)" stroke="#1b0e05" stroke-width="3"/>' +
@@ -563,14 +556,23 @@ function mfaVictorVSvg() {
         '<rect x="930" y="922" width="86" height="22" rx="4" fill="url(#gvOakTopFace)" stroke="#241306" stroke-width="2"/>' +
         '<rect x="184" y="1128" width="86" height="24" rx="4" fill="url(#gvOakFace)" stroke="#241306" stroke-width="2"/>' +
         '<rect x="930" y="1128" width="86" height="24" rx="4" fill="url(#gvOakFace)" stroke="#241306" stroke-width="2"/>' +
-        // 금박 데칼 — 니스 아래 인쇄된 것처럼 그림자와 하이라이트를 함께
+        // 명판 — 실물은 큰 금박 글씨가 아니라 앞판에 볼트로 박은 작은 검은 금속판이다
+        '<rect x="514" y="1002" width="176" height="60" rx="4" fill="#000" opacity=".45" transform="translate(3 5)" filter="url(#soTight)"/>' +
+        '<rect x="514" y="1002" width="176" height="60" rx="4" fill="#14100c" stroke="#4a3f2c" stroke-width="2"/>' +
+        '<rect x="518" y="1006" width="168" height="52" rx="3" fill="none" stroke="#8e7444" stroke-width="1.4" opacity=".6"/>' +
+        '<rect x="514" y="1002" width="176" height="4" fill="#6d5a38" opacity=".45"/>' +
         '<g mask="url(#gvWornDecal)">' +
-        '<text x="602" y="1024" font-family="Georgia, serif" font-size="64" font-style="italic" font-weight="700" fill="#1c0d03" opacity=".55" text-anchor="middle">Victor</text>' +
-        '<text x="600" y="1021" font-family="Georgia, serif" font-size="64" font-style="italic" font-weight="700" fill="#e8bd6e" text-anchor="middle">Victor</text>' +
-        '<text x="600" y="1019" font-family="Georgia, serif" font-size="64" font-style="italic" font-weight="700" fill="#fff0c8" opacity=".35" text-anchor="middle">Victor</text>' +
-        '<path d="M462 1040 Q600 1062 738 1040" fill="none" stroke="#d8ab5c" stroke-width="2.4" opacity=".75"/>' +
-        '<text x="600" y="1084" font-family="Arial" font-size="16" font-weight="600" letter-spacing="3.2" fill="#f0c583" text-anchor="middle" opacity=".92">VICTOR TALKING MACHINE CO.</text>' +
-        '<text x="600" y="1112" font-family="Arial" font-size="13" letter-spacing="2.8" fill="#c79a58" text-anchor="middle" opacity=".8">CAMDEN, N.J. &#183; VICTOR V</text>' +
+        '<text x="601" y="1033" font-family="Georgia, serif" font-size="30" font-style="italic" font-weight="700" fill="#000" opacity=".6" text-anchor="middle">Victor</text>' +
+        '<text x="600" y="1031" font-family="Georgia, serif" font-size="30" font-style="italic" font-weight="700" fill="#e0b467" text-anchor="middle">Victor</text>' +
+        '<text x="600" y="1050" font-family="Arial" font-size="8.5" font-weight="600" letter-spacing="1.7" fill="#b8935a" text-anchor="middle" opacity=".85">VICTOR V &#183; CAMDEN N.J.</text>' +
+        '</g>' +
+        '<circle cx="519" cy="1007" r="3" fill="#3a3128"/><circle cx="685" cy="1007" r="3" fill="#3a3128"/>' +
+        '<circle cx="519" cy="1057" r="3" fill="#3a3128"/><circle cx="685" cy="1057" r="3" fill="#3a3128"/>' +
+        // 그 위의 작은 니켈 명찰 — 트레이드마크 뱃지
+        '<ellipse cx="600" cy="962" rx="47" ry="20" fill="#100d0a" stroke="#6a5738" stroke-width="1.8"/>' +
+        '<ellipse cx="600" cy="959" rx="41" ry="15" fill="none" stroke="#8e7444" stroke-width="1" opacity=".5"/>' +
+        '<g mask="url(#gvWornDecal)">' +
+        '<text x="600" y="967" font-family="Arial" font-size="9" font-weight="700" letter-spacing="1.6" fill="#b09257" text-anchor="middle">HIS MASTER&#8217;S VOICE</text>' +
         '</g>' +
         // 굽도리 2단 + 바닥 접지
         molding(168, 1032, 1148, 1176) +
@@ -583,8 +585,8 @@ function mfaVictorVSvg() {
         '<path d="M1120 950 L1214 936" stroke="url(#gvNickel)" stroke-width="14" stroke-linecap="round"/>' +
         '<path d="M1124 946 L1210 933" stroke="#ffffff" stroke-width="3" opacity=".4" stroke-linecap="round"/>' +
         '<g id="gvCrankG" transform="rotate(0 1214 936)">' +
-        '<path d="M1214 936 L1214 856" stroke="url(#gvNickel)" stroke-width="13" stroke-linecap="round"/>' +
-        '<path d="M1211 934 L1211 858" stroke="#ffffff" stroke-width="2.6" opacity=".45" stroke-linecap="round"/>' +
+        '<rect x="1207" y="852" width="14" height="88" rx="7" fill="url(#gvNickel)" stroke="#14171b" stroke-width="1.6"/>' +
+        '<rect x="1210" y="858" width="3" height="76" rx="1.5" fill="#ffffff" opacity=".45"/>' +
         '<rect x="1199" y="822" width="30" height="50" rx="14" fill="#6b4423" stroke="#221105" stroke-width="2"/>' +
         '<rect x="1204" y="828" width="8" height="38" rx="4" fill="#b78455" opacity=".65"/>' +
         '<rect x="1199" y="822" width="30" height="50" rx="14" fill="url(#gvVarnish)"/>' +
@@ -604,13 +606,14 @@ function mfaVictorVSvg() {
         '<text id="gvSpeedText" x="310" y="899" font-family="Arial" font-size="11.5" font-weight="700" fill="#f0e4c8" text-anchor="middle">78</text>' +
         '</g>' +
         '<ellipse id="gvSpeedHit" cx="310" cy="884" rx="60" ry="36" fill="#000" fill-opacity="0" style="cursor:ns-resize;touch-action:none"><title>SPEED — 위아래로 끌어 회전수를 60~88rpm으로 조절</title></ellipse>' +
-        '<ellipse cx="1110" cy="784" rx="34" ry="22" fill="#000" opacity=".45" filter="url(#soSoft)"/>' +
-        '<ellipse cx="1108" cy="776" rx="34" ry="22" fill="url(#gvNickel)" stroke="#181b20" stroke-width="2"/>' +
-        '<ellipse cx="1108" cy="774" rx="30" ry="18" fill="none" stroke="#ffffff" stroke-width="1.2" opacity=".35"/>' +
-        '<path id="gvBrakeLever" d="M1108 776 L1138 746" stroke="#0e0f12" stroke-width="12" stroke-linecap="round" transform="rotate(0 1108 776)"/>' +
-        '<circle cx="1108" cy="776" r="10" fill="url(#gvNickelBall)"/>' +
-        '<text x="1108" y="812" font-family="Arial" font-size="11.5" font-weight="700" letter-spacing="1.6" fill="#c9a066" text-anchor="middle">BRAKE</text>' +
-        '<ellipse id="gvBrakeHit" cx="1116" cy="768" rx="52" ry="42" fill="#000" fill-opacity="0" style="cursor:pointer"><title>브레이크 — 플래터를 세우고 다시 돌립니다</title></ellipse>' +
+        // 브레이크는 실물처럼 조속기 바로 옆(상판 앞왼쪽)에 둔다 — 뒷오른쪽은 톤암 기둥 자리다
+        '<ellipse cx="380" cy="808" rx="27" ry="18" fill="#000" opacity=".45" filter="url(#soSoft)"/>' +
+        '<ellipse cx="378" cy="800" rx="27" ry="18" fill="url(#gvNickel)" stroke="#181b20" stroke-width="2"/>' +
+        '<ellipse cx="378" cy="798" rx="23" ry="14" fill="none" stroke="#ffffff" stroke-width="1.2" opacity=".35"/>' +
+        '<path id="gvBrakeLever" d="M378 800 L406 772" stroke="#0e0f12" stroke-width="12" stroke-linecap="round" transform="rotate(0 378 800)"/>' +
+        '<circle cx="378" cy="800" r="9" fill="url(#gvNickelBall)"/>' +
+        '<text x="378" y="768" font-family="Arial" font-size="11.5" font-weight="700" letter-spacing="1.6" fill="#c9a066" text-anchor="middle">BRAKE</text>' +
+        '<ellipse id="gvBrakeHit" cx="386" cy="792" rx="48" ry="38" fill="#000" fill-opacity="0" style="cursor:pointer"><title>브레이크 — 플래터를 세우고 다시 돌립니다</title></ellipse>' +
 
         // ── 바늘통 (탁자 위)
         '<g id="gvTinG">' +
