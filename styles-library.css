@@ -748,6 +748,16 @@ body.focus-unit-zoomed .focus-speaker {
     display: none !important;
 }
 
+/* 단독 기기는 랙에 물리지 않는 한 대짜리 물건이다 — 리스닝 룸의 좌우 스피커를 세우지 않고,
+   바닥에 붙일 랙도 없으므로 화면 한가운데에 놓는다. */
+body.mode-solo .focus-speaker {
+    display: none !important;
+}
+
+body.mode-solo.mode-focus.focus-room .hero-visual {
+    align-items: center;
+}
+
 body.focus-unit-zoomed .unit-zoomed {
     width: min(98%, 1920px);
     min-width: 0;

@@ -263,7 +263,8 @@ function focusFitRack() {
             el.style.removeProperty("width");
             el.style.removeProperty("min-width");
         });
-        const maxWidth = Math.min(1160, available.width);
+        // 단독 기기는 한 대뿐이라 랙 폭 상한(1160)에 묶일 이유가 없다 — 화면을 더 채운다
+        const maxWidth = Math.min(soloActive() ? 1760 : 1160, available.width);
         focusFitWidth(col, maxWidth, available.height, (width) => {
             col.style.flex = "0 0 " + Math.round(width) + "px";
         });
@@ -1210,9 +1211,12 @@ function applyUnitVisibility() {
     // 헤더 버튼은 해당 기기가 화면에 없을 때(간편 모드·기기 숨김·단독 기기)만 나타나는 비상구다.
     const unitsOnScreen = viewMode !== "simple" && !solo;
     const schedBtn = document.getElementById("headerSchedBtn");
-    if (schedBtn) schedBtn.hidden = unitsOnScreen && unitShow.tuner;
+    // 단독 기기는 소스가 하나뿐이다 — 축음기에는 방송 입구가, 라디오에는 음반 입구가 없다
+    if (schedBtn) schedBtn.hidden = solo ? !soloIsRadio() : (unitsOnScreen && unitShow.tuner);
     const tapeBtn = document.getElementById("headerTapeBtn");
-    if (tapeBtn) tapeBtn.hidden = unitsOnScreen && unitShow.deck;
+    if (tapeBtn) tapeBtn.hidden = solo || (unitsOnScreen && unitShow.deck);
+    const crateBtn = document.getElementById("headerCrateBtn");
+    if (crateBtn) crateBtn.hidden = solo && !soloIsPhono();
 }
 
 function syncDeckStageLive() {
@@ -3484,6 +3488,11 @@ function mountTurntable() {
 
 // auto=true는 한 면을 이어 재생하는 자동 곡 넘김 — 바늘을 새로 놓는 게 아니므로 낙침음을 내지 않는다
 function playPhonoTrack(i, auto, fromLibraryMix) {
+    // 금성 A-501은 수신기다 — 음반은 걸 수 없다
+    if (soloIsRadio()) {
+        playerSubtext.textContent = "이 라디오는 방송만 받습니다 — 음반을 들으려면 오디오 구성에서 축음기나 랙으로 바꿔 주세요.";
+        return;
+    }
     if (!PHONO_AVAILABLE || !RECORD.tracks[i]) {
         playerSubtext.textContent = "재생할 음반 데이터가 없습니다. 라디오와 테이프는 계속 사용할 수 있습니다.";
         return;
@@ -3948,11 +3957,11 @@ function gvFrame(now, dt) {
     }
     const stylus = gvStylusAt(gvArmFr);
     const boxY = stylus.y - 56;
-    const arm = document.getElementById("gvArm");
-    const armHi = document.getElementById("gvArmHi");
     const d = "M" + GV_ARM.x + " " + GV_ARM.y + " L" + stylus.x.toFixed(1) + " " + boxY.toFixed(1);
-    if (arm) arm.setAttribute("d", d);
-    if (armHi) armHi.setAttribute("d", d);
+    ["gvArm", "gvArmHi", "gvArmLo", "gvArmShadow"].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.setAttribute("d", d);
+    });
     const box = document.getElementById("gvBoxG");
     if (box) {
         const tilt = Math.atan2(boxY - GV_ARM.y, stylus.x - GV_ARM.x) * 180 / Math.PI * 0.5;
@@ -3974,7 +3983,7 @@ function gvFrame(now, dt) {
     }
     // 브레이크 레버 — 멎어 있으면 젖혀진다
     const lever = document.getElementById("gvBrakeLever");
-    if (lever) lever.setAttribute("transform", "rotate(" + (running ? 0 : 34) + " 1058 800)");
+    if (lever) lever.setAttribute("transform", "rotate(" + (running ? 0 : 42) + " 1108 776)");
 
     // 표면 잡음 — 바늘이 닳을수록, 먼지가 쌓일수록 커진다. 한 바퀴마다 스치는 결까지.
     const swish = 1 + 0.28 * Math.sin(gvAngle * Math.PI / 180);
@@ -3998,7 +4007,9 @@ function gvFrame(now, dt) {
 // ----- 금성 A-501 (1959) -----
 // SELECT 노브가 SC(방송) · PU(음반 픽업) · SW(단파)를 고른다. 실물의 2밴드 눈금 중
 // 상단 행만 앱의 FM으로 바꿔 읽고, 하단 SW 행은 실물 눈금 그대로 남겨 SW에서 쓴다.
-const A5_BANDS = ["SC", "PU", "SW"];
+// 실물 각인은 SC·PU·SW 세 위치지만, 이 라디오는 방송만 받는다 — PU(픽업 입력)는
+// 연결된 기기가 없어 셀렉터가 건너뛴다. 각인은 실물대로 남겨 두고 표시만 죽인다.
+const A5_BANDS = ["SC", "SW"];
 const A5_BAND_ANGLE = { SC: -34, PU: 0, SW: 34 };
 let a5Band = "SC";
 let a5Freq = 98;
@@ -4046,11 +4057,6 @@ function a5StationLabel(text) {
 
 function a5SyncStation() {
     if (!soloIsRadio()) return;
-    if (a5Band === "PU") {
-        a5StationLabel("PU · 픽업 입력 — " + (RECORD.title || "음반"));
-        a5HighlightMark(null);
-        return;
-    }
     if (a5Band === "SW") {
         a5StationLabel("SW · 단파 — 수신되는 방송이 없습니다");
         a5HighlightMark(null);
@@ -4071,7 +4077,7 @@ function a5Preview(f) {
     a5Freq = Math.max(88, Math.min(108, f));
     a5SetPointer(a5Freq);
     if (a5Band !== "SC") {
-        a5StationLabel(a5Band === "SW" ? "SW · " + a5Freq.toFixed(1) + " — 잡음뿐입니다" : "PU · 픽업 입력");
+        a5StationLabel("SW · " + a5Freq.toFixed(1) + " — 잡음뿐입니다");
         return;
     }
     const near = nearestStation(a5Freq);
@@ -4100,31 +4106,30 @@ function a5CycleBand() {
     a5SetBand(next);
 }
 
+function a5PaintSelect() {
+    // SC·SW만 실효 위치 — PU 각인은 실물대로 남기되 늘 어둡게 둔다
+    const map = { a5SelSc: "SC", a5SelPu: "PU", a5SelSw: "SW" };
+    Object.entries(map).forEach(([id, band]) => {
+        const el = document.getElementById(id);
+        if (el) el.setAttribute("opacity", band === a5Band ? "1" : band === "PU" ? "0.16" : "0.32");
+    });
+    const ptr = document.getElementById("a5SelPtr");
+    if (ptr) ptr.setAttribute("transform", "rotate(" + A5_BAND_ANGLE[a5Band] + " 1420 716)");
+}
+
 function a5SetBand(band) {
     if (!A5_BANDS.includes(band) || band === a5Band) return;
     a5Band = band;
     const ptr = document.getElementById("a5SelPtr");
     if (ptr) ptr.setAttribute("transform", "rotate(" + A5_BAND_ANGLE[band] + " 1420 716)");
-    ["a5SelSc", "a5SelPu", "a5SelSw"].forEach((id, i) => {
-        const el = document.getElementById(id);
-        if (el) el.setAttribute("opacity", A5_BANDS[i] === band ? "1" : "0.32");
-    });
+    a5PaintSelect();
     if (band === "SC") {
-        stopPhono();
         playerSubtext.textContent = "SC — 방송 수신. 다이얼이나 TUNER 노브로 선국하세요.";
         if (a5PowerOn()) {
             const station = currentStation || nearestStation(a5Freq);
             if (station) selectStation(station.id, true);
         }
-    } else if (band === "PU") {
-        if (!PHONO_AVAILABLE) {
-            playerSubtext.textContent = "PU — 음반 카탈로그를 불러오지 못해 픽업 입력을 쓸 수 없습니다.";
-        } else {
-            playerSubtext.textContent = "PU — 픽업 입력. 음반을 라디오의 진공관 앰프로 듣습니다.";
-            if (a5PowerOn()) playPhonoTrack(0);
-        }
     } else {
-        stopPhono();
         stopPlay();
         playerSubtext.textContent = "SW — 단파. 국내 단파 방송은 제공되지 않아 잡음과 헤테로다인 휘슬만 들립니다.";
     }
@@ -4222,13 +4227,10 @@ function mountA501() {
     a5SetPointer(a5Freq);
     const selPtr = document.getElementById("a5SelPtr");
     if (selPtr) selPtr.setAttribute("transform", "rotate(" + A5_BAND_ANGLE[a5Band] + " 1420 716)");
-    ["a5SelSc", "a5SelPu", "a5SelSw"].forEach((id, i) => {
-        const el = document.getElementById(id);
-        if (el) el.setAttribute("opacity", A5_BANDS[i] === a5Band ? "1" : "0.32");
-    });
+    a5PaintSelect();
     a5BindDial();
     a5BindVolume();
-    soloOn("a5SelHit", a5CycleBand, "SELECT — SC(방송)·PU(음반)·SW(단파) 전환");
+    soloOn("a5SelHit", a5CycleBand, "SELECT — SC(방송)·SW(단파) 전환");
     a5SyncStation();
 }
 
@@ -5590,6 +5592,11 @@ let selectSeq = 0;
 async function selectStation(id, viaDial) {
     const station = stations.find((item) => item.id === id);
     if (!station) return;
+    // 축음기는 수신기가 아니다 — 어떤 경로로 들어온 선국이든 받지 않는다
+    if (soloIsPhono()) {
+        playerSubtext.textContent = "축음기는 음반만 재생합니다 — 방송을 들으려면 오디오 구성에서 라디오나 랙으로 바꿔 주세요.";
+        return;
+    }
 
     // 사용자가 직접 고른 선국은 재접속 예산을 새로 준다. 자동 재접속이 부른 선국이면
     // 소진 상태를 그대로 이어받아야 상한(RADIO_RECONNECT_MAX)이 의미를 갖는다.

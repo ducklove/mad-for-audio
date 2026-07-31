@@ -501,10 +501,21 @@ test.describe("데스크톱", () => {
         expect(radio.ring[2]).toBeGreaterThan(0);                 // 캐비닛 잔향
         expect(radio.resonance[0]).toBeLessThan(220);             // 중저음 공진
         expect(await page.evaluate(() => a5Band)).toBe("SC");
-        await page.click("#a5SelHit");
-        expect(await page.evaluate(() => a5Band)).toBe("PU");
-        await page.click("#a5SelHit");
+        await page.click("#a5SelHit");                            // SELECT는 SC ↔ SW만 — PU는 건너뛴다
         expect(await page.evaluate(() => a5Band)).toBe("SW");
+        await page.click("#a5SelHit");
+        expect(await page.evaluate(() => a5Band)).toBe("SC");
+
+        // 소스 격리: 라디오에는 음반을, 축음기에는 방송을 걸 수 없다
+        expect(await page.evaluate(() => { playPhonoTrack(0); return phonoActive; })).toBe(false);
+        await expect(page.locator("#headerCrateBtn")).toBeHidden();
+        await page.evaluate(() => setSoloModel("victorv"));
+        await expect(page.locator("#headerSchedBtn")).toBeHidden();
+        expect(await page.evaluate(async () => {
+            const before = currentStation && currentStation.id;
+            await selectStation(before === "kbs1fm" ? "sbslove" : "kbs1fm");
+            return { changed: (currentStation && currentStation.id) !== before, playing: isPlaying };
+        })).toEqual({ changed: false, playing: false });
 
         // 랙 복귀 — 저장값도 함께 지워진다
         await page.click('button:has-text("오디오 구성")');
