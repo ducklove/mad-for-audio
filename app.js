@@ -123,6 +123,16 @@ function fxSlide(el, x, y) {
     }
 }
 
+// 웜업 램프 공통 스텝 — 남은 거리가 한 스텝 이하면 목표에 스냅한다.
+// 클램프에만 기대면 목표 도달 후에도 매 프레임 1→0.96→1로 영원히 진동해, 수십 개
+// 램프·글로우 불투명도가 계속 다시 써진다 (TV 4K 래스터에서 프레임당 수백 ms
+// 리페인트의 주범이었고, 데스크톱에서도 애니메이션 루프가 영원히 안 멎는 원인).
+function approach(cur, target, step) {
+    const d = target - cur;
+    if (Math.abs(d) <= step) return target;
+    return cur + (d > 0 ? step : -step);
+}
+
 // 복합 변환(축음기 플래터·사운드박스처럼 translate·scale·rotate가 얽힌 곳) —
 // 속성 문자열과 CSS 문자열의 문법이 달라 콜사이트가 둘 다 만들어 준다.
 function fxXform(el, attrVal, cssVal) {
@@ -595,7 +605,10 @@ function tunerLoop(now) {
     if (!tunerCfg) return;
     let target = 0;
     if (isPlaying) {
-        if (analyser) {
+        // webOS TV는 미디어를 별도 파이프라인(uMediaServer)에서 재생해 Web Audio 탭이
+        // 항상 무음이다 (그래프는 ready지만 RMS 0 — 실측). 사파리와 같은 시뮬레이션
+        // 안무로 바늘을 살린다.
+        if (analyser && !IS_TV) {
             // 시간 영역 RMS — 실제 음량감에 대응 (스펙트럼 평균은 항상 높게 나온다)
             if (!tsTimeData) tsTimeData = new Uint8Array(analyser.fftSize);
             analyser.getByteTimeDomainData(tsTimeData);
@@ -4429,7 +4442,7 @@ function a5Frame(now, dt) {
     // 진공관 예열 — 전원을 넣으면 서서히 달아오르고, 끄면 더 천천히 식는다
     const target = a5PowerOn() ? 1 : 0;
     const rate = target > a5Warm ? dt / 2.4 : dt / 3.6;
-    a5Warm = Math.max(0, Math.min(1, a5Warm + (target > a5Warm ? 1 : -1) * rate));
+    a5Warm = approach(a5Warm, target, rate);
     soloAttr("a5DialLamp", "opacity", (a5Warm * 0.95).toFixed(2));
     soloAttr("a5TubeGlow", "opacity", (a5Warm * (0.55 + Math.max(0, tsSignal) * 0.45)).toFixed(2));
     // 10KC 배지 = 동조 표시등 — 방송이 잡히면 초록으로 밝아진다
@@ -5024,15 +5037,15 @@ function ttFrame(now) {
         }
     }
     const warmRate = warmTarget > tubeWarm ? dt / 2.0 : dt / 3.5;
-    tubeWarm = Math.max(0, Math.min(1, tubeWarm + (warmTarget > tubeWarm ? 1 : -1) * warmRate));
+    tubeWarm = approach(tubeWarm, warmTarget, warmRate);
     // 앰프 패널 조명도 전원 연동 — 통전이면 켜지고, 미터는 신호가 올 때만 움직인다
     const ampTarget = unitOn("amp") ? 1 : 0;
     const ampRate = ampTarget > ampWarm ? dt / 2.0 : dt / 3.5;
-    ampWarm = Math.max(0, Math.min(1, ampWarm + (ampTarget > ampWarm ? 1 : -1) * ampRate));
+    ampWarm = approach(ampWarm, ampTarget, ampRate);
     // 데크 조명: 전원 연동 (예약은 타이머 아웃렛 통전) — 릴·카운터 구동은 deckMode가 따로 결정
     const deckTarget = unitOn("deck") ? 1 : 0;
     const deckRate = deckTarget > deckWarm ? dt / 2.0 : dt / 3.5;
-    deckWarm = Math.max(0, Math.min(1, deckWarm + (deckTarget > deckWarm ? 1 : -1) * deckRate));
+    deckWarm = approach(deckWarm, deckTarget, deckRate);
     updateMa2375Display();
 
     // 튜너 램프: 전원 연동 — 실물처럼 통전이면 다이얼이 빛난다 (수신 LED는 별도 게이트).
@@ -5040,7 +5053,7 @@ function ttFrame(now) {
     const tnCap = tunerDim ? 0.38 : 1;
     const tnTarget = unitOn("tuner") ? tnCap : 0;
     const tnRate = tnTarget > tunerWarm ? dt / 0.9 : dt / 1.4;
-    tunerWarm = Math.max(0, Math.min(1, tunerWarm + (tnTarget > tunerWarm ? 1 : -1) * tnRate));
+    tunerWarm = approach(tunerWarm, tnTarget, tnRate);
 
     // 앰프: 진공관 글로우(웜업 연동)·갤러리 어둠·VU 바늘·전원 LED
     // 유리 할로·주변광은 은은하게, 필라멘트는 백열로 뜨겁게 (실제 진공관의 빛 분포)
