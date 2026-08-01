@@ -29,25 +29,51 @@ log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" >> "$LOG"; }
 
 token_file() { echo "$CONF_DIR/devmode-token-$1"; }
 
-# 기기 IP는 ares 등록 정보에서 읽는다 — 주소를 두 곳에 적어 두면 어긋난다.
-device_host() {
-    "$ARES_BIN/ares-setup-device" --list 2>/dev/null \
-        | awk -v d="$1" '$1 == d { print $2 }' | sed 's/.*@//; s/:.*//'
+# 주소·키·패스프레이즈는 ares 등록 정보를 그대로 쓴다 — 같은 값을 두 곳에 적어 두면
+# 언젠가 어긋난다. (emulator 항목은 indelible 표시가 있어 걸러진다.)
+REGISTRY="$HOME/.webos/tv/novacom-devices.json"
+device_field() {
+    python3 -c '
+import json, sys, os
+name, field = sys.argv[1], sys.argv[2]
+try:
+    entries = json.load(open(os.path.expanduser(sys.argv[3])))
+except Exception:
+    sys.exit(0)
+for d in entries:
+    if d.get("name") == name and not d.get("indelible"):
+        v = d.get(field) or ""
+        if field == "privateKey":
+            v = (v or {}).get("openSsh", "") if isinstance(v, dict) else ""
+        print(v)
+        break
+' "$1" "$2" "$REGISTRY" 2>/dev/null
 }
+device_host() { device_field "$1" host; }
 
 # 기기에서 현재 세션 토큰을 다시 읽어 온다 (개발자 모드를 재활성화한 뒤 필요).
-# TV는 ssh-rsa만 제공하므로 최신 OpenSSH에서는 레거시 알고리즘을 명시해야 한다.
+# TV는 ssh-rsa만 제공하므로 최신 OpenSSH에서는 레거시 알고리즘을 명시해야 하고,
+# 개발자 모드 키에는 패스프레이즈가 걸려 있어 askpass로 넣어 준다 (대화형 프롬프트가
+# 뜨면 launchd에서 그대로 멎는다).
 refresh_token() {
-    local dev="$1" host key out
+    local dev="$1" host pass key askpass out
     host=$(device_host "$dev")
-    key="$HOME/.ssh/${dev}_webos"
     [ -n "$host" ] || { log "$dev: ares에 등록되지 않은 기기"; return 1; }
-    [ -f "$key" ] || key="$HOME/.ssh/tv_webos"
+    key="$HOME/.ssh/$(device_field "$dev" privateKey)"
+    [ -f "$key" ] || key="$HOME/.ssh/${dev}_webos"
     [ -f "$key" ] || { log "$dev: SSH 키 없음"; return 1; }
-    out=$(ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+    pass=$(device_field "$dev" passphrase)
+
+    askpass=$(mktemp "${TMPDIR:-/tmp}/mfa-askpass.XXXXXX")
+    printf '#!/bin/sh\nprintf "%%s\\n" "$MFA_PASS"\n' > "$askpass"
+    chmod 700 "$askpass"
+    out=$(MFA_PASS="$pass" SSH_ASKPASS="$askpass" SSH_ASKPASS_REQUIRE=force DISPLAY=:0 \
+        ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
         -o HostKeyAlgorithms=+ssh-rsa -o PubkeyAcceptedAlgorithms=+ssh-rsa \
-        -o ConnectTimeout=10 -p 9922 "prisoner@$host" \
+        -o ConnectTimeout=10 -i "$key" -p 9922 "prisoner@$host" \
         "cat /var/luna/preferences/devmode_enabled" 2>/dev/null | tr -d '\r\n ')
+    rm -f "$askpass"
+
     if [ -n "$out" ]; then
         printf '%s' "$out" > "$(token_file "$dev")"
         chmod 600 "$(token_file "$dev")"
