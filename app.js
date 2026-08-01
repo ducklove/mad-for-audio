@@ -410,6 +410,7 @@ function tunerSetStation(station) {
     // 단독 라디오가 서 있으면 선국 결과는 그 기기의 다이얼에도 반영한다
     // (채널 목록·마지막 채널 복원·이전/다음 등 다이얼 밖에서 들어온 선국까지)
     if (soloIsRadio()) a5SyncStation();
+    if (soloIsBoombox()) bbSyncStation();
     if (!tunerCfg || !tsDialPtr) return;
     // 슬라이더 역할(다이얼·노브)의 현재값을 주파수로 노출
     ["tsDialHit", "tsKnobHit"].forEach((id) => {
@@ -596,6 +597,7 @@ function rackAnimationShouldRun() {
             || gvCrankLeft > 0 || gvArmDrag || gvScratch > 0.002))
         || (soloIsRadio() && (Math.abs(a5Warm - (a5PowerOn() ? 1 : 0)) > 0.003
             || (a5Band === "SW" && a5Warm > 0.01)))
+        || (soloIsBoombox() && bbPower && bbFn === "radio" && bbBand !== "FM")
     );
     return playingOrMoving || busy || settling || soloSettling || ttArmDrag || ttScratchEnergy > 0.002
         || performance.now() < ttCleanUntil || performance.now() < ampRectUntil;
@@ -1212,11 +1214,11 @@ function applyUnitVisibility() {
     const unitsOnScreen = viewMode !== "simple" && !solo;
     const schedBtn = document.getElementById("headerSchedBtn");
     // 단독 기기는 소스가 하나뿐이다 — 축음기에는 방송 입구가, 라디오에는 음반 입구가 없다
-    if (schedBtn) schedBtn.hidden = solo ? !soloIsRadio() : (unitsOnScreen && unitShow.tuner);
+    if (schedBtn) schedBtn.hidden = solo ? !(soloIsRadio() || soloIsBoombox()) : (unitsOnScreen && unitShow.tuner);
     const tapeBtn = document.getElementById("headerTapeBtn");
     if (tapeBtn) tapeBtn.hidden = solo || (unitsOnScreen && unitShow.deck);
     const crateBtn = document.getElementById("headerCrateBtn");
-    if (crateBtn) crateBtn.hidden = solo && !soloIsPhono();
+    if (crateBtn) crateBtn.hidden = solo && !(soloIsPhono() || soloIsBoombox());
 }
 
 function syncDeckStageLive() {
@@ -1365,6 +1367,7 @@ function setSoloModel(id, finish, options) {
     saveJson("fmRadio.soloFinish", soloFinish);
     gvResetTransport();
     a5ResetTransport();
+    bbResetTransport();
     mountSolo();
     applyUnitVisibility();
     if (typeof buildEqChain === "function") buildEqChain();
@@ -2868,6 +2871,8 @@ function setRecord(i) {
         mountSolo();
     } else if (soloIsRadio()) {
         a5SyncStation();   // PU(픽업) 위치면 다이얼에 인쇄된 음반 이름도 갱신
+    } else if (soloIsBoombox()) {
+        bbSyncTape();      // 데크 창의 카세트 라벨을 갈아 끼운다
     }
     playerSubtext.textContent = "음반 교체: " + RECORD.title + " (" + RECORD.performer + ")";
     gtag('event', 'change_record', { record: RECORD.bwv });
@@ -3501,6 +3506,10 @@ function playPhonoTrack(i, auto, fromLibraryMix) {
         stopLibraryMix({ stopAudio: false, silent: true });
     }
     gvCoast = 0;                       // 새로 걸면 늘어지던 관성은 없던 일이 된다
+    if (soloIsBoombox()) {
+        if (!bbPower) bbSetPower(true, { silent: true });
+        bbSetFn("tape", { silent: true });
+    }
     if (!recIsMic) stopRecording();   // MIC 녹음은 본체 소스와 무관 — 계속 담는다
     stopDeck();
     if (player) { player.destroy(); player = null; }
@@ -3596,6 +3605,7 @@ function soloEsc(value) {
 }
 function soloIsPhono() { return soloActive() && soloKind() === "phono"; }
 function soloIsRadio() { return soloActive() && soloKind() === "radio"; }
+function soloIsBoombox() { return soloActive() && soloKind() === "boombox"; }
 
 // 값이 그대로인데도 매 프레임 속성을 쓰면, 그 요소가 속한 그룹의 필터(에이징 오버레이)가
 // 통째로 다시 래스터라이즈된다. 실제로 라디오가 60→46fps로 떨어졌다. 바뀔 때만 쓴다.
@@ -3633,6 +3643,7 @@ function mountSolo() {
     stage.innerHTML = SOLO_MODELS[soloModelId].render(soloFinish);
     applyPanelLighting(stage.querySelector("svg"));
     if (soloModelId === "victorv") mountVictorV();
+    else if (soloModelId === "trc931") mountBoombox();
     else mountA501();
 }
 
@@ -4301,9 +4312,443 @@ function a5Frame(now, dt) {
     }
 }
 
+// ----- Lasonic TRC-931 (1985) -----
+// FUNCTION 스위치가 소스를 가른다: RADIO는 3밴드 튜너(실효 FM), TAPE는 카세트에
+// 담긴 음반이다. 전면 5밴드 EQ는 엔진 solo 체인의 진짜 필터에 직결된다.
+// AM·SW는 제공 방송이 없어 험과 헤테로다인 휘슬만 낸다 — 80년대 밤의 소리다.
+const BB_BANDS = ["FM", "AM", "SW"];
+const BB_EQ_LABEL = ["80Hz", "250Hz", "1KHz", "3.5KHz", "10KHz"];
+let bbFreq = 98;
+let bbBand = "FM";
+let bbFn = "radio";
+let bbPower = true;
+let bbEqDb = [0, 0, 0, 0, 0];
+let bbLoud = false;
+let bbStereo = true;
+let bbHub = 0;
+let bbCount = 0;
+
+function bbResetTransport() {
+    bbFreq = currentStation ? currentStation.freq : 98;
+    bbBand = "FM";
+    bbFn = phonoActive ? "tape" : "radio";
+    bbPower = true;
+    bbHub = 0;
+    bbCount = 0;
+    // EQ·LOUDNESS·MODE는 기기에 새겨 둔 취향이다 — 오가더라도 유지한다
+}
+
+function bbFreqToX(f) { return BB_DIAL.x88 + (Math.max(88, Math.min(108, f)) - 88) * BB_DIAL.px; }
+
+function bbSetPointer(f) {
+    const ptr = document.getElementById("bbNeedle");
+    if (ptr) ptr.setAttribute("transform", "translate(" + (bbFreqToX(f) - BB_DIAL.x88).toFixed(1) + ",0)");
+    const knob = document.getElementById("bbTuneKnob");
+    if (knob) knob.setAttribute("transform", "rotate(" + ((Math.max(88, Math.min(108, f)) - 88) / 20 * 300 - 150).toFixed(1) + " 1755 318)");
+    ["bbDialHit", "bbTuneHit"].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.setAttribute("aria-valuenow", f.toFixed(1));
+    });
+}
+
+function bbHighlightMark(id) {
+    const marks = document.getElementById("bbStMarks");
+    if (!marks) return;
+    marks.querySelectorAll("rect").forEach((el) => {
+        const on = el.getAttribute("data-station") === id;
+        el.setAttribute("fill", on ? "#e05545" : "#5c6066");
+        el.setAttribute("height", on ? "14" : "8");
+    });
+}
+
+function bbSyncStation() {
+    if (!soloIsBoombox()) return;
+    if (bbBand !== "FM") { bbHighlightMark(null); return; }
+    if (currentStation) {
+        bbFreq = currentStation.freq;
+        bbSetPointer(bbFreq);
+        bbHighlightMark(currentStation.id);
+    } else {
+        bbHighlightMark(null);
+    }
+}
+
+function bbPreview(f) {
+    bbFreq = Math.max(88, Math.min(108, f));
+    bbSetPointer(bbFreq);
+    if (bbBand !== "FM") {
+        playerSubtext.textContent = bbBand + " · " + bbFreq.toFixed(1) + " — 잡음뿐입니다.";
+        return;
+    }
+    const near = nearestStation(bbFreq);
+    playerSubtext.textContent = near.name + " · " + near.freq.toFixed(1) + " MHz — 손을 떼면 선택됩니다.";
+}
+
+function bbRelease(f) {
+    bbFreq = Math.max(88, Math.min(108, f));
+    if (bbBand !== "FM") { bbSetPointer(bbFreq); return; }
+    if (!bbPower) {
+        playerSubtext.textContent = "전원이 꺼져 있습니다 — ON/OFF 스위치를 올려 주세요.";
+        bbSetPointer(bbFreq);
+        return;
+    }
+    bbSetFn("radio", { silent: true });
+    const station = nearestStation(bbFreq);
+    selectStation(station.id, true);
+    bbSyncStation();
+}
+
+function bbPaintBand() {
+    const pos = { FM: 0, AM: 61, SW: 122 };
+    soloAttr("bbBandCap", "transform", "translate(" + pos[bbBand] + " 0)");
+    BB_BANDS.forEach((b) => soloAttr("bbBand" + b, "opacity", b === bbBand ? "1" : "0.38"));
+    // 선택된 밴드의 눈금 행만 또렷하다 — 유리 뒤 지침판의 문법
+    soloAttr("bbRowFM", "opacity", bbBand === "FM" ? "1" : "0.4");
+    soloAttr("bbRowAM", "opacity", bbBand === "AM" ? "1" : "0.4");
+    soloAttr("bbRowSW", "opacity", bbBand === "SW" ? "1" : "0.4");
+}
+
+function bbSetBand(band, opts) {
+    if (!BB_BANDS.includes(band) || band === bbBand) return;
+    bbBand = band;
+    bbPaintBand();
+    if (opts && opts.silent) { bbSyncStation(); return; }
+    if (band === "FM") {
+        playerSubtext.textContent = "FM — 방송 수신. 다이얼이나 TUNING 노브로 선국하세요.";
+        if (bbPower && bbFn === "radio") {
+            const station = currentStation || nearestStation(bbFreq);
+            if (station) selectStation(station.id, true);
+        }
+    } else {
+        if (bbFn === "radio" && isPlaying && !phonoActive) stopPlay();
+        playerSubtext.textContent = band === "AM"
+            ? "AM — 중파. 제공되는 방송이 없어 험과 잡음만 들립니다."
+            : "SW — 단파. 헤테로다인 휘슬과 잡음만 들립니다.";
+    }
+    if (typeof ensureAudioGraph === "function") ensureAudioGraph();
+    bbSyncStation();
+    gtag('event', 'trc931_band', { band: bbBand });
+}
+
+function bbCycleBand() { bbSetBand(BB_BANDS[(BB_BANDS.indexOf(bbBand) + 1) % BB_BANDS.length]); }
+
+function bbPaintFn() {
+    soloAttr("bbFnLever", "transform", "translate(0 " + (bbFn === "radio" ? 0 : 50) + ")");
+    soloAttr("bbFnRadio", "opacity", bbFn === "radio" ? "1" : "0.38");
+    soloAttr("bbFnTape", "opacity", bbFn === "tape" ? "1" : "0.38");
+}
+
+function bbSetFn(fn, opts) {
+    if (fn !== "radio" && fn !== "tape") return;
+    const changed = fn !== bbFn;
+    bbFn = fn;
+    bbPaintFn();
+    if ((opts && opts.silent) || !changed) return;
+    if (fn === "radio") {
+        if (phonoActive) stopPlay();
+        playerSubtext.textContent = "FUNCTION — RADIO. " + (bbBand === "FM" ? "다이얼로 선국하세요." : "밴드를 FM으로 돌려야 방송이 잡힙니다.");
+        if (bbPower && bbBand === "FM") {
+            const station = currentStation || nearestStation(bbFreq);
+            if (station) selectStation(station.id, true);
+        }
+    } else {
+        if (isPlaying && !phonoActive) stopPlay();
+        bbKillNoise();
+        playerSubtext.textContent = "FUNCTION — TAPE. PLAY(►) 키로 테이프에 담긴 음반을 재생하세요.";
+    }
+    gtag('event', 'trc931_fn', { fn: bbFn });
+}
+
+function bbPaintPower() {
+    soloAttr("bbPowerLever", "transform", "translate(0 " + (bbPower ? 0 : 44) + ")");
+    soloAttr("bbPowerOnTxt", "opacity", bbPower ? "1" : "0.38");
+    soloAttr("bbPowerOffTxt", "opacity", bbPower ? "0.38" : "1");
+}
+
+function bbSetPower(on, opts) {
+    on = !!on;
+    if (on === bbPower) return;
+    bbPower = on;
+    bbPaintPower();
+    if (opts && opts.silent) return;
+    if (!on) {
+        if (isPlaying || phonoActive) stopPlay();
+        bbKillNoise();
+        playerSubtext.textContent = "전원을 껐습니다.";
+        return;
+    }
+    playerSubtext.textContent = "전원을 켰습니다.";
+    if (bbFn === "radio" && bbBand === "FM") {
+        const station = currentStation || nearestStation(bbFreq);
+        if (station) selectStation(station.id, true);
+    }
+}
+
+function bbTogglePower() { bbSetPower(!bbPower); }
+
+// 잡음 루프는 프레임이 돌 때만 잦아든다 — 프레임이 멎는 전환(전원 OFF·TAPE)에서는
+// 바로 끊어야 AM/SW의 험이 유령처럼 남지 않는다
+function bbKillNoise() {
+    if (typeof soloNodes === "undefined" || !soloNodes) return;
+    try {
+        soloNodes.noiseGain.gain.value = 0;
+        soloNodes.whistleGain.gain.value = 0;
+    } catch (e) {}
+}
+
+// ── 5밴드 EQ — 캡 위치와 엔진 필터 게인을 함께 민다
+function bbEqY(db) { return -db / 10 * ((BB_EQ.y1 - BB_EQ.y0) / 2); }
+
+function bbPaintEq(i) {
+    soloAttr("bbEqCap" + i, "transform", "translate(0 " + bbEqY(bbEqDb[i]).toFixed(1) + ")");
+    const hit = document.getElementById("bbEqHit" + i);
+    if (hit) hit.setAttribute("aria-valuenow", bbEqDb[i].toFixed(1));
+}
+
+function bbApplyEq(i) {
+    bbPaintEq(i);
+    if (typeof soloBoomboxEq === "function") soloBoomboxEq(i, bbEqDb[i]);
+}
+
+function bbBindEq() {
+    const half = (BB_EQ.y1 - BB_EQ.y0) / 2;
+    const mid = BB_EQ.y0 + half;
+    BB_EQ.xs.forEach((x, i) => {
+        const hit = document.getElementById("bbEqHit" + i);
+        if (!hit) return;
+        let dragging = false;
+        const apply = (e) => {
+            const p = soloPointAt(e);
+            const db = -(p.y - mid) / half * 10;
+            bbEqDb[i] = Math.max(-10, Math.min(10, Math.round(db * 2) / 2));
+            bbApplyEq(i);
+            playerSubtext.textContent = "EQ " + BB_EQ_LABEL[i] + " " + (bbEqDb[i] > 0 ? "+" : "") + bbEqDb[i].toFixed(1) + " dB";
+        };
+        hit.addEventListener("pointerdown", (e) => {
+            dragging = true;
+            try { hit.setPointerCapture(e.pointerId); } catch (err) {}
+            apply(e);
+            e.preventDefault();
+        });
+        hit.addEventListener("pointermove", (e) => { if (dragging) apply(e); });
+        const end = () => { dragging = false; };
+        hit.addEventListener("pointerup", end);
+        hit.addEventListener("pointercancel", end);
+        hit.addEventListener("keydown", (e) => {
+            if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+            e.preventDefault();
+            bbEqDb[i] = Math.max(-10, Math.min(10, bbEqDb[i] + (e.key === "ArrowUp" ? 1 : -1)));
+            bbApplyEq(i);
+        });
+    });
+}
+
+function bbPaintTone() {
+    soloAttr("bbLoudCap", "transform", "translate(" + (bbLoud ? 30 : 0) + " 0)");
+    soloAttr("bbModeCap", "transform", "translate(" + (bbStereo ? 0 : 30) + " 0)");
+    soloText("bbLoudState", bbLoud ? "ON" : "OFF");
+    soloText("bbModeState", bbStereo ? "STEREO" : "MONO");
+}
+
+function bbToggleLoud() {
+    bbLoud = !bbLoud;
+    bbPaintTone();
+    if (typeof soloBoomboxTone === "function") soloBoomboxTone(bbLoud, bbStereo);
+    playerSubtext.textContent = bbLoud
+        ? "LOUDNESS ON — 낮은 음량에서도 저음이 두툼해집니다."
+        : "LOUDNESS OFF — 본래 톤으로 돌아왔습니다.";
+    gtag('event', 'trc931_loudness', { on: bbLoud });
+}
+
+function bbToggleMode() {
+    bbStereo = !bbStereo;
+    bbPaintTone();
+    if (typeof soloBoomboxTone === "function") soloBoomboxTone(bbLoud, bbStereo);
+    playerSubtext.textContent = bbStereo
+        ? "STEREO — 두 채널이 살아납니다."
+        : "MONO — 두 스피커가 같은 소리를 냅니다.";
+}
+
+// ── 트랜스포트 — TAPE 키는 곧 음반 조작이다
+function bbTapePlay() {
+    if (!bbPower) { playerSubtext.textContent = "전원이 꺼져 있습니다 — ON/OFF 스위치를 올려 주세요."; return; }
+    bbSetFn("tape", { silent: true });
+    if (phonoActive && isPlaying) { playerSubtext.textContent = "이미 재생 중입니다."; return; }
+    if (phonoActive && !isPlaying) { togglePlay(); playerSubtext.textContent = "PLAY(►) — 이어서 재생합니다."; return; }
+    playPhonoTrack(Math.max(0, phonoTrack));
+}
+
+function bbTapeStop() {
+    if (!phonoActive) { playerSubtext.textContent = "테이프가 돌고 있지 않습니다."; return; }
+    stopPlay();
+    playerSubtext.textContent = "정지(■) — 테이프를 멈췄습니다.";
+}
+
+function bbTapePause() {
+    if (!phonoActive) { playerSubtext.textContent = "테이프가 돌고 있지 않습니다."; return; }
+    togglePlay();
+    playerSubtext.textContent = isPlaying ? "일시정지 해제 — 다시 돕니다." : "일시정지(▮▮).";
+}
+
+function bbTapeSkip(d) {
+    if (!RECORD || !RECORD.tracks || !RECORD.tracks.length) return;
+    if (!bbPower) { playerSubtext.textContent = "전원이 꺼져 있습니다 — ON/OFF 스위치를 올려 주세요."; return; }
+    const n = RECORD.tracks.length;
+    const next = (((phonoTrack >= 0 ? phonoTrack : 0) + d) % n + n) % n;
+    bbSetFn("tape", { silent: true });
+    playPhonoTrack(next);
+}
+
+function bbSyncTape() {
+    if (!soloIsBoombox()) return;
+    soloText("bbTapeTitle", RECORD ? RECORD.title : "");
+    soloText("bbTapeArtist", RECORD ? RECORD.performer : "");
+}
+
+function mountBoombox() {
+    const marks = document.getElementById("bbStMarks");
+    if (marks) {
+        marks.innerHTML = stations.map((st) =>
+            '<rect x="' + (bbFreqToX(st.freq) - 1.5).toFixed(1) + '" y="318" width="3" height="8" rx="1.5" fill="#5c6066" data-station="' + soloEsc(st.id) + '"/>').join("");
+    }
+    bbFreq = currentStation ? currentStation.freq : bbFreq;
+    bbSetPointer(bbFreq);
+    bbPaintFn();
+    bbPaintBand();
+    bbPaintPower();
+    bbPaintTone();
+    for (let i = 0; i < 5; i++) bbApplyEq(i);
+    if (typeof soloBoomboxTone === "function") soloBoomboxTone(bbLoud, bbStereo);
+    bbBindDial();
+    bbBindVolume();
+    bbBindEq();
+    soloOn("bbFnHit", () => bbSetFn(bbFn === "radio" ? "tape" : "radio"), "FUNCTION — RADIO·TAPE 전환");
+    soloOn("bbBandHit", bbCycleBand, "BAND SELECTOR — FM·AM·SW");
+    soloOn("bbPowerHit", bbTogglePower, "전원 ON/OFF");
+    soloOn("bbLoudHit", bbToggleLoud, "LOUDNESS — 저음 보강");
+    soloOn("bbModeHit", bbToggleMode, "MODE — STEREO·MONO 전환");
+    soloOn("bbKeyRew", () => bbTapeSkip(-1), "되감기 — 이전 곡");
+    soloOn("bbKeyPlay", bbTapePlay, "PLAY — 테이프(음반) 재생");
+    soloOn("bbKeyFf", () => bbTapeSkip(1), "빨리감기 — 다음 곡");
+    soloOn("bbKeyRec", () => {
+        playerSubtext.textContent = "REC — 녹음 방지 탭이 부러져 있습니다. 소중한 테이프는 그렇게 지켜졌습니다.";
+    }, "녹음");
+    soloOn("bbKeyStop", bbTapeStop, "정지");
+    soloOn("bbKeyPause", bbTapePause, "일시정지");
+    soloOn("bbResetHit", () => { bbCount = 0; soloText("bbCounter", "000"); }, "카운터 리셋");
+    bbSyncStation();
+    bbSyncTape();
+}
+
+function bbBindDial() {
+    const bind = (id, toFreq) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        let dragging = false, startX = 0, startFreq = 98;
+        el.addEventListener("pointerdown", (e) => {
+            dragging = true;
+            startX = e.clientX;
+            startFreq = bbFreq;
+            try { el.setPointerCapture(e.pointerId); } catch (err) {}
+            bbPreview(toFreq(e, startX, startFreq));
+            e.preventDefault();
+        });
+        el.addEventListener("pointermove", (e) => {
+            if (dragging) bbPreview(toFreq(e, startX, startFreq));
+        });
+        el.addEventListener("pointerup", (e) => {
+            if (!dragging) return;
+            dragging = false;
+            bbRelease(toFreq(e, startX, startFreq));
+        });
+        el.addEventListener("pointercancel", () => { dragging = false; });
+        el.addEventListener("keydown", (e) => {
+            if (e.key === "ArrowLeft" || e.key === "ArrowDown") { e.preventDefault(); stepStation(-1); }
+            else if (e.key === "ArrowRight" || e.key === "ArrowUp") { e.preventDefault(); stepStation(1); }
+        });
+    };
+    // 다이얼 유리는 절대 위치, TUNING 노브는 상대 이동 (감속 기어의 감)
+    bind("bbDialHit", (e) => 88 + (soloPointAt(e).x - BB_DIAL.x88) / BB_DIAL.px);
+    bind("bbTuneHit", (e, startX, startFreq) => startFreq + (e.clientX - startX) / 15);
+}
+
+function bbBindVolume() {
+    const hit = document.getElementById("bbVolHit");
+    if (!hit) return;
+    let dragging = false, startX = 0, startVol = 1;
+    const paint = () => {
+        const ptr = document.getElementById("bbVolPtr");
+        if (ptr) ptr.setAttribute("transform", "rotate(" + (-140 + volumeLevel * 280).toFixed(1) + " 352 478)");
+        hit.setAttribute("aria-valuenow", Math.round(volumeLevel * 100));
+    };
+    const apply = (v) => {
+        setVolume(Math.max(0, Math.min(1, v)));
+        paint();
+    };
+    hit.addEventListener("pointerdown", (e) => {
+        dragging = true;
+        startX = e.clientX;
+        startVol = volumeLevel;
+        try { hit.setPointerCapture(e.pointerId); } catch (err) {}
+        e.preventDefault();
+    });
+    hit.addEventListener("pointermove", (e) => {
+        if (dragging) apply(startVol + (e.clientX - startX) / 280);
+    });
+    const end = () => { dragging = false; };
+    hit.addEventListener("pointerup", end);
+    hit.addEventListener("pointercancel", end);
+    hit.addEventListener("keydown", (e) => {
+        if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+        e.preventDefault();
+        apply(volumeLevel + (e.key === "ArrowRight" ? 0.05 : -0.05));
+    });
+    paint();
+}
+
+function bbFrame(now, dt) {
+    const t = now / 1000;
+    const rolling = phonoActive && isPlaying;
+    // 릴 회전 — 테이프(음반)가 도는 동안만. 감는 쪽이 조금 빠르다
+    if (rolling) {
+        bbHub += dt;
+        const a = (bbHub * 168) % 360;
+        soloAttr("bbHubBL", "transform", "rotate(" + a.toFixed(1) + " 990 915)");
+        soloAttr("bbHubBR", "transform", "rotate(" + ((a * 1.28) % 360).toFixed(1) + " 1130 915)");
+        bbCount += dt * 2.6;
+        soloText("bbCounter", String(Math.floor(bbCount) % 1000).padStart(3, "0"));
+        if (!SAFARI_LIKE) {
+            // 카세트 특유의 아주 미세한 와우 — 캡스턴 편심의 느린 파도
+            const wow = 1 + 0.0016 * Math.sin(t * 2 * Math.PI * 0.52) + 0.0006 * Math.sin(t * 2 * Math.PI * 3.1);
+            try { audio.playbackRate = wow; } catch (e) {}
+        }
+    } else if (!SAFARI_LIKE && phonoActive && Math.abs(audio.playbackRate - 1) > 0.0001) {
+        try { audio.playbackRate = 1; } catch (e) {}
+    }
+    // PLAY 키는 재생 중 눌린 채 걸려 있다
+    soloAttr("bbKeyPlayG", "transform", "translate(0 " + (rolling ? 4 : 0) + ")");
+    // 표시등 — 전원 LED와 FM 스테레오 비컨
+    const stOn = bbPower && bbFn === "radio" && bbBand === "FM" && isPlaying && !!currentStation && bbStereo;
+    soloAttr("bbPowerLed", "fill", bbPower ? "#ff5545" : "#3a1512");
+    soloStyle("bbPowerLed", "filter", bbPower ? "drop-shadow(0 0 6px rgba(255,85,69,.8))" : "none");
+    soloAttr("bbStLed", "fill", stOn ? "#ff6a55" : "#3a1512");
+    soloStyle("bbStLed", "filter", stOn ? "drop-shadow(0 0 5px rgba(255,106,85,.75))" : "none");
+    // AM·SW는 잡음만 — 밴드에 따라 험/휘슬의 성격이 갈린다
+    if (typeof soloNoiseSet === "function") {
+        if (bbPower && bbFn === "radio" && bbBand !== "FM") {
+            const drift = 1 + 0.1 * Math.sin(now / 3100);
+            if (bbBand === "AM") soloNoiseSet(0.045, 0.003, 320 * drift);
+            else soloNoiseSet(0.05, 0.007, (540 + (bbFreq - 88) * 190) * drift);
+        } else {
+            soloNoiseSet(bbPower ? 0.002 : 0, 0, 0);
+        }
+    }
+}
+
 function soloFrame(now, dt) {
     if (!soloActive()) return;
     if (soloModelId === "victorv") gvFrame(now, dt);
+    else if (soloModelId === "trc931") bbFrame(now, dt);
     else a5Frame(now, dt);
 }
 
@@ -5633,6 +6078,13 @@ async function selectStation(id, viaDial) {
     if (soloIsPhono()) {
         playerSubtext.textContent = "축음기는 음반만 재생합니다 — 방송을 들으려면 오디오 구성에서 라디오나 랙으로 바꿔 주세요.";
         return;
+    }
+    // 붐박스는 FUNCTION 스위치가 소스를 가른다 — 선국이 들어오면 RADIO 쪽으로 넘긴다
+    if (soloIsBoombox()) {
+        if (!bbPower) bbSetPower(true, { silent: true });
+        if (bbBand !== "FM") bbSetBand("FM", { silent: true });
+        if (bbFn !== "radio") bbSetFn("radio", { silent: true });
+        if (phonoActive) stopPlay();
     }
 
     // 사용자가 직접 고른 선국은 재접속 예산을 새로 준다. 자동 재접속이 부른 선국이면

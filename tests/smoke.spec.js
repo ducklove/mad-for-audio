@@ -459,7 +459,7 @@ test.describe("데스크톱", () => {
     test("단독 기기: 축음기·라디오가 랙을 대신하고 고유 음향 경로로 흐른다", async ({ page }) => {
         await expect(page.locator("#soloStage")).toBeHidden();
         await page.click('button:has-text("오디오 구성")');
-        await expect(page.locator("#soloPicker .skin-btn")).toHaveCount(4);   // 사용 안 함 + 축음기 + 라디오 2색
+        await expect(page.locator("#soloPicker .skin-btn")).toHaveCount(5);   // 사용 안 함 + 축음기 + 라디오 2색 + 붐박스
 
         // 축음기 — 랙 여섯 유닛이 내려가고 어쿠스틱 경로가 선다
         await page.locator("#soloPicker .skin-btn", { hasText: "VICTOR V" }).click();
@@ -506,7 +506,39 @@ test.describe("데스크톱", () => {
         await page.click("#a5SelHit");
         expect(await page.evaluate(() => a5Band)).toBe("SC");
 
+        // 붐박스 — 방송·음반 겸용, 전면 5밴드 EQ가 엔진 필터에 직결된다
+        await page.click('button:has-text("오디오 구성")');
+        await page.locator("#soloPicker .skin-btn", { hasText: "TRC-931" }).click();
+        await page.click(".settings-close");
+        await expect(page.locator('#soloStage svg[aria-label*="TRC-931"]')).toHaveCount(1);
+        await expect(page.locator("#bbStMarks rect")).not.toHaveCount(0);
+        // 방송·음반 입구가 둘 다 열려 있다 (편성표 버튼의 화면 노출은 CSS가 모드별로 정한다)
+        await expect(page.locator("#headerCrateBtn")).toBeVisible();
+        expect(await page.evaluate(() => document.getElementById("headerSchedBtn").hidden)).toBe(false);
+        // 필터 램프가 안착하면: 90Hz대 미드베이스 혹(풍부한 저음), 축음기·라디오보다 낮은 하한
+        await page.waitForFunction(() => {
+            const dsp = window.MFA_SoloDSP.inspect();
+            return dsp && dsp.kind === "boombox" && dsp.resonance[0] < 120 && dsp.band[0] < 60;
+        }, null, { timeout: 15000 });
+        // FUNCTION: PLAY 키는 TAPE(음반), 선국은 RADIO — 서로 소스를 넘겨받는다
+        await page.click("#bbKeyPlay");
+        await page.waitForFunction(() => phonoActive, null, { timeout: 15000 });
+        expect(await page.evaluate(() => bbFn)).toBe("tape");
+        await page.evaluate(() => selectStation("kbs1fm"));
+        await page.waitForFunction(() => !phonoActive, null, { timeout: 15000 });
+        expect(await page.evaluate(() => bbFn)).toBe("radio");
+        // EQ 슬라이더 — 키보드 한 칸이 엔진 게인 1dB로 안착한다
+        await page.evaluate(() => { bbEqDb[0] = 6; bbApplyEq(0); });
+        await page.waitForFunction(() => {
+            const dsp = window.MFA_SoloDSP.inspect();
+            return dsp && dsp.eq && dsp.eq[0] > 5;
+        }, null, { timeout: 15000 });
+        await page.evaluate(() => { bbEqDb[0] = 0; bbApplyEq(0); });
+
         // 소스 격리: 라디오에는 음반을, 축음기에는 방송을 걸 수 없다
+        await page.click('button:has-text("오디오 구성")');
+        await page.locator("#soloPicker .skin-btn", { hasText: "차콜" }).click();
+        await page.click(".settings-close");
         expect(await page.evaluate(() => { playPhonoTrack(0); return phonoActive; })).toBe(false);
         await expect(page.locator("#headerCrateBtn")).toBeHidden();
         await page.evaluate(() => setSoloModel("victorv"));

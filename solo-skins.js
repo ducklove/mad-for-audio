@@ -12,6 +12,9 @@
  *  · 금성 A-501 (금성사, 1959) — 방송 전용
  *      국산 1호 라디오. 5구 진공관·5인치 스피커·2밴드 슈퍼헤테로다인.
  *      40×17×17cm 플라스틱 캐비닛(락희화학)과 상아색 전면이 정면 구조다.
+ *  · Lasonic TRC-931 (1985) — 방송·음반 겸용
+ *      1980년대 붐박스. AM/FM/SW 3밴드 튜너·카세트 2조·5밴드 그래픽
+ *      EQ를 FUNCTION 스위치로 갈라 쓴다. 대형 우퍼 두 발이 저음을 책임진다.
  *
  * ── 재질 원칙 (MR-78 패널과 같은 기준) ────────────────────────────────
  * 금속은 매끈한 그라데이션이 아니라 **명암이 교차하는 띠**로 읽힌다. 크롬·니켈·
@@ -20,7 +23,7 @@
  * 폐색 그림자 네 겹으로 세운다. 광원은 좌상단 하나로 통일한다.
  *
  * 외형 근거와 앱에서 허용한 변형은 docs/EQUIPMENT_REFERENCES.md에 정리했다.
- * 동적 id는 축음기 gv*, 라디오 a5* 접두사를 쓴다 (문서 전역 id 충돌 회피).
+ * 동적 id는 축음기 gv*, 라디오 a5*, 붐박스 bb* 접두사를 쓴다 (문서 전역 id 충돌 회피).
  */
 
 // ===================================================================
@@ -992,6 +995,426 @@ function mfaA501Svg(finish) {
         '</svg>';
 }
 
+// ===================================================================
+// Lasonic TRC-931 — 1985 붐박스
+// ===================================================================
+// 실물 전면 구조: 크롬 파이프 손잡이 아래 3밴드(FM·AM·SW) 튜너 스케일이 전폭으로
+// 지나가고, 그 밑에 좌(볼륨·밸런스·FUNCTION)/중(5밴드 그래픽 EQ)/우(ON-OFF·녹음·
+// 밴드 셀렉터) 조작부가 늘어선다. 중앙 세로로 오토리버스 데크 A → 카운터·LASONIC
+// 로고 → 데크 B → 피아노 키가 쌓이고, 양옆을 크롬 3스포크 그릴의 대형 우퍼가
+// 채운다. 모서리에는 콘 트위터. 검은 사출 캐비닛에 크롬 포인트가 80년대 문법이다.
+const BB_DIAL = { x88: 560, px: 44, y0: 296 };                        // FM 88~108MHz → x 560..1440
+const BB_EQ = { xs: [712, 806, 900, 994, 1088], y0: 470, y1: 574 };   // 5밴드 슬롯 (0dB = 522)
+
+function mfaBoomboxSvg() {
+    // ── 튜너 스케일 세 줄 — 유리 뒤 인쇄물이라 밝은 그림자를 함께 찍지 않는다(뒤가 어둡다)
+    const fmRow = (() => {
+        let out = '<text x="447" y="308" font-family="Arial" font-size="13" font-weight="700" fill="#e8e6df">FM</text>';
+        for (let f = 88; f <= 108; f++) {
+            const x = (BB_DIAL.x88 + (f - 88) * BB_DIAL.px).toFixed(1);
+            const major = f % 2 === 0;
+            out += '<path d="M' + x + ' ' + (major ? 299 : 302) + ' V311" stroke="' + (major ? "#d8d6cf" : "#8a8d92") +
+                '" stroke-width="' + (major ? 2 : 1.2) + '" opacity="' + (major ? ".85" : ".55") + '"/>';
+            if (major) out += '<text x="' + x + '" y="294" font-family="Arial" font-size="15" font-weight="700" fill="#d8d6cf" text-anchor="middle">' + f + '</text>';
+        }
+        out += '<text x="1500" y="308" font-family="Arial" font-size="9" fill="#9aa0a6">MHz</text>';
+        return out;
+    })();
+    const amRow = (() => {
+        const vals = ["53", "60", "70", "80", "90", "100", "120", "140", "160"];
+        let out = '<text x="447" y="348" font-family="Arial" font-size="13" font-weight="700" fill="#b8bcc2">AM</text>';
+        vals.forEach((v, i) => {
+            const x = (560 + i * (880 / (vals.length - 1))).toFixed(1);
+            out += '<path d="M' + x + ' 342 V349" stroke="#9aa0a6" stroke-width="1.2" opacity=".55"/>' +
+                '<text x="' + x + '" y="337" font-family="Arial" font-size="12.5" fill="#b8bcc2" text-anchor="middle">' + v + '</text>';
+        });
+        out += '<text x="1500" y="348" font-family="Arial" font-size="8" fill="#9aa0a6">x10KHz</text>';
+        return out;
+    })();
+    const swRow = (() => {
+        const vals = ["4.0", "4.5", "5", "5.5", "6", "7", "8", "9.5", "12"];
+        let out = '<text x="447" y="382" font-family="Arial" font-size="13" font-weight="700" fill="#9aa0a6">SW</text>';
+        vals.forEach((v, i) => {
+            const x = (560 + i * (880 / (vals.length - 1))).toFixed(1);
+            out += '<path d="M' + x + ' 372 V378" stroke="#7a7d84" stroke-width="1.2" opacity=".5"/>' +
+                '<text x="' + x + '" y="368" font-family="Arial" font-size="11.5" fill="#9aa0a6" text-anchor="middle">' + v + '</text>';
+        });
+        out += '<text x="1500" y="382" font-family="Arial" font-size="8" fill="#9aa0a6">MHz</text>';
+        return out;
+    })();
+
+    // ── 5밴드 EQ 슬라이더 (붙박이 + 캡은 런타임이 translate)
+    const eqLabels = ["80Hz", "250Hz", "1KHz", "3.5KHz", "10KHz"];
+    const eqSliders = BB_EQ.xs.map((x, i) => {
+        let out = '<rect x="' + (x - 4.5) + '" y="' + BB_EQ.y0 + '" width="9" height="' + (BB_EQ.y1 - BB_EQ.y0) + '" rx="4.5" fill="#030405" stroke="#000" stroke-width="1"/>' +
+            '<rect x="' + (x - 1) + '" y="' + (BB_EQ.y0 + 2) + '" width="2" height="' + (BB_EQ.y1 - BB_EQ.y0 - 4) + '" fill="#3f434a" opacity=".22"/>' +
+            '<rect x="' + (x - 15) + '" y="521" width="30" height="2" fill="#4a4d54" opacity=".55"/>';
+        for (let db = -10; db <= 10; db += 5) {
+            if (db === 0) continue;
+            const y = (522 - db * 5.2).toFixed(1);
+            out += '<rect x="' + (x - 13) + '" y="' + y + '" width="5" height="1.5" fill="#4a4d54" opacity=".4"/>' +
+                '<rect x="' + (x + 8) + '" y="' + y + '" width="5" height="1.5" fill="#4a4d54" opacity=".4"/>';
+        }
+        out += '<g id="bbEqCap' + i + '">' +
+            '<rect x="' + (x - 14) + '" y="509" width="28" height="28" rx="4" fill="url(#bbKey)" stroke="#050608" stroke-width="1.4"/>' +
+            '<rect x="' + (x - 14) + '" y="510" width="28" height="3" rx="1.5" fill="#6a6e76" opacity=".6"/>' +
+            '<rect x="' + (x - 14) + '" y="521.5" width="28" height="3" fill="#d84438"/>' +
+            '<rect x="' + (x - 10) + '" y="515" width="20" height="1.2" fill="#0a0b0d" opacity=".7"/>' +
+            '<rect x="' + (x - 10) + '" y="530" width="20" height="1.2" fill="#0a0b0d" opacity=".7"/>' +
+            '</g>' +
+            '<rect id="bbEqHit' + i + '" x="' + (x - 32) + '" y="458" width="64" height="130" fill="#000" fill-opacity="0" style="cursor:ns-resize;touch-action:none" tabindex="0" role="slider" aria-label="EQ ' + eqLabels[i] + ' — 위아래로 끌어 조절" aria-valuemin="-10" aria-valuemax="10" aria-valuenow="0"><title>' + eqLabels[i] + ' ±10dB</title></rect>' +
+            '<text x="' + x + '" y="595" font-family="Arial" font-size="8.5" fill="#9aa0a6" text-anchor="middle">' + eqLabels[i] + '</text>';
+        return out;
+    }).join("");
+
+    // ── 콘 트위터 (모서리) — 크롬 링 안 검은 매시, 가로 크롬 바 두 줄
+    const twt = (cx, clip) =>
+        '<ellipse cx="' + (cx + 3) + '" cy="512" rx="58" ry="56" fill="#000" opacity=".5" filter="url(#soSoft)"/>' +
+        '<circle cx="' + cx + '" cy="506" r="55" fill="url(#soChrome)" stroke="#0a0b0d" stroke-width="2"/>' +
+        '<circle cx="' + cx + '" cy="506" r="46" fill="#08090b" stroke="#000" stroke-width="1.5"/>' +
+        '<circle cx="' + cx + '" cy="506" r="31" fill="url(#bbCone)" opacity=".5"/>' +
+        '<circle cx="' + cx + '" cy="506" r="46" fill="url(#bbMesh)" opacity=".75"/>' +
+        '<g clip-path="url(#' + clip + ')">' +
+        '<rect x="' + (cx - 52) + '" y="488" width="104" height="10" rx="5" fill="url(#soChromeV)" stroke="#101215" stroke-width="1"/>' +
+        '<rect x="' + (cx - 52) + '" y="514" width="104" height="10" rx="5" fill="url(#soChromeV)" stroke="#101215" stroke-width="1"/>' +
+        '</g>' +
+        '<circle cx="' + cx + '" cy="506" r="46" fill="url(#bbSpkShade)"/>' +
+        '<path d="M' + (cx - 38) + ' 480 A46 46 0 0 1 ' + (cx - 6) + ' 461" fill="none" stroke="#ffffff" stroke-width="3" opacity=".2" stroke-linecap="round"/>';
+
+    // ── 대형 우퍼 — 크롬 트림 링 + 매시 너머 어렴풋한 골드 콘 + 크롬 3스포크
+    const speaker = (cx, clip) =>
+        '<ellipse cx="' + (cx + 8) + '" cy="933" rx="302" ry="290" fill="#000" opacity=".5" filter="url(#soSoft)"/>' +
+        '<circle cx="' + cx + '" cy="915" r="305" fill="none" stroke="#000" stroke-width="7" opacity=".4"/>' +
+        '<circle cx="' + cx + '" cy="915" r="298" fill="#0b0c0e"/>' +
+        '<circle cx="' + cx + '" cy="915" r="298" fill="none" stroke="url(#soChrome)" stroke-width="13"/>' +
+        '<circle cx="' + cx + '" cy="915" r="291" fill="none" stroke="#05060a" stroke-width="3" opacity=".8"/>' +
+        '<circle cx="' + cx + '" cy="915" r="304.5" fill="none" stroke="#1c1e22" stroke-width="2" opacity=".6"/>' +
+        '<circle cx="' + cx + '" cy="915" r="284" fill="#0a0a0c"/>' +
+        '<circle cx="' + cx + '" cy="915" r="248" fill="#060607"/>' +
+        '<circle cx="' + cx + '" cy="915" r="236" fill="none" stroke="#101113" stroke-width="30"/>' +
+        '<circle cx="' + cx + '" cy="915" r="212" fill="url(#bbCone)" opacity=".85"/>' +
+        '<circle cx="' + cx + '" cy="915" r="178" fill="none" stroke="#000" stroke-width="2" opacity=".18"/>' +
+        '<circle cx="' + cx + '" cy="915" r="146" fill="none" stroke="#000" stroke-width="2" opacity=".16"/>' +
+        '<circle cx="' + cx + '" cy="915" r="114" fill="none" stroke="#000" stroke-width="2" opacity=".14"/>' +
+        '<circle cx="' + cx + '" cy="915" r="60" fill="url(#bbCap)" stroke="#000" stroke-width="2"/>' +
+        '<ellipse cx="' + (cx - 18) + '" cy="895" rx="22" ry="14" fill="#ffffff" opacity=".12"/>' +
+        '<circle cx="' + cx + '" cy="915" r="284" fill="#05060a" opacity=".28"/>' +
+        '<circle cx="' + cx + '" cy="915" r="284" fill="url(#bbMesh)"/>' +
+        '<circle cx="' + cx + '" cy="915" r="284" fill="url(#bbSpkShade)"/>' +
+        '<circle cx="' + cx + '" cy="915" r="284" fill="#000" filter="url(#bbDust)" opacity=".13"/>' +
+        '<g clip-path="url(#' + clip + ')">' +
+        [0, 47, -47].map((ang) =>
+            '<g transform="rotate(' + ang + ' ' + cx + ' 915)">' +
+            '<rect x="' + (cx - 292) + '" y="896" width="584" height="38" rx="19" fill="url(#soChromeV)" stroke="#0d0f13" stroke-width="2.5"/>' +
+            '<rect x="' + (cx - 292) + '" y="900" width="584" height="5" rx="2.5" fill="#f7f9fa" opacity=".6"/>' +
+            '<rect x="' + (cx - 292) + '" y="925" width="584" height="4" rx="2" fill="#0c0e11" opacity=".65"/>' +
+            '</g>').join("") +
+        '</g>' +
+        '<circle cx="' + cx + '" cy="915" r="54" fill="url(#soChrome)" stroke="#0a0b0d" stroke-width="3"/>' +
+        '<circle cx="' + cx + '" cy="915" r="43" fill="url(#soCapDark)"/>' +
+        '<circle cx="' + cx + '" cy="915" r="41" fill="url(#soKnurl)" opacity=".3"/>' +
+        soloScrew(cx, 915, 9, true) +
+        '<path d="M' + (cx - 43) + ' 889 A54 54 0 0 1 ' + (cx - 3) + ' 861" fill="none" stroke="#ffffff" stroke-width="4" opacity=".3" stroke-linecap="round"/>';
+
+    // ── 트랜스포트 피아노 키 6개 — REW · PLAY · F.FWD · REC · STOP/EJ · PAUSE
+    const keyDefs = [
+        { id: "bbKeyRew", label: "REW", tag: "", glyph: "rew", title: "되감기 — 이전 곡" },
+        { id: "bbKeyPlay", label: "PLAY", tag: "#d9ba43", glyph: "play", title: "PLAY — 테이프(음반) 재생" },
+        { id: "bbKeyFf", label: "F.FWD", tag: "", glyph: "ff", title: "빨리감기 — 다음 곡" },
+        { id: "bbKeyRec", label: "REC", tag: "#b5342a", glyph: "rec", title: "녹음 — 방지 탭이 부러져 있다" },
+        { id: "bbKeyStop", label: "STOP/EJ", tag: "", glyph: "stop", title: "정지" },
+        { id: "bbKeyPause", label: "PAUSE", tag: "", glyph: "pause", title: "일시정지" }
+    ];
+    const keyGlyph = (kc, glyph) => {
+        if (glyph === "rew") return '<path d="M' + (kc + 12) + ' 1038 L' + (kc - 1) + ' 1047 L' + (kc + 12) + ' 1056 Z M' + (kc - 1) + ' 1038 L' + (kc - 14) + ' 1047 L' + (kc - 1) + ' 1056 Z" fill="#e8e6e0"/>';
+        if (glyph === "ff") return '<path d="M' + (kc - 12) + ' 1038 L' + (kc + 1) + ' 1047 L' + (kc - 12) + ' 1056 Z M' + (kc + 1) + ' 1038 L' + (kc + 14) + ' 1047 L' + (kc + 1) + ' 1056 Z" fill="#e8e6e0"/>';
+        if (glyph === "play") return '<path d="M' + (kc - 7) + ' 1037 L' + (kc + 10) + ' 1047 L' + (kc - 7) + ' 1057 Z" fill="#e8e6e0"/>';
+        if (glyph === "rec") return '<circle cx="' + kc + '" cy="1047" r="7.5" fill="#d84438" stroke="#5c130c" stroke-width="1.5"/>';
+        if (glyph === "stop") return '<rect x="' + (kc - 7.5) + '" y="1039.5" width="15" height="15" fill="#e8e6e0"/>';
+        return '<rect x="' + (kc - 8.5) + '" y="1039" width="6" height="16" fill="#e8e6e0"/><rect x="' + (kc + 2.5) + '" y="1039" width="6" height="16" fill="#e8e6e0"/>';
+    };
+    const keys = keyDefs.map((k, i) => {
+        const x = 772 + i * 78;
+        const kc = x + 37;
+        const label = k.tag
+            ? '<rect x="' + (kc - 26) + '" y="999" width="52" height="14" rx="2.5" fill="' + k.tag + '"/>' +
+              '<text x="' + kc + '" y="1009.5" font-family="Arial" font-size="8" font-weight="700" letter-spacing="1" fill="' + (k.tag === "#d9ba43" ? "#14120a" : "#f6efe4") + '" text-anchor="middle">' + k.label + '</text>'
+            : '<text x="' + kc + '" y="1009.5" font-family="Arial" font-size="8" font-weight="600" letter-spacing="1" fill="#b8bcc2" text-anchor="middle">' + k.label + '</text>';
+        return label +
+            '<g id="' + k.id + 'G">' +
+            '<rect x="' + x + '" y="1018" width="74" height="52" rx="5" fill="url(#bbKey)" stroke="#050608" stroke-width="1.5"/>' +
+            '<rect x="' + (x + 2) + '" y="1019.5" width="70" height="8" rx="4" fill="#575b63" opacity=".4"/>' +
+            '<rect x="' + (x + 2) + '" y="1062" width="70" height="6" rx="3" fill="#000" opacity=".4"/>' +
+            keyGlyph(kc, k.glyph) +
+            '</g>' +
+            '<rect id="' + k.id + '" x="' + x + '" y="1012" width="74" height="62" fill="#000" fill-opacity="0" style="cursor:pointer"><title>' + k.title + '</title></rect>';
+    }).join("");
+
+    // ── 카세트 허브 — 흰 톱니 링 + 3스포크 (데크 B만 런타임이 돌린다)
+    const hub = (id, cx, cy) =>
+        '<g id="' + id + '">' +
+        '<circle cx="' + cx + '" cy="' + cy + '" r="15" fill="#0d0e10" stroke="#d9d3c4" stroke-width="3.5"/>' +
+        '<g fill="#d9d3c4">' +
+        '<rect x="' + (cx - 1.5) + '" y="' + (cy - 13) + '" width="3" height="26"/>' +
+        '<rect x="' + (cx - 1.5) + '" y="' + (cy - 13) + '" width="3" height="26" transform="rotate(60 ' + cx + ' ' + cy + ')"/>' +
+        '<rect x="' + (cx - 1.5) + '" y="' + (cy - 13) + '" width="3" height="26" transform="rotate(120 ' + cx + ' ' + cy + ')"/>' +
+        '</g></g>';
+
+    return '<svg class="solo-svg bb-svg" viewBox="0 0 2000 1330" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="Lasonic TRC-931 붐박스">' +
+        '<defs>' + soloMaterialDefs("bb") +
+        '<linearGradient id="bbWall" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0" stop-color="#221f1b"/><stop offset=".55" stop-color="#141210"/><stop offset="1" stop-color="#0b0a09"/></linearGradient>' +
+        '<linearGradient id="bbBody" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0" stop-color="#2c2d31"/><stop offset=".1" stop-color="#232428"/><stop offset=".45" stop-color="#18191d"/>' +
+        '<stop offset=".85" stop-color="#0e0f12"/><stop offset="1" stop-color="#08090a"/></linearGradient>' +
+        '<linearGradient id="bbSide" x1="0" y1="0" x2="1" y2="0">' +
+        '<stop offset="0" stop-color="#000000" stop-opacity=".55"/><stop offset=".06" stop-color="#000000" stop-opacity=".16"/>' +
+        '<stop offset=".3" stop-color="#ffffff" stop-opacity=".03"/><stop offset=".7" stop-color="#000000" stop-opacity=".05"/>' +
+        '<stop offset=".94" stop-color="#000000" stop-opacity=".26"/><stop offset="1" stop-color="#000000" stop-opacity=".58"/></linearGradient>' +
+        '<linearGradient id="bbInset" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0" stop-color="#0b0c0e"/><stop offset=".3" stop-color="#101215"/><stop offset="1" stop-color="#0c0d10"/></linearGradient>' +
+        '<linearGradient id="bbPanel" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0" stop-color="#1e1f24"/><stop offset=".5" stop-color="#141519"/><stop offset="1" stop-color="#0e0f12"/></linearGradient>' +
+        '<linearGradient id="bbGlass" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0" stop-color="#171d21"/><stop offset=".45" stop-color="#10151a"/><stop offset="1" stop-color="#0b0f13"/></linearGradient>' +
+        '<linearGradient id="bbTapeGlass" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0" stop-color="#182a2f"/><stop offset="1" stop-color="#0c161a"/></linearGradient>' +
+        '<linearGradient id="bbDoor" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0" stop-color="#17181d"/><stop offset="1" stop-color="#0f1014"/></linearGradient>' +
+        '<linearGradient id="bbKey" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0" stop-color="#52565e"/><stop offset=".25" stop-color="#34373d"/><stop offset=".7" stop-color="#1a1c20"/><stop offset="1" stop-color="#0c0d10"/></linearGradient>' +
+        '<radialGradient id="bbCone" cx=".42" cy=".42" r=".72">' +
+        '<stop offset="0" stop-color="#a08a55"/><stop offset=".35" stop-color="#74613a"/><stop offset=".7" stop-color="#413320"/><stop offset="1" stop-color="#191209"/></radialGradient>' +
+        '<radialGradient id="bbCap" cx=".35" cy=".3" r=".95">' +
+        '<stop offset="0" stop-color="#565044"/><stop offset=".5" stop-color="#23201a"/><stop offset="1" stop-color="#0d0c0a"/></radialGradient>' +
+        '<radialGradient id="bbSpkShade" cx=".4" cy=".36" r=".85">' +
+        '<stop offset=".5" stop-color="#000000" stop-opacity="0"/><stop offset=".82" stop-color="#000000" stop-opacity=".24"/>' +
+        '<stop offset="1" stop-color="#000000" stop-opacity=".55"/></radialGradient>' +
+        '<pattern id="bbMesh" width="14" height="14" patternUnits="userSpaceOnUse">' +
+        '<g fill="#4a4e55" opacity=".26"><circle cx="3.5" cy="4.5" r="3"/><circle cx="10.5" cy="11.5" r="3"/></g>' +
+        '<g fill="#000000" opacity=".85"><circle cx="3.5" cy="3.5" r="3"/><circle cx="10.5" cy="10.5" r="3"/></g></pattern>' +
+        '<clipPath id="bbSpkClipL"><circle cx="455" cy="915" r="290"/></clipPath>' +
+        '<clipPath id="bbSpkClipR"><circle cx="1545" cy="915" r="290"/></clipPath>' +
+        '<clipPath id="bbTwClipL"><circle cx="228" cy="506" r="47"/></clipPath>' +
+        '<clipPath id="bbTwClipR"><circle cx="1772" cy="506" r="47"/></clipPath>' +
+        soloGrime("bbScuff", [0.6, 0.58, 0.54], 2.0, 1.0, -1.66, "0.03 0.1", 3, 31) +
+        soloGrime("bbDust", [0.42, 0.4, 0.36], 1.9, 0.95, -1.5, "0.06 0.06", 3, 17) +
+        '</defs>' +
+
+        // ── 배경과 접지
+        '<rect x="0" y="0" width="2000" height="1330" fill="url(#bbWall)"/>' +
+        '<rect x="0" y="1270" width="2000" height="60" fill="#0b0a09"/>' +
+        '<ellipse cx="1000" cy="1296" rx="790" ry="28" fill="#000" opacity=".55" filter="url(#soWide)"/>' +
+
+        // ── 크롬 손잡이 (몸통 뒤로 꽂힌다)
+        '<path d="M500 262 V158 Q500 106 552 106 H1448 Q1500 106 1500 158 V262" fill="none" stroke="#0d0f13" stroke-width="26" stroke-linecap="round"/>' +
+        '<path d="M500 262 V158 Q500 106 552 106 H1448 Q1500 106 1500 158 V262" fill="none" stroke="url(#soChromeV)" stroke-width="20"/>' +
+        '<path d="M504 258 V160 Q504 112 554 112 H1446" fill="none" stroke="#ffffff" stroke-width="4" opacity=".4" stroke-dasharray="150 40 340 60 260"/>' +
+        '<path d="M500 262 V166 M1500 262 V166" stroke="#000" stroke-width="4" opacity=".25"/>' +
+
+        // ── 캐비닛
+        '<rect x="150" y="250" width="1700" height="1000" rx="20" fill="url(#bbBody)" stroke="#050506" stroke-width="3"/>' +
+        '<rect x="150" y="250" width="1700" height="1000" rx="20" fill="url(#bbSide)"/>' +
+        '<rect x="172" y="252.5" width="1656" height="2.5" rx="1.2" fill="#4a4d54" opacity=".55"/>' +
+        // 손잡이 결착 플레이트
+        '<rect x="468" y="256" width="64" height="34" rx="8" fill="url(#soChromeV)" stroke="#0a0b0d" stroke-width="2"/>' +
+        '<rect x="1468" y="256" width="64" height="34" rx="8" fill="url(#soChromeV)" stroke="#0a0b0d" stroke-width="2"/>' +
+        soloScrew(480, 273, 4.5, false) + soloScrew(520, 273, 4.5, false) +
+        soloScrew(1480, 273, 4.5, false) + soloScrew(1520, 273, 4.5, false) +
+
+        // ── 튜너 스케일 스트립
+        '<rect x="170" y="266" width="1660" height="140" rx="10" fill="url(#bbInset)" stroke="#000" stroke-width="2"/>' +
+        '<path d="M170 408 H1830" stroke="#000" stroke-width="2.5" opacity=".8"/>' +
+        '<path d="M170 410.5 H1830" stroke="#3f434a" stroke-width="1" opacity=".35"/>' +
+        // 좌측 인디케이터 블록
+        '<rect x="190" y="282" width="54" height="54" rx="6" fill="#d9ba43" stroke="#0a0a0c" stroke-width="2"/>' +
+        '<path d="M217 320 V299 M207 309 L217 299 L227 309 M205 324 H229" fill="none" stroke="#1a1710" stroke-width="3.5" stroke-linecap="round"/>' +
+        '<rect x="254" y="282" width="78" height="54" rx="6" fill="#0d0e11" stroke="#26282e" stroke-width="1.6"/>' +
+        '<text x="293" y="303" font-family="Arial" font-size="9" font-weight="700" letter-spacing="1.5" fill="#7ea0d8" text-anchor="middle">POWER</text>' +
+        '<circle id="bbPowerLed" cx="293" cy="318" r="5.5" fill="#3a1512" stroke="#000" stroke-width="1"/>' +
+        '<rect x="342" y="282" width="54" height="54" rx="6" fill="#45b0bf" stroke="#0a0a0c" stroke-width="2"/>' +
+        '<path d="M352 316 Q360 300 369 316 Q378 332 386 316 M352 306 Q360 290 369 306 M369 326 Q378 310 386 326" fill="none" stroke="#0f2f33" stroke-width="2.6" stroke-linecap="round"/>' +
+        '<text x="293" y="356" font-family="Arial" font-size="7.5" letter-spacing="2" fill="#63666c" text-anchor="middle">INDICATOR</text>' +
+        // 다이얼 유리
+        '<rect x="430" y="276" width="1200" height="118" rx="8" fill="url(#bbGlass)" stroke="#000" stroke-width="2"/>' +
+        '<rect x="430" y="276" width="1200" height="14" fill="#000" opacity=".28"/>' +
+        '<text x="507" y="314" font-family="Arial" font-size="9" fill="#8a8d92">ST</text>' +
+        '<circle id="bbStLed" cx="527" cy="310" r="4.5" fill="#3a1512" stroke="#000" stroke-width="1"/>' +
+        '<g id="bbRowFM">' + fmRow + '<g id="bbStMarks"></g></g>' + '<g id="bbRowAM">' + amRow + '</g><g id="bbRowSW">' + swRow + '</g>' +
+        '<g id="bbNeedle"><rect x="558.2" y="280" width="3.6" height="112" fill="#e8554a" opacity=".95"/>' +
+        '<rect x="559.4" y="280" width="1.2" height="112" fill="#ffe0d8" opacity=".8"/></g>' +
+        '<polygon points="440,276 580,276 480,394 440,394" fill="#ffffff" opacity=".04"/>' +
+        '<rect id="bbDialHit" x="430" y="270" width="1200" height="130" fill="#000" fill-opacity="0" style="cursor:ew-resize;touch-action:none" tabindex="0" role="slider" aria-label="주파수 다이얼 — 드래그하여 선국" aria-valuemin="88" aria-valuemax="108" aria-valuenow="98"><title>드래그하여 주파수를 맞추세요</title></rect>' +
+
+        // ── 튜닝 노브 (상판 모서리에 걸친다)
+        '<ellipse cx="1762" cy="332" rx="82" ry="78" fill="#000" opacity=".5" filter="url(#soSoft)"/>' +
+        '<circle cx="1755" cy="318" r="78" fill="url(#soChrome)" stroke="#101215" stroke-width="2"/>' +
+        '<circle cx="1755" cy="318" r="78" fill="url(#soKnurl)" opacity=".5"/>' +
+        '<circle cx="1755" cy="318" r="58" fill="url(#soChromeV)" stroke="#22252b" stroke-width="1.5"/>' +
+        '<circle cx="1755" cy="318" r="48" fill="none" stroke="#14161a" stroke-width="1" opacity=".3"/>' +
+        '<circle cx="1755" cy="318" r="38" fill="none" stroke="#14161a" stroke-width="1" opacity=".25"/>' +
+        '<circle cx="1755" cy="318" r="16" fill="url(#soCapDark)" stroke="#0a0b0d" stroke-width="1.5"/>' +
+        '<circle cx="1755" cy="318" r="68" fill="none" stroke="#0d0f13" stroke-width="2" opacity=".55"/>' +
+        '<ellipse cx="1732" cy="292" rx="26" ry="17" fill="#ffffff" opacity=".14"/>' +
+        '<g id="bbTuneKnob" transform="rotate(0 1755 318)"><circle cx="1755" cy="276" r="5" fill="#e8e6df" stroke="#101215" stroke-width="1.2"/><rect x="1753.6" y="286" width="2.8" height="26" rx="1.4" fill="#0a0b0d" opacity=".55"/></g>' +
+        '<circle id="bbTuneHit" cx="1755" cy="318" r="88" fill="#000" fill-opacity="0" style="cursor:grab;touch-action:none" tabindex="0" role="slider" aria-label="TUNING 노브 — 좌우로 끌어 선국" aria-valuemin="88" aria-valuemax="108" aria-valuenow="98"><title>TUNING — 좌우로 끌어 선국하세요</title></circle>' +
+
+        // ── 조작부 스트립
+        '<rect x="170" y="412" width="1660" height="192" fill="url(#bbPanel)" stroke="#000" stroke-width="2"/>' +
+        '<rect x="172" y="414" width="1656" height="2" fill="#3f434a" opacity=".4"/>' +
+        '<path d="M652 416 V602 M1188 416 V602" stroke="#000" stroke-width="2" opacity=".7"/>' +
+        '<path d="M654 416 V602 M1190 416 V602" stroke="#3f434a" stroke-width="1" opacity=".3"/>' +
+        '<path d="M170 604 H1830" stroke="#000" stroke-width="2.5" opacity=".8"/>' +
+        '<path d="M170 606.5 H1830" stroke="#3f434a" stroke-width="1" opacity=".3"/>' +
+        twt(228, "bbTwClipL") + twt(1772, "bbTwClipR") +
+
+        // 좌 — VOLUME · BALANCE · FUNCTION · 토글
+        soloKnob(352, 478, 35, "bbVol") +
+        '<text x="352" y="537" font-family="Arial" font-size="9" letter-spacing="1.5" fill="#9aa0a6" text-anchor="middle">VOLUME</text>' +
+        '<circle id="bbVolHit" cx="352" cy="478" r="48" fill="#000" fill-opacity="0" style="cursor:grab;touch-action:none" tabindex="0" role="slider" aria-label="음량 — 좌우로 끌어 조절" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><title>VOLUME — 좌우로 끌어 음량 조절</title></circle>' +
+        soloKnob(452, 478, 28, "bbBal") +
+        '<text x="452" y="537" font-family="Arial" font-size="9" letter-spacing="1.5" fill="#9aa0a6" text-anchor="middle">BALANCE</text>' +
+        '<rect x="518" y="426" width="118" height="18" rx="3" fill="#b5342a"/>' +
+        '<text x="577" y="439" font-family="Arial" font-size="9" font-weight="700" letter-spacing="2" fill="#f6efe4" text-anchor="middle">FUNCTION</text>' +
+        '<rect x="545" y="452" width="15" height="76" rx="7" fill="#050607" stroke="#26282e" stroke-width="1.2"/>' +
+        '<g id="bbFnLever"><rect x="529" y="450" width="47" height="26" rx="6" fill="url(#soChromeV)" stroke="#0a0b0d" stroke-width="1.6"/>' +
+        '<rect x="537" y="459" width="31" height="2" fill="#0a0b0d" opacity=".6"/><rect x="537" y="465" width="31" height="2" fill="#0a0b0d" opacity=".6"/></g>' +
+        '<text id="bbFnRadio" x="590" y="469" font-family="Arial" font-size="10" font-weight="700" fill="#d8d6cf">RADIO</text>' +
+        '<text id="bbFnTape" x="590" y="519" font-family="Arial" font-size="10" font-weight="700" fill="#d8d6cf" opacity=".38">TAPE</text>' +
+        '<rect id="bbFnHit" x="515" y="422" width="130" height="114" fill="#000" fill-opacity="0" style="cursor:pointer"><title>FUNCTION — RADIO·TAPE 전환</title></rect>' +
+        // 토글 4개 (LOUDNESS·MODE 실효, TAPE SEL·MIC SEL 각인)
+        '<text x="336" y="557" font-family="Arial" font-size="8" letter-spacing="1" fill="#9aa0a6" text-anchor="middle">LOUDNESS</text>' +
+        '<rect x="310" y="562" width="52" height="13" rx="6" fill="#050607" stroke="#26282e" stroke-width="1"/>' +
+        '<g id="bbLoudCap"><rect x="312" y="559" width="22" height="19" rx="4" fill="url(#soChromeV)" stroke="#0a0b0d" stroke-width="1.2"/></g>' +
+        '<text id="bbLoudState" x="336" y="596" font-family="Arial" font-size="7.5" fill="#7a7d84" text-anchor="middle">OFF</text>' +
+        '<rect id="bbLoudHit" x="296" y="548" width="80" height="54" fill="#000" fill-opacity="0" style="cursor:pointer"><title>LOUDNESS — 저음 보강</title></rect>' +
+        '<text x="430" y="557" font-family="Arial" font-size="8" letter-spacing="1" fill="#9aa0a6" text-anchor="middle">MODE</text>' +
+        '<rect x="404" y="562" width="52" height="13" rx="6" fill="#050607" stroke="#26282e" stroke-width="1"/>' +
+        '<g id="bbModeCap"><rect x="406" y="559" width="22" height="19" rx="4" fill="url(#soChromeV)" stroke="#0a0b0d" stroke-width="1.2"/></g>' +
+        '<text id="bbModeState" x="430" y="596" font-family="Arial" font-size="7.5" fill="#7a7d84" text-anchor="middle">STEREO</text>' +
+        '<rect id="bbModeHit" x="390" y="548" width="80" height="54" fill="#000" fill-opacity="0" style="cursor:pointer"><title>MODE — STEREO·MONO</title></rect>' +
+        '<text x="524" y="557" font-family="Arial" font-size="8" letter-spacing="1" fill="#7a7d84" text-anchor="middle">TAPE SEL</text>' +
+        '<rect x="498" y="562" width="52" height="13" rx="6" fill="#050607" stroke="#1c1e22" stroke-width="1"/>' +
+        '<rect x="528" y="559" width="22" height="19" rx="4" fill="url(#soChromeAged)" stroke="#0a0b0d" stroke-width="1.2"/>' +
+        '<text x="524" y="596" font-family="Arial" font-size="7.5" fill="#5c5f66" text-anchor="middle">NORMAL</text>' +
+        '<text x="618" y="557" font-family="Arial" font-size="8" letter-spacing="1" fill="#7a7d84" text-anchor="middle">MIC SEL</text>' +
+        '<rect x="592" y="562" width="52" height="13" rx="6" fill="#050607" stroke="#1c1e22" stroke-width="1"/>' +
+        '<rect x="594" y="559" width="22" height="19" rx="4" fill="url(#soChromeAged)" stroke="#0a0b0d" stroke-width="1.2"/>' +
+        '<text x="618" y="596" font-family="Arial" font-size="7.5" fill="#5c5f66" text-anchor="middle">INT</text>' +
+
+        // 중 — 5밴드 그래픽 EQ
+        '<rect x="678" y="424" width="488" height="21" rx="3" fill="#b5342a"/>' +
+        '<text x="922" y="439" font-family="Arial" font-size="10.5" font-weight="700" letter-spacing="2" fill="#f6efe4" text-anchor="middle">5 - BAND GRAPHIC EQUALIZER</text>' +
+        '<text x="694" y="475" font-family="Arial" font-size="8" fill="#7a7d84" text-anchor="end">+10</text>' +
+        '<text x="694" y="525" font-family="Arial" font-size="8" fill="#7a7d84" text-anchor="end">0</text>' +
+        '<text x="694" y="577" font-family="Arial" font-size="8" fill="#7a7d84" text-anchor="end">-10</text>' +
+        '<text x="1152" y="475" font-family="Arial" font-size="8" fill="#7a7d84">+10</text>' +
+        '<text x="1152" y="525" font-family="Arial" font-size="8" fill="#7a7d84">0</text>' +
+        '<text x="1152" y="577" font-family="Arial" font-size="8" fill="#7a7d84">-10</text>' +
+        eqSliders +
+
+        // 우 — AUTO REVERSE · ON/OFF · 녹음 노브 · BAND SELECTOR
+        '<text x="1218" y="452" font-family="Georgia, serif" font-size="21" font-style="italic" font-weight="700" fill="#c8402f">Auto Reverse</text>' +
+        '<path d="M1390 437 A12 12 0 1 1 1390 453 M1390 453 L1396 447 M1390 453 L1383 449" fill="none" stroke="#c8402f" stroke-width="2.2" stroke-linecap="round"/>' +
+        '<rect x="1218" y="470" width="92" height="104" rx="8" fill="none" stroke="#b5342a" stroke-width="2" opacity=".8"/>' +
+        '<text id="bbPowerOnTxt" x="1243" y="498" font-family="Arial" font-size="11" font-weight="700" fill="#d8d6cf" text-anchor="middle">ON</text>' +
+        '<text id="bbPowerOffTxt" x="1243" y="546" font-family="Arial" font-size="11" font-weight="700" fill="#d8d6cf" text-anchor="middle" opacity=".38">OFF</text>' +
+        '<rect x="1277" y="482" width="14" height="80" rx="7" fill="#050607" stroke="#26282e" stroke-width="1.2"/>' +
+        '<g id="bbPowerLever"><rect x="1263" y="480" width="42" height="24" rx="6" fill="url(#soChromeV)" stroke="#0a0b0d" stroke-width="1.5"/>' +
+        '<rect x="1270" y="488" width="28" height="2" fill="#0a0b0d" opacity=".6"/><rect x="1270" y="494" width="28" height="2" fill="#0a0b0d" opacity=".6"/></g>' +
+        '<rect id="bbPowerHit" x="1212" y="464" width="104" height="116" fill="#000" fill-opacity="0" style="cursor:pointer"><title>전원 ON/OFF</title></rect>' +
+        soloKnob(1390, 508, 27, "bbMic", { pointer: false }) +
+        '<text x="1390" y="556" font-family="Arial" font-size="7.5" letter-spacing="1" fill="#9aa0a6" text-anchor="middle">MIC MIX VOL</text>' +
+        soloKnob(1478, 508, 27, "bbRecVol", { pointer: false }) +
+        '<text x="1478" y="556" font-family="Arial" font-size="7.5" letter-spacing="1" fill="#9aa0a6" text-anchor="middle">REC VOL</text>' +
+        '<text id="bbBandFM" x="1554" y="482" font-family="Arial" font-size="10" font-weight="700" fill="#d8d6cf" text-anchor="middle">FM</text>' +
+        '<text id="bbBandAM" x="1615" y="482" font-family="Arial" font-size="10" font-weight="700" fill="#d8d6cf" text-anchor="middle" opacity=".38">AM</text>' +
+        '<text id="bbBandSW" x="1676" y="482" font-family="Arial" font-size="10" font-weight="700" fill="#d8d6cf" text-anchor="middle" opacity=".38">SW</text>' +
+        '<rect x="1540" y="492" width="148" height="15" rx="7" fill="#050607" stroke="#26282e" stroke-width="1.2"/>' +
+        '<g id="bbBandCap"><rect x="1540" y="489" width="28" height="21" rx="6" fill="url(#soChromeV)" stroke="#0a0b0d" stroke-width="1.4"/></g>' +
+        '<rect x="1540" y="524" width="148" height="20" rx="3" fill="#3a5fa8"/>' +
+        '<text x="1614" y="538" font-family="Arial" font-size="8.5" font-weight="700" letter-spacing="1.5" fill="#eef2f8" text-anchor="middle">BAND SELECTOR</text>' +
+        '<rect id="bbBandHit" x="1530" y="468" width="168" height="86" fill="#000" fill-opacity="0" style="cursor:pointer"><title>BAND SELECTOR — FM·AM·SW</title></rect>' +
+
+        // ── 우퍼 두 발
+        speaker(455, "bbSpkClipL") + speaker(1545, "bbSpkClipR") +
+
+        // ── 중앙 카세트 컬럼: 데크 A
+        '<rect x="760" y="618" width="480" height="112" rx="10" fill="#17181c" stroke="#26282e" stroke-width="2"/>' +
+        '<rect x="770" y="626" width="460" height="96" rx="6" fill="url(#bbDoor)" stroke="#000" stroke-width="1.5"/>' +
+        '<text x="786" y="646" font-family="Arial" font-size="9" letter-spacing="1" fill="#c8402f">AUTO REVERSE</text>' +
+        '<text x="1214" y="646" font-family="Arial" font-size="9" fill="#7cc79a" text-anchor="end">&#9668;&#9668; &#9658;&#9658;</text>' +
+        '<rect x="786" y="654" width="428" height="58" rx="5" fill="url(#bbTapeGlass)" stroke="#000" stroke-width="2"/>' +
+        '<rect x="796" y="660" width="408" height="46" rx="4" fill="#23252a" stroke="#0a0b0d" stroke-width="1.5"/>' +
+        '<rect x="856" y="664" width="288" height="15" rx="2" fill="#d9d3c4" opacity=".85"/>' +
+        '<text x="1000" y="675.5" font-family="Arial" font-size="8" fill="#4a4438" text-anchor="middle" letter-spacing="1">MAD FOR AUDIO &#183; C-90</text>' +
+        hub("bbHubAL", 930, 691) + hub("bbHubAR", 1070, 691) +
+        '<polygon points="796,660 900,660 830,706 796,706" fill="#ffffff" opacity=".05"/>' +
+        '<text x="790" y="720" font-family="Arial" font-size="8" fill="#8a8d92">TAPE A</text>' +
+
+        // 카운터 · RESET · LASONIC
+        '<text x="786" y="756" font-family="Arial" font-size="8" letter-spacing="1" fill="#8a8d92">COUNTER</text>' +
+        '<rect x="782" y="760" width="76" height="26" rx="3" fill="#050607" stroke="#26282e" stroke-width="1.4"/>' +
+        '<text id="bbCounter" x="820" y="779" font-family="Consolas, monospace" font-size="16" letter-spacing="3" fill="#e8e4da" text-anchor="middle">000</text>' +
+        '<rect x="868" y="762" width="48" height="22" rx="4" fill="#1c1e22" stroke="#000" stroke-width="1.2"/>' +
+        '<text x="892" y="776.5" font-family="Arial" font-size="7.5" letter-spacing="1" fill="#9aa0a6" text-anchor="middle">RESET</text>' +
+        '<rect id="bbResetHit" x="862" y="756" width="60" height="34" fill="#000" fill-opacity="0" style="cursor:pointer"><title>카운터 리셋</title></rect>' +
+        '<rect x="1010" y="748" width="220" height="44" rx="6" fill="#0a0b0d" stroke="#26282e" stroke-width="1.6"/>' +
+        '<path d="M1028 756 L1046 756 L1036 784 L1018 784 Z" fill="#b5342a"/>' +
+        '<text x="1142" y="780" font-family="Arial" font-size="26" font-weight="900" font-style="italic" letter-spacing="2" fill="url(#soChromeV)" text-anchor="middle">LASONIC</text>' +
+
+        // 데크 B
+        '<rect x="760" y="800" width="480" height="210" rx="10" fill="#17181c" stroke="#26282e" stroke-width="2"/>' +
+        '<rect x="770" y="808" width="460" height="194" rx="8" fill="url(#bbDoor)" stroke="#000" stroke-width="1.5"/>' +
+        soloScrew(781, 819, 5, true) + soloScrew(1219, 819, 5, true) +
+        soloScrew(781, 991, 5, true) + soloScrew(1219, 991, 5, true) +
+        '<text x="794" y="833" font-family="Arial" font-size="18" font-weight="700" letter-spacing="1" fill="#e8e6e0">TRC-931</text>' +
+        '<rect x="884" y="818" width="58" height="17" rx="2" fill="#b5342a"/>' +
+        '<text x="913" y="830.5" font-family="Arial" font-size="8" font-weight="700" letter-spacing="1" fill="#f6efe4" text-anchor="middle">METAL</text>' +
+        '<text x="1210" y="830" font-family="Arial" font-size="7.5" letter-spacing="1" fill="#8a8d92" text-anchor="end">AUTO STOP SYSTEM</text>' +
+        '<rect x="786" y="842" width="72" height="14" rx="2" fill="#b5342a"/>' +
+        '<text x="822" y="852.5" font-family="Arial" font-size="7" font-weight="700" letter-spacing="1" fill="#f6efe4" text-anchor="middle">TAPE SCALE</text>' +
+        '<path d="M786 866 H904" stroke="#4a4d54" stroke-width="1.5" opacity=".7"/>' +
+        '<path d="M790 866 V860 M810 866 V862 M830 866 V860 M850 866 V862 M870 866 V860 M890 866 V862" stroke="#4a4d54" stroke-width="1.2" opacity=".6"/>' +
+        '<text x="794" y="996" font-family="Arial" font-size="9" fill="#8a8d92">TAPE B</text>' +
+        '<text x="1055" y="996" font-family="Arial" font-size="9.5" letter-spacing="2.5" fill="#b8bcc2" text-anchor="middle">STEREO CASSETTE RECORDER</text>' +
+        '<rect x="915" y="842" width="290" height="112" rx="8" fill="url(#bbTapeGlass)" stroke="#000" stroke-width="2.5"/>' +
+        '<rect x="925" y="850" width="270" height="96" rx="6" fill="#202227" stroke="#0a0b0d" stroke-width="1.5"/>' +
+        '<rect x="940" y="856" width="240" height="30" rx="3" fill="#d9d3c4" opacity=".9"/>' +
+        '<text id="bbTapeTitle" x="1060" y="869" font-family="Arial" font-size="10.5" font-weight="700" fill="#3a3428" text-anchor="middle"></text>' +
+        '<text id="bbTapeArtist" x="1060" y="881.5" font-family="Arial" font-size="8" fill="#6a6254" text-anchor="middle"></text>' +
+        '<circle cx="990" cy="915" r="30" fill="#191512"/>' +
+        '<circle cx="1130" cy="915" r="22" fill="#191512"/>' +
+        hub("bbHubBL", 990, 915) + hub("bbHubBR", 1130, 915) +
+        '<polygon points="925,850 1030,850 950,946 925,946" fill="#ffffff" opacity=".05"/>' +
+
+        // 트랜스포트 키 + ONE TOUCH + 벤트
+        keys +
+        '<circle cx="940" cy="1090" r="4" fill="#c8402f"/>' +
+        '<text x="952" y="1094" font-family="Arial" font-size="8" letter-spacing="1.5" fill="#9aa0a6">ONE TOUCH RECORDING</text>' +
+        '<rect x="850" y="1104" width="300" height="130" rx="8" fill="#0c0d10" stroke="#22242a" stroke-width="1.6"/>' +
+        (() => {
+            let out = "";
+            for (let i = 0; i < 9; i++) {
+                const y = 1112 + i * 13;
+                out += '<rect x="862" y="' + y + '" width="276" height="6" rx="3" fill="#030405"/>' +
+                    '<rect x="862" y="' + (y + 6.5) + '" width="276" height="1" fill="#3a3d42" opacity=".3"/>';
+            }
+            return out;
+        })() +
+        '<text x="1000" y="1247" font-family="Arial" font-size="7.5" letter-spacing="2" fill="#63666c" text-anchor="middle">FREQUENCY RESPONDER</text>' +
+
+        // ── 발 + 40년치 흔적
+        '<rect x="290" y="1250" width="120" height="40" rx="9" fill="#08090b" stroke="#000" stroke-width="2"/>' +
+        '<rect x="296" y="1252" width="108" height="3" rx="1.5" fill="#3a3d42" opacity=".5"/>' +
+        '<rect x="1590" y="1250" width="120" height="40" rx="9" fill="#08090b" stroke="#000" stroke-width="2"/>' +
+        '<rect x="1596" y="1252" width="108" height="3" rx="1.5" fill="#3a3d42" opacity=".5"/>' +
+        '<rect x="150" y="250" width="1700" height="1000" rx="20" fill="#000" filter="url(#bbScuff)" opacity=".1" pointer-events="none"/>' +
+        '<text x="1830" y="1318" font-family="Arial" font-size="13" letter-spacing="1.6" fill="#8a8d92" opacity=".5" text-anchor="end">LASONIC &#183; TRC-931 &#183; AM/FM/SW &#183; 5-BAND EQ &#183; 1985</text>' +
+        soloFilmGrade(0, 0, 2000, 1330) +
+        '</svg>';
+}
+
 const SOLO_MODELS = {
     victorv: {
         label: "VICTOR V 축음기",
@@ -1008,5 +1431,13 @@ const SOLO_MODELS = {
         finishes: A501_FINISHES,
         render: mfaA501Svg
     }
+,
+    trc931: {
+        label: "LASONIC TRC-931 붐박스",
+        kind: "boombox",
+        year: 1985,
+        desc: "1980년대 대표 붐박스 — AM/FM/SW 튜너·카세트 2조·5밴드 그래픽 EQ. 방송과 음반을 모두 재생합니다.",
+        render: mfaBoomboxSvg
+    }
 };
-const SOLO_ORDER = ["victorv", "a501"];
+const SOLO_ORDER = ["victorv", "a501", "trc931"];

@@ -808,6 +808,9 @@ function buildSoloNodes() {
         lp1: bq("lowpass", 12000, 0.7),
         lp2: bq("lowpass", 12000, 0.7),
         tilt: bq("highshelf", 6000, null),
+        // 붐박스 전면 5밴드 그래픽 EQ — 다른 기기에서는 게인 0으로 투명하다
+        eq: [bq("peaking", 80, 1.05), bq("peaking", 250, 1.05), bq("peaking", 1000, 1.05),
+            bq("peaking", 3500, 1.05), bq("peaking", 10000, 0.9)],
         ringDelay: audioCtx.createDelay(0.2),
         ringFb: audioCtx.createGain(),
         ringTone: bq("lowpass", 3000, 0.7),
@@ -834,13 +837,15 @@ function buildSoloNodes() {
     n.in.connect(n.mono).connect(n.hp1).connect(n.hp2).connect(n.body)
         .connect(n.res1).connect(n.res2).connect(n.drive).connect(n.shaper)
         .connect(n.lp1).connect(n.lp2).connect(n.tilt);
-    n.tilt.connect(n.out);
+    // 그래픽 EQ는 전치앰프 뒤·파워앰프(캐비닛 잔향) 앞 — 실물 신호 순서 그대로
+    n.tilt.connect(n.eq[0]).connect(n.eq[1]).connect(n.eq[2]).connect(n.eq[3]).connect(n.eq[4]);
+    n.eq[4].connect(n.out);
     // 관 공명·캐비닛 잔향 — 짧은 되울림 루프
-    n.tilt.connect(n.ringDelay);
+    n.eq[4].connect(n.ringDelay);
     n.ringDelay.connect(n.ringTone).connect(n.ringWet).connect(n.out);
     n.ringDelay.connect(n.ringFb).connect(n.ringDelay);
     // 짝수 배음 패러렐 — 라디오에서만 게인을 올린다
-    n.tilt.connect(n.evenIn).connect(n.evenShaper).connect(n.evenBp).connect(n.evenGain).connect(n.out);
+    n.eq[4].connect(n.evenIn).connect(n.evenShaper).connect(n.evenBp).connect(n.evenGain).connect(n.out);
     // 기계·수신 잡음은 기기 착색을 함께 받아야 하므로 체인 맨 앞으로 들어간다
     n.noiseBp.connect(n.noiseGain).connect(n.in);
     n.whistleGain.connect(n.in);
@@ -930,7 +935,58 @@ function applySoloVoice() {
         set(soloNodes.evenGain.gain, 0.075);
         set(soloNodes.noiseBp.frequency, 1900); soloNodes.noiseBp.Q.value = 0.35;
         set(soloNodes.out.gain, 0.92);
+    } else if (kind === "boombox") {
+        // 붐박스 — 라우드니스 커브. 작은 통이 못 내는 초저역은 접고 그 위 90Hz대를
+        // 크게 부풀린다. 중역은 살짝 파이고 고역은 반짝인다. ALC의 늦고 단단한 무릎.
+        soloNodes.mono.channelCount = 2;
+        soloNodes.mono.channelCountMode = "max";
+        set(soloNodes.hp1.frequency, 46); soloNodes.hp1.Q.value = 0.95;
+        set(soloNodes.hp2.frequency, 38); soloNodes.hp2.Q.value = 0.7;
+        const bbLoudOn = typeof bbLoud !== "undefined" && bbLoud;
+        set(soloNodes.body.frequency, 92); soloNodes.body.Q.value = 0.95;
+        set(soloNodes.body.gain, bbLoudOn ? 7.6 : 5.2);
+        set(soloNodes.res1.frequency, 430); soloNodes.res1.Q.value = 0.8; set(soloNodes.res1.gain, -2.2);
+        set(soloNodes.res2.frequency, 3400); soloNodes.res2.Q.value = 0.9; set(soloNodes.res2.gain, 2.2);
+        set(soloNodes.drive.gain, 1.24);
+        soloNodes.shaper.curve = soloTubeCurve(0.03, 0.8);
+        set(soloNodes.lp1.frequency, 15500); soloNodes.lp1.Q.value = 0.72;
+        set(soloNodes.lp2.frequency, 17500); soloNodes.lp2.Q.value = 0.6;
+        set(soloNodes.tilt.frequency, 8600); set(soloNodes.tilt.gain, bbLoudOn ? 2.6 : 1.2);
+        set(soloNodes.ringDelay.delayTime, 0.0092);          // 플라스틱 통의 짧은 박스 톤
+        set(soloNodes.ringFb.gain, 0.24);
+        set(soloNodes.ringTone.frequency, 2100);
+        set(soloNodes.ringWet.gain, 0.085);
+        set(soloNodes.evenBp.frequency, 900);
+        set(soloNodes.evenGain.gain, 0.03);
+        set(soloNodes.noiseBp.frequency, 1400); soloNodes.noiseBp.Q.value = 0.3;
+        set(soloNodes.out.gain, 1.02);
+        const bbHz = [80, 250, 1000, 3500, 10000];
+        soloNodes.eq.forEach((f, i) => {
+            set(f.frequency, bbHz[i]);
+            f.Q.value = i === 4 ? 0.9 : 1.05;
+            const db = typeof bbEqDb !== "undefined" && bbEqDb[i] ? bbEqDb[i] : 0;
+            set(f.gain, Math.max(-10, Math.min(10, db)));
+        });
     }
+    if (kind !== "boombox") soloNodes.eq.forEach((f) => set(f.gain, 0));
+}
+
+// 붐박스 전면 그래픽 EQ — 슬라이더 드래그가 밴드 게인(dB)으로 직결된다
+function soloBoomboxEq(i, db) {
+    if (!soloNodes || !audioCtx || !soloNodes.eq[i]) return;
+    const v = Math.max(-10, Math.min(10, db || 0));
+    try { soloNodes.eq[i].gain.setTargetAtTime(v, audioCtx.currentTime, 0.04); } catch (e) { soloNodes.eq[i].gain.value = v; }
+}
+
+// LOUDNESS·MODE 스위치 — 라우드니스는 저역 혹과 고역 선반을 함께 키운다
+function soloBoomboxTone(loud, stereo) {
+    if (!soloNodes || !audioCtx) return;
+    if ((typeof soloKind === "function" ? soloKind() : "") !== "boombox") return;
+    const set = (param, value) => { try { param.setTargetAtTime(value, audioCtx.currentTime, 0.06); } catch (e) { param.value = value; } };
+    set(soloNodes.body.gain, loud ? 7.6 : 5.2);
+    set(soloNodes.tilt.gain, loud ? 2.6 : 1.2);
+    soloNodes.mono.channelCount = stereo ? 2 : 1;
+    soloNodes.mono.channelCountMode = stereo ? "max" : "explicit";
 }
 
 // 프레임 루프에서 부르는 잡음 제어 — 표면 잡음(축음기)·대역 잡음과 휘슬(라디오 SW)
@@ -967,7 +1023,8 @@ window.MFA_SoloDSP = Object.freeze({
             drive: soloNodes.drive.gain.value,
             ring: [soloNodes.ringDelay.delayTime.value, soloNodes.ringFb.gain.value, soloNodes.ringWet.gain.value],
             evenHarmonics: soloNodes.evenGain.gain.value,
-            noise: soloNodes.noiseGain.gain.value
+            noise: soloNodes.noiseGain.gain.value,
+            eq: soloNodes.eq.map((f) => Math.round(f.gain.value * 10) / 10)
         };
     }
 });
