@@ -6619,5 +6619,48 @@
     }
    }
   ]
+ },
+ {
+  "title": "TRC-931 데모 테이프 — 스트리트 비트",
+  "composer": "MAD FOR AUDIO",
+  "performer": "MFA Rhythm Section",
+  "credit": "자체 제작 데모 음원 · Mad for Audio 오리지널 · CC0",
+  "labelBig": "DEMO",
+  "labelTitle": "스트리트 비트 데모",
+  "labelArtist": "MFA RHYTHM SECTION",
+  "jTitle": "DEMO TAPE",
+  "jSub1": "스트리트 비트 데모 테이프",
+  "jSub2": "TRC-931 DEMONSTRATION · 1985",
+  "labelBg": "#d9d3c4",
+  "jacketBg": "#1c1d22",
+  "accent": "#d84438",
+  "side": "A",
+  "tracks": [
+   {
+    "t": "Street Beat",
+    "f": "media/demo-street-beat.mp3",
+    "host": "local",
+    "id": "tape-demo-001-track-01"
+   },
+   {
+    "t": "Bass Alley",
+    "f": "media/demo-bass-alley.mp3",
+    "host": "local",
+    "id": "tape-demo-001-track-02"
+   },
+   {
+    "t": "Night Cruise",
+    "f": "media/demo-night-cruise.mp3",
+    "host": "local",
+    "id": "tape-demo-001-track-03"
+   }
+  ],
+  "id": "tape-demo-001",
+  "artist": "MFA Rhythm Section",
+  "catalogNo": "MFA-C90-001",
+  "genre": "기타",
+  "boomboxOnly": true,
+  "playbackGain": 1.0,
+  "bwv": "MFA-C90-001"
  }
 ]

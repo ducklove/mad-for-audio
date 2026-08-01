@@ -886,7 +886,8 @@
             switch (data.type) {
                 case "fmRadio:records":
                     if (Array.isArray(data.records) && !records.length) {
-                        records = data.records.filter((record) => record && Array.isArray(record.tracks) && record.tracks.length);
+                        // 카세트 전용(붐박스 데모) 레코드는 턴테이블에 올리지 않는다
+                        records = data.records.filter((record) => record && Array.isArray(record.tracks) && record.tracks.length && !record.boomboxOnly);
                         populateRecords();
                     }
                     break;
@@ -1058,7 +1059,8 @@
                 })
                 .then((data) => {
                     if (Array.isArray(data) && !records.length) {
-                        records = data.filter((record) => record && Array.isArray(record.tracks) && record.tracks.length);
+                        // 카세트 전용(붐박스 데모) 레코드는 턴테이블에 올리지 않는다
+                        records = data.filter((record) => record && Array.isArray(record.tracks) && record.tracks.length && !record.boomboxOnly);
                         populateRecords();
                     }
                 })

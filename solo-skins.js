@@ -1110,6 +1110,8 @@ function mfaBoomboxSvg() {
             '<rect x="' + (cx - 292) + '" y="925" width="584" height="4" rx="2" fill="#0c0e11" opacity=".65"/>' +
             '</g>').join("") +
         '</g>' +
+        // 스포크도 같은 그릇 안에 있다 — 럼사 비네팅을 한 번 더 얹어 가장자리를 가라앉힌다
+        '<circle cx="' + cx + '" cy="915" r="284" fill="url(#bbSpkShade)" opacity=".85"/>' +
         '<circle cx="' + cx + '" cy="915" r="54" fill="url(#soChrome)" stroke="#0a0b0d" stroke-width="3"/>' +
         '<circle cx="' + cx + '" cy="915" r="43" fill="url(#soCapDark)"/>' +
         '<circle cx="' + cx + '" cy="915" r="41" fill="url(#soKnurl)" opacity=".3"/>' +
@@ -1122,7 +1124,7 @@ function mfaBoomboxSvg() {
         { id: "bbKeyPlay", label: "PLAY", tag: "#d9ba43", glyph: "play", title: "PLAY — 테이프(음반) 재생" },
         { id: "bbKeyFf", label: "F.FWD", tag: "", glyph: "ff", title: "빨리감기 — 다음 곡" },
         { id: "bbKeyRec", label: "REC", tag: "#b5342a", glyph: "rec", title: "녹음 — 방지 탭이 부러져 있다" },
-        { id: "bbKeyStop", label: "STOP/EJ", tag: "", glyph: "stop", title: "정지" },
+        { id: "bbKeyStop", label: "STOP/EJ", tag: "", glyph: "stop", title: "정지 — 멈춘 상태에서 한 번 더 누르면 EJECT(테이프 교체)" },
         { id: "bbKeyPause", label: "PAUSE", tag: "", glyph: "pause", title: "일시정지" }
     ];
     const keyGlyph = (kc, glyph) => {
@@ -1183,6 +1185,13 @@ function mfaBoomboxSvg() {
         '<stop offset="0" stop-color="#17181d"/><stop offset="1" stop-color="#0f1014"/></linearGradient>' +
         '<linearGradient id="bbKey" x1="0" y1="0" x2="0" y2="1">' +
         '<stop offset="0" stop-color="#52565e"/><stop offset=".25" stop-color="#34373d"/><stop offset=".7" stop-color="#1a1c20"/><stop offset="1" stop-color="#0c0d10"/></linearGradient>' +
+        // 세로로 선 크롬 원기둥 — 명암 띠가 좌우로 갈린다 (손잡이 스트럿·힌지 너클)
+        '<linearGradient id="bbChromeH" x1="0" y1="0" x2="1" y2="0">' +
+        '<stop offset="0" stop-color="#33373e"/><stop offset=".16" stop-color="#e9edf1"/><stop offset=".38" stop-color="#868d97"/>' +
+        '<stop offset=".55" stop-color="#f6f8fa"/><stop offset=".76" stop-color="#767d87"/><stop offset="1" stop-color="#282c32"/></linearGradient>' +
+        // 손잡이 고무 그립 — 위가 밝고 아래로 말려 들어가는 원통
+        '<linearGradient id="bbGrip" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0" stop-color="#41454c"/><stop offset=".26" stop-color="#26292e"/><stop offset=".72" stop-color="#131519"/><stop offset="1" stop-color="#0a0b0e"/></linearGradient>' +
         '<radialGradient id="bbCone" cx=".42" cy=".42" r=".72">' +
         '<stop offset="0" stop-color="#a08a55"/><stop offset=".35" stop-color="#74613a"/><stop offset=".7" stop-color="#413320"/><stop offset="1" stop-color="#191209"/></radialGradient>' +
         '<radialGradient id="bbCap" cx=".35" cy=".3" r=".95">' +
@@ -1206,33 +1215,76 @@ function mfaBoomboxSvg() {
         '<rect x="0" y="1270" width="2000" height="60" fill="#0b0a09"/>' +
         '<ellipse cx="1000" cy="1296" rx="790" ry="28" fill="#000" opacity=".55" filter="url(#soWide)"/>' +
 
-        // ── 크롬 손잡이 (몸통 뒤로 꽂힌다)
-        '<path d="M500 262 V158 Q500 106 552 106 H1448 Q1500 106 1500 158 V262" fill="none" stroke="#0d0f13" stroke-width="26" stroke-linecap="round"/>' +
-        '<path d="M500 262 V158 Q500 106 552 106 H1448 Q1500 106 1500 158 V262" fill="none" stroke="url(#soChromeV)" stroke-width="20"/>' +
-        '<path d="M504 258 V160 Q504 112 554 112 H1446" fill="none" stroke="#ffffff" stroke-width="4" opacity=".4" stroke-dasharray="150 40 340 60 260"/>' +
-        '<path d="M500 262 V166 M1500 262 V166" stroke="#000" stroke-width="4" opacity=".25"/>' +
+        // ── 크롬 파이프 손잡이 (몸통 뒤로 꽂힌다) — 스트럿·엘보·그립 슬리브의 3부 구성
+        // 벽에 지는 그림자부터 깔아야 파이프가 공중에 뜨지 않는다
+        '<path d="M500 268 V158 Q500 106 552 106 H1448 Q1500 106 1500 158 V268" fill="none" stroke="#000" stroke-width="28" opacity=".28" filter="url(#soSoft)" transform="translate(10 16)"/>' +
+        // 파이프 본체 — 어두운 외곽 위에 크롬을 얹는다
+        '<path d="M500 268 V158 Q500 106 552 106 H1448 Q1500 106 1500 158 V268" fill="none" stroke="#04050a" stroke-width="30" stroke-linecap="round"/>' +
+        '<path d="M500 268 V158 Q500 106 552 106 H1448 Q1500 106 1500 158 V268" fill="none" stroke="url(#soChromeV)" stroke-width="24"/>' +
+        // 세로 스트럿은 좌우로 명암이 갈리는 원기둥 — 가로 크롬 띠로 다시 세운다
+        '<rect x="488" y="162" width="24" height="106" fill="url(#bbChromeH)"/>' +
+        '<rect x="1488" y="162" width="24" height="106" fill="url(#bbChromeH)"/>' +
+        '<path d="M494.5 168 V256" stroke="#ffffff" stroke-width="2.6" opacity=".4" stroke-linecap="round"/>' +
+        '<path d="M1493 168 V256" stroke="#ffffff" stroke-width="2.2" opacity=".3" stroke-linecap="round"/>' +
+        '<path d="M507.5 168 V256 M1507.5 168 V256" stroke="#0b0d11" stroke-width="3.5" opacity=".5"/>' +
+        // 엘보-스트럿 이음 페룰 — 관이 꺾이는 자리를 물어 주는 칼라
+        '<rect x="484" y="155" width="32" height="11" rx="4.5" fill="url(#soChromeV)" stroke="#05060a" stroke-width="1.4"/>' +
+        '<rect x="1484" y="155" width="32" height="11" rx="4.5" fill="url(#soChromeV)" stroke="#05060a" stroke-width="1.4"/>' +
+        // 가로 바의 빛 — 곧은 구간을 끊김 없이 한 획으로, 바닥 모서리는 폐색으로
+        '<path d="M556 99.5 H1444" stroke="#ffffff" stroke-width="3.4" opacity=".5" stroke-linecap="round"/>' +
+        '<path d="M556 116.5 H1444" stroke="#0c0e12" stroke-width="3" opacity=".5" stroke-linecap="round"/>' +
+        '<path d="M505.5 158 Q505.5 111.5 552 111.5" fill="none" stroke="#ffffff" stroke-width="2.4" opacity=".4" stroke-linecap="round"/>' +
+        '<path d="M1448 111.5 Q1494.5 111.5 1494.5 158" fill="none" stroke="#ffffff" stroke-width="2" opacity=".28" stroke-linecap="round"/>' +
+        // 중앙 고무 그립 — 골이 파인 슬리브가 파이프를 감싼다 (실물의 손자국이 남는 자리)
+        '<rect x="827" y="86" width="346" height="44" rx="22" fill="#04050a"/>' +
+        '<rect x="831" y="89" width="338" height="38" rx="19" fill="url(#bbGrip)"/>' +
+        (() => {
+            let ribs = "";
+            for (let x = 856; x <= 1144; x += 12) {
+                ribs += '<path d="M' + x + ' 92 V124" stroke="#06070a" stroke-width="4" opacity=".5"/>' +
+                    '<path d="M' + (x + 3.4) + ' 92 V124" stroke="#5a5f68" stroke-width="1.4" opacity=".32"/>';
+            }
+            return ribs;
+        })() +
+        '<rect x="838" y="91" width="324" height="7" rx="3.5" fill="#ffffff" opacity=".09"/>' +
+        '<rect x="838" y="119" width="324" height="5" rx="2.5" fill="#000000" opacity=".35"/>' +
+        // 그립 양끝 리테이너 링
+        '<rect x="820" y="87" width="14" height="42" rx="6" fill="url(#soChromeV)" stroke="#05060a" stroke-width="1.2"/>' +
+        '<rect x="1166" y="87" width="14" height="42" rx="6" fill="url(#soChromeV)" stroke="#05060a" stroke-width="1.2"/>' +
 
         // ── 캐비닛
         '<rect x="150" y="250" width="1700" height="1000" rx="20" fill="url(#bbBody)" stroke="#050506" stroke-width="3"/>' +
         '<rect x="150" y="250" width="1700" height="1000" rx="20" fill="url(#bbSide)"/>' +
         '<rect x="172" y="252.5" width="1656" height="2.5" rx="1.2" fill="#4a4d54" opacity=".55"/>' +
-        // 손잡이 결착 플레이트
-        '<rect x="468" y="256" width="64" height="34" rx="8" fill="url(#soChromeV)" stroke="#0a0b0d" stroke-width="2"/>' +
-        '<rect x="1468" y="256" width="64" height="34" rx="8" fill="url(#soChromeV)" stroke="#0a0b0d" stroke-width="2"/>' +
-        soloScrew(480, 273, 4.5, false) + soloScrew(520, 273, 4.5, false) +
-        soloScrew(1480, 273, 4.5, false) + soloScrew(1520, 273, 4.5, false) +
-
         // ── 튜너 스케일 스트립
         '<rect x="170" y="266" width="1660" height="140" rx="10" fill="url(#bbInset)" stroke="#000" stroke-width="2"/>' +
         '<path d="M170 408 H1830" stroke="#000" stroke-width="2.5" opacity=".8"/>' +
         '<path d="M170 410.5 H1830" stroke="#3f434a" stroke-width="1" opacity=".35"/>' +
+
+        // 손잡이 결착 브래킷 — 스트립 상단 모서리를 물고 볼트로 앉는다 (너클이 스트럿을 문다)
+        '<ellipse cx="504" cy="296" rx="46" ry="7" fill="#000" opacity=".4" filter="url(#soTight)"/>' +
+        '<ellipse cx="1504" cy="296" rx="46" ry="7" fill="#000" opacity=".4" filter="url(#soTight)"/>' +
+        '<rect x="462" y="254" width="76" height="38" rx="9" fill="url(#soChromeV)" stroke="#0a0b0d" stroke-width="2"/>' +
+        '<rect x="1462" y="254" width="76" height="38" rx="9" fill="url(#soChromeV)" stroke="#0a0b0d" stroke-width="2"/>' +
+        '<rect x="466" y="257" width="68" height="5" rx="2.5" fill="#ffffff" opacity=".4"/>' +
+        '<rect x="1466" y="257" width="68" height="5" rx="2.5" fill="#ffffff" opacity=".4"/>' +
+        '<rect x="483" y="247" width="34" height="24" rx="10" fill="url(#bbChromeH)" stroke="#070809" stroke-width="1.8"/>' +
+        '<rect x="1483" y="247" width="34" height="24" rx="10" fill="url(#bbChromeH)" stroke="#070809" stroke-width="1.8"/>' +
+        '<path d="M486 252 H514" stroke="#ffffff" stroke-width="1.6" opacity=".35" stroke-linecap="round"/>' +
+        '<path d="M1486 252 H1514" stroke="#ffffff" stroke-width="1.4" opacity=".3" stroke-linecap="round"/>' +
+        soloScrew(473, 283, 4.5, false) + soloScrew(527, 283, 4.5, false) +
+        soloScrew(1473, 283, 4.5, false) + soloScrew(1527, 283, 4.5, false) +
         // 좌측 인디케이터 블록
         '<rect x="190" y="282" width="54" height="54" rx="6" fill="#d9ba43" stroke="#0a0a0c" stroke-width="2"/>' +
+        '<rect x="190" y="282" width="54" height="26" rx="6" fill="#ffffff" opacity=".12"/>' +
+        '<rect x="192" y="330" width="50" height="4" rx="2" fill="#000" opacity=".22"/>' +
         '<path d="M217 320 V299 M207 309 L217 299 L227 309 M205 324 H229" fill="none" stroke="#1a1710" stroke-width="3.5" stroke-linecap="round"/>' +
         '<rect x="254" y="282" width="78" height="54" rx="6" fill="#0d0e11" stroke="#26282e" stroke-width="1.6"/>' +
         '<text x="293" y="303" font-family="Arial" font-size="9" font-weight="700" letter-spacing="1.5" fill="#7ea0d8" text-anchor="middle">POWER</text>' +
         '<circle id="bbPowerLed" cx="293" cy="318" r="5.5" fill="#3a1512" stroke="#000" stroke-width="1"/>' +
         '<rect x="342" y="282" width="54" height="54" rx="6" fill="#45b0bf" stroke="#0a0a0c" stroke-width="2"/>' +
+        '<rect x="342" y="282" width="54" height="26" rx="6" fill="#ffffff" opacity=".12"/>' +
+        '<rect x="344" y="330" width="50" height="4" rx="2" fill="#000" opacity=".22"/>' +
         '<path d="M352 316 Q360 300 369 316 Q378 332 386 316 M352 306 Q360 290 369 306 M369 326 Q378 310 386 326" fill="none" stroke="#0f2f33" stroke-width="2.6" stroke-linecap="round"/>' +
         '<text x="293" y="356" font-family="Arial" font-size="7.5" letter-spacing="2" fill="#63666c" text-anchor="middle">INDICATOR</text>' +
         // 다이얼 유리
@@ -1387,6 +1439,10 @@ function mfaBoomboxSvg() {
         '<circle cx="1130" cy="915" r="22" fill="#191512"/>' +
         hub("bbHubBL", 990, 915) + hub("bbHubBR", 1130, 915) +
         '<polygon points="925,850 1030,850 950,946 925,946" fill="#ffffff" opacity=".05"/>' +
+        // 데크 B 도어가 곧 테이프 교체 창구다 — 눌러서 수납장을 연다
+        '<text x="794" y="910" font-family="Arial" font-size="9" letter-spacing="1.5" fill="#8a8d92">&#9650; EJECT</text>' +
+        '<text x="794" y="924" font-family="Arial" font-size="7" letter-spacing="1" fill="#63666c">TAPE CHANGE</text>' +
+        '<rect id="bbTapeHit" x="770" y="808" width="460" height="194" rx="8" fill="#000" fill-opacity="0" style="cursor:pointer"><title>EJECT — 테이프를 꺼내고 음반 수납장에서 새 테이프를 고릅니다</title></rect>' +
 
         // 트랜스포트 키 + ONE TOUCH + 벤트
         keys +

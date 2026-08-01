@@ -92,8 +92,11 @@ for (const [recordIndex, record] of records.entries()) {
         if (track.recordingYear != null && (!Number.isInteger(track.recordingYear) || track.recordingYear < 1877)) {
             errors.push(`${trackAt}.recordingYear must be an integer no earlier than 1877`);
         }
-        if (track.host != null && track.host !== "commons" && track.host !== "archive") {
-            errors.push(`${trackAt}.host must be "commons" or "archive" when present`);
+        if (track.host != null && track.host !== "commons" && track.host !== "archive" && track.host !== "local") {
+            errors.push(`${trackAt}.host must be "commons", "archive" or "local" when present`);
+        }
+        if (track.host === "local" && !/^media\/[\w.-]+$/.test(track.f || "")) {
+            errors.push(`${trackAt}.f must be a repo-relative media/ path for local tracks`);
         }
         if (track.sourcePage != null
             && !/^https:\/\/commons\.wikimedia\.org\/wiki\/File:/i.test(track.sourcePage)

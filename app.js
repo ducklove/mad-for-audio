@@ -1360,6 +1360,7 @@ function setSoloModel(id, finish, options) {
     if (!SOLO_ORDER.includes(id)) id = "";
     const silent = !!(options && options.silent);
     const changed = id !== soloModelId || (finish && finish !== soloFinish);
+    const wasBoombox = soloIsBoombox();
     if (changed && (isPlaying || phonoActive || deckMode === "play")) stopPlay();
     soloModelId = id;
     if (finish && A501_FINISHES[finish]) soloFinish = finish;
@@ -1368,6 +1369,16 @@ function setSoloModel(id, finish, options) {
     gvResetTransport();
     a5ResetTransport();
     bbResetTransport();
+    // 매체 정합 — 붐박스가 서면 데크에 자기 테이프(디폴트: 데모 테이프)를 물리고,
+    // 내려오면 카세트 전용 레코드는 빼고 바이닐을 복원한다
+    if (changed && PHONO_AVAILABLE) {
+        if (soloIsBoombox() && !wasBoombox) {
+            const tapeIdx = bbSavedTapeIdx();
+            if (tapeIdx >= 0 && tapeIdx !== recordIdx) setRecord(tapeIdx, { silent: true });
+        } else if (wasBoombox && !soloIsBoombox() && recordIsTape(RECORD)) {
+            setRecord(vinylFallbackIdx(), { silent: true });
+        }
+    }
     mountSolo();
     applyUnitVisibility();
     if (typeof buildEqChain === "function") buildEqChain();
@@ -2843,6 +2854,33 @@ let recordIdx = typeof savedRecordId === "string" && savedRecordId
 if (typeof recordIdx !== "number" || !RECORDS[recordIdx]) recordIdx = 0;
 let RECORD = RECORDS[recordIdx] || EMPTY_RECORD;
 
+// ── 붐박스 전용 테이프 — 카세트는 턴테이블에 올릴 수 없는 매체다 ──
+// boomboxOnly 레코드는 TRC-931 데크에서만 재생·노출된다. 붐박스는 자기 테이프
+// 선택을 따로 기억하고(fmRadio.bbTapeId), 랙·축음기로 내려오면 바이닐로 복원한다.
+function recordIsTape(rec) { return !!(rec && rec.boomboxOnly); }
+function bbSavedTapeIdx() {
+    const saved = loadJson("fmRadio.bbTapeId", "");
+    let idx = typeof saved === "string" && saved ? RECORDS.findIndex((r) => r.id === saved) : -1;
+    if (idx < 0) idx = RECORDS.findIndex(recordIsTape);   // 공장 출하 데모 테이프가 디폴트
+    return idx;
+}
+function vinylFallbackIdx() {
+    const saved = loadJson("fmRadio.recordId", "");
+    let idx = typeof saved === "string" && saved ? RECORDS.findIndex((r) => r.id === saved) : -1;
+    if (idx < 0 || recordIsTape(RECORDS[idx])) idx = RECORDS.findIndex((r) => !recordIsTape(r));
+    return Math.max(0, idx);
+}
+// 부팅 정합 — 붐박스로 복귀하면 데크의 테이프를, 그 외에는 바이닐을 문다
+if (RECORDS.length) {
+    if (soloIsBoombox()) {
+        const bootTapeIdx = bbSavedTapeIdx();
+        if (bootTapeIdx >= 0) recordIdx = bootTapeIdx;
+    } else if (recordIsTape(RECORDS[recordIdx])) {
+        recordIdx = vinylFallbackIdx();
+    }
+    RECORD = RECORDS[recordIdx] || EMPTY_RECORD;
+}
+
 // 음반 교체 — 실제로 판을 갈아 끼우듯, 돌고 있던 판은 내려놓는다
 // 재킷 배경 밝기에 따라 잉크(글자·테두리) 색을 정한다 — 어두운 재킷에서도 인쇄가 읽히도록.
 function jacketInk(bg) {
@@ -2854,15 +2892,28 @@ function jacketInk(bg) {
         : { title: "#3a2b1e", sub: "#5d4430", perf: "#3a2b1e", line: "#8a7d5a", frame: "#b3a988", inner: "#8a7d5a" };
 }
 
-function setRecord(i) {
+function setRecord(i, opts) {
     if (!PHONO_AVAILABLE) {
         playerSubtext.textContent = "음반 카탈로그를 불러오지 못해 PHONO를 사용할 수 없습니다. 라디오와 테이프는 계속 사용할 수 있습니다.";
         return;
     }
-    recordIdx = ((i % RECORDS.length) + RECORDS.length) % RECORDS.length;
+    const n = RECORDS.length;
+    let idx = ((i % n) + n) % n;
+    // 카세트 전용 레코드는 턴테이블·축음기 순환에서 같은 방향으로 건너뛴다 — 매체가 다르다
+    if (!soloIsBoombox() && recordIsTape(RECORDS[idx])) {
+        const dir = i >= recordIdx ? 1 : -1;
+        for (let step = 0; step < n && recordIsTape(RECORDS[idx]); step++) idx = (idx + dir + n) % n;
+        if (recordIsTape(RECORDS[idx])) return;
+    }
+    recordIdx = idx;
     RECORD = RECORDS[recordIdx];
-    saveJson("fmRadio.record", recordIdx);
-    if (RECORD.id) saveJson("fmRadio.recordId", RECORD.id);
+    // 붐박스의 테이프 선택과 턴테이블의 바이닐 선택은 서로 다른 매체로 따로 기억한다
+    if (soloIsBoombox()) {
+        if (RECORD.id) saveJson("fmRadio.bbTapeId", RECORD.id);
+    } else {
+        saveJson("fmRadio.record", recordIdx);
+        if (RECORD.id) saveJson("fmRadio.recordId", RECORD.id);
+    }
     if (phonoActive) stopPlay();
     mountTurntable();
     // 축음기가 서 있으면 그 위의 판과 종이 봉투도 함께 갈아 끼운다
@@ -2874,7 +2925,10 @@ function setRecord(i) {
     } else if (soloIsBoombox()) {
         bbSyncTape();      // 데크 창의 카세트 라벨을 갈아 끼운다
     }
-    playerSubtext.textContent = "음반 교체: " + RECORD.title + " (" + RECORD.performer + ")";
+    if (!(opts && opts.silent)) {
+        playerSubtext.textContent = (soloIsBoombox() ? "테이프 교체: " : "음반 교체: ")
+            + RECORD.title + " (" + RECORD.performer + ")";
+    }
     gtag('event', 'change_record', { record: RECORD.bwv });
 }
 let phonoActive = false;
@@ -3163,6 +3217,7 @@ function phonoSrc(track) {
     const f = typeof track === "string" ? track : (track && track.f) || "";
     const host = track && typeof track === "object" ? track.host : "commons";
     if (TEST_MEDIA_BASE) return TEST_MEDIA_BASE + "?f=" + encodeURIComponent(f);
+    if (host === "local") return f;                   // 앱과 같은 출처의 자체 음원 (붐박스 데모 테이프)
     if (host === "archive") return ARCHIVE_BASE + f;  // archive는 mp3라 WebKit도 그대로 재생
     if (CAN_OGG || !/\.(ogg|oga)$/i.test(f)) return PHONO_BASE + f;
     const name = f.split("/").pop();
@@ -3496,6 +3551,11 @@ function playPhonoTrack(i, auto, fromLibraryMix) {
     // 금성 A-501은 수신기다 — 음반은 걸 수 없다
     if (soloIsRadio()) {
         playerSubtext.textContent = "이 라디오는 방송만 받습니다 — 음반을 들으려면 오디오 구성에서 축음기나 랙으로 바꿔 주세요.";
+        return;
+    }
+    // 카세트 전용 데모는 TRC-931에만 꽂힌다 — 어떤 경로로 들어온 요청이든 매체가 맞아야 돈다
+    if (recordIsTape(RECORD) && !soloIsBoombox()) {
+        playerSubtext.textContent = "이 데모 테이프는 붐박스 전용입니다 — 오디오 구성에서 TRC-931을 세워 주세요.";
         return;
     }
     if (!PHONO_AVAILABLE || !RECORD.tracks[i]) {
@@ -4579,9 +4639,14 @@ function bbTapePlay() {
 }
 
 function bbTapeStop() {
-    if (!phonoActive) { playerSubtext.textContent = "테이프가 돌고 있지 않습니다."; return; }
+    // 실물 STOP/EJ의 두 얼굴 — 돌고 있으면 정지, 이미 서 있으면 이젝트(테이프 교체)
+    if (!phonoActive) {
+        playerSubtext.textContent = "EJECT — 도어를 열었습니다. 수납장에서 테이프를 골라 주세요.";
+        openCrate();
+        return;
+    }
     stopPlay();
-    playerSubtext.textContent = "정지(■) — 테이프를 멈췄습니다.";
+    playerSubtext.textContent = "정지(■) — 테이프를 멈췄습니다. 한 번 더 누르면 테이프를 꺼냅니다.";
 }
 
 function bbTapePause() {
@@ -4633,8 +4698,9 @@ function mountBoombox() {
     soloOn("bbKeyRec", () => {
         playerSubtext.textContent = "REC — 녹음 방지 탭이 부러져 있습니다. 소중한 테이프는 그렇게 지켜졌습니다.";
     }, "녹음");
-    soloOn("bbKeyStop", bbTapeStop, "정지");
+    soloOn("bbKeyStop", bbTapeStop, "정지 · 이젝트");
     soloOn("bbKeyPause", bbTapePause, "일시정지");
+    soloOn("bbTapeHit", openCrate, "EJECT — 테이프 교체(음반 수납장 열기)");
     soloOn("bbResetHit", () => { bbCount = 0; soloText("bbCounter", "000"); }, "카운터 리셋");
     bbSyncStation();
     bbSyncTape();
@@ -5421,7 +5487,9 @@ function catalogFilterLabel(filters) {
 }
 
 function filteredCatalogTracks(filters) {
-    return filterCatalogTracks(RECORDS, filters || currentCrateFilters());
+    const candidates = filterCatalogTracks(RECORDS, filters || currentCrateFilters());
+    // 붐박스 밖에서는 카세트 전용 레코드가 수납장·믹스 후보에 서지 않는다
+    return soloIsBoombox() ? candidates : candidates.filter((c) => !recordIsTape(c.record));
 }
 
 function renderCrate(q) {
@@ -5439,10 +5507,12 @@ function renderCrate(q) {
         shown++;
     });
     empty.hidden = shown > 0;
+    // 지금 선 기기에서 걸 수 있는 레코드만 센다 (붐박스 밖에서는 카세트 전용 제외)
+    const totalHere = soloIsBoombox() ? RECORDS.length : RECORDS.filter((rec) => !recordIsTape(rec)).length;
     document.getElementById("crateCount").textContent =
         (filters.query || filters.genre)
-            ? `${shown} / ${RECORDS.length}장 · ${candidates.length}곡`
-            : `${RECORDS.length}장 · ${candidates.length}곡`;
+            ? `${shown} / ${totalHere}장 · ${candidates.length}곡`
+            : `${totalHere}장 · ${candidates.length}곡`;
     const mixButton = document.getElementById("crateMixBtn");
     mixButton.disabled = candidates.length === 0;
     if (!libraryMix.active) {
