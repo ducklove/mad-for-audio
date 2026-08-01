@@ -1,0 +1,13 @@
+{
+    "id": "com.ducklove.madforaudio",
+    "version": "1.0.0",
+    "vendor": "ducklove",
+    "type": "web",
+    "main": "index.html",
+    "title": "Mad for Audio",
+    "icon": "icon.png",
+    "largeIcon": "largeIcon.png",
+    "bgColor": "#121110",
+    "iconColor": "#121110",
+    "resolution": "1920x1080"
+}

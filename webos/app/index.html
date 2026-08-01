@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Mad for Audio</title>
+    <style>
+        html, body { margin: 0; height: 100%; background: #121110; color: #d8cfc2;
+            font-family: sans-serif; display: flex; align-items: center; justify-content: center; }
+        .msg { text-align: center; font-size: 28px; letter-spacing: 0.04em; }
+        .sub { margin-top: 16px; font-size: 20px; opacity: 0.55; }
+    </style>
+</head>
+<body>
+    <div class="msg">Mad for Audio
+        <div class="sub" id="status">하이파이 랙을 켜는 중…</div>
+    </div>
+    <script>
+        // 호스팅된 본체로 넘어가는 래퍼 — 배포는 지금처럼 GitHub Pages에 push만 하면 된다.
+        // location.replace라 히스토리가 남지 않고, 리모컨 '뒤로'는 곧장 앱 종료로 이어진다.
+        var APP_URL = 'https://ducklove.github.io/mad-for-audio/';
+        var tries = 0;
+        function go() {
+            tries += 1;
+            fetch(APP_URL, { method: 'HEAD', cache: 'no-store' })
+                .then(function () { location.replace(APP_URL); })
+                .catch(function () {
+                    document.getElementById('status').textContent =
+                        '네트워크 연결 대기 중… (' + tries + '회 재시도)';
+                    setTimeout(go, 3000);
+                });
+        }
+        go();
+    </script>
+</body>
+</html>

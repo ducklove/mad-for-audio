@@ -72,6 +72,77 @@ let viewMode = urlView === "simple" ? "simple" : "rack";
 // sessionStorage에 보존해 바 상태에서 새로고침해도 풀 랙 레이아웃으로 리셋되지 않는다.
 let barOverlay = urlView === "bar" || sessionStorage.getItem("fmRadio.bar") === "1";
 
+// ----- TV(webOS) 성능 모드 -----
+// webOS TV는 4K로 래스터해서 SVG transform 속성 재작성이 한 곳만 있어도 프레임이
+// 8fps로 무너진다 (OLED48C2 실측). 같은 기기에서 합성 레이어의 CSS transform은
+// 50fps — TV에서는 프레임 루프의 계기 회전을 전부 합성 경로로 돌리고, 프레임마다
+// 바뀌는 블룸 필터 문자열은 끈다. 데스크톱·모바일은 기존 경로 그대로다.
+// 데스크톱 브라우저에서 ?perf=tv 로 강제해 검증할 수 있다.
+const IS_TV = /Web0S/i.test(navigator.userAgent) || new URLSearchParams(location.search).get("perf") === "tv";
+
+// 프레임 루프 전용 회전. TV에서는 첫 호출에 요소를 합성 레이어로 승격하고
+// (transform-box: view-box — viewBox 좌표계 기준이므로 조상에 transform이 없는
+// 요소에서만 회전 중심이 속성 방식과 일치한다. 콜사이트가 그 조건을 보장한다)
+// 이후 CSS transform만 쓴다. 값이 안 변한 프레임은 아예 건드리지 않는다.
+function fxSpin(el, deg, cx, cy) {
+    if (!IS_TV) {
+        el.setAttribute("transform", "rotate(" + deg + " " + cx + " " + cy + ")");
+        return;
+    }
+    const pin = cx + " " + cy;
+    if (el.__fxPin !== pin) {
+        el.__fxPin = pin;
+        el.style.transformBox = "view-box";
+        el.style.transformOrigin = cx + "px " + cy + "px";
+        el.style.willChange = "transform";
+        el.removeAttribute("transform");
+    }
+    if (el.__fxVal !== deg) {
+        el.__fxVal = deg;
+        el.style.transform = "rotate(" + deg + "deg)";
+    }
+}
+
+// 프레임 루프 전용 이동 (다이얼 포인터의 수평 주행 등)
+function fxSlide(el, x, y) {
+    if (!IS_TV) {
+        el.setAttribute("transform", "translate(" + x + "," + y + ")");
+        return;
+    }
+    if (el.__fxPin !== "slide") {
+        el.__fxPin = "slide";
+        el.style.transformBox = "view-box";
+        el.style.transformOrigin = "0px 0px";
+        el.style.willChange = "transform";
+        el.removeAttribute("transform");
+    }
+    const v = x + "," + y;
+    if (el.__fxVal !== v) {
+        el.__fxVal = v;
+        el.style.transform = "translate(" + x + "px," + y + "px)";
+    }
+}
+
+// 복합 변환(축음기 플래터·사운드박스처럼 translate·scale·rotate가 얽힌 곳) —
+// 속성 문자열과 CSS 문자열의 문법이 달라 콜사이트가 둘 다 만들어 준다.
+function fxXform(el, attrVal, cssVal) {
+    if (!IS_TV) {
+        el.setAttribute("transform", attrVal);
+        return;
+    }
+    if (el.__fxPin !== "xform") {
+        el.__fxPin = "xform";
+        el.style.transformBox = "view-box";
+        el.style.transformOrigin = "0px 0px";
+        el.style.willChange = "transform";
+        el.removeAttribute("transform");
+    }
+    if (el.__fxVal !== cssVal) {
+        el.__fxVal = cssVal;
+        el.style.transform = cssVal;
+    }
+}
+
 function setPopupBarMode(on) {
     barOverlay = !!on;
     document.body.classList.toggle("mode-bar", barOverlay);
@@ -554,9 +625,9 @@ function tunerLoop(now) {
     const sigX = sc.baseX + Math.max(0, Math.min(1, tsSignal * tunerWarm)) * sc.travel;
     if (tsSignalPtr.dataset.cx) {
         const a = -42 + Math.max(0, Math.min(1, tsSignal * tunerWarm)) * 84;
-        tsSignalPtr.setAttribute("transform", "rotate(" + a.toFixed(1) + " " + tsSignalPtr.dataset.cx + " " + tsSignalPtr.dataset.cy + ")");
+        fxSpin(tsSignalPtr, a.toFixed(1), tsSignalPtr.dataset.cx, tsSignalPtr.dataset.cy);
     } else {
-        tsSignalPtr.setAttribute("transform", "translate(" + (sigX - sc.drawX).toFixed(1) + ",0)");
+        fxSlide(tsSignalPtr, (sigX - sc.drawX).toFixed(1), 0);
     }
 
     const tuneTarget = (isPlaying && currentStation) ? 0 : 0.85;
@@ -564,14 +635,14 @@ function tunerLoop(now) {
     tsTune += (tuneTarget - tsTune) * 0.1 + jitter;
     tsTune = Math.max(-1, Math.min(1, tsTune));
     if (tsTunePtr.dataset.cx) {
-        tsTunePtr.setAttribute("transform", "rotate(" + (tsTune * 42).toFixed(1) + " " + tsTunePtr.dataset.cx + " " + tsTunePtr.dataset.cy + ")");
+        fxSpin(tsTunePtr, (tsTune * 42).toFixed(1), tsTunePtr.dataset.cx, tsTunePtr.dataset.cy);
     } else {
-        tsTunePtr.setAttribute("transform", "translate(" + (tsTune * tunerCfg.tune.travel).toFixed(1) + ",0)");
+        fxSlide(tsTunePtr, (tsTune * tunerCfg.tune.travel).toFixed(1), 0);
     }
     // MR78 MULTIPATH 미터: 정확히 동조되면 왼쪽, 이탈·다중경로가 커지면 오른쪽으로 움직인다.
     if (tsMultipathPtr) {
         const amount = Math.max(0, Math.min(1, Math.abs(tsTune)));
-        tsMultipathPtr.setAttribute("transform", "rotate(" + (-35 + amount * 70).toFixed(1) + " 190 347)");
+        fxSpin(tsMultipathPtr, (-35 + amount * 70).toFixed(1), 190, 347);
     }
     tsSyncPanel();
 }
@@ -4038,8 +4109,9 @@ function gvFrame(now, dt) {
     }
     if (gvSpin > 0.002) {
         gvAngle = (gvAngle + gvSpeed * sag / 60 * 360 * gvSpin * dt) % 360;
-        spinG.setAttribute("transform",
-            "translate(" + GV_PC.x + " " + GV_PC.y + ") scale(1 " + GV_K.toFixed(4) + ") rotate(" + gvAngle.toFixed(2) + ")");
+        fxXform(spinG,
+            "translate(" + GV_PC.x + " " + GV_PC.y + ") scale(1 " + GV_K.toFixed(4) + ") rotate(" + gvAngle.toFixed(2) + ")",
+            "translate(" + GV_PC.x + "px," + GV_PC.y + "px) scale(1," + GV_K.toFixed(4) + ") rotate(" + gvAngle.toFixed(2) + "deg)");
     }
 
     // 스프링 모터의 와우 — 현대 턴테이블과 비교할 수 없이 크다
@@ -4067,19 +4139,26 @@ function gvFrame(now, dt) {
     const stylus = gvStylusAt(gvArmFr);
     const boxY = stylus.y - 56;
     const d = "M" + GV_ARM.x + " " + GV_ARM.y + " L" + stylus.x.toFixed(1) + " " + boxY.toFixed(1);
-    ["gvArm", "gvArmHi", "gvArmLo", "gvArmShadow"].forEach((id) => {
-        const el = document.getElementById(id);
-        if (el) el.setAttribute("d", d);
-    });
+    // 암은 트랙 진행을 따라 아주 느리게 기어간다 — 같은 프레임에 같은 경로를 다시
+    // 쓰지 않는다 (동일 값 setAttribute도 리페인트 무효화를 일으킨다)
+    if (ttFrame.gvArmD !== d) {
+        ttFrame.gvArmD = d;
+        ["gvArm", "gvArmHi", "gvArmLo", "gvArmShadow"].forEach((id) => {
+            const el = document.getElementById(id);
+            if (el) el.setAttribute("d", d);
+        });
+        const armHit = document.getElementById("gvArmHit");
+        if (armHit) {
+            armHit.setAttribute("cx", stylus.x.toFixed(1));
+            armHit.setAttribute("cy", boxY.toFixed(1));
+        }
+    }
     const box = document.getElementById("gvBoxG");
     if (box) {
         const tilt = Math.atan2(boxY - GV_ARM.y, GV_ARM.x - stylus.x) * 180 / Math.PI * 0.5;
-        box.setAttribute("transform", "translate(" + stylus.x.toFixed(1) + " " + boxY.toFixed(1) + ") rotate(" + tilt.toFixed(1) + ")");
-    }
-    const armHit = document.getElementById("gvArmHit");
-    if (armHit) {
-        armHit.setAttribute("cx", stylus.x.toFixed(1));
-        armHit.setAttribute("cy", boxY.toFixed(1));
+        fxXform(box,
+            "translate(" + stylus.x.toFixed(1) + " " + boxY.toFixed(1) + ") rotate(" + tilt.toFixed(1) + ")",
+            "translate(" + stylus.x.toFixed(1) + "px," + boxY.toFixed(1) + "px) rotate(" + tilt.toFixed(1) + "deg)");
     }
 
     // 크랭크 회전 애니메이션
@@ -4088,12 +4167,12 @@ function gvFrame(now, dt) {
         gvCrankLeft -= step;
         gvCrankAng = (gvCrankAng + step) % 360;
         const crank = document.getElementById("gvCrankG");
-        if (crank) crank.setAttribute("transform", "rotate(" + gvCrankAng.toFixed(1) + " 1214 936)");
+        if (crank) fxSpin(crank, gvCrankAng.toFixed(1), 1214, 936);
     }
     // 브레이크 레버 — 멎어 있으면 젖혀진다
     const lever = document.getElementById("gvBrakeLever");
     // 태엽 소진(coast 2)은 브레이크를 쓴 게 아니다 — 레버는 멎은 뒤에야 제자리로 눕는다
-    if (lever) lever.setAttribute("transform", "rotate(" + (running || gvCoast === 2 ? 0 : 42) + " 378 800)");
+    if (lever) fxSpin(lever, running || gvCoast === 2 ? 0 : 42, 378, 800);
 
     // 표면 잡음 — 바늘이 닳을수록, 먼지가 쌓일수록 커진다. 한 바퀴마다 스치는 결까지.
     const swish = 1 + 0.28 * Math.sin(gvAngle * Math.PI / 180);
@@ -4857,7 +4936,7 @@ function ttFrame(now) {
     if (ttSpin > 0.002) {
         ttAngle = (ttAngle + rpm / 60 * 360 * ttSpin * dt) % 360;
         const g = document.getElementById("ttSpinG");
-        if (g) g.setAttribute("transform", "rotate(" + ttAngle.toFixed(2) + " 560 330)");
+        if (g) fxSpin(g, ttAngle.toFixed(2), 560, 330);
     }
     // SL-1200 스트로브 — 도트는 플래터와 함께 돌지만, 스트로브 조명 아래에서는
     // 정속(피치 0)일 때 멈춰 보인다: 역회전으로 상쇄하고 편차만큼만 흐르게 한다.
@@ -4866,7 +4945,7 @@ function ttFrame(now) {
         if (ring) {
             const effRate = ttSpeedTrim * (ttSpin < 0.999 ? (0.5 + 0.5 * ttSpin) : 1);
             if (ttSpin > 0.002) ttStrobeAng = (ttStrobeAng + dt * (effRate - 1) * 200) % 360;
-            ring.setAttribute("transform", "rotate(" + (((-ttAngle + ttStrobeAng) % 360)).toFixed(2) + " 560 330)");
+            fxSpin(ring, (((-ttAngle + ttStrobeAng) % 360)).toFixed(2), 560, 330);
         }
     }
 
@@ -4879,7 +4958,7 @@ function ttFrame(now) {
     }
     if (!ttArmDrag) ttArmAng += (armTarget - ttArmAng) * Math.min(1, dt * 3.5);
     const arm = document.getElementById("ttArmG");
-    if (arm) arm.setAttribute("transform", "rotate(" + ttArmAng.toFixed(2) + " 1065 120)");
+    if (arm) fxSpin(arm, ttArmAng.toFixed(2), 1065, 120);
 
     // 와우·플러터 + 스핀업 피치 + 45회전
     // 주의(실측 webprobe): WebKit은 playbackRate를 대입하는 것만으로 스트림을 리셋하고,
@@ -4965,25 +5044,28 @@ function ttFrame(now) {
 
     // 앰프: 진공관 글로우(웜업 연동)·갤러리 어둠·VU 바늘·전원 LED
     // 유리 할로·주변광은 은은하게, 필라멘트는 백열로 뜨겁게 (실제 진공관의 빛 분포)
+    // TV: 신호 연동 호흡(signalBreath)과 블룸 필터는 프레임마다 문자열이 바뀌어
+    // 블러 재래스터를 부른다 — TV에서는 웜업만 따르게 해 정착 후 완전히 정적이 된다.
+    const glowSig = IS_TV ? 0 : Math.max(0, Math.min(1, tsSignal));
     document.querySelectorAll(".ampGlow").forEach((el) => {
         const off = Number(el.dataset.lzOff || 0.008);
         const on = Number(el.dataset.lzOn || 0.22);
-        const signalBreath = 0.9 + Math.max(0, Math.min(1, tsSignal)) * 0.1;
+        const signalBreath = 0.9 + glowSig * 0.1;
         el.style.opacity = (off + (on - off) * ampWarm * signalBreath).toFixed(3);
     });
-    const filBloom = ampWarm > 0.04
+    const filBloom = IS_TV ? "none" : ampWarm > 0.04
         ? "drop-shadow(0 0 5px rgba(255,150,50," + ampWarm.toFixed(2) + ")) drop-shadow(0 0 14px rgba(255,110,35," + (0.6 * ampWarm).toFixed(2) + "))"
         : "none";
     document.querySelectorAll(".ampFil").forEach((el) => {
-        el.style.opacity = (0.02 + ampWarm * (0.85 + tsSignal * 0.15)).toFixed(3);
+        el.style.opacity = (0.02 + ampWarm * (0.85 + glowSig * 0.15)).toFixed(3);
         el.style.filter = filBloom;
     });
     // 필라멘트 핫코어 — 유리 안에서 작열하는 백열점. 큰 블룸으로 유리 전체에 번진다.
-    const hotBloom = ampWarm > 0.04
+    const hotBloom = IS_TV ? "none" : ampWarm > 0.04
         ? "drop-shadow(0 0 10px rgba(255,170,70," + (0.85 * ampWarm).toFixed(2) + ")) drop-shadow(0 0 26px rgba(255,120,40," + (0.45 * ampWarm).toFixed(2) + "))"
         : "none";
     document.querySelectorAll(".ampFilHot").forEach((el) => {
-        el.style.opacity = (ampWarm * (0.8 + tsSignal * 0.2)).toFixed(3);
+        el.style.opacity = (ampWarm * (0.8 + glowSig * 0.2)).toFixed(3);
         el.style.filter = hotBloom;
     });
     // 켜지면 스모크 유리가 거의 걷힌다 — 달아오른 관은 노출된 유리처럼 보여야 한다
@@ -5038,16 +5120,21 @@ function ttFrame(now) {
             const level = Math.max(0, Math.min(1, sig * (idx % 2 ? .96 : 1)));
             const segments = n.querySelectorAll("[data-meter-segment]");
             const lit = Math.round(level * segments.length);
-            segments.forEach((segment, segmentIndex) => {
-                const on = segmentIndex < lit;
-                const color = on ? segment.dataset.on : segment.dataset.off;
-                segment.style.fill = color;
-                segment.style.filter = on ? "drop-shadow(0 0 3px " + color + ")" : "none";
-            });
+            // 점등 개수가 안 변한 프레임은 세그먼트를 건드리지 않는다 — 같은 값이라도
+            // setAttribute/style 쓰기는 TV에서 리페인트 영역을 만든다
+            if (n.__fxLit !== lit) {
+                n.__fxLit = lit;
+                segments.forEach((segment, segmentIndex) => {
+                    const on = segmentIndex < lit;
+                    const color = on ? segment.dataset.on : segment.dataset.off;
+                    segment.style.fill = color;
+                    segment.style.filter = (on && !IS_TV) ? "drop-shadow(0 0 3px " + color + ")" : "none";
+                });
+            }
             return;
         }
         const ang = -42 + sig * 84;
-        n.setAttribute("transform", "rotate(" + (ang * (idx % 2 ? 0.96 : 1)).toFixed(1) + " " + n.getAttribute("data-cx") + " " + n.getAttribute("data-cy") + ")");
+        fxSpin(n, (ang * (idx % 2 ? 0.96 : 1)).toFixed(1), n.getAttribute("data-cx"), n.getAttribute("data-cy"));
     });
 
     // 카세트 데크: 테이프 트랜스포트 (위치·릴·감김량·카운터·히스·REC 램프)
@@ -5160,18 +5247,18 @@ function ttFrame(now) {
     if (rl) {
         const leftCx = Number(rl.dataset.cx || 610);
         const leftCy = Number(rl.dataset.cy || 260);
-        rl.setAttribute("transform", "rotate(" + deckReelAngle.toFixed(1) + " " + leftCx + " " + leftCy + ")");
+        fxSpin(rl, deckReelAngle.toFixed(1), leftCx, leftCy);
         const rr = document.getElementById("deckReelR");
         if (rr) {
             const rightCx = Number(rr.dataset.cx || 850);
             const rightCy = Number(rr.dataset.cy || 260);
-            rr.setAttribute("transform", "rotate(" + (deckReelAngle * 0.82).toFixed(1) + " " + rightCx + " " + rightCy + ")");
+            fxSpin(rr, (deckReelAngle * 0.82).toFixed(1), rightCx, rightCy);
         }
         const p = tapePos / tapeLenOf(deckTape);
         const pl = document.getElementById("deckPackL");
         const pr = document.getElementById("deckPackR");
-        if (pl) pl.setAttribute("r", (24 + (1 - p) * 16).toFixed(1));
-        if (pr) pr.setAttribute("r", (24 + p * 16).toFixed(1));
+        if (pl) { const r = (24 + (1 - p) * 16).toFixed(1); if (pl.getAttribute("r") !== r) pl.setAttribute("r", r); }
+        if (pr) { const r = (24 + p * 16).toFixed(1); if (pr.getAttribute("r") !== r) pr.setAttribute("r", r); }
         const cnt = document.getElementById("deckCounter");
         if (cnt) {
             const txt = (typeof deckTimeRemaining !== "undefined" && deckTimeRemaining && deckTape)
@@ -5207,14 +5294,14 @@ function ttFrame(now) {
                 playerSubtext.textContent = "B웰 테이프 끝 — 녹음이 정지되었습니다.";
             }
         }
-        brl.setAttribute("transform", "rotate(" + deckBReelAngle.toFixed(1) + " " + brl.getAttribute("data-cx") + " " + brl.getAttribute("data-cy") + ")");
+        fxSpin(brl, deckBReelAngle.toFixed(1), brl.getAttribute("data-cx"), brl.getAttribute("data-cy"));
         const brr = document.getElementById("deckBReelR");
-        if (brr) brr.setAttribute("transform", "rotate(" + (deckBReelAngle * 0.82).toFixed(1) + " " + brr.getAttribute("data-cx") + " " + brr.getAttribute("data-cy") + ")");
+        if (brr) fxSpin(brr, (deckBReelAngle * 0.82).toFixed(1), brr.getAttribute("data-cx"), brr.getAttribute("data-cy"));
         const pB = deckBPos / bLen;
         const bpl = document.getElementById("deckBPackL");
         const bpr = document.getElementById("deckBPackR");
-        if (bpl) bpl.setAttribute("r", (24 + (1 - pB) * 16).toFixed(1));
-        if (bpr) bpr.setAttribute("r", (24 + pB * 16).toFixed(1));
+        if (bpl) { const r = (24 + (1 - pB) * 16).toFixed(1); if (bpl.getAttribute("r") !== r) bpl.setAttribute("r", r); }
+        if (bpr) { const r = (24 + pB * 16).toFixed(1); if (bpr.getAttribute("r") !== r) bpr.setAttribute("r", r); }
         const bcnt = document.getElementById("deckBCounter");
         if (bcnt) {
             const btxt = formatDuration(deckBPos * 1000);
@@ -5233,7 +5320,8 @@ function ttFrame(now) {
     applySourceVoice();
     // 10B 오실로스코프 — 미동조에선 유영하는 타원, 동조·재생 중엔 중앙의 안정된 정현파
     const scopeCore = document.getElementById("tsScopeCore");
-    if (scopeCore) {
+    // TV: 스코프 파형은 프레임마다 경로 전체를 다시 그린다 — 절반 프레임으로도 충분히 산다
+    if (scopeCore && (!IS_TV || (ttFrame.scopeTick = !ttFrame.scopeTick))) {
         const scopeGlow = document.getElementById("tsScopeGlow");
         const locked = isPlaying && currentStation;
         const ts = now / 1000;
@@ -5278,9 +5366,11 @@ function ttFrame(now) {
         const el = document.getElementById("eqLvl" + i);
         if (!el) break;
         const on = eqState.on && isPlaying && (i / 12) < tsPeak;
+        if (el.__fxOn === on) continue;   // 상태가 안 변한 LED는 건드리지 않는다
+        el.__fxOn = on;
         const color = i >= 10 ? "#ff5a3a" : "#ffb03a";
         el.style.fill = on ? color : "#1e1610";
-        el.style.filter = on ? "drop-shadow(0 0 5px " + color + ") drop-shadow(0 0 12px " + color + "66)" : "none";
+        el.style.filter = (on && !IS_TV) ? "drop-shadow(0 0 5px " + color + ") drop-shadow(0 0 12px " + color + "66)" : "none";
     }
 
     // 밴드별 실시간 스펙트럼 — 분석기 FFT bin을 현재 EQ 중심 주파수에 대응시킨다.
@@ -5302,9 +5392,11 @@ function ttFrame(now) {
             const el = document.getElementById("eqBandLvl" + i + "_" + j);
             if (!el) continue;
             const on = eqState.on && isPlaying && (j + 1) / 8 <= level;
+            if (el.__fxOn === on) continue;   // 상태가 안 변한 세그먼트는 건드리지 않는다
+            el.__fxOn = on;
             const color = on ? el.dataset.on : el.dataset.off;
             el.style.fill = color;
-            el.style.filter = on ? "drop-shadow(0 0 4px " + color + ")" : "none";
+            el.style.filter = (on && !IS_TV) ? "drop-shadow(0 0 4px " + color + ")" : "none";
         }
     });
 
