@@ -150,26 +150,31 @@
         }
     }
 
+    // 동일 값이어도 setAttribute는 mutation record를 만들므로 값이 바뀔 때만 쓴다.
+    function syncAttribute(element, name, value) {
+        if (element.getAttribute(name) !== value) element.setAttribute(name, value);
+    }
+
     function syncPickerButtons(root = document) {
         const pickers = [];
         if (root instanceof Element && root.matches(".skin-picker")) pickers.push(root);
         if (root.querySelectorAll) pickers.push(...root.querySelectorAll(".skin-picker"));
         pickers.forEach((picker) => {
             picker.querySelectorAll(".skin-btn").forEach((button) => {
-                button.setAttribute("aria-pressed", String(button.classList.contains("active")));
+                syncAttribute(button, "aria-pressed", String(button.classList.contains("active")));
             });
         });
     }
 
     function syncToggleButtons() {
         const record = document.getElementById("btnRec");
-        if (record) record.setAttribute("aria-pressed", String(record.classList.contains("recording")));
+        if (record) syncAttribute(record, "aria-pressed", String(record.classList.contains("recording")));
 
         document.querySelectorAll(".unit-zoom-btn").forEach((button) => {
             const stage = button.parentElement;
             const expanded = !!stage && stage.classList.contains("unit-zoomed");
-            button.setAttribute("aria-pressed", String(expanded));
-            if (stage && stage.id) button.setAttribute("aria-controls", stage.id);
+            syncAttribute(button, "aria-pressed", String(expanded));
+            if (stage && stage.id) syncAttribute(button, "aria-controls", stage.id);
         });
     }
 
@@ -238,6 +243,13 @@
     document.addEventListener("click", rememberOpener, true);
     document.addEventListener("keydown", handleDialogKeys, true);
 
+    function hasElementNodes(nodes) {
+        for (let i = 0; i < nodes.length; i += 1) {
+            if (nodes[i].nodeType === Node.ELEMENT_NODE) return true;
+        }
+        return false;
+    }
+
     const observer = new MutationObserver((mutations) => {
         let shouldRefreshDialogs = false;
         let shouldSyncTabs = false;
@@ -250,6 +262,9 @@
                 if (mutation.target.matches(".sched-tab")) shouldSyncTabs = true;
                 if (mutation.target.matches(".skin-btn, .unit-zoomed, #btnRec")) shouldSyncToggles = true;
             } else {
+                // 시계류 textContent 틱은 텍스트 노드만 갈아끼운다 — 요소 추가·제거가
+                // 없는 변이는 피커·토글 구조를 못 바꾸므로 매초 전량 재동기화를 막는다.
+                if (!hasElementNodes(mutation.addedNodes) && !hasElementNodes(mutation.removedNodes)) return;
                 syncPickerButtons(mutation.target);
                 shouldSyncToggles = true;
             }

@@ -1654,7 +1654,9 @@ function timerPaint() {
             : (timerArmed ? "#cfe9d8" : "#a7aaad");
     }
     const hit = document.getElementById("dtHitTimer");
-    if (hit) hit.setAttribute("aria-pressed", String(timerArmed));
+    const pressed = String(timerArmed);
+    // 매초 호출되는 timerPaint에서 동일 값 재기록은 mutation record만 쌓는다 — 값이 바뀔 때만 쓴다.
+    if (hit && hit.getAttribute("aria-pressed") !== pressed) hit.setAttribute("aria-pressed", pressed);
 }
 
 function rackPresetMatches(preset) {
