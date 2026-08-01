@@ -35,6 +35,32 @@ ares-novacom --device tv --getkey
 ./package.sh           # 패키징만 (dist/*.ipk)
 ```
 
+## 다른 LG TV에 추가로 설치하기
+
+기기마다 **개발자 모드 세션·SSH 키·ares 등록 이름이 따로**다. 첫 TV와 같은 절차를
+새 이름(`tv2` 등)으로 한 번 더 하면 된다. LG 개발자 계정은 같은 것을 쓴다.
+
+1. 새 TV에서: Content Store → **Developer Mode** 앱 설치 → 같은 LG 계정으로 로그인
+   → **Dev Mode ON**(재부팅) → **Key Server ON**. 화면의 IP와 Passphrase를 메모.
+2. Mac에서 등록 (이름만 다르게):
+   ```bash
+   ares-setup-device          # add → 이름 tv2, 메모한 IP, port 9922, user prisoner
+   ares-novacom --device tv2 --getkey     # Passphrase 입력
+   ```
+3. **호환성 확인** — 이 앱은 옵셔널 체이닝 등 최신 문법을 쓰므로 Chromium 80+가 필요하다:
+   ```bash
+   ares-device -i --device tv2
+   ```
+   `sdkVersion`이 **7.0 이상**(webOS 22 / 2022년형 이상)이면 그대로 동작한다.
+   6.x 이하(2021년형 이하, Chromium 79)면 트랜스파일 단계를 넣어야 한다.
+4. 설치와 만료 방지:
+   ```bash
+   ./package.sh tv2
+   ./keep-alive.sh --refresh-token tv2
+   ```
+   토큰을 한 번 받아 두면 이후 자동 연장이 이 기기까지 함께 돌본다
+   (인자 없이 실행하면 토큰이 있는 기기를 전부 처리한다).
+
 ## 만료 대책 — 자동 세션 연장 (설정 완료)
 
 개발자 모드 세션은 최대 1000시간(약 41일)이고, 만료되면 설치한 앱이 지워진다.
@@ -42,16 +68,17 @@ ares-novacom --device tv --getkey
 만료를 없앤다. 세션 리셋은 클라우드 API라 **TV가 꺼져 있어도 동작한다.**
 
 ```bash
-./install-keepalive.sh            # 매일 13시 실행하는 launchd 작업 등록
+./install-keepalive.sh               # 매일 13시 실행하는 launchd 작업 등록
 ./install-keepalive.sh --uninstall
-./keep-alive.sh                   # 수동 1회 실행
-./keep-alive.sh --refresh-token   # TV에서 개발자 모드를 껐다 켠 뒤
+./keep-alive.sh                      # 수동 1회 (토큰 있는 기기 전부)
+./keep-alive.sh --refresh-token tv   # 개발자 모드를 껐다 켠 뒤
 ```
 
 - 하는 일: ① 세션 1000시간으로 연장 ② 앱이 사라졌으면 자동 재설치.
+- 등록된 기기 여러 대를 한 번에 돌본다 (기기 IP는 ares 등록 정보에서 읽는다).
 - 로그: `~/.config/mad-for-audio/keep-alive.log`
-- 세션 토큰은 저장소가 아니라 `~/.config/mad-for-audio/devmode-token`(600)에 둔다.
-  TV에서 개발자 모드를 재활성화하면 토큰이 바뀌므로 `--refresh-token`으로 다시 받는다.
+- 세션 토큰은 저장소가 아니라 `~/.config/mad-for-audio/devmode-token-<기기>`(600)에 둔다.
+  개발자 모드를 재활성화하면 토큰이 바뀌므로 `--refresh-token <기기>`로 다시 받는다.
 - Mac이 자고 있었으면 깨어난 직후 한 번 실행된다. 41일 넘게 Mac을 켜지 않으면
   세션이 만료되므로, 그때는 TV에서 개발자 모드를 다시 켜고 재설치하면 된다.
 
