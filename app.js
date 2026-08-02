@@ -407,6 +407,10 @@ setTimeout(() => {
 
 function applyFocusMode(on) {
     document.body.classList.toggle("mode-focus", on);
+    // 몰입 여부를 남겨 둔다 — TV 앱이 다음 실행에서 끝냈을 때의 화면으로 되살린다.
+    // (웹에서는 읽지 않는다. 브라우저는 Fullscreen API가 사용자 제스처를 요구해
+    //  클래스만 복원하면 실제 전체 화면과 어긋나기 때문이다.)
+    saveJson("fmRadio.focusOn", on);
     if (!on) {
         focusClearZoom();
         focusClearViewport();
@@ -3279,6 +3283,14 @@ function closeJacketView() {
 }
 
 document.getElementById("jacketOverlay").addEventListener("click", closeJacketView);
+// 재킷을 크게 본 다음 곧장 다른 판을 고를 수 있게 한다 — 수납장으로 들어가는 길이
+// 헤더 버튼 하나뿐이라 확대 화면에서 막다른 길처럼 느껴졌다.
+// (오버레이 전체가 '눌러서 닫기'라 버블을 끊고 직접 닫은 뒤 수납장을 연다.)
+document.getElementById("jacketCrateBtn").addEventListener("click", (e) => {
+    e.stopPropagation();
+    closeJacketView();
+    openCrate();
+});
 document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !document.getElementById("jacketOverlay").hidden) closeJacketView();
 });
@@ -8720,3 +8732,20 @@ setInterval(updateNowProgram, 30000);
 updateResChip();
 reservationTick();
 updateNowProgram();
+
+// ----- TV 앱 부팅 동작 (webos/ 래퍼가 ?boot=tv 로 연다) -----
+// 첫 실행은 켜자마자 몰입 화면에서 KBS 1FM이 흐르게 한다 — 리모컨으로 전원·선국을
+// 더듬지 않고 바로 소리가 나야 '기기'처럼 쓰인다. 두 번째 실행부터는 끝냈을 때의
+// 상태(몰입 여부 포함)를 그대로 되살린다. 웹에서 열었을 때의 동작은 건드리지 않는다.
+if (new URLSearchParams(location.search).get("boot") === "tv") {
+    if (!loadJson("fmRadio.tvBooted", false)) {
+        saveJson("fmRadio.tvBooted", true);
+        applyFocusMode(true);
+        if (!unitPower.amp) ampPowerToggle();
+        // setTunerPower가 이 채널로 붙는다 — selectStation을 따로 부르면 이중 접속이 된다
+        tunerOffTuned = stations.find((s) => s.id === "kbs1fm") || stations[0];
+        setTunerPower(true);
+    } else if (loadJson("fmRadio.focusOn", false)) {
+        applyFocusMode(true);
+    }
+}

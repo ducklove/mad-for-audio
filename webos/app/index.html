@@ -17,7 +17,8 @@
     <script>
         // 호스팅된 본체로 넘어가는 래퍼 — 배포는 지금처럼 GitHub Pages에 push만 하면 된다.
         // location.replace라 히스토리가 남지 않고, 리모컨 '뒤로'는 곧장 앱 종료로 이어진다.
-        var APP_URL = 'https://ducklove.github.io/mad-for-audio/';
+        // boot=tv — 첫 실행은 몰입 화면 + KBS 1FM 자동 재생, 이후엔 마지막 상태 복원
+        var APP_URL = 'https://ducklove.github.io/mad-for-audio/?boot=tv';
         var tries = 0;
         function go() {
             tries += 1;

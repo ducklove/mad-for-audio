@@ -262,6 +262,79 @@
         if (startsOnDragControl(event.target)) event.preventDefault();
     }, { passive: false });
 
+    // webOS의 supportTouchMode:"full"은 터치를 앱에 넘겨줄 뿐 브라우저 기본 패닝을
+    // 제공하지 않는다 — touch-action이 auto이고 기본 동작을 막지 않았는데도 스와이프에
+    // scrollY가 꿈쩍하지 않는다(StanbyME 실측). 그래서 컨트롤이 아닌 곳에서 시작한
+    // 스와이프는 앱이 직접 스크롤로 옮긴다. 손을 뗀 뒤 관성도 직접 굴린다.
+    // 네이티브 패닝이 있는 환경(모바일·데스크톱)에서 켜면 이중 스크롤이 되므로
+    // webOS 터치 기기에서만 동작시킨다.
+    const needsTouchPan = /Web0S/i.test(navigator.userAgent) && navigator.maxTouchPoints > 0;
+    if (needsTouchPan) {
+        const DECEL = 0.94;   // 관성 감쇠 — 실기기에서 손맛이 가장 자연스러운 값
+        const MIN_V = 0.08;   // 이보다 느려지면 멈춘다 (px/frame)
+        let panTarget = null;
+        let lastY = 0;
+        let lastAt = 0;
+        let velocity = 0;
+        let glideFrame = 0;
+
+        // 안쪽에 자체 스크롤 영역(채널 목록·예약 대화상자 등)이 있으면 그쪽을 민다.
+        function scrollableFrom(node) {
+            for (let el = node; el instanceof Element; el = el.parentElement) {
+                const style = window.getComputedStyle(el);
+                if (/(auto|scroll)/.test(style.overflowY) && el.scrollHeight > el.clientHeight + 2) return el;
+            }
+            return null;
+        }
+        function panBy(target, dy) {
+            if (target === window) window.scrollBy(0, dy);
+            else target.scrollTop += dy;
+        }
+        function stopGlide() {
+            if (glideFrame) cancelAnimationFrame(glideFrame);
+            glideFrame = 0;
+        }
+
+        document.addEventListener("touchstart", (event) => {
+            stopGlide();
+            panTarget = null;
+            if (event.touches.length !== 1 || startsOnDragControl(event.target)) return;
+            panTarget = scrollableFrom(event.target) || window;
+            lastY = event.touches[0].clientY;
+            lastAt = event.timeStamp;
+            velocity = 0;
+        }, { passive: true });
+
+        document.addEventListener("touchmove", (event) => {
+            if (!panTarget || event.touches.length !== 1) return;
+            const y = event.touches[0].clientY;
+            const dy = lastY - y;
+            const dt = Math.max(1, event.timeStamp - lastAt);
+            velocity = (dy / dt) * 16;   // 프레임당 픽셀로 환산
+            lastY = y;
+            lastAt = event.timeStamp;
+            panBy(panTarget, dy);
+        }, { passive: true });
+
+        // 탭은 dy가 0에 가까워 스크롤이 일어나지 않는다 — 기본 동작을 막지 않으므로
+        // 버튼 클릭은 그대로 산다.
+        function releasePan() {
+            if (!panTarget) return;
+            const target = panTarget;
+            panTarget = null;
+            let v = velocity;
+            if (Math.abs(v) < MIN_V) return;
+            const glide = () => {
+                panBy(target, v);
+                v *= DECEL;
+                glideFrame = Math.abs(v) > MIN_V ? requestAnimationFrame(glide) : 0;
+            };
+            glideFrame = requestAnimationFrame(glide);
+        }
+        document.addEventListener("touchend", releasePan, { passive: true });
+        document.addEventListener("touchcancel", releasePan, { passive: true });
+    }
+
     function hasElementNodes(nodes) {
         for (let i = 0; i < nodes.length; i += 1) {
             if (nodes[i].nodeType === Node.ELEMENT_NODE) return true;
