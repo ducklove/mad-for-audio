@@ -8737,7 +8737,7 @@ updateNowProgram();
 // 첫 실행은 켜자마자 몰입 화면에서 KBS 1FM이 흐르게 한다 — 리모컨으로 전원·선국을
 // 더듬지 않고 바로 소리가 나야 '기기'처럼 쓰인다. 두 번째 실행부터는 끝냈을 때의
 // 상태(몰입 여부 포함)를 그대로 되살린다. 웹에서 열었을 때의 동작은 건드리지 않는다.
-if (new URLSearchParams(location.search).get("boot") === "tv") {
+function tvBootApply() {
     if (!loadJson("fmRadio.tvBooted", false)) {
         saveJson("fmRadio.tvBooted", true);
         applyFocusMode(true);
@@ -8747,5 +8747,16 @@ if (new URLSearchParams(location.search).get("boot") === "tv") {
         setTunerPower(true);
     } else if (loadJson("fmRadio.focusOn", false)) {
         applyFocusMode(true);
+    }
+}
+
+if (new URLSearchParams(location.search).get("boot") === "tv") {
+    // 파싱 중에 바로 붙이면 안 된다 — hls.js는 defer라 이 스크립트보다 늦게 실행되고,
+    // 그 시점의 선국은 재생 수단이 없어 'unsupported'로 조용히 실패한다(실측).
+    // defer 스크립트는 DOMContentLoaded 전에 모두 끝나므로 그때 시작한다.
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", tvBootApply, { once: true });
+    } else {
+        tvBootApply();
     }
 }
