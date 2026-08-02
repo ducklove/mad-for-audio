@@ -243,6 +243,25 @@
     document.addEventListener("click", rememberOpener, true);
     document.addEventListener("keydown", handleDialogKeys, true);
 
+    // 터치 화면에서 노브·슬라이더 드래그 살리기.
+    // Chromium은 SVG '내부' 요소의 touch-action을 무시하고 <svg> 루트만 본다
+    // (webOS 24 StanbyME 실측). 그래서 히트 영역에 인라인으로 걸어 둔
+    // touch-action:none이 통하지 않고, 첫 pointermove 직후 브라우저가 제스처를
+    // 스크롤로 가져가며 pointercancel을 던져 드래그가 죽는다.
+    // <svg> 루트에 none을 주면 컴포넌트 위에서 페이지 스크롤이 통째로 죽으므로,
+    // 컨트롤에서 시작한 터치만 기본 동작을 막는다 (비수동 리스너여야 유효하다).
+    // 마우스·매직 리모컨 포인터는 이 경로를 타지 않아 영향이 없다.
+    function startsOnDragControl(node) {
+        for (let el = node; el instanceof Element; el = el.parentElement) {
+            if (window.getComputedStyle(el).touchAction === "none") return true;
+            if (el.tagName && el.tagName.toLowerCase() === "svg") break;
+        }
+        return false;
+    }
+    document.addEventListener("touchstart", (event) => {
+        if (startsOnDragControl(event.target)) event.preventDefault();
+    }, { passive: false });
+
     function hasElementNodes(nodes) {
         for (let i = 0; i < nodes.length; i += 1) {
             if (nodes[i].nodeType === Node.ELEMENT_NODE) return true;

@@ -403,7 +403,7 @@ function mfaVictorVSvg() {
         '<circle r="13" fill="none" stroke="#3a2c1c" stroke-width="4" opacity=".3"/>' +
         '<circle r="7" fill="#0a0807"/>' +
         '</g>' +
-        '<ellipse id="gvDiscHit" cx="' + GV_PC.x + '" cy="' + GV_PC.y + '" rx="' + GV_DISC + '" ry="' + (GV_DISC * GV_K).toFixed(0) + '" fill="#000" fill-opacity="0" style="cursor:grab"><title>도는 판을 문지르면 바늘이 긁힙니다</title></ellipse>' +
+        '<ellipse id="gvDiscHit" cx="' + GV_PC.x + '" cy="' + GV_PC.y + '" rx="' + GV_DISC + '" ry="' + (GV_DISC * GV_K).toFixed(0) + '" fill="#000" fill-opacity="0" style="cursor:grab;touch-action:none"><title>도는 판을 문지르면 바늘이 긁힙니다</title></ellipse>' +
         // ── 나팔 목 — 상판 뒤 오른쪽 관절에서 왼쪽 위로 뻗어 벨 뒤로 들어간다.
         // 시작점 두 개는 벨 안쪽 타원 안에 들어가 있어야 잘린 단면이 드러나지 않는다.
         '<path d="M790 528 C898 546 1014 606 1084 742 L1040 774 C984 664 894 620 784 612 Z" fill="url(#gvBrassTube)" stroke="#201304" stroke-width="2.5"/>' +
@@ -519,7 +519,7 @@ function mfaVictorVSvg() {
         '<path id="gvNeedle" d="M0 45 L0 59" stroke="#e8ebee" stroke-width="3.6" stroke-linecap="round"/>' +
         '<circle cx="27" cy="25" r="6.5" fill="url(#soCapDark)" stroke="#949aa1" stroke-width="1.2"/>' +
         '</g>' +
-        '<ellipse id="gvArmHit" cx="871" cy="852" rx="66" ry="52" fill="#000" fill-opacity="0" style="cursor:grab"><title>톤암 — 잡아서 원하는 곡 위에 바늘을 내려놓으세요</title></ellipse>' +
+        '<ellipse id="gvArmHit" cx="871" cy="852" rx="66" ry="52" fill="#000" fill-opacity="0" style="cursor:grab;touch-action:none"><title>톤암 — 잡아서 원하는 곡 위에 바늘을 내려놓으세요</title></ellipse>' +
 
         // ── 캐비닛 우측면 + 앞면
         '<polygon points="1010,930 ' + off(1010, 930) + ' ' + off(1010, 1150) + ' 1010,1150" fill="url(#gvOakSide)" stroke="#1b0e05" stroke-width="3"/>' +
