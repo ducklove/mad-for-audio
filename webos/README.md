@@ -35,6 +35,21 @@ ares-novacom --device tv --getkey
 ./package.sh           # 패키징만 (dist/*.ipk)
 ```
 
+## 터치 기기(StanbyME)
+
+`appinfo.json`의 **`supportTouchMode: "full"`이 없으면 터치가 앱에 전혀 전달되지
+않는다** — 기본값이 `none`이라 화면을 만져도 시스템 터치 리모컨만 뜬다. 이 값은
+StanbyME 계열에서만 의미가 있고 일반 TV에는 영향이 없다.
+
+시스템이 가져가는 제스처 두 가지는 앱에서 처리할 수 없다: 세 손가락 이상 터치,
+화면 오른쪽 가장자리에서 왼쪽으로 스와이프(둘 다 터치 리모컨 호출).
+
+앱 쪽에도 대응이 필요했다 — Chromium은 SVG **내부** 요소의 `touch-action`을 무시하고
+`<svg>` 루트만 본다. 그래서 히트 영역의 인라인 `touch-action:none`이 무력했고 드래그가
+`pointercancel`로 끊겼다. `ui-controls.js`가 컨트롤에서 시작한 터치만 비수동
+`touchstart`에서 막아 해결한다 (v166). 새 드래그 컨트롤을 추가할 때는 히트 영역에
+`touch-action:none`을 반드시 붙일 것 — 그 표시가 이 처리의 판단 기준이다.
+
 ## 다른 LG TV에 추가로 설치하기
 
 기기마다 **개발자 모드 세션·SSH 키·ares 등록 이름이 따로**다. 첫 TV와 같은 절차를

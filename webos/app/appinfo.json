@@ -9,5 +9,6 @@
     "largeIcon": "largeIcon.png",
     "bgColor": "#121110",
     "iconColor": "#121110",
-    "resolution": "1920x1080"
+    "resolution": "1920x1080",
+    "supportTouchMode": "full"
 }
