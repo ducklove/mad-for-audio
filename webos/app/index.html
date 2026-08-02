@@ -20,16 +20,20 @@
         // boot=tv — 첫 실행은 몰입 화면 + KBS 1FM 자동 재생, 이후엔 마지막 상태 복원
         var APP_URL = 'https://ducklove.github.io/mad-for-audio/?boot=tv';
         var tries = 0;
+        // 예전에는 HEAD로 도달 가능한지 먼저 확인한 뒤 넘어갔는데, 그 왕복이 켜자마자
+        // 통째로 대기 시간이 됐다(TV는 DNS·TLS부터 새로 맺는다). onLine은 즉시 답하므로
+        // 같은 보호(네트워크가 아직 안 올라온 부팅 직후)를 왕복 없이 얻는다.
         function go() {
-            tries += 1;
-            fetch(APP_URL, { method: 'HEAD', cache: 'no-store' })
-                .then(function () { location.replace(APP_URL); })
-                .catch(function () {
-                    document.getElementById('status').textContent =
-                        '네트워크 연결 대기 중… (' + tries + '회 재시도)';
-                    setTimeout(go, 3000);
-                });
+            if (navigator.onLine === false) {
+                tries += 1;
+                document.getElementById('status').textContent =
+                    '네트워크 연결 대기 중… (' + tries + '회 재시도)';
+                setTimeout(go, 2000);
+                return;
+            }
+            location.replace(APP_URL);
         }
+        window.addEventListener('online', go);
         go();
     </script>
 </body>

@@ -23,16 +23,26 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="Mad for Audio">
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S8GLTG1KYZ"></script>
     <script>
+        // 분석 스크립트는 켜자마자 받지 않는다 — TV에서 시작 직후 0.45초를 회선·CPU에서
+        // 가져가며 랙이 뜨는 시간을 밀어냈다(실측). 큐만 먼저 만들어 두고 로드는 화면이
+        // 다 뜬 뒤로 미룬다. gtag() 호출부는 그대로 두면 된다.
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
         gtag('config', 'G-S8GLTG1KYZ');
+        window.addEventListener('load', function () {
+            setTimeout(function () {
+                var s = document.createElement('script');
+                s.async = true;
+                s.src = 'https://www.googletagmanager.com/gtag/js?id=G-S8GLTG1KYZ';
+                document.head.appendChild(s);
+            }, 1200);
+        });
     </script>
     <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-    <link rel="stylesheet" href="styles.css?v=169">
+    <link rel="stylesheet" href="styles.css?v=170">
 </head>
 <body>
     <div class="page-shell">
@@ -285,24 +295,24 @@
 
     <audio id="audioPlayer" crossorigin="anonymous"></audio>
 
-    <script src="stations.js?v=169"></script>
-    <script src="player-core.js?v=169"></script>
-    <script src="native-hls-capture.js?v=169"></script>
-    <script src="store.js?v=169"></script>
-    <script src="schedule.js?v=169"></script>
-    <script src="skins.js?v=169"></script>
-    <script src="component-skins.js?v=169"></script>
-    <script src="solo-skins.js?v=169"></script>
-    <script src="model-registry.js?v=169"></script>
-    <script src="animation-scheduler.js?v=169"></script>
-    <script src="engine.js?v=169"></script>
-    <script src="deck.js?v=169"></script>
-    <script src="bootstrap.js?v=169"></script>
-    <script src="ui-controls.js?v=169"></script>
+    <script src="stations.js?v=170"></script>
+    <script src="player-core.js?v=170"></script>
+    <script src="native-hls-capture.js?v=170"></script>
+    <script src="store.js?v=170"></script>
+    <script src="schedule.js?v=170"></script>
+    <script src="skins.js?v=170"></script>
+    <script src="component-skins.js?v=170"></script>
+    <script src="solo-skins.js?v=170"></script>
+    <script src="model-registry.js?v=170"></script>
+    <script src="animation-scheduler.js?v=170"></script>
+    <script src="engine.js?v=170"></script>
+    <script src="deck.js?v=170"></script>
+    <script src="bootstrap.js?v=170"></script>
+    <script src="ui-controls.js?v=170"></script>
     <script>
         // 실행 중 버전 — 자산 링크의 ?v=가 단일 진실 (bump-version.py가 올린다)
         const RUNNING_ASSET_VERSION = (() => {
-            const link = document.querySelector('link[rel="stylesheet"][href^="styles.css?v=169"]');
+            const link = document.querySelector('link[rel="stylesheet"][href^="styles.css?v=170"]');
             const m = link && /[?&]v=(\d+)/.exec(link.getAttribute("href"));
             return m ? Number(m[1]) : null;
         })();

@@ -3297,12 +3297,20 @@ document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !document.getElementById("jacketOverlay").hidden) closeJacketView();
 });
 
-// WebKit(사파리·맥 앱·iOS)은 OGG(Vorbis)를 재생하지 못한다 —
-// 커먼즈가 자동 생성하는 mp3 트랜스코드로 대체한다 (같은 호스트, CORS 동일).
-// 주의: WebKit은 canPlayType('audio/ogg')에 "probably"라 답해 놓고 실제로는
-// readyState 0에서 오류도 없이 영원히 멈춘다 (실측: webprobe). 답변을 믿지 말고
-// 엔진으로 판단한다 — 크롬/파이어폭스 계열만 Vorbis를 정말 재생한다.
-const CAN_OGG = !SAFARI_LIKE;
+// 위키미디어 원본을 그대로 물릴 수 없는 형식은 커먼즈가 자동 생성하는 mp3 트랜스코드로
+// 대체한다 (같은 호스트, CORS 동일).
+// - WebKit(사파리·맥 앱·iOS): OGG(Vorbis)를 재생하지 못한다.
+// - webOS TV: mp3·aac 말고는 전부 거부한다 — ogg·oga·opus·flac 모두 MEDIA_ERR_DECODE
+//   (code 4, "Format error"). 실측: OLED48C2/webOS 25에서 원본은 전부 실패, 전사 mp3는 정상.
+// 주의: 두 엔진 모두 canPlayType에 "probably"라 답해 놓고 실제로는 재생하지 못한다.
+// 답변을 믿지 말고 엔진으로 판단한다.
+const CAN_OGG = !SAFARI_LIKE && !IS_TV;
+const TV_UNPLAYABLE_RE = /\.(ogg|oga|opus|flac|wav)$/i;
+
+function needsTranscode(f) {
+    if (IS_TV) return TV_UNPLAYABLE_RE.test(f);
+    return !CAN_OGG && /\.(ogg|oga)$/i.test(f);
+}
 
 // 테스트 전용 미디어 시임 — WebKit은 <audio> 미디어 요청을 별도 미디어 스택으로 처리해
 // Playwright의 라우트 목킹·차단을 모두 우회하고 실네트워크로 나간다(목킹 WAV 대신 실제
@@ -3319,7 +3327,7 @@ function phonoSrc(track) {
     if (TEST_MEDIA_BASE) return TEST_MEDIA_BASE + "?f=" + encodeURIComponent(f);
     if (host === "local") return f;                   // 앱과 같은 출처의 자체 음원 (붐박스 데모 테이프)
     if (host === "archive") return ARCHIVE_BASE + f;  // archive는 mp3라 WebKit도 그대로 재생
-    if (CAN_OGG || !/\.(ogg|oga)$/i.test(f)) return PHONO_BASE + f;
+    if (!needsTranscode(f)) return PHONO_BASE + f;
     const name = f.split("/").pop();
     return PHONO_BASE + "transcoded/" + f + "/" + name + ".mp3";
 }

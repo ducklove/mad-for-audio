@@ -4,7 +4,7 @@
  * 네트워크로 그대로 통과시킨다 — 오디오 range 요청과 실시간성을 깨지 않기 위함.
  */
 const CACHE_PREFIX = "fm-radio-";
-const CACHE = "fm-radio-v169";
+const CACHE = "fm-radio-v170";
 // 일반 URL과 분리한 합성 키를 사용한다. manual.html 같은 다른 내비게이션 응답이
 // 오프라인 앱 셸을 덮어쓰지 못하게 하기 위함이다.
 const NAVIGATION_CACHE_KEY = new URL("__mfa_navigation_shell__", self.registration.scope).href;
@@ -17,28 +17,28 @@ const CORE = [
     "widget.html",
     "turntable.html",
     "embed.html",
-    "styles.css?v=169",
-    "styles-foundation.css?v=169",
-    "styles-library.css?v=169",
-    "styles-schedule.css?v=169",
-    "styles-tape.css?v=169",
-    "stations.js?v=169",
-    "player-core.js?v=169",
-    "app-runtime-core.js?v=169",
-    "native-hls-capture.js?v=169",
-    "store.js?v=169",
-    "schedule.js?v=169",
-    "model-registry.js?v=169",
-    "skins.js?v=169",
-    "component-skins.js?v=169",
-    "solo-skins.js?v=169",
-    "engine.js?v=169",
-    "animation-scheduler.js?v=169",
-    "deck.js?v=169",
-    "ui-controls.js?v=169",
-    "records.json?v=169",
-    "bootstrap.js?v=169",
-    "app.js?v=169",
+    "styles.css?v=170",
+    "styles-foundation.css?v=170",
+    "styles-library.css?v=170",
+    "styles-schedule.css?v=170",
+    "styles-tape.css?v=170",
+    "stations.js?v=170",
+    "player-core.js?v=170",
+    "app-runtime-core.js?v=170",
+    "native-hls-capture.js?v=170",
+    "store.js?v=170",
+    "schedule.js?v=170",
+    "model-registry.js?v=170",
+    "skins.js?v=170",
+    "component-skins.js?v=170",
+    "solo-skins.js?v=170",
+    "engine.js?v=170",
+    "animation-scheduler.js?v=170",
+    "deck.js?v=170",
+    "ui-controls.js?v=170",
+    "records.json?v=170",
+    "bootstrap.js?v=170",
+    "app.js?v=170",
     "manifest.webmanifest",
     "icons/icon.svg",
     "icons/icon-192.png",
@@ -57,7 +57,7 @@ const CDN = [
 // 특정 셸에서만 쓰는 자산은 설치 실패를 유발하지 않게 best-effort로 캐싱한다.
 // 트레이 iframe이 오프라인으로 열릴 때는 캐시가 있으면 그대로 사용할 수 있다.
 const OPTIONAL = [
-    "tray-bridge.js?v=169"
+    "tray-bridge.js?v=170"
 ];
 
 const CORE_PATHS = new Set(CORE.map((asset) => new URL(asset, self.registration.scope).pathname));
@@ -112,16 +112,36 @@ function isKnownStaticRequest(request, url) {
     return ["script", "style", "image", "font", "manifest"].includes(request.destination);
 }
 
+// 셸을 네트워크에서 받아오되, 느린 회선에서 무한정 기다리지 않는다. TV는 켜자마자
+// DNS·TLS부터 새로 맺느라 이 왕복이 그대로 검은 화면 시간이 됐다(실측 1.7~2.4초).
+// 이 시간을 넘기면 캐시된 셸로 먼저 띄우고, 받아온 새 셸은 캐시에 넣어 다음 실행에 쓴다.
+// 자산 URL에는 버전 쿼리가 붙으므로 한 번 늦게 반영돼도 뒤섞이지 않는다.
+const NAVIGATION_TIMEOUT_MS = 1200;
+
 async function navigationResponse(request, url) {
     const cache = await caches.open(CACHE);
+    const cachedShell = async () => (isAppShellNavigation(url)
+        ? await cache.match(NAVIGATION_CACHE_KEY)
+        : await cache.match(request, { ignoreSearch: true }))
+        || await cache.match(NAVIGATION_CACHE_KEY);
     try {
-        const fresh = await fetch(request);
+        const network = fetch(request).then((res) => {
+            if (res && res.ok) {
+                const key = isAppShellNavigation(url) ? NAVIGATION_CACHE_KEY : request;
+                cache.put(key, res.clone()).catch(() => {});
+            }
+            return res;
+        });
+        const timeout = new Promise((resolve) => setTimeout(() => resolve(null), NAVIGATION_TIMEOUT_MS));
+        const raced = await Promise.race([network.catch(() => null), timeout]);
+        if (!raced) {
+            const cached = await cachedShell();
+            if (cached) return cached;
+        }
+        // 캐시 적재는 위 network 체인이 이미 맡았다 — 여기서 또 넣지 않는다.
+        const fresh = raced || await network;
         // 서버 장애일 때는 설치된 셸로 복구하되, 정상적인 4xx는 그대로 보여 준다.
         if (fresh.status >= 500) throw new Error(`navigation response ${fresh.status}`);
-        if (fresh.ok) {
-            const key = isAppShellNavigation(url) ? NAVIGATION_CACHE_KEY : request;
-            cache.put(key, fresh.clone()).catch(() => {});
-        }
         return fresh;
     } catch (error) {
         const exact = isAppShellNavigation(url)
