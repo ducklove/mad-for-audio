@@ -3307,6 +3307,13 @@ document.addEventListener("keydown", (e) => {
 const CAN_OGG = !SAFARI_LIKE && !IS_TV;
 const TV_UNPLAYABLE_RE = /\.(ogg|oga|opus|flac|wav)$/i;
 
+// 프레임마다 playbackRate를 대입하면 미디어 파이프라인이 리셋되는 엔진들.
+// WebKit(사파리·맥 앱)에서 알려진 문제인데 webOS TV도 똑같았다 — 실측: 대입을 멈추자
+// 그제야 buffered가 차고 currentTime이 흐르기 시작했다(그 전에는 readyState 4에
+// buffered 0, 위치 0에서 영원히 '버퍼링'). 이 엔진들에서는 와우·플러터를 포기하고
+// 배속은 전환 순간에만 1회 대입한다.
+const RATE_WRITE_RESETS_STREAM = SAFARI_LIKE || IS_TV;
+
 function needsTranscode(f) {
     if (IS_TV) return TV_UNPLAYABLE_RE.test(f);
     return !CAN_OGG && /\.(ogg|oga)$/i.test(f);
@@ -3332,9 +3339,9 @@ function phonoSrc(track) {
     return PHONO_BASE + "transcoded/" + f + "/" + name + ".mp3";
 }
 
-// 45회전 배속 — WebKit에서는 프레임 루프 대입이 금지라 전환 순간에만 1회 대입한다
+// 45회전 배속 — 프레임 루프 대입이 금지된 엔진에서는 전환 순간에만 1회 대입한다
 function applyRpmRate() {
-    if (!SAFARI_LIKE || !phonoActive) return;
+    if (!RATE_WRITE_RESETS_STREAM || !phonoActive) return;
     try { audio.playbackRate = (ttRpm45 ? 1.35 : 1) * ttSpeedTrim; } catch (e) {}
 }
 
@@ -4152,7 +4159,7 @@ function gvFrame(now, dt) {
     }
 
     // 스프링 모터의 와우 — 현대 턴테이블과 비교할 수 없이 크다
-    if (phonoActive && isPlaying && !SAFARI_LIKE) {
+    if (phonoActive && isPlaying && !RATE_WRITE_RESETS_STREAM) {
         const t = now / 1000;
         const wow = 1 + 0.0062 * Math.sin(t * 2 * Math.PI * 0.68) + 0.0024 * Math.sin(t * 2 * Math.PI * 2.7);
         // 멎을 때는 더 깊게 처진다 — 태엽 축이 풀리며 음이 주저앉는 소리
@@ -4899,12 +4906,12 @@ function bbFrame(now, dt) {
         soloAttr("bbHubBR", "transform", "rotate(" + ((a * 1.28) % 360).toFixed(1) + " 1130 915)");
         bbCount += dt * 2.6;
         soloText("bbCounter", String(Math.floor(bbCount) % 1000).padStart(3, "0"));
-        if (!SAFARI_LIKE) {
+        if (!RATE_WRITE_RESETS_STREAM) {
             // 카세트 특유의 아주 미세한 와우 — 캡스턴 편심의 느린 파도
             const wow = 1 + 0.0016 * Math.sin(t * 2 * Math.PI * 0.52) + 0.0006 * Math.sin(t * 2 * Math.PI * 3.1);
             try { audio.playbackRate = wow; } catch (e) {}
         }
-    } else if (!SAFARI_LIKE && phonoActive && Math.abs(audio.playbackRate - 1) > 0.0001) {
+    } else if (!RATE_WRITE_RESETS_STREAM && phonoActive && Math.abs(audio.playbackRate - 1) > 0.0001) {
         try { audio.playbackRate = 1; } catch (e) {}
     }
     // PLAY 키는 재생 중 눌린 채 걸려 있다
@@ -5000,8 +5007,9 @@ function ttFrame(now) {
     // 와우·플러터 + 스핀업 피치 + 45회전
     // 주의(실측 webprobe): WebKit은 playbackRate를 대입하는 것만으로 스트림을 리셋하고,
     // 리셋이 pause 이벤트를 불러 스핀업이 재계산되는 피드백 루프에 빠진다.
-    // 사파리 계열에서는 프레임 루프에서 절대 건드리지 않는다 (45회전은 전환 시 1회 대입).
-    if (phonoActive && isPlaying && !SAFARI_LIKE && !soloActive()) {
+    // 해당 엔진(사파리 계열·webOS TV)에서는 프레임 루프에서 절대 건드리지 않는다
+    // (45회전은 전환 시 1회 대입 — applyRpmRate).
+    if (phonoActive && isPlaying && !RATE_WRITE_RESETS_STREAM && !soloActive()) {
         const t = now / 1000;
         const wow = 1 + 0.0022 * Math.sin(t * 2 * Math.PI * 0.43) + 0.0007 * Math.sin(t * 2 * Math.PI * 3.1);
         const spinPitch = ttSpin < 0.999 ? (0.5 + 0.5 * ttSpin) : 1;
