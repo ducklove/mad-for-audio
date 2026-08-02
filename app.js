@@ -842,8 +842,10 @@ function bindTunerControls() {
         if (knobMoved) {
             tuneRelease(Math.max(88, Math.min(108, knobStartFreq + (e.clientX - knobStartX) / 14)));
         } else {
-            // 가벼운 탭 — 디스플레이만 잠깐 깨운다
+            // 가벼운 탭 — 디스플레이를 깨우고 방송 목록을 연다.
+            // 다이얼을 원하는 국까지 정확히 끌고 가는 건 리모컨·손가락으로는 번거롭다.
             tunerPreview(currentStation && currentStation.freq ? currentStation.freq : 98);
+            openStationPicker();
         }
     });
     knob.addEventListener("pointercancel", () => { knobDrag = false; });
@@ -949,12 +951,12 @@ function initTunerSkin(id) {
     kc.setAttribute("style", "cursor:grab;touch-action:none");
     kc.setAttribute("tabindex", "0");
     kc.setAttribute("role", "slider");
-    kc.setAttribute("aria-label", "튜닝 노브 — 좌우 화살표로 선국");
+    kc.setAttribute("aria-label", "튜닝 노브 — 좌우 화살표로 선국, 눌러서 방송 목록");
     kc.setAttribute("aria-valuemin", "88");
     kc.setAttribute("aria-valuemax", "108");
     kc.setAttribute("aria-valuenow", "98");
     const kt = document.createElementNS(SVG_NS, "title");
-    kt.textContent = "노브를 좌우로 드래그해 튜닝하세요";
+    kt.textContent = "좌우로 드래그해 튜닝 · 눌러서 방송 목록";
     kc.appendChild(kt);
     tunerSvgEl.appendChild(kc);
     mountMr78Selectivity();
@@ -5489,6 +5491,36 @@ function openListFromSettings() {
     if (main.classList.contains("collapsed")) toggleStationList();
     main.scrollIntoView({ behavior: "smooth", block: "start" });
 }
+
+// 튜닝 노브를 탭했을 때 여는 방송 목록.
+// 몰입 모드에서는 목록이 통째로 숨겨져 있어(그게 몰입 모드의 정의다) 그냥 펼치면
+// 아무것도 안 보인다 — 몰입을 깨지 않고 랙 위에 얹어 띄운다. TV의 기본 화면이
+// 몰입 모드라 이 경로가 사실상 기본이다.
+function openStationPicker() {
+    const main = document.getElementById("stationMain");
+    if (main.classList.contains("collapsed")) toggleStationList();
+    if (document.body.classList.contains("mode-focus")) {
+        document.body.classList.add("focus-list");
+        main.scrollTop = 0;
+    } else {
+        main.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+}
+
+function closeStationPicker() {
+    document.body.classList.remove("focus-list");
+}
+
+// 국을 고르면 목록은 물러난다 — 몰입 화면으로 곧장 돌아온다
+document.getElementById("stationMain").addEventListener("click", (e) => {
+    if (e.target.closest(".station-main")) closeStationPicker();
+});
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && document.body.classList.contains("focus-list")) {
+        e.stopPropagation();   // 목록만 닫는다 — 몰입 모드까지 함께 빠지지 않도록
+        closeStationPicker();
+    }
+}, true);
 
 document.getElementById("settingsOverlay").addEventListener("click", (e) => {
     if (e.target === e.currentTarget) toggleSettings(false);

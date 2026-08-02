@@ -520,6 +520,25 @@ body.mode-focus .hero-player-wrap {
     display: none !important;
 }
 
+/* 몰입 모드에서 튜닝 노브를 탭해 부른 방송 목록 — 몰입을 깨지 않고 랙 위에 얹는다.
+   TV의 기본 화면이 몰입 모드라, 이게 리모컨·손가락으로 국을 고르는 기본 경로다. */
+body.mode-focus.focus-list #stationMain {
+    display: block !important;
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 3vh;
+    width: min(1180px, 92vw);
+    max-height: 62vh;
+    overflow-y: auto;
+    z-index: 76;
+    padding: 18px;
+    border: 1px solid #46392f;
+    border-radius: 16px;
+    background: rgba(11, 9, 8, 0.97);
+    box-shadow: 0 34px 80px rgba(0, 0, 0, 0.76);
+}
+
 body.mode-focus .hero-visual {
     background: none;
     border: none;
