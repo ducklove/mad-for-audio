@@ -2715,6 +2715,15 @@ function applyAmpPowerGate() {
     }
 }
 
+// 앰프 스피커 관문 — 실물 진공관 앰프처럼, 켜는 순간이 아니라 관이 달아오른 뒤에
+// 소리가 나온다. 끌 때는 unitOn이 즉시 내려가 소리가 먼저 끊기고 불만 남아 식는다.
+// 단독 기기(축음기·라디오·붐박스)에는 외부 앰프가 없어 이 관문을 두지 않는다.
+function ampSpeakerOpen() {
+    if (typeof soloActive === "function" && soloActive()) return true;
+    if (!unitOn("amp")) return false;
+    return ampWarm >= 0.995;
+}
+
 function ampPowerToggle() {
     unitPower.amp = !unitPower.amp;
     saveUnitPower();
@@ -4948,7 +4957,12 @@ function soloFrame(now, dt) {
 
 // ----- 랙 프레임 루프 (플래터 회전·톤암·와우플러터·크랙클·진공관 글로우·VU) -----
 function ttFrame(now) {
-    const dt = Math.min(0.05, ttLastTs ? (now - ttLastTs) / 1000 : 0.016);
+    // dt 상한 — 탭이 잠들었다 깨어날 때 한 프레임에 몇 초씩 건너뛰는 것을 막는다.
+    // 그런데 TV는 정상 동작 중에도 프레임이 300ms씩 벌어져(부팅 직후 실측 361ms) 50ms
+    // 상한에 계속 걸렸고, 그 결과 예열·플래터·테이프가 모두 슬로모션으로 흘렀다
+    // (0.7초짜리 예열이 2.2초). 기기에서는 상한을 실제 프레임 간격에 맞춰 넉넉히 둔다.
+    const dtCap = IS_TV ? 0.3 : 0.05;
+    const dt = Math.min(dtCap, ttLastTs ? (now - ttLastTs) / 1000 : 0.016);
     ttLastTs = now;
     ttLastDt = dt;
 
@@ -5080,6 +5094,14 @@ function ttFrame(now) {
     const ampTarget = unitOn("amp") ? 1 : 0;
     const ampRate = ampTarget > ampWarm ? dt / (2.0 * WARM_SCALE) : dt / (3.5 * WARM_SCALE);
     ampWarm = approach(ampWarm, ampTarget, ampRate);
+    // 전원 시퀀스 — 관이 다 달아오른 뒤에 소리가 나온다. 끌 때는 반대로 소리가 먼저
+    // 끊기고(스위치가 곧 unitOn을 내린다) 불만 천천히 식는다. 관문은 applyGainStaging이
+    // 쥐고 있으므로 열림 여부가 바뀌는 순간에만 다시 부른다.
+    const ampOpenNow = ampSpeakerOpen();
+    if (ttFrame.ampOpenPrev !== ampOpenNow) {
+        ttFrame.ampOpenPrev = ampOpenNow;
+        applyGainStaging();
+    }
     // 데크 조명: 전원 연동 (예약은 타이머 아웃렛 통전) — 릴·카운터 구동은 deckMode가 따로 결정
     const deckTarget = unitOn("deck") ? 1 : 0;
     const deckRate = deckTarget > deckWarm ? dt / (2.0 * WARM_SCALE) : dt / (3.5 * WARM_SCALE);
@@ -8815,6 +8837,10 @@ function tvBootApply() {
 // 듣는 중에 화면이 꺼지면 재생까지 함께 멎는다. webOS는 스크린세이버를 띄우기 전에
 // 등록된 앱에 물어보므로, 재생 중일 때만 거절한다. 멈춰 있을 때는 그대로 재우도록 둔다 —
 // OLED에 정지 화면을 몇 시간씩 띄워 두는 것이 번인의 지름길이라 항상 막지는 않는다.
+const screenSaverGuard = { registered: false, requests: 0, declined: 0, lastState: null };
+// 실제로 걸렸는지는 TV가 몇 분 놀아야 드러난다 — 상태를 남겨 두고 확인할 수 있게 한다.
+window.MFA_ScreenSaver = Object.freeze({ inspect: () => Object.freeze({ ...screenSaverGuard }) });
+
 function initScreenSaverGuard() {
     if (!IS_TV || typeof WebOSServiceBridge !== "function") return;
     const CLIENT = "com.ducklove.madforaudio";
@@ -8823,8 +8849,13 @@ function initScreenSaverGuard() {
     bridge.onservicecallback = (raw) => {
         let msg = null;
         try { msg = JSON.parse(raw); } catch (e) { return; }
-        if (!msg || msg.state !== "Active") return;
+        if (!msg) return;
+        if (msg.subscribed === true) screenSaverGuard.registered = true;
+        if (msg.state !== "Active") return;
+        screenSaverGuard.requests += 1;
+        screenSaverGuard.lastState = msg.state;
         if (!(isPlaying || !audio.paused)) return;   // 쉬는 중 — 화면을 재운다
+        screenSaverGuard.declined += 1;
         try {
             const reply = new WebOSServiceBridge();
             reply.onservicecallback = () => {};

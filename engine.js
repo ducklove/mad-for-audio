@@ -554,7 +554,10 @@ function applyGainStaging() {
     // 앰프가 꺼져 있어도 실물처럼 소스 신호는 데크에 계속 흐른다.
     // 단독 기기에는 외부 앰프가 없다 — 자기 볼륨(volumeLevel)만이 관문이다.
     const soloOn = typeof soloActive === "function" && soloActive();
-    const speakerOpen = soloOn || unitOn("amp") ? 1 : 0;
+    // 관문 판정은 app.js가 쥔다 (예열 진행도를 아는 쪽) — 아직 로드 전이면 전원만 본다.
+    const speakerOpen = (typeof ampSpeakerOpen === "function"
+        ? ampSpeakerOpen()
+        : (soloOn || unitOn("amp"))) ? 1 : 0;
     setAudioParam(gainNode.gain, volumeLevel * speakerOpen, .012);
     // webOS는 미디어를 별도 파이프라인(uMediaServer)에서 재생한다 — MediaElementSource가
     // 소리를 잡지 못해(분석기 RMS가 0) 그래프 게인이 스피커에 닿지 않는다. 실측: 앰프를
