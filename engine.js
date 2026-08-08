@@ -3,6 +3,12 @@
 
 // 오디오 그래프: source → 입력 기준 레벨 → 앰프 → master gain(청취 볼륨) → 스피커.
 // 청취 볼륨과 출력관 구동을 분리해 작은 음량에서도 모델 고유의 배음·댐핑이 유지된다.
+// webOS TV는 <audio>를 별도 미디어 파이프라인(uMediaServer)에서 재생한다 —
+// MediaElementSource로 잡아도 그래프에는 무음만 흐르고, 소리는 그래프를 우회해 그대로
+// 스피커로 나간다. 그래서 master gain을 0으로 내려도 소리가 멎지 않는다(실측).
+// 이 환경에서는 요소 볼륨으로 같은 관문을 만든다 — applyGainStaging 참고.
+const MEDIA_BYPASSES_GRAPH = /Web0S/i.test(navigator.userAgent);
+
 let audioCtx = null;
 let gainNode = null;
 let audioGraphInitState = "idle"; // idle | initializing | ready | failed
@@ -548,7 +554,16 @@ function applyGainStaging() {
     // 앰프가 꺼져 있어도 실물처럼 소스 신호는 데크에 계속 흐른다.
     // 단독 기기에는 외부 앰프가 없다 — 자기 볼륨(volumeLevel)만이 관문이다.
     const soloOn = typeof soloActive === "function" && soloActive();
-    setAudioParam(gainNode.gain, volumeLevel * (soloOn || unitOn("amp") ? 1 : 0), .012);
+    const speakerOpen = soloOn || unitOn("amp") ? 1 : 0;
+    setAudioParam(gainNode.gain, volumeLevel * speakerOpen, .012);
+    // webOS는 미디어를 별도 파이프라인(uMediaServer)에서 재생한다 — MediaElementSource가
+    // 소리를 잡지 못해(분석기 RMS가 0) 그래프 게인이 스피커에 닿지 않는다. 실측: 앰프를
+    // 꺼도 턴테이블 소리가 그대로 났고 볼륨 노브도 먹지 않았다. 이 환경에서는 요소 볼륨이
+    // 유일한 관문이다. 일시정지가 아니라 볼륨이라 트랜스포트는 계속 돌아간다 —
+    // 실물처럼 앰프를 내려도 판은 돌고 테이프는 감긴다.
+    if (MEDIA_BYPASSES_GRAPH) {
+        try { audio.volume = volumeLevel * speakerOpen; } catch (e) {}
+    }
 }
 
 // ----- 프런트패널 상태 (모델별 노브·스위치 영속) -----
@@ -1192,7 +1207,9 @@ function ensureAudioGraph() {
         applyMono();
         applyAmp();
         applyGainStaging();
-        audio.volume = 1;
+        // 그래프가 볼륨을 맡으므로 요소는 열어 둔다. 단, 그래프를 우회하는 환경에서는
+        // applyGainStaging이 방금 정한 요소 볼륨을 여기서 되돌리면 안 된다.
+        if (!MEDIA_BYPASSES_GRAPH) audio.volume = 1;
         if (audioCtx.state === "suspended") {
             audioCtx.resume();
         }

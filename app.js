@@ -80,6 +80,11 @@ let barOverlay = urlView === "bar" || sessionStorage.getItem("fmRadio.bar") === 
 // 데스크톱 브라우저에서 ?perf=tv 로 강제해 검증할 수 있다.
 const IS_TV = /Web0S/i.test(navigator.userAgent) || new URLSearchParams(location.search).get("perf") === "tv";
 
+// TV는 부팅 직후 프레임이 초당 두세 장까지 떨어진다 (실측 평균 361ms/프레임, 최대 1.2초).
+// 2초짜리 예열 페이드가 대여섯 장으로 쪼개져 '한 프레임씩' 넘어가는 것이 눈에 보인다.
+// 기기에서는 예열을 짧게 끝내 계단이 드러나지 않게 한다 — 연출보다 켜졌다는 사실이 먼저다.
+const WARM_SCALE = IS_TV ? 0.35 : 1;
+
 // 프레임 루프 전용 회전. TV에서는 첫 호출에 요소를 합성 레이어로 승격하고
 // (transform-box: view-box — viewBox 좌표계 기준이므로 조상에 transform이 없는
 // 요소에서만 회전 중심이 속성 방식과 일치한다. 콜사이트가 그 조건을 보장한다)
@@ -5051,7 +5056,7 @@ function ttFrame(now) {
     const warmTarget = unitOn("amp") ? 1 : 0;
     // 91E 정류관 지연 — 차가운 상태에서 소리를 걸면 2.6초간 정류관이 먼저 서고, 그 뒤 페이드인
     if (ampModelId === "300b" && gainNode && warmTarget === 1 && ttFrame.prevWarmTarget === 0 && tubeWarm < 0.05) {
-        ampRectUntil = now + 2600;
+        ampRectUntil = now + 2600 * WARM_SCALE;
         // 유휴 통전 웜업에서는 안내가 소음 — 실제로 듣는 중일 때만 예열을 알린다
         if (isPlaying || deckMode === "play") playerSubtext.textContent = "정류관 예열 중 — 잠시 후 소리가 나옵니다 (300B 싱글엔디드의 아침 의식).";
     }
@@ -5065,18 +5070,19 @@ function ttFrame(now) {
         } else {
             const remain = ampRectUntil - now;
             applyGainStaging();
-            gainNode.gain.value *= remain > 700 ? 0 : (1 - remain / 700);
+            const fade = 700 * WARM_SCALE;
+            gainNode.gain.value *= remain > fade ? 0 : (1 - remain / fade);
         }
     }
-    const warmRate = warmTarget > tubeWarm ? dt / 2.0 : dt / 3.5;
+    const warmRate = warmTarget > tubeWarm ? dt / (2.0 * WARM_SCALE) : dt / (3.5 * WARM_SCALE);
     tubeWarm = approach(tubeWarm, warmTarget, warmRate);
     // 앰프 패널 조명도 전원 연동 — 통전이면 켜지고, 미터는 신호가 올 때만 움직인다
     const ampTarget = unitOn("amp") ? 1 : 0;
-    const ampRate = ampTarget > ampWarm ? dt / 2.0 : dt / 3.5;
+    const ampRate = ampTarget > ampWarm ? dt / (2.0 * WARM_SCALE) : dt / (3.5 * WARM_SCALE);
     ampWarm = approach(ampWarm, ampTarget, ampRate);
     // 데크 조명: 전원 연동 (예약은 타이머 아웃렛 통전) — 릴·카운터 구동은 deckMode가 따로 결정
     const deckTarget = unitOn("deck") ? 1 : 0;
-    const deckRate = deckTarget > deckWarm ? dt / 2.0 : dt / 3.5;
+    const deckRate = deckTarget > deckWarm ? dt / (2.0 * WARM_SCALE) : dt / (3.5 * WARM_SCALE);
     deckWarm = approach(deckWarm, deckTarget, deckRate);
     updateMa2375Display();
 
@@ -5084,7 +5090,7 @@ function ttFrame(now) {
     // 10B DIM 위치는 조명만 낮춘다 — 수신은 그대로 (실물 3위치 전원의 감광 기능)
     const tnCap = tunerDim ? 0.38 : 1;
     const tnTarget = unitOn("tuner") ? tnCap : 0;
-    const tnRate = tnTarget > tunerWarm ? dt / 0.9 : dt / 1.4;
+    const tnRate = tnTarget > tunerWarm ? dt / (0.9 * WARM_SCALE) : dt / (1.4 * WARM_SCALE);
     tunerWarm = approach(tunerWarm, tnTarget, tnRate);
 
     // 앰프: 진공관 글로우(웜업 연동)·갤러리 어둠·VU 바늘·전원 LED
@@ -8793,10 +8799,45 @@ function tvBootApply() {
         // setTunerPower가 이 채널로 붙는다 — selectStation을 따로 부르면 이중 접속이 된다
         tunerOffTuned = stations.find((s) => s.id === "kbs1fm") || stations[0];
         setTunerPower(true);
-    } else if (loadJson("fmRadio.focusOn", false)) {
-        applyFocusMode(true);
+    } else {
+        if (loadJson("fmRadio.focusOn", false)) applyFocusMode(true);
+        // 켜진 랙이 그려져 있는데 소리가 없으면 기기로서 앞뒤가 맞지 않는다 — 전원이 켜진
+        // 채로 끝났다면 마지막 채널을 실제로 다시 물린다. 포노·테이프가 소스였던 경우는
+        // 트랜스포트 위치까지 되살릴 수 없어 건드리지 않는다 (사용자가 바늘을 올린다).
+        const lastId = loadJson("fmRadio.lastStation", null);
+        if (unitPower.tuner && lastId && !phonoActive && deckMode === "stop") {
+            selectStation(lastId, true);
+        }
     }
 }
+
+// ----- TV 절전(스크린세이버) 대응 -----
+// 듣는 중에 화면이 꺼지면 재생까지 함께 멎는다. webOS는 스크린세이버를 띄우기 전에
+// 등록된 앱에 물어보므로, 재생 중일 때만 거절한다. 멈춰 있을 때는 그대로 재우도록 둔다 —
+// OLED에 정지 화면을 몇 시간씩 띄워 두는 것이 번인의 지름길이라 항상 막지는 않는다.
+function initScreenSaverGuard() {
+    if (!IS_TV || typeof WebOSServiceBridge !== "function") return;
+    const CLIENT = "com.ducklove.madforaudio";
+    let bridge;
+    try { bridge = new WebOSServiceBridge(); } catch (e) { return; }
+    bridge.onservicecallback = (raw) => {
+        let msg = null;
+        try { msg = JSON.parse(raw); } catch (e) { return; }
+        if (!msg || msg.state !== "Active") return;
+        if (!(isPlaying || !audio.paused)) return;   // 쉬는 중 — 화면을 재운다
+        try {
+            const reply = new WebOSServiceBridge();
+            reply.onservicecallback = () => {};
+            reply.call("luna://com.webos.service.tvpower/power/responseScreenSaverRequest",
+                JSON.stringify({ clientName: CLIENT, ack: false, timestamp: msg.timestamp }));
+        } catch (e) {}
+    };
+    try {
+        bridge.call("luna://com.webos.service.tvpower/power/registerScreenSaverRequest",
+            JSON.stringify({ subscribe: true, clientName: CLIENT }));
+    } catch (e) {}
+}
+initScreenSaverGuard();
 
 if (new URLSearchParams(location.search).get("boot") === "tv") {
     // 파싱 중에 바로 붙이면 안 된다 — hls.js는 defer라 이 스크립트보다 늦게 실행되고,
