@@ -14,7 +14,7 @@ def start():
     headers = {"Authorization": "Bearer " + config["token"]}
     try:
         response = httpx.get("http://127.0.0.1:8766/health", headers=headers, timeout=2)
-    except httpx.ConnectError:
+    except (httpx.ConnectError, httpx.ConnectTimeout):
         response = None
     if response is not None:
         if response.status_code == 200 and response.json().get("ok"):

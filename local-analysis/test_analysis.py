@@ -161,6 +161,23 @@ class AnalysisTests(unittest.TestCase):
             self.assertEqual(self.client.post("/pair", headers={**headers,
                 "Authorization": "Bearer " + link.split("pc-analysis-pair=")[1]}).status_code, 401)
 
+    def test_startup_accepts_windows_connect_timeout_and_skips_live_server(self):
+        import httpx
+        import start_service
+        with patch.object(start_service, "DATA", self.root), patch.object(start_service, "load_config", return_value=self.config), \
+             patch("start_service.httpx.get", side_effect=[httpx.ConnectTimeout("offline"), httpx.Response(200, json={"ok": True})]), \
+             patch("start_service.subprocess.Popen") as spawn:
+            spawn.return_value.poll.return_value = None
+            spawn.return_value.pid = 12345
+            start_service.start()
+            self.assertEqual((self.root / "service.pid").read_text(), "12345")
+            self.assertEqual(spawn.call_count, 1)
+        with patch.object(start_service, "load_config", return_value=self.config), \
+             patch("start_service.httpx.get", return_value=httpx.Response(200, json={"ok": True})), \
+             patch("start_service.subprocess.Popen") as spawn:
+            start_service.start()
+            spawn.assert_not_called()
+
     def test_openrouter_audio_json_usage_and_failures(self):
         import httpx
         self.config["openrouterApiKey"] = "router-test"
