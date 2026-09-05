@@ -142,6 +142,25 @@ class AnalysisTests(unittest.TestCase):
         self.assertNotIn("router-test", response.text)
         self.assertNotIn("google-test", response.text)
 
+    def test_pairing_requires_auth_to_issue_and_is_origin_bound_one_use(self):
+        self.assertEqual(self.client.post("/connection-link").status_code, 401)
+        response = self.client.post("/connection-link", headers=self.headers)
+        self.assertEqual(response.status_code, 200)
+        ticket = response.json()["url"].split("pc-analysis-pair=")[1]
+        self.assertNotIn(self.config["token"], response.text)
+        headers = {"Authorization": "Bearer " + ticket, "Origin": "https://ducklove.github.io"}
+        self.assertEqual(self.client.post("/pair", headers={"Authorization": "Bearer " + ticket}).status_code, 403)
+        self.assertEqual(self.client.post("/pair", headers={**headers, "Origin": "https://evil.test"}).status_code, 403)
+        claimed = self.client.post("/pair", headers=headers)
+        self.assertEqual(claimed.json()["token"], self.config["token"])
+        self.assertEqual(claimed.headers["cache-control"], "no-store")
+        self.assertEqual(self.client.post("/pair", headers=headers).status_code, 401)
+        link = self.client.post("/connection-link", headers=self.headers).json()["url"]
+        import time
+        with patch("server.time.monotonic", return_value=time.monotonic() + 121):
+            self.assertEqual(self.client.post("/pair", headers={**headers,
+                "Authorization": "Bearer " + link.split("pc-analysis-pair=")[1]}).status_code, 401)
+
     def test_openrouter_audio_json_usage_and_failures(self):
         import httpx
         self.config["openrouterApiKey"] = "router-test"

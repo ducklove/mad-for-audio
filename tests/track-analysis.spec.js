@@ -14,6 +14,32 @@ test.describe("예약 녹음 곡 분리", () => {
         await page.evaluate(() => { openSchedule(); schedSetView("res"); document.getElementById("trackAnalysisPanel").open = true; });
     }
 
+    test("PC 연결 링크를 한 번 교환하고 배포 환경 설정을 유지", async ({page, context}) => {
+        const ticket = "t".repeat(43), token = "p".repeat(43);
+        let pairs = 0;
+        await context.route("http://127.0.0.1:8766/**", async route => {
+            const req = route.request(), path = new URL(req.url()).pathname;
+            const headers = {"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*"};
+            if (req.method() === "OPTIONS") return route.fulfill({status: 204, headers});
+            if (path === "/pair") {
+                expect(req.headers().authorization).toBe("Bearer " + ticket);
+                pairs++;
+                return route.fulfill({headers, json: {token}});
+            }
+            expect(req.headers().authorization).toBe("Bearer " + token);
+            return route.fulfill({headers, json: path === "/health" ?
+                {localConfigured: true, geminiConfigured: true, geminiProvider: "openrouter"} : []});
+        });
+        await page.goto("/index.html#pc-analysis-pair=" + ticket);
+        await expect(page.locator("[data-analysis-status]")).toContainText("OpenRouter · Gemini 보완 사용 가능");
+        expect(page.url()).not.toContain(ticket);
+        expect(await page.evaluate(() => JSON.parse(localStorage.getItem("fmRadio.trackAnalysis")).token)).toBe(token);
+        await page.reload();
+        await show(page);
+        await expect(page.locator("[data-analysis-status]")).toContainText("PC 분석 서비스 연결됨");
+        expect(pairs).toBe(1);
+    });
+
     test("예약별 선택 저장과 기존 예약 기본값 유지", async ({page}) => {
         await show(page);
         const add = async title => page.evaluate(title => {

@@ -3,6 +3,8 @@
     "use strict";
     const BASE = "http://127.0.0.1:8766";
     const KEY = "fmRadio.trackAnalysis";
+    const pairingTicket = new URLSearchParams(location.hash.slice(1)).get("pc-analysis-pair");
+    if (pairingTicket !== null) history.replaceState(null, "", location.pathname + location.search);
     let config = {};
     try { config = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (_) {}
     const pending = new Map();
@@ -158,7 +160,7 @@
         try {
             const health = await (await request("/health")).json();
             connected = true;
-            message.textContent = `${health.localConfigured ? "PC 분석 서비스 연결됨" : "PC 모델 설치가 필요합니다"} · ${health.geminiConfigured ? "Gemini 보완 사용 가능" : "Gemini 키 미등록 · 로컬 분석 사용"}${pending.size ? ` · 전송 대기 ${pending.size}건` : ""}`;
+            message.textContent = `${health.localConfigured ? "PC 분석 서비스 연결됨" : "PC 모델 설치가 필요합니다"} · ${health.geminiConfigured ? (health.geminiProvider === "openrouter" ? "OpenRouter · Gemini 보완 사용 가능" : "Gemini 보완 사용 가능") : "Gemini 키 미등록 · 로컬 분석 사용"}${pending.size ? ` · 전송 대기 ${pending.size}건` : ""}`;
             render(await (await request("/jobs")).json());
         } catch (error) { connected = false; message.textContent = error.message; }
         finally { refreshing = false; }
@@ -196,5 +198,26 @@
         forNewReservation: () => config.enabled ? options() : null});
     // 연결이 꺼져 있어도 다음 앱 실행 시 IndexedDB의 원본에서 재전송한다.
     setInterval(() => { if (config.token) { void flush(); if (!host.closest("[hidden]")) void refresh(); } }, 15000);
-    if (config.token) void refresh();
+    async function pairPC() {
+        await window.MFA_READY;
+        if (typeof window.openSchedule === "function") window.openSchedule();
+        if (typeof window.schedSetView === "function") window.schedSetView("res");
+        host.open = true;
+        message.textContent = "이 PC의 분석 서버를 연결하는 중…";
+        try {
+            if (!/^[A-Za-z0-9_-]{43}$/.test(pairingTicket)) throw new Error("PC 연결 링크가 올바르지 않습니다.");
+            const response = await fetch(BASE + "/pair", {method: "POST",
+                headers: {Authorization: "Bearer " + pairingTicket}, signal: AbortSignal.timeout(30000)});
+            if (!response.ok) throw new Error("PC 연결 링크가 만료됐거나 사용할 수 없습니다. PC 연결 도구를 다시 실행하세요.");
+            const data = await response.json();
+            if (typeof data.token !== "string" || data.token.length < 32) throw new Error("PC 연결 응답이 올바르지 않습니다.");
+            tokenInput.value = data.token;
+            save();
+            await refresh();
+        } catch (error) {
+            message.textContent = error instanceof TypeError ? "PC 연결 실패: 서버 실행과 브라우저의 로컬 네트워크 접근 허용을 확인하세요." : error.message;
+        }
+    }
+    if (pairingTicket !== null) void pairPC();
+    else if (config.token) void refresh();
 })();

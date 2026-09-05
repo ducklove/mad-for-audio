@@ -121,6 +121,7 @@ class Jobs:
 def create_app(root=DATA, config=None, start_worker=True):
     config = config or load_config(root)
     jobs = Jobs(root, config)
+    pairing_tickets = {}
 
     @asynccontextmanager
     async def lifespan(app):
@@ -145,7 +146,7 @@ def create_app(root=DATA, config=None, start_worker=True):
         origin = request.headers.get("origin")
         if origin and origin not in origins:
             return JSONResponse({"detail": "허용되지 않은 앱 출처입니다."}, 403)
-        if request.method != "OPTIONS" and not secrets.compare_digest(
+        if request.method != "OPTIONS" and request.url.path != "/pair" and not secrets.compare_digest(
                 request.headers.get("authorization", ""), "Bearer " + config["token"]):
             return JSONResponse({"detail": "PC 분석 서비스 연결 코드를 확인하세요."}, 401,
                                 headers={"Access-Control-Allow-Origin": origin} if origin in origins else None)
@@ -154,6 +155,33 @@ def create_app(root=DATA, config=None, start_worker=True):
             response.headers["Access-Control-Allow-Private-Network"] = "true"
         response.headers["Cache-Control"] = "no-store"
         return response
+
+    @app.post("/connection-link")
+    def connection_link():
+        # 이미 인증된 로컬 설치 도구만 일회용 연결 링크를 발급할 수 있다.
+        with jobs.lock:
+            now = time.monotonic()
+            for ticket in list(pairing_tickets):
+                if pairing_tickets[ticket] < now:
+                    del pairing_tickets[ticket]
+            if len(pairing_tickets) >= 10:
+                raise HTTPException(429, "잠시 뒤 연결 링크를 다시 만드세요.")
+            ticket = secrets.token_urlsafe(32)
+            pairing_tickets[ticket] = now + 120
+        return {"url": "https://ducklove.github.io/mad-for-audio/#pc-analysis-pair=" + ticket,
+                "expiresIn": 120}
+
+    @app.post("/pair")
+    def pair(request: Request):
+        if request.headers.get("origin") not in origins:
+            raise HTTPException(403, "허용된 앱에서 연결하세요.")
+        authorization = request.headers.get("authorization", "")
+        ticket = authorization.removeprefix("Bearer ") if authorization.startswith("Bearer ") else ""
+        with jobs.lock:
+            expires = pairing_tickets.pop(ticket, 0)
+        if expires <= time.monotonic():
+            raise HTTPException(401, "연결 링크가 만료됐습니다. PC 연결 도구를 다시 실행하세요.")
+        return {"token": config["token"]}
 
     @app.get("/health")
     def health():
