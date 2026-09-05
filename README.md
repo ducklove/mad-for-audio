@@ -8,7 +8,7 @@ KBS·MBC·CBS·SBS·EBS 등 한국 주요 FM 라디오를 한 화면에서 선�
 
 ![Mad for Audio 하이파이 랙](docs/screenshots/desktop.png)
 
-[기기 24종 디자인 평가표](docs/DESIGN_REVIEW_2026-09-05.md) · [개선 전후 화면 비교](https://ducklove.github.io/mad-for-audio/docs/design-review-2026-09-05.html)
+[기기 24종 재평가와 실물 대조](docs/REFERENCE_REDESIGN.md) · [재설계 전후 화면 비교](https://ducklove.github.io/mad-for-audio/docs/design-review-2026-09-05.html)
 
 ## 기능
 
