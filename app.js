@@ -6716,11 +6716,6 @@ function toggleRecording(opts) {
     const tapeStartPos = wellB ? deckBPos : tapePos;
     const tapeId = tapeTarget.id;
     const tapeSide = tapeTarget.side || "A";   // 어느 면에 녹음되는지 — 복원 시 같은 면으로
-    // onstop 시점에는 activeResRec가 이미 지워질 수 있으므로 시작 시 설정을 고정한다.
-    const trackAnalysis = bgRec && activeResRec?.res.trackAnalysis?.enabled
-        ? { ...activeResRec.res.trackAnalysis } : null;
-    const analysisId = trackAnalysis ? crypto.randomUUID() : null;
-
     rec.ondataavailable = (event) => {
         if (event.data && event.data.size > 0) chunks.push(event.data);
     };
@@ -6749,8 +6744,6 @@ function toggleRecording(opts) {
             tapeLen: tapeLenOf(tapeTarget),
             side: tapeSide,
             mediaStart,
-            trackAnalysis,
-            analysisId,
             blob
         };
         // 세그먼트를 먼저 테이프에 올린다 — 파트가 끊겨 이어질 때(워치독 재시동)
@@ -6765,8 +6758,6 @@ function toggleRecording(opts) {
             duration_seconds: Math.round(durationMs / 1000)
         });
         await startRecordingPersistence(record, item);
-        // 후처리 장애가 예약 녹음 저장/다음 예약 실행을 막지 않는다.
-        if (trackAnalysis) window.MFA_TrackAnalysis?.register(record);
     };
 
     recorder = rec;
@@ -7078,7 +7069,6 @@ function finalizeRecordingPersistence(record, itemHandle, result) {
 }
 
 function addRecordingItem(record) {
-    if (record.dbId != null) window.MFA_TrackAnalysis?.register(record);
     recordingCount += 1;
     const url = URL.createObjectURL(record.blob);
     const { fileName, startLabel } = recordingFileInfo(record);
@@ -7940,7 +7930,6 @@ function addReservation(data) {
         ymd: data.ymd,
         dow: ymdToDate(data.ymd).getDay(),
         enabled: true,
-        trackAnalysis: data.trackAnalysis === undefined ? (window.MFA_TrackAnalysis?.forNewReservation() || null) : data.trackAnalysis,
         createdAt: Date.now()
     };
     reservations.push(res);
@@ -8103,21 +8092,7 @@ function renderResList() {
         btnDel.textContent = "삭제";
         btnDel.addEventListener("click", () => removeReservation(res.id));
 
-        const btnAnalysis = document.createElement("button");
-        btnAnalysis.type = "button";
-        btnAnalysis.className = "res-btn";
-        btnAnalysis.dataset.analysisRes = "";
-        btnAnalysis.hidden = !window.MFA_TrackAnalysis?.isAvailable();
-        btnAnalysis.textContent = res.trackAnalysis?.enabled ? "곡 분리 켬" : "곡 분리 끔";
-        btnAnalysis.setAttribute("aria-pressed", String(!!res.trackAnalysis?.enabled));
-        btnAnalysis.title = "다음 녹음부터 적용됩니다. 켤 때 위 PC 분석 설정을 사용합니다.";
-        btnAnalysis.addEventListener("click", () => {
-            if (!window.MFA_TrackAnalysis?.isAvailable()) return;
-            res.trackAnalysis = res.trackAnalysis?.enabled ? null : window.MFA_TrackAnalysis?.options();
-            resSave();
-            renderResList();
-        });
-        row.append(main, btnAnalysis, btnRepeat, btnToggle, btnDel);
+        row.append(main, btnRepeat, btnToggle, btnDel);
         resListEl.appendChild(row);
     });
 }
