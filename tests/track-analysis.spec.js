@@ -11,6 +11,7 @@ test.describe("예약 녹음 곡 분리", () => {
     });
 
     async function show(page) {
+        await page.evaluate(() => window.MFA_READY);
         await page.evaluate(() => { openSchedule(); schedSetView("res"); document.getElementById("trackAnalysisPanel").open = true; });
     }
 
