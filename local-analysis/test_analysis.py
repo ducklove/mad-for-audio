@@ -14,7 +14,7 @@ from cloud_config import load_cloud_keys, cloud_connection
 
 def segment(start, end, kind="music", title="소나타", **kw):
     return dict(start=start, end=end, kind=kind, title=title, composer="모차르트", performer="김연주",
-                evidence="모차르트 소나타 김연주", uncertain=False, **kw)
+                evidence="모차르트 소나타 김연주 연주", uncertain=False, **kw)
 
 
 class AnalysisTests(unittest.TestCase):
@@ -60,7 +60,7 @@ class AnalysisTests(unittest.TestCase):
         result = ground_metadata(segment(0, 10), "쇼팽 야상곡을 듣습니다")
         self.assertFalse(result["composer"])
         self.assertFalse(result["evidence"])
-        result = ground_metadata(segment(0, 10), "다음은 모차르트 소나타 김연주입니다")
+        result = ground_metadata(segment(0, 10), "다음은 모차르트 소나타 김연주 연주입니다")
         self.assertEqual(result["composer"], "모차르트")
         self.assertEqual(result["performer"], "김연주")
 
@@ -125,6 +125,21 @@ class AnalysisTests(unittest.TestCase):
             self.assertEqual(snapshots[0]["cloudSeconds"], 60)
             self.assertEqual(snapshots[0]["cloudCalls"], 1)
             self.assertNotIn("test-key", str(snapshots))
+
+    def test_metadata_only_queue_keeps_usage_and_user_edits(self):
+        job_id=str(uuid4())
+        job={"id":job_id,"status":"review","createdAt":1,"tracks":[{"id":1,"source":"user"}],
+             "options":{"cloudFallback":True,"maxCloudSeconds":600},"cloudCalls":5,"cloudSeconds":600}
+        self.app.state.jobs.save(job)
+        folder=self.app.state.jobs.folder(job_id)
+        for name in ('source.wav','asr-input.json','asr-output.jsonl','moss-output.jsonl'):
+            (folder/name).write_text('test',encoding='utf-8')
+        response=self.client.post(f'/jobs/{job_id}/metadata',headers=self.headers)
+        self.assertEqual(response.status_code,200)
+        self.assertTrue(response.json()['metadataOnly'])
+        self.assertEqual(response.json()['cloudSeconds'],600)
+        self.assertEqual(response.json()['tracks'][0]['source'],'user')
+        self.assertEqual(self.client.post(f'/jobs/{job_id}/metadata',headers=self.headers).status_code,409)
 
     def test_dotenv_keys_are_private_and_openrouter_takes_precedence(self):
         env_path = self.root / ".env"
@@ -218,9 +233,9 @@ class AnalysisTests(unittest.TestCase):
                "options": {"cloudFallback": False, "maxCloudSeconds": 600}}
         pipeline = Pipeline(self.config)
         data = json.dumps({"segments": [segment(0, 2, "speech"), segment(2, 10), segment(10, 12, "speech")]})
-        with patch.object(pipeline, "model", side_effect=[{0: "모차르트 소나타 김연주"}, {0: data}]):
+        with patch.object(pipeline, "model", side_effect=[{0: "모차르트 소나타 김연주 연주"}, {0: data}]):
             pipeline.process(folder, job, self.app.state.jobs.save)
-        self.assertEqual(job["status"], "done")
+        self.assertEqual(job["status"], "review")
         self.assertAlmostEqual(duration(folder / "track-1.flac"), 8, places=2)
         probe = json.loads(run(["ffprobe", "-v", "error", "-show_format", "-of", "json", folder / "track-1.flac"]))
         tags = {k.lower(): v for k, v in probe["format"]["tags"].items()}

@@ -110,7 +110,11 @@ class Jobs:
                     continue
                 job["status"] = "running"
                 self.save(job)
-                Pipeline(self.config).process(self.folder(job_id), job, self.save)
+                pipeline = Pipeline(self.config)
+                if job.pop("metadataOnly", False):
+                    pipeline.review_metadata(self.folder(job_id), job, self.save)
+                else:
+                    pipeline.process(self.folder(job_id), job, self.save)
             except Exception as error:
                 if job is not None:
                     job.update(status="error", message=str(error)[:1800])
@@ -194,7 +198,8 @@ def create_app(root=DATA, config=None, start_worker=True):
         return {"ok": True, "version": 1, "localConfigured": Path(config["modelPython"]).is_file()
                 and (Path(config["mossSource"]) / "src").is_dir() and (root / "models-ready.json").is_file(),
                 "geminiConfigured": bool(key), "geminiProvider": provider,
-                "geminiModel": model, "maxCloudSeconds": config.get("maxCloudSeconds", 600), "serverRecorder": True}
+                "geminiModel": model, "maxCloudSeconds": config.get("maxCloudSeconds", 600), "serverRecorder": True,
+                "metadataReview": True}
 
     @app.get("/recorder")
     def recorder_status():
@@ -276,6 +281,23 @@ def create_app(root=DATA, config=None, start_worker=True):
                 raise HTTPException(409, "실패했거나 확인이 필요한 작업만 재시도할 수 있습니다.")
             job.update(status="queued", message="다시 분석 대기 중")
             jobs.save(job)  # 사용량 카운터는 초기화하지 않는다.
+            jobs.queue.put(job_id)
+            return job
+
+    @app.post("/jobs/{job_id}/metadata")
+    def metadata_review(job_id: str):
+        with jobs.lock:
+            job = jobs.read(job_id)
+            if job["status"] not in ("done", "review") or not job.get("tracks"):
+                raise HTTPException(409, "곡 분석이 완료된 작업만 정보를 재검토할 수 있습니다.")
+            if not job["options"].get("cloudFallback"):
+                raise HTTPException(409, "이 녹음은 Gemini 보완이 꺼져 있습니다.")
+            if job["cloudCalls"] >= 10 or job["options"]["maxCloudSeconds"] <= 0:
+                raise HTTPException(409, "앱의 파일당 Gemini 호출 한도 또는 전송 설정을 확인하세요. 사용량은 초기화하지 않습니다.")
+            if not all((jobs.folder(job_id) / name).is_file() for name in ("source.wav", "asr-input.json", "asr-output.jsonl", "moss-output.jsonl")):
+                raise HTTPException(409, "곡 정보 재검토에 필요한 전사 또는 원본 분석 파일이 없습니다.")
+            job.update(status="queued", metadataOnly=True, message="곡 정보만 재검토 대기 중")
+            jobs.save(job)
             jobs.queue.put(job_id)
             return job
 

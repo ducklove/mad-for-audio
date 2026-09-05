@@ -168,6 +168,23 @@ test.describe("예약 녹음 곡 분리", () => {
         expect(uploads).toHaveLength(1);
     });
 
+    test("곡 정보만 재검토 요청과 파일 한도 안내", async ({page, context}) => {
+        let metadataRequests = 0;
+        const job = {id: "c57c221c-8fbc-4da5-8523-52fb326ac2d9", name: "검증 방송", message: "곡 정보 확인 필요",
+            status: "review", metadataNotice: "음성 전송 잔여량에 따라 전사 텍스트로 교정했습니다.", tracks: [{id: 1, title: "소나타", start: 10, end: 70, review: true}]};
+        await context.route("http://127.0.0.1:8766/**", route => {
+            const url = route.request().url();
+            if (url.endsWith("/metadata")) { metadataRequests++; return route.fulfill({json: job}); }
+            return route.fulfill({json: url.endsWith("/health") ? {localConfigured: true, metadataReview: true} : [job]});
+        });
+        await page.evaluate(() => localStorage.setItem("fmRadio.trackAnalysis", JSON.stringify({token: "test"})));
+        await page.reload(); await show(page);
+        await page.locator(".analysis-job > summary").click();
+        await expect(page.getByText(job.metadataNotice)).toBeVisible();
+        await page.getByRole("button", {name: "곡 정보만 재검토", exact: true}).click();
+        expect(metadataRequests).toBe(1);
+    });
+
     test("확인 필요 곡의 메타데이터 표시와 수정", async ({page, context}) => {
         let update;
         const job = {id: "c57c221c-8fbc-4da5-8523-52fb326ac2d9", name: "검증 방송", message: "1곡 저장 · 확인 필요",

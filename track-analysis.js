@@ -10,7 +10,7 @@
     const pending = new Map();
     const completed = new Set();
     const previewURLs = new Set();
-    let sending = false, refreshing = false, connected = false, available = false;
+    let sending = false, refreshing = false, connected = false, available = false, metadataReviewAvailable = false;
     const host = document.getElementById("trackAnalysisPanel");
     if (!host) return;
     const el = (tag, text, cls) => {
@@ -121,6 +121,10 @@
             }));
             if (["done", "review"].includes(job.status)) details.append(button("전체 곡 ZIP 저장", () =>
                 download(`/jobs/${job.id}/archive`, `${job.name}-분리된-곡.zip`)));
+            if (metadataReviewAvailable && ["done", "review"].includes(job.status) && job.tracks?.length) details.append(button("곡 정보만 재검토", async () => {
+                await request(`/jobs/${job.id}/metadata`, {method: "POST"}); await refresh();
+            }));
+            if (job.metadataNotice) details.append(el("p", job.metadataNotice, "analysis-warning"));
             if (job.source === "server-recorder" && job.status !== "recording") details.append(button("녹음 원본 저장", () =>
                 download(`/jobs/${job.id}/files/original`, `${job.name}.m4a`)));
             if (job.recordingNote) details.append(el("p", job.recordingNote));
@@ -171,6 +175,7 @@
         refreshing = true;
         try {
             const health = await (await request("/health")).json();
+            metadataReviewAvailable = health.metadataReview === true;
             connected = true;
             setAvailable(health.localConfigured === true);
             message.textContent = `${health.localConfigured ? "PC 분석 서비스 연결됨" : "PC 모델 설치가 필요합니다"} · ${health.geminiConfigured ? (health.geminiProvider === "openrouter" ? "OpenRouter · Gemini 보완 사용 가능" : "Gemini 보완 사용 가능") : "Gemini 키 미등록 · 로컬 분석 사용"}${pending.size ? ` · 전송 대기 ${pending.size}건` : ""}`;

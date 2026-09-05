@@ -26,7 +26,8 @@ def main():
             max_inference_batch_size=1, max_new_tokens=1024, local_files_only=True,
         )
         def infer(item):
-            result = model.transcribe(audio=item["path"], language="Korean")
+            result = model.transcribe(audio=item["path"], language=None,
+                context="라디오 음악 방송. 소개 멘트의 용어: 도이치 번호, 작품번호, BWV, 쾨헬 번호, 피아노, 비올라, 오보에, 지휘, 소프라노, 바리톤.")
             return {"text": result[0].text}
     else:
         sys.path.insert(0, os.environ["MFA_MOSS_SOURCE"])
