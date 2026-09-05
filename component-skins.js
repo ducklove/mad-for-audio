@@ -568,33 +568,27 @@ MFA_AMPS.forEach((spec) => {
 });
 
 function mfaMa2375Meter(x, needleId) {
-    const cx = x + 192, cy = 354, arcCy = 305;
-    const ticks = Array.from({ length: 13 }, (_, i) => {
-        const deg = -70 + i * (140 / 12);
-        const a = deg * Math.PI / 180;
-        const major = i % 3 === 0;
-        const x1 = (cx + Math.sin(a) * (major ? 134 : 140)).toFixed(1);
-        const y1 = (arcCy - Math.cos(a) * (major ? 41 : 44)).toFixed(1);
-        const x2 = (cx + Math.sin(a) * 150).toFixed(1);
-        const y2 = (arcCy - Math.cos(a) * 50).toFixed(1);
-        return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="#123b5b" stroke-width="' + (major ? 2.5 : 1.3) + '"/>';
-    }).join("");
-    return '<g>' +
-        '<rect x="' + (x - 7) + '" y="167" width="398" height="216" rx="7" fill="#010305" stroke="#2c343b" stroke-width="6"/>' +
-        '<rect x="' + x + '" y="174" width="384" height="202" rx="4" fill="#05080b" stroke="#10151a" stroke-width="12"/>' +
-        '<rect x="' + (x + 15) + '" y="189" width="354" height="172" rx="2" fill="url(#ma2375MeterBlue)" opacity=".82"/>' +
-        '<g opacity=".74"><rect class="ampLamp ma2375-meter-light" data-lz-off=".018" data-lz-on=".48" x="' + (x + 15) + '" y="189" width="354" height="172" rx="2" fill="url(#ma2375MeterLamp)" opacity=".018" filter="url(#ma2375BlueGlow)"/></g>' +
-        '<rect x="' + (x + 15) + '" y="189" width="354" height="172" rx="2" fill="url(#ma2375MeterVignette)" opacity=".38" pointer-events="none"/>' +
-        '<rect x="' + (x + 22) + '" y="196" width="340" height="158" rx="2" fill="none" stroke="#8edcff" stroke-width="1.5" opacity=".15"/>' +
-        '<path class="ma2375-meter-arc" d="M' + (x + 51) + ' 288 A150 50 0 0 1 ' + (x + 333) + ' 288" fill="none" stroke="#153e5b" stroke-width="2"/>' + ticks +
-        '<g font-family="Arial" fill="#11334d" text-anchor="middle"><text x="' + (x + 57) + '" y="282" font-size="14" font-weight="700">.075</text><text x="' + (x + 126) + '" y="252" font-size="14" font-weight="700">.75</text><text x="' + (x + 258) + '" y="252" font-size="14" font-weight="700">7.5</text><text x="' + (x + 327) + '" y="282" font-size="14" font-weight="700">75</text><text x="' + cx + '" y="213" font-size="13" font-weight="700" letter-spacing="3">WATTS</text><text x="' + (cx + 94) + '" y="316" font-size="11" font-weight="600" letter-spacing="1">dB</text><text x="' + cx + '" y="335" font-size="13" font-weight="700" letter-spacing="2">POWER OUTPUT</text></g>' +
-        '<line id="' + needleId + '" data-cx="' + cx + '" data-cy="' + cy + '" x1="' + cx + '" y1="' + cy + '" x2="' + cx + '" y2="248" stroke="#071019" stroke-width="4" transform="rotate(-42 ' + cx + ' ' + cy + ')"/>' +
-        '<circle cx="' + cx + '" cy="' + cy + '" r="10" fill="#101820" stroke="#5c829c" stroke-width="2"/>' +
-        '<rect class="meterDark" x="' + (x + 15) + '" y="189" width="354" height="172" rx="2" fill="#02070c" opacity=".56" pointer-events="none"/>' +
-        '<path d="M' + (x + 24) + ' 199 H' + (x + 360) + '" stroke="#fff" stroke-width="2" opacity=".14"/>' +
-        '<path d="M' + (x + 24) + ' 199 L' + (x + 158) + ' 199 L' + (x + 96) + ' 354 L' + (x + 24) + ' 354 Z" fill="#fff" opacity=".035" pointer-events="none"/>' +
-        '<path d="M' + (x + 34) + ' 207 C' + (x + 118) + ' 190 ' + (x + 220) + ' 195 ' + (x + 326) + ' 217" fill="none" stroke="#dff7ff" stroke-width="3" opacity=".075" pointer-events="none"/>' +
-        '</g>';
+    const cx = x + 230, cy = 361, r = 158;
+    const polar = (a, radius) => [cx + Math.sin(a * Math.PI / 180) * radius, cy - Math.cos(a * Math.PI / 180) * radius];
+    const ticks = Array.from({length:25}, (_,i) => {
+        const a = -58 + i * 116 / 24, p = polar(a,r), q = polar(a,r-(i%6?8:16));
+        return `<path d="M${p.join(' ')}L${q.join(' ')}"/>`;
+    }).join('');
+    const labels = ['.0075','.075','.75','7.5','75'];
+    return `<g data-panel-region="meter" class="ma2375-reference-meter">
+        <rect x="${x-4}" y="170" width="468" height="202" fill="#010506" stroke="#17242c" stroke-width="2"/>
+        <rect x="${x}" y="174" width="460" height="194" fill="#72bdce"/>
+        <rect class="ampLamp ma2375-meter-light" data-lz-off=".018" data-lz-on=".48" x="${x}" y="174" width="460" height="194" fill="url(#ma2375MeterLamp)" opacity=".018"/>
+        <path class="ma2375-meter-arc" d="M${polar(-58,r).join(' ')}A${r} ${r} 0 0 1 ${polar(58,r).join(' ')}" fill="none" stroke="#244757" stroke-width="1.5"/>
+        <g fill="none" stroke="#244757" stroke-width="1.5">${ticks}</g>
+        ${labels.map((v,i)=>{const p=polar(-58+i*29,r+14);return `<text x="${p[0]}" y="${p[1]}" font-family="Arial" font-size="15" fill="#214553" text-anchor="middle">${v}</text>`;}).join('')}
+        <text x="${cx}" y="293" font-family="Arial" font-size="14" fill="#234653" text-anchor="middle" letter-spacing="2">WATTS</text>
+        <text x="${cx}" y="321" font-family="Arial" font-size="14" fill="#234653" text-anchor="middle" letter-spacing="3">POWER OUTPUT</text>
+        <line id="${needleId}" data-cx="${cx}" data-cy="${cy}" x1="${cx}" y1="${cy}" x2="${cx}" y2="202" stroke="#163644" stroke-width="2.5" transform="rotate(-42 ${cx} ${cy})"/>
+        <path d="M${cx-38} 368v-9q38-15 76 0v9" fill="#294951"/>
+        <rect class="meterDark" x="${x}" y="174" width="460" height="194" fill="#02070c" opacity=".56" pointer-events="none"/>
+        <path d="M${x+2} 176h456" stroke="#fff" stroke-width="2" opacity=".28"/>
+    </g>`;
 }
 
 function mfaMa2375Tube(cx, baseY, scale, cage) {
@@ -602,11 +596,11 @@ function mfaMa2375Tube(cx, baseY, scale, cage) {
     const cageRx = w * .74, cageRy = 12 * scale;
     const ringYs = Array.from({ length: 6 }, (_, i) => top + 24 * scale + i * 32 * scale);
     const cageRear = cage ?
-        '<g fill="none" stroke="url(#ma2375Cage)" stroke-width="' + (4.8 * scale).toFixed(1) + '" opacity=".27">' +
+        '<g fill="none" stroke="url(#ma2375Cage)" stroke-width="' + (4.8 * scale).toFixed(1) + '" opacity=".72">' +
         ringYs.map((y) => '<ellipse cx="' + cx + '" cy="' + y.toFixed(1) + '" rx="' + cageRx.toFixed(1) + '" ry="' + cageRy.toFixed(1) + '"/>').join("") +
         '<path d="M' + (cx - w * .67).toFixed(1) + ' ' + (top + 20 * scale).toFixed(1) + ' V' + baseY + ' M' + (cx + w * .67).toFixed(1) + ' ' + (top + 20 * scale).toFixed(1) + ' V' + baseY + '"/></g>' : '';
     const cageFront = cage ?
-        '<g fill="none" stroke="url(#ma2375Cage)" stroke-width="' + (5.2 * scale).toFixed(1) + '" opacity=".64" stroke-linecap="round">' +
+        '<g fill="none" stroke="url(#ma2375Cage)" stroke-width="' + (5.2 * scale).toFixed(1) + '" opacity="1" stroke-linecap="round">' +
         ringYs.map((y) => '<path d="M' + (cx - cageRx).toFixed(1) + ' ' + y.toFixed(1) + ' A' + cageRx.toFixed(1) + ' ' + cageRy.toFixed(1) + ' 0 0 0 ' + (cx + cageRx).toFixed(1) + ' ' + y.toFixed(1) + '"/>').join("") +
         '<path d="M' + (cx - w * .22).toFixed(1) + ' ' + (top + 10 * scale).toFixed(1) + ' V' + baseY + ' M' + (cx + w * .22).toFixed(1) + ' ' + (top + 10 * scale).toFixed(1) + ' V' + baseY + '"/>' +
         '<path d="M' + (cx - w * .82).toFixed(1) + ' ' + baseY + ' A' + (w * .82).toFixed(1) + ' ' + (15 * scale).toFixed(1) + ' 0 0 0 ' + (cx + w * .82).toFixed(1) + ' ' + baseY + '"/></g>' : '';
@@ -697,6 +691,10 @@ function mfaMa2375Knob(cx, faceY, r, options) {
         '</g>';
 }
 
+const MA2375_PROJECTION = { scale: 1.076, x: -76 };
+function ma2375PanelPoint(x, y) {
+    return { x: MA2375_PROJECTION.x + x * MA2375_PROJECTION.scale, y: y * MA2375_PROJECTION.scale };
+}
 function mfaMa2375Svg() {
     const powerTubes = [380, 620, 1380, 1620].map((x) => mfaMa2375Tube(x, 642, 1.12, true)).join("");
     // 미러 폴리시 상판에 비친 진공관 실루엣 + 점등 시 은은한 그린 글로우 반사
@@ -707,7 +705,7 @@ function mfaMa2375Svg() {
     ).join("") +
         '<g opacity=".07"><ellipse class="ampLamp" data-lz-off=".006" data-lz-on=".12" cx="442" cy="706" rx="142" ry="36" fill="url(#ma2375MeterBlue)" opacity=".006" filter="url(#ma2375Smudge)"/><ellipse class="ampLamp" data-lz-off=".006" data-lz-on=".12" cx="1558" cy="706" rx="142" ry="36" fill="url(#ma2375MeterBlue)" opacity=".006" filter="url(#ma2375Smudge)"/></g>';
     const eqKnobs = [720, 860, 1000, 1140, 1280].map((x) => mfaMa2375Knob(x, 690, 34, { depth: 40 })).join("");
-    const scale = 1.076, offsetX = -76;
+    const scale = MA2375_PROJECTION.scale, offsetX = MA2375_PROJECTION.x;
     const volumeX = offsetX + 1700 * scale;
     const volumeY = 690 * scale;
     const volumeR = 70 * scale;
@@ -721,7 +719,7 @@ function mfaMa2375Svg() {
         <linearGradient id="ma2375LowerFace" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e3e6e3"/><stop offset="0.06" stop-color="#b9c1c2"/><stop offset="0.55" stop-color="#a4aeb1"/><stop offset="0.9" stop-color="#8c979b"/><stop offset="1" stop-color="#414c52"/></linearGradient>
         <linearGradient id="ma2375GlassRefl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14181c" stop-opacity=".62"/><stop offset="1" stop-color="#14181c" stop-opacity="0"/></linearGradient>
         <linearGradient id="ma2375Edge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#63666a"/><stop offset=".35" stop-color="#f0f0ed"/><stop offset=".62" stop-color="#96999c"/><stop offset="1" stop-color="#3d4044"/></linearGradient>
-        <linearGradient id="ma2375Cage" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#34383b"/><stop offset=".2" stop-color="#cfd3d1"/><stop offset=".45" stop-color="#777d80"/><stop offset=".72" stop-color="#d7dad7"/><stop offset="1" stop-color="#43494c"/></linearGradient>
+        <linearGradient id="ma2375Cage" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#50595d"/><stop offset=".16" stop-color="#ffffff"/><stop offset=".25" stop-color="#e8efee"/><stop offset=".45" stop-color="#869699"/><stop offset=".66" stop-color="#f6fbf8"/><stop offset=".78" stop-color="#ffffff"/><stop offset="1" stop-color="#566267"/></linearGradient>
         <radialGradient id="ma2375Chrome"><stop offset="0" stop-color="#d9dcda"/><stop offset=".42" stop-color="#92989b"/><stop offset=".75" stop-color="#34393d"/><stop offset="1" stop-color="#c3c7c5"/></radialGradient>
         <linearGradient id="ma2375KnobSide" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#101214"/><stop offset=".08" stop-color="#5d6164"/><stop offset=".17" stop-color="#f1f2f0"/><stop offset=".25" stop-color="#fdfdfb"/><stop offset=".36" stop-color="#8d9296"/><stop offset=".5" stop-color="#43474b"/><stop offset=".63" stop-color="#c6c9c9"/><stop offset=".78" stop-color="#f2f2ef"/><stop offset=".9" stop-color="#787d81"/><stop offset="1" stop-color="#0c0e10"/></linearGradient>
         <linearGradient id="ma2375KnobSkirt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#191b1d"/><stop offset=".1" stop-color="#8d9194"/><stop offset=".2" stop-color="#f7f7f4"/><stop offset=".34" stop-color="#b1b5b8"/><stop offset=".5" stop-color="#585d61"/><stop offset=".66" stop-color="#d4d6d5"/><stop offset=".8" stop-color="#fafaf7"/><stop offset=".92" stop-color="#84888c"/><stop offset="1" stop-color="#121416"/></linearGradient>
@@ -755,18 +753,17 @@ function mfaMa2375Svg() {
     <rect x="180" y="112" width="36" height="536" fill="url(#ma2375SteelBand)" opacity=".92"/>
     <rect x="1784" y="112" width="36" height="536" fill="url(#ma2375SteelBand)" opacity=".92"/>
     <path d="M218 139 H1782" stroke="#fff" stroke-width="4" opacity=".11"/>
-    ${mfaMa2375Meter(250, "ampVuL")}${mfaMa2375Meter(1366, "ampVuR")}
+    ${mfaMa2375Meter(245, "ampVuL")}${mfaMa2375Meter(1295, "ampVuR")}
     <g class="ampLegend ma2375-lettering" data-lz-off=".18" data-lz-on=".78" text-anchor="middle">
         <g fill="#62c783" opacity=".14" filter="url(#ma2375LetterGlow)"><text x="1000" y="252" font-family="Georgia" font-size="58" font-style="italic">McIntosh</text><text x="1000" y="291" font-family="Arial" font-size="19" font-weight="700" letter-spacing="8">MA2375</text><text x="1000" y="320" font-family="Arial" font-size="14" font-weight="700" letter-spacing="3.5">TUBE INTEGRATED AMPLIFIER</text></g>
         <text x="1000" y="252" font-family="Georgia" font-size="58" font-style="italic" fill="#66cc86" stroke="#235437" stroke-width="1">McIntosh</text><text x="1000" y="291" font-family="Arial" font-size="19" font-weight="700" letter-spacing="8" fill="#56b975">MA2375</text><text x="1000" y="320" font-family="Arial" font-size="14" font-weight="700" letter-spacing="3.5" fill="#51aa6d">TUBE INTEGRATED AMPLIFIER</text>
     </g><circle cx="1000" cy="344" r="4" fill="#b52c27"/>
     <g filter="url(#ma2375DisplayShadow)"><rect x="740" y="402" width="520" height="112" rx="4" fill="#010405" stroke="#202b30" stroke-width="3"/><rect x="750" y="412" width="500" height="92" rx="2" fill="#02090b" stroke="#0b2026" stroke-width="1.5"/>
-        <path d="M760 420 H1240" stroke="#8ceaf1" stroke-width="1.5" opacity=".09"/><path d="M760 496 H1240" stroke="#051417" stroke-width="2"/><path d="M920 422 V494 M1080 422 V494" stroke="#153037" opacity=".42"/>
-        <g font-family="Arial" font-size="10" font-weight="700" letter-spacing="2" fill="#527b81"><text x="770" y="438">INPUT</text><text x="1230" y="438" text-anchor="end">LEVEL</text><text x="1000" y="438" text-anchor="middle">UNITY COUPLED</text></g>
-        <text x="1000" y="474" font-family="Arial" font-size="11" font-weight="700" letter-spacing="2" fill="#3c7779" text-anchor="middle">5-BAND TONE CONTROL</text>
+        <path d="M760 420 H1240" stroke="#8ceaf1" stroke-width="1.5" opacity=".09"/><path d="M760 496 H1240" stroke="#051417" stroke-width="2"/>
+        <g font-family="Arial" font-size="10" font-weight="700" letter-spacing="2" fill="#527b81"><text x="770" y="438">INPUT</text><text x="1230" y="438" text-anchor="end">LEVEL</text></g>
         <path d="M756 418 L900 418 L860 500 H756 Z" fill="#a9eff5" opacity=".018" pointer-events="none"/>
     </g>
-    <g class="ampLegend ma2375-display-readout" data-lz-off=".15" data-lz-on=".74" font-family="monospace" font-size="27">
+    <g class="ampLegend ma2375-display-readout" data-lz-off=".15" data-lz-on=".86" font-family="monospace" font-size="33">
         <g fill="#66cbd0" opacity=".18" filter="url(#ma2375DisplayGlow)"><text id="ma2375SourceGlow" x="770" y="472">Tuner</text><text id="ma2375VolumeGlow" x="1230" y="472" text-anchor="end">100%</text></g>
         <g fill="#71cdd1"><text id="ma2375SourceText" x="770" y="472">Tuner</text><text id="ma2375VolumeText" x="1230" y="472" text-anchor="end">100%</text></g>
     </g>

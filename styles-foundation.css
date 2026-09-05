@@ -1372,3 +1372,43 @@ body.mode-simple #stationMain.collapsed {
 a.mini-open {
     text-decoration: none;
 }
+
+/* 기기와 음반 정보는 별도 물체로 배치한다. 작은 화면에서는 정보 영역을 아래로 보낸다. */
+.tt-workstation { display:grid; grid-template-columns:minmax(0,1.55fr) minmax(0,1fr); gap:26px; align-items:start; line-height:1.45; padding:22px 6px 8px; }
+.tt-machine { min-width:0; }
+#ttStage .tt-machine svg { border-radius:0; box-shadow:none; filter:drop-shadow(0 14px 12px #0007); }
+.tt-operating-strip { display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:12px 4px; }
+.tt-workstation button { font:inherit; cursor:pointer; color:#d8ddd7; border:1px solid #49514a; background:#242a25; border-radius:5px; min-height:40px; padding:8px 12px; }
+.tt-workstation button:hover { background:#343e35; }
+.tt-workstation button:focus-visible { outline:2px solid #eaa071; outline-offset:3px; }
+.tt-workstation .tt-start { background:#d8ded3; color:#1b251d; min-width:86px; font-weight:700; }
+.tt-speed { display:flex; gap:1px; }.tt-speed button[aria-pressed="true"] { background:#66432b; color:#fff2da; }
+.tt-status-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:#65472f; margin-right:7px; }
+.tt-status-dot[fill="#ff7a2a"] { background:#f69a59; box-shadow:0 0 7px #e88442; }
+.tt-dust-track { height:4px; width:38px; background:#1b221b; display:inline-block; }.tt-dust-track span { display:block; height:4px; background:#b68345; }
+.tt-credit { font-size:10px; color:#92998b; margin:4px 4px 0; line-height:1.5; overflow-wrap:anywhere; }
+.tt-record-panel { min-width:0; padding:0 0 12px; color:#deded0; }
+.tt-record-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; padding-bottom:13px; border-bottom:1px solid #605d494d; font-size:11px; letter-spacing:.07em; color:#a9ad9c; }
+.tt-record-heading button { font-size:11px; padding:5px 9px; min-height:32px; background:transparent; }
+.tt-record-summary { display:grid; grid-template-columns:minmax(90px,.8fr) minmax(0,1fr); gap:18px; align-items:center; padding:20px 0; }
+.tt-workstation .tt-paper-jacket { display:block; padding:0; border-radius:1px; border:1px solid #a6997855; overflow:hidden; box-shadow:3px 7px 10px #0005; }
+.tt-cover-art { display:block; position:relative; width:100%; aspect-ratio:1; }
+.tt-cover-art img { display:block; width:100%; height:100%; object-fit:cover; position:absolute; inset:0; }
+.tt-cover-art img[opacity="0"] { opacity:0; }.tt-cover-art img[opacity="1"] { opacity:1; }
+.tt-cover-fallback { position:absolute; inset:12%; border:1px solid #77684f55; border-radius:50%; }
+.tt-cover-fallback:after { content:""; position:absolute; inset:38%; border:1px solid #77684f77; border-radius:50%; }
+.tt-paper-title { display:block; font-family:Georgia,serif; font-size:15px; padding:10px 5px; border-top:2px solid #a66c4d; overflow-wrap:anywhere; }
+.tt-record-meta { min-width:0; }.tt-record-meta p { margin:6px 0; }.tt-record-meta h3 { font-size:18px; line-height:1.4; margin:7px 0 10px; font-weight:600; color:#ede8d8; overflow-wrap:anywhere; }
+.tt-record-composer { font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:#bcaa86; }.tt-record-performer { font-size:12px; color:#bcbdb0; }.tt-record-count { font-size:10px; color:#8f9788; }
+.tt-track-list { list-style:none; padding:0; margin:0; max-height:270px; overflow:auto; scrollbar-width:thin; scrollbar-color:#7c80664d transparent; }
+.tt-track-list li+li { border-top:1px solid #605d492c; }.tt-track-list button { display:flex; gap:12px; text-align:left; width:100%; border:0; border-radius:0; background:transparent; min-height:39px; padding:9px 8px; font-size:13px; line-height:1.35; }
+.tt-track-list button[aria-current="true"] { background:#9e75492b; color:#f0d3a3; }.tt-track-number { font-variant-numeric:tabular-nums; color:#929886; min-width:20px; font-size:11px; padding-top:2px; }
+.tt-record-paging { display:flex; justify-content:space-between; gap:8px; padding-top:16px; }.tt-record-paging button { border:0; font-size:11px; background:transparent; padding:4px 0; }
+@media(max-width:760px){.tt-workstation{grid-template-columns:1fr;gap:20px;padding:12px 0}.tt-operating-strip{gap:6px;font-size:12px}.tt-workstation button{min-height:44px}.tt-record-panel{padding:0 14px 12px}.tt-record-summary{grid-template-columns:120px minmax(0,1fr)}.tt-track-list button{font-size:14px}.tt-track-list{max-height:290px}.tt-record-heading{font-size:12px}.tt-record-paging button{font-size:12px}}
+/* 전체 랙 감상에서는 기기만 나란히 맞춘다. 단일 확대는 음반·조작 영역까지 연다. */
+body.mode-focus.focus-room:not(.focus-unit-zoomed) .tt-workstation { display:block; padding:0; }
+body.mode-focus.focus-room:not(.focus-unit-zoomed) .tt-record-panel,
+body.mode-focus.focus-room:not(.focus-unit-zoomed) .tt-operating-strip,
+body.mode-focus.focus-room:not(.focus-unit-zoomed) .tt-credit { display:none; }
+body.mode-focus.focus-room #ttStage .tt-machine svg { filter:none; }
+body.mode-focus.focus-room #ttStage.unit-zoomed { max-height:calc(var(--focus-viewport-height, 100vh) - var(--focus-optical-top, 3vh) - var(--focus-optical-bottom, 7vh) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); overflow:auto; }

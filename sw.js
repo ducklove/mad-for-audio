@@ -4,7 +4,7 @@
  * 네트워크로 그대로 통과시킨다 — 오디오 range 요청과 실시간성을 깨지 않기 위함.
  */
 const CACHE_PREFIX = "fm-radio-";
-const CACHE = "fm-radio-v175";
+const CACHE = "fm-radio-v176";
 // 일반 URL과 분리한 합성 키를 사용한다. manual.html 같은 다른 내비게이션 응답이
 // 오프라인 앱 셸을 덮어쓰지 못하게 하기 위함이다.
 const NAVIGATION_CACHE_KEY = new URL("__mfa_navigation_shell__", self.registration.scope).href;
@@ -17,28 +17,29 @@ const CORE = [
     "widget.html",
     "turntable.html",
     "embed.html",
-    "styles.css?v=175",
-    "styles-foundation.css?v=175",
-    "styles-library.css?v=175",
-    "styles-schedule.css?v=175",
-    "styles-tape.css?v=175",
-    "stations.js?v=175",
-    "player-core.js?v=175",
-    "app-runtime-core.js?v=175",
-    "native-hls-capture.js?v=175",
-    "store.js?v=175",
-    "schedule.js?v=175",
-    "model-registry.js?v=175",
-    "skins.js?v=175",
-    "component-skins.js?v=175",
-    "solo-skins.js?v=175",
-    "engine.js?v=175",
-    "animation-scheduler.js?v=175",
-    "deck.js?v=175",
-    "ui-controls.js?v=175",
-    "records.json?v=175",
-    "bootstrap.js?v=175",
-    "app.js?v=175",
+    "styles.css?v=176",
+    "styles-foundation.css?v=176",
+    "styles-library.css?v=176",
+    "styles-schedule.css?v=176",
+    "styles-tape.css?v=176",
+    "stations.js?v=176",
+    "player-core.js?v=176",
+    "app-runtime-core.js?v=176",
+    "native-hls-capture.js?v=176",
+    "store.js?v=176",
+    "schedule.js?v=176",
+    "model-registry.js?v=176",
+    "skins.js?v=176",
+    "component-skins.js?v=176",
+    "solo-skins.js?v=176",
+    "reference-layouts.js?v=176",
+    "engine.js?v=176",
+    "animation-scheduler.js?v=176",
+    "deck.js?v=176",
+    "ui-controls.js?v=176",
+    "records.json?v=176",
+    "bootstrap.js?v=176",
+    "app.js?v=176",
     "manifest.webmanifest",
     "icons/icon.svg",
     "icons/icon-192.png",
@@ -57,7 +58,7 @@ const CDN = [
 // 특정 셸에서만 쓰는 자산은 설치 실패를 유발하지 않게 best-effort로 캐싱한다.
 // 트레이 iframe이 오프라인으로 열릴 때는 캐시가 있으면 그대로 사용할 수 있다.
 const OPTIONAL = [
-    "tray-bridge.js?v=175"
+    "tray-bridge.js?v=176"
 ];
 
 const CORE_PATHS = new Set(CORE.map((asset) => new URL(asset, self.registration.scope).pathname));

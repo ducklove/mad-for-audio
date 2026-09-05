@@ -722,10 +722,10 @@ function bindDeckFrontPanel() {
             fpNote(fpGet("rec.mpx", false) ? "MPX FILTER ON" : "MPX FILTER OFF");
         });
     } else if (deckModelId === "tcd3014") {
-        fpKnob(svg, 106, 238, 32, "rec.bias", { label: "BIAS — 녹음 고역 성향", min: -1, max: 1, def: 0, fmt: biasFmt });
-        fpKnob(svg, 180, 238, 32, "rec.levelL", { label: "LEVEL L — 좌채널 녹음 레벨", min: 0.4, max: 2, def: 1, fmt: pct });
-        fpKnob(svg, 254, 238, 32, "rec.levelR", { label: "LEVEL R — 우채널 녹음 레벨", min: 0.4, max: 2, def: 1, fmt: pct });
-        fpKnob(svg, 328, 238, 32, "deck.out", { label: "OUTPUT — 데크 재생 출력", min: 0.4, max: 1.6, def: 1, fmt: pct, apply: () => applyGainStaging() });
+        fpKnob(svg, 1100, 584, 39, "rec.bias", { label: "BIAS — 녹음 고역 성향", min: -1, max: 1, def: 0, fmt: biasFmt, ink: "#303b30" });
+        fpKnob(svg, 1280, 584, 39, "rec.levelL", { label: "LEVEL L — 좌채널 녹음 레벨", min: 0.4, max: 2, def: 1, fmt: pct, ink: "#303b30" });
+        fpKnob(svg, 1460, 584, 39, "rec.levelR", { label: "LEVEL R — 우채널 녹음 레벨", min: 0.4, max: 2, def: 1, fmt: pct, ink: "#303b30" });
+        fpKnob(svg, 1740, 584, 68, "deck.out", { label: "OUTPUT — 데크 재생 출력", min: 0.4, max: 1.6, def: 1, fmt: pct, ink: "#303b30", apply: () => applyGainStaging() });
     } else if (deckModelId === "ctf1250") {
         fpButton(svg, 76, 202, 58, 60, "돌비 NR", "DOLBY NR — OFF/B 전환 (재생 히스)", () => deckCycleNr(["off", "b"]));
         fpKnob(svg, 182, 232, 30, "rec.bias", { label: "BIAS — 녹음 고역 성향", min: -1, max: 1, def: 0, fmt: biasFmt, ink: "#4b4e51" });
@@ -945,6 +945,8 @@ function deckMountMicPanel() {
     const lzPrefix = svg.getAttribute("data-lz-prefix") || "";
     const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
     g.setAttribute("id", "deckMicPanel");
+    const micOffsetY = (DECK_MODELS[deckModelId] || {}).micOffsetY || 0;
+    if (micOffsetY) g.setAttribute("transform", "translate(0 " + micOffsetY + ")");
     g.setAttribute("role", "button");
     g.setAttribute("tabindex", "0");
     g.setAttribute("aria-label", "녹음 입력 선택 — LINE(재생 소스) / MIC(마이크)");

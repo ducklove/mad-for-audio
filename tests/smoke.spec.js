@@ -590,8 +590,14 @@ test.describe("데스크톱", () => {
         await expect(page.locator("#ampStage .ma2375-lower-chassis")).toHaveAttribute("x", "80");
         await expect(page.locator("#ampStage .ma2375-lower-chassis")).toHaveAttribute("width", "1840");
         await expect(page.locator("#ampStage .ma2375-meter-arc")).toHaveCount(2);
-        await expect(page.locator("#ampStage .ma2375-meter-arc").first()).toHaveAttribute("d", "M301 288 A150 50 0 0 1 583 288");
-        await expect(page.locator("#ampVuL")).toHaveAttribute("y2", "248");
+        // 창·눈금·바늘이 실제로 같은 공간을 사용해야 한다. 장식 경로 문자열은 고정하지 않는다.
+        const meterFit = await page.locator("#ampStage .ma2375-reference-meter").first().evaluate(el => {
+            const window = el.querySelector('.meterDark').getBBox();
+            const scale = el.querySelector('.ma2375-meter-arc').getBBox();
+            const needle = el.querySelector('#ampVuL');
+            return scale.x >= window.x && scale.x + scale.width <= window.x + window.width && scale.y >= window.y && Number(needle.getAttribute('y2')) >= window.y;
+        });
+        expect(meterFit).toBe(true);
         await expect(page.locator("#ampStage .ma2375-meter-light")).toHaveCount(2);
         await expect(page.locator("#ampStage .meterDark")).toHaveCount(2);
         await expect(page.locator("#ampStage .ma2375-lettering")).toHaveCount(1);

@@ -1,4 +1,6 @@
-# 하이파이 컴포넌트 SVG 레퍼런스 — v156
+# 하이파이 컴포넌트 SVG 레퍼런스 — v176
+
+v176에서 MC2105·B215·TCD 3014A의 잘못된 구조 설명을 정정했다. 이 목록의 기존 항목은 모두 이번에 새로 검증한 자료가 아니다. 실제 대조 범위와 남은 차이는 [재설계 검토](REFERENCE_REDESIGN.md)에 명시한다.
 
 현재 공개 카탈로그 20종과 단일 타이머 DT-540의 외형·조작 근거다. 사진과 설명서는
 비례, 재질, 계기와 대표 조작을 확인하는 용도로만 사용하며 원본 이미지를 배포 파일에
@@ -35,19 +37,19 @@ SH-8065는 채널당 33밴드 슬라이더가 전부인 순수 그래픽 EQ이�
 
 | 공개 모델 | 사진·자료 | SVG에 반영한 식별 포인트 |
 |---|---|---|
-| McIntosh MC2105 | [McIntosh 공식 레거시 페이지](https://www.mcintoshlabs.com/legacy-products/amplifiers/MC2105) | 블랙 글라스, 듀얼 블루 POWER OUTPUT 미터, 중앙 녹색 로고, 좌우 랙 핸들 |
+| McIntosh MC2105 | [McIntosh 공식 레거시 페이지와 정면 사진](https://www.mcintoshlabs.com/legacy-products/amplifiers/MC2105) | 왼쪽에 나란한 두 dB 미터, 오른쪽 녹색 로고, 하단 LEFT GAIN·METER RANGE·RIGHT GAIN·SPEAKER·POWER 노브와 PANLOC. 공통 음량은 실물에 없는 앱 기능이므로 본체 밖에 배치 |
 | 8B TRIBUTE | [Marantz 8B 자료](https://www.hifiengine.com/manual_library/marantz/8b.shtml) | EL34 푸시풀 시대의 샴페인 섀시와 관 배열을 출발점으로 스모크 갤러리·바이어스 미터를 재구성 |
 | 91E TRIBUTE | [Western Electric 91E 공식 페이지](https://www.westernelectric.com/91e) | 300B 싱글엔디드, 아이보리·다크 대비와 벌룬관을 출발점으로 정류관 지연과 단일 미터를 재구성 |
 | E-303 TRIBUTE | [Accuphase E-303 사진 자료](https://www.hifido.co.jp/sold/23-41462-27564-00.html?LNG=E), [VintageChief 전면 사진](https://www.vintagechief.com/accuphase-e-303-amplifier-20919) | 밝은 실버·옅은 샴페인 패널, 독립 듀얼 미터, 소형 SPEAKERS/MC LOAD/HEAD AMP 버튼군, LOUDNESS·BASS·TREBLE, 대형 VOLUME과 얇은 BALANCE 레버 |
-| McIntosh MA2375 | [McIntosh 공식 제품 페이지](https://www.mcintoshlabs.com/products/integrated-amplifiers/MA2375), [제품 소개 사진](https://www.ecoustics.com/products/mcintosh-ma2375-tube-integrated-amplifier/) | 넓은 블랙글라스 상부, 듀얼 블루 미터, 중앙 표시창, KT88 크롬 케이지 4개, 직선형 스테인리스 하부와 5밴드 톤 |
+| McIntosh MA2375 | [McIntosh 공식 제품 페이지](https://www.mcintoshlabs.com/products/integrated-amplifiers/MA2375), 사용자 제공 정면·측면 사진 | 넓은 블랙글라스 상부, 듀얼 블루 미터, 중앙 표시창, 전면 크롬 케이지 4개, 직선형 스테인리스 하부와 5밴드 톤. v176은 미터 개구부 확대·표시창 단순화·케이지 반사와 실제 조작 좌표를 수정 |
 
 ## 카세트 데크 5종
 
 | 공개 모델 | 사진·자료 | SVG에 반영한 식별 포인트 |
 |---|---|---|
 | Nakamichi Dragon | [Dragon 사용 설명서](https://www.richardhess.com/manuals/Nakamichi/nakamichi_Dragon_ops.pdf), [Wikimedia Commons 전면 사진](https://commons.wikimedia.org/wiki/File:Nakamichi_Dragon_-_High_End_Cassette_Deck_with_Auto_Reverse.jpg) | 좌측 POWER/TIMER/EJECT와 방향·Auto Azimuth 표시가 있는 작은 카세트 도어, 중앙 4자리 카운터·세로 L/R 미터, 4행 트랜스포트/캘리브레이션 매트릭스, 우측 레벨 노브·필터 열 |
-| Revox B215 | [Revox 공식](https://revox.com/us/classic/classic-products/173/b215-cassette-deck?c=230), [Wikimedia Commons · CC0](https://commons.wikimedia.org/wiki/File:Revox_B215_cassette_deck.jpg) | 중앙 오픈 트랜스포트, 좌측 모듈 키패드, 녹색 디지털 표시, 스튜디오형 블랙 패널 |
-| Tandberg TCD 3014A | [HiFi Wiki](https://hifi-wiki.com/index.php/Tandberg_TCD_3014_A) | 오픈 트랜스포트, 우드 케이스, 대형 조정 노브와 웜 아날로그 미터 |
+| Revox B215 | [Wikimedia Commons 정면 사진](https://commons.wikimedia.org/wiki/File:Revox_B215_cassette_deck.jpg) | 은색 상단의 왼쪽 LCD와 오른쪽 트랜스포트 키, 검은색 하단의 중앙 오픈 카세트와 양쪽 격자 키. 종전 검은 일체형 패널·발광 LED 묘사는 정정 |
+| Tandberg TCD 3014A | [Tandberg 1985년 제조사 카탈로그, 6쪽](https://snw.lonningdal.no/tandberg/catalogs/TandbergCatalog1985_US.pdf) | 왼쪽 카세트, 오른쪽 상단 가로 레벨 표시, 그 아래 원형 키와 하단 조정 노브. 종전 바늘 미터와 왼쪽 4노브 배치는 정정. 목재 외곽은 앱에서 선택한 마감 |
 | Pioneer CT-F1250 | [Pioneer 사용 설명서](https://akdatabase.com/AKview/albums/userpics/10004/Pioneer%20CTF1250%20Owners.pdf) | 월넛 케이스, 헤어라인 실버, 플렉시 도어, 블루 카운터와 플루로스캔 미터 |
 | TEAC W-990RX | [HiFi Wiki](https://hifi-wiki.com/index.php/Teac_W-990_RX) | 좌우 더블 웰, 중앙 제어부, 독립 A/B 트랜스포트와 고속 더빙 문법 |
 
@@ -59,7 +61,7 @@ W-990RX의 투명 릴 창 길이와 좌우 카세트 중심은 실물 사진에�
 
 | 공개 모델 | 사진·자료 | SVG에 반영한 식별 포인트 |
 |---|---|---|
-| Technics SL-1200MK2 | [Technics 공식 50주년 아카이브](https://www.technics.com/global/home/sl1200/50th-anniversary.html) | 실버 다이캐스트 베이스, 플래터 스트로브 도트, 우측 피치 슬라이더, 좌측 시작 버튼 |
+| Technics SL-1200MK2 | [Technics 공식 계보](https://www.technics.com/global/home/sl1200/heritage.html), [정상 방향 상면 사진](https://prosoundlighting.com.au/products/hire-technics-sl1200-mk2-turntable) | 실버 다이캐스트 베이스, 스트로브 도트, 우측 피치 슬라이더, 왼쪽 하단 사각 START/STOP 키와 별도 전원 노브. 실물 MK2에 없는 피치 리셋 버튼은 앱 조작 영역으로 분리 |
 | Thorens TD 124 | [Thorens 공식 역사](https://www.thorens.com/en/history.html) | 우드 플린스, 아이보리 모터보드, 별도 4단 속도 선택부와 계측기풍 인쇄 |
 | Garrard 301 | [Garrard 공식 Heritage](https://www.garrardturntables.co.uk/heritage/) | 크림 모터 유닛, 묵직한 우드 플린스, 속도 미세 조정과 브레이크 레버, 필기체 배지 |
 | Linn Sondek LP12 | [Linn 공식 역사](https://radio.linn.co.uk/about/our-story) | 미니멀한 검정 상판, 두꺼운 목재 플린스, 작은 전원 버튼과 절제된 서스펜디드 구조 |

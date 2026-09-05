@@ -1024,6 +1024,7 @@ function svgButtonize(id, label) {
     el.setAttribute("role", "button");
     const t = el.querySelector("title");
     el.setAttribute("aria-label", label || (t ? t.textContent : ""));
+    if (el.tagName.toLowerCase() === "button") return;
     el.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
@@ -2364,7 +2365,10 @@ function fpKnob(svg, cx, cy, r, keyOrFn, o) {
     svg.appendChild(ind);
     const paint = () => {
         const t = (fpGet(keyOf(), o.def) - o.min) / (o.max - o.min);
-        ind.setAttribute("transform", "rotate(" + (-135 + Math.max(0, Math.min(1, t)) * 270).toFixed(1) + " " + cx + " " + cy + ")");
+        const angle = (-135 + Math.max(0, Math.min(1, t)) * 270).toFixed(1);
+        ind.setAttribute("transform", o.yScale
+            ? `translate(${cx} ${cy}) scale(1 ${o.yScale}) rotate(${angle}) translate(${-cx} ${-cy})`
+            : `rotate(${angle} ${cx} ${cy})`);
     };
     const hit = document.createElementNS(SVG_NS, "circle");
     hit.setAttribute("cx", cx);
@@ -2555,10 +2559,19 @@ function bindAmpFrontPanel() {
     const phones = (cx, cy) => fpButton(svg, cx - 22, cy - 22, 44, 44, "헤드폰 단자", "PHONES — 단자는 장식이지만, 실물이라면 여기 꽂았을 겁니다", () =>
         fpNote("PHONES — 헤드폰을 꽂으면 스피커가 죽는 단자입니다. 브라우저에서는 시스템 볼륨이 그 역할을 합니다."));
     if (ampModelId === "mc2105") {
-        fpKnob(svg, 560, 442, 46, "mc2105.gainL", { label: "L GAIN — 좌채널 트림", min: 0, max: 1.4, def: 1, fmt: FP_PCT, ink: "#9fd8ff" });
-        fpKnob(svg, 1440, 442, 46, "mc2105.gainR", { label: "R GAIN — 우채널 트림", min: 0, max: 1.4, def: 1, fmt: FP_PCT, ink: "#9fd8ff" });
-        power(252, 398, 78, 78);
-        fpButton(svg, 1656, 384, 92, 60, "스피커 전환", "SPEAKERS — 스피커 연결 차단/복구 (세션 한정)", fpToggleSpeakers);
+        fpKnob(svg, 320, 709, 60, "mc2105.gainL", { label: "L GAIN — 좌채널 트림", min: 0, max: 1.4, def: 1, fmt: FP_PCT, ink: "#34463b" });
+        fpKnob(svg, 940, 709, 60, "mc2105.gainR", { label: "R GAIN — 우채널 트림", min: 0, max: 1.4, def: 1, fmt: FP_PCT, ink: "#34463b" });
+        power(1630, 639, 140, 140);
+        fpButton(svg, 1310, 639, 140, 140, "스피커 전환", "SPEAKER — 스피커 연결 차단/복구 (세션 한정)", () => { fpToggleSpeakers(); refSyncMCControls(); });
+        fpButton(svg, 560, 639, 140, 140, "미터 범위", "METER RANGE — 0 / −10 / −20 / OFF", () => {
+            const ranges = [0, -10, -20, 'off'];
+            const next = ranges[(ranges.indexOf(fpGet('mc2105.meterRange', 0)) + 1) % ranges.length];
+            fpSet('mc2105.meterRange', next);
+            refSyncMCControls();
+            fpNote('METER RANGE ' + (next === 'off' ? 'OFF' : next + ' dB') + ' — 미터 감도만 변경');
+        });
+        refSyncMCControls();
+        phones(1140, 712);
     } else if (ampModelId === "el34") {
         power(552, 342, 96, 76);
     } else if (ampModelId === "300b") {
@@ -2602,15 +2615,18 @@ function bindAmpFrontPanel() {
         phones(350, 608);
     } else if (ampModelId === "ma2375") {
         [720, 860, 1000, 1140, 1280].forEach((cx, i) => {
-            fpKnob(svg, cx, 690, 38, "ma2375.tone" + i, {
-                label: "TONE " + ["30Hz", "250Hz", "1kHz", "4kHz", "10kHz"][i], min: -8, max: 8, def: 0, fmt: FP_DB, ink: "#9fd8ff"
+            const point = ma2375PanelPoint(cx, 690);
+            fpKnob(svg, point.x, point.y, 31, "ma2375.tone" + i, {
+                label: "TONE " + ["30Hz", "250Hz", "1kHz", "4kHz", "10kHz"][i], min: -8, max: 8, def: 0, fmt: FP_DB, ink: "#e0e0d3", yScale: .65
             });
         });
-        fpKnob(svg, 300, 690, 38, () => "ma2375.trim." + (deckPlaying ? "tape" : phonoActive ? "phono" : "radio"), {
-            label: "INPUT TRIM — 현재 소스 게인 기억", min: 0.5, max: 1.6, def: 1, fmt: FP_PCT, ink: "#9fd8ff"
+        const input = ma2375PanelPoint(300, 690);
+        fpKnob(svg, input.x, input.y, 61, () => "ma2375.trim." + (deckPlaying ? "tape" : phonoActive ? "phono" : "radio"), {
+            label: "INPUT TRIM — 현재 소스 게인 기억", min: 0.5, max: 1.6, def: 1, fmt: FP_PCT, ink: "#e0e0d3", yScale: .65
         });
-        power(1458, 680, 64, 62);
-        phones(540, 707);
+        const led = ma2375PanelPoint(1490, 711), jack = ma2375PanelPoint(540, 707);
+        power(led.x-32, led.y-31, 64, 62);
+        phones(jack.x, jack.y);
     }
     paintUnitPower();   // 모델 교체 후에도 전원 상태 표시 유지
 }
@@ -2692,6 +2708,7 @@ function paintUnitPower() {
     dim("tunerStage", unitOn("tuner"));
     dim("ampStage", unitOn("amp"));
     dim("deckStage", unitOn("deck"));
+    if (ampModelId === "mc2105") refSyncMCControls();
     tsPanelState = "";           // 전원 액추에이터·LED 즉시 갱신
     if (typeof tsSyncPanel === "function" && tunerCfg) tsSyncPanel();
 }
@@ -3094,7 +3111,7 @@ function bindTtModelControls() {
     if (!svg) return;
     const vbY = (clientY) => {
         const r = svg.getBoundingClientRect();
-        return (clientY - r.top) / r.height * svg.viewBox.baseVal.height;
+        return svg.viewBox.baseVal.y + (clientY - r.top) / r.height * svg.viewBox.baseVal.height;
     };
     // SL-1200: 피치 페이더 ±8% + QUARTZ LOCK. WebKit은 드래그 종료 시 1회 대입(원샷 규칙).
     const pitchHit = document.getElementById("ttPitchHit");
@@ -3138,7 +3155,7 @@ function bindTtModelControls() {
                 playerSubtext.textContent = "QUARTZ LOCK — 피치 0.0%";
             };
             quartz.addEventListener("click", lock);
-            quartz.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); lock(); } });
+            svgButtonize(quartz, "쿼츠 록 — 피치 0으로 복귀");
         }
         paintPitch();
     }
@@ -3442,7 +3459,7 @@ function ttVisualSpec(id, skin) {
             detail: '<g pointer-events="none"><circle cx="196" cy="550" r="24" fill="url(#ttChrome)" stroke="#282a2e" stroke-width="2"/><circle cx="196" cy="550" r="8" fill="#111216"/><text x="240" y="556" font-family="Arial" font-size="12" font-weight="700" letter-spacing="2.4" fill="#c8c5bc">33 / 45</text><path d="M71 282 H239" stroke="#47494e" stroke-width="1"/><text x="72" y="310" font-family="Arial" font-size="11" letter-spacing="2" fill="#787a7e">SINGLE POINT BEARING</text><text x="72" y="334" font-family="Arial" font-size="10" letter-spacing="1.6" fill="#65676b">LOW NOISE · HIGH TORQUE</text></g>' + modelScrew(78, 572, false) + modelScrew(1104, 572, false)
         }
     };
-    return specs[id] || specs.sl1200;
+    return id === 'sl1200' ? refSL1200Details(specs.sl1200) : (specs[id] || refSL1200Details(specs.sl1200));
 }
 
 function mountTurntable() {
@@ -3477,7 +3494,6 @@ function mountTurntable() {
     dustSpecks += '</g>';
     // 트랙 수에 따라 행 간격을 조인다 (최대 13트랙 — 슈만 어린이 정경까지 수용)
     const nTracks = RECORD.tracks.length;
-    const jc = jacketInk(RECORD.jacketBg);
     // 라벨 인쇄 — 실물 LP처럼 스핀들 홀 아래에 곡 리스트를 인쇄한다.
     // 8곡까지는 한 컬럼, 그 이상은 두 컬럼. 원 밖으로 나가는 긴 제목은 ttLabelClip이 자른다.
     const labelTracks = (() => {
@@ -3496,19 +3512,9 @@ function mountTurntable() {
             return '<text x="' + x + '" y="' + (342 + row * step) + '" font-family="Arial" font-size="5.8" fill="#3a2b1e" text-anchor="middle">' + (i + 1) + '. ' + tr.t + '</text>';
         }).join("");
     })();
-    // 트랙 리스트는 큰 재킷 오른쪽의 좁은 컬럼(x1690, 폭 286)으로 — 긴 제목은 ttListClip이 자른다
-    const rowStep = nTracks > 12 ? 38 : nTracks > 8 ? 42 : nTracks > 6 ? 46 : 54;
-    const rowFont = nTracks > 12 ? 13 : nTracks > 8 ? 14 : nTracks > 6 ? 15 : 16;
-    const rows = RECORD.tracks.map((tr, i) => {
-        const y = 128 + i * rowStep;
-        return '<rect id="ttTrackBg' + i + '" x="1690" y="' + (y - 26) + '" width="286" height="' + (rowStep - 6) + '" rx="6" fill="#d36a42" opacity="0"/>' +
-            '<text x="1700" y="' + y + '" font-family="Arial" font-size="' + (rowFont + 1) + '" font-weight="700" fill="' + (ttSkin.muted || "#8a7d70") + '">' + (i + 1) + '</text>' +
-            '<text x="1728" y="' + y + '" font-family="Georgia, serif" font-size="' + rowFont + '" fill="' + (ttSkin.ink || "#d9cfc0") + '">' + tr.t + '</text>' +
-            '<rect id="ttTrackHit' + i + '" x="1690" y="' + (y - 26) + '" width="286" height="' + (rowStep - 4) + '" fill="#000" fill-opacity="0" style="cursor:pointer"><title>' + tr.t + ' 재생</title></rect>';
-    }).join("");
     document.getElementById("ttStage").innerHTML =
-        // viewBox를 위아래로 40씩 넓혀(640→720) 콘텐츠 좌표는 그대로 두고 여백만 확보한다
-        '<svg class="tt-svg" viewBox="0 -40 2000 720" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="' + ttSkin.label + ' 턴테이블">' +
+        // 기기 전용 캔버스. 음반 정보와 재생 버튼은 refTurntableLayout이 HTML로 배치한다.
+        '<svg class="tt-svg" data-reference-layout="independent-turntable" viewBox="0 -40 1220 810" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="' + ttSkin.label + ' 턴테이블">' +
         '<defs>' +
         '<linearGradient id="ttWood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5d4430"/><stop offset="0.5" stop-color="#4a3524"/><stop offset="1" stop-color="#33241a"/></linearGradient>' +
         '<linearGradient id="ttWalnut" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a5b38"/><stop offset=".18" stop-color="#5b3822"/><stop offset=".55" stop-color="#75482b"/><stop offset="1" stop-color="#2b190f"/></linearGradient>' +
@@ -3531,22 +3537,11 @@ function mountTurntable() {
         '<filter id="ttShadow" x="-35%" y="-35%" width="190%" height="200%"><feGaussianBlur stdDeviation="8"/></filter>' +
         '<clipPath id="ttLabelClip"><circle cx="560" cy="330" r="83"/></clipPath>' +
         '<path id="ttLabelArc" d="M 488 330 A 72 72 0 0 1 632 330" fill="none"/>' +
-        '<clipPath id="ttJacketClip"><rect x="1170" y="76" width="508" height="508" rx="4"/></clipPath>' +
-        '<clipPath id="ttListClip"><rect x="1690" y="56" width="286" height="590"/></clipPath>' +
         '</defs>' +
-        '<rect x="0" y="-40" width="2000" height="720" rx="10" fill="' + ttSkin.plinth + '"/>' +
-        '<rect x="24" y="-16" width="1952" height="672" rx="8" fill="' + ttSkin.deck + '" stroke="#0a0a0c" stroke-width="2"/>' +
-        '<rect x="1147" y="-16" width="7" height="672" fill="#000" opacity=".36"/><path d="M1155 -8 V648" stroke="#fff" stroke-width="1" opacity=".13"/>' +
+        '<rect x="0" y="-40" width="1220" height="720" rx="10" fill="' + ttSkin.plinth + '"/>' +
+        '<rect x="24" y="-16" width="1172" height="672" rx="8" fill="' + ttSkin.deck + '" stroke="#0a0a0c" stroke-width="2"/>' +
         ttVisual.body +
         '<path d="M30 638 H1168 V652 H30 Z" fill="#08090b" opacity=".42" pointer-events="none"/><path d="M46 639 H1140" stroke="#fff" stroke-width="1.4" opacity=".2" pointer-events="none"/>' + ttVisual.brand +
-        // 레코드 브러시 — 쌓인 먼지를 닦아낸다. 게이지는 현재 먼지량.
-        '<g transform="translate(0 -24)"><rect id="ttCleanBtn" x="44" y="150" width="200" height="56" rx="8" fill="#26262b" stroke="#4a4a52" stroke-width="2" style="cursor:pointer"><title>레코드 브러시 — 판의 먼지를 닦아냅니다</title></rect>' +
-        '<rect x="60" y="170" width="44" height="16" rx="4" fill="#4a3524" pointer-events="none"/>' +
-        '<rect x="60" y="166" width="44" height="6" rx="2" fill="#6b5138" pointer-events="none"/>' +
-        '<text x="170" y="185" font-family="Arial" font-size="15" font-weight="700" letter-spacing="1" fill="#e6e5e8" text-anchor="middle" pointer-events="none">클리닝</text>' +
-        '<text x="44" y="238" font-family="Arial" font-size="10" letter-spacing="2" fill="#8a7d70">DUST</text>' +
-        '<rect x="88" y="229" width="156" height="10" rx="5" fill="#101013" stroke="#3a3a40"/>' +
-        '<rect id="ttDustBar" x="88" y="229" width="0" height="10" rx="5" fill="#b06a2a"/></g>' +
         // 플래터
         ttVisual.platterBase +
         '<g id="ttSpinG">' +
@@ -3580,52 +3575,9 @@ function mountTurntable() {
         ttVisual.detail +
         // 톤암
         ttVisual.armBase + ttVisual.arm +
-        // 앨범 재킷 — 바이닐 지름(504)급 508×508. 수납장 버튼은 위, 컨트롤·화살표는 아래 한 줄로.
-        '<g id="ttCrateBtn" style="cursor:pointer"><title>음반 수납장 열기</title>' +
-        '<rect x="1280" y="28" width="288" height="32" rx="7" fill="#26262b" stroke="#4a4a52" stroke-width="1.5"/>' +
-        '<text x="1424" y="49" font-family="Arial" font-size="13" fill="#d9cfc0" text-anchor="middle" pointer-events="none">▤ 음반 수납장 · ' + (recordIdx + 1) + ' / ' + RECORDS.length + '</text></g>' +
-        '<rect x="1178" y="86" width="508" height="508" rx="4" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/>' +
-        '<rect x="1170" y="76" width="508" height="508" rx="4" fill="' + RECORD.jacketBg + '"/>' +
-        (RECORD.cover
-            // 실제 이미지 재킷 — 위 3/4는 커버(초상·실물 커버), 아래 밴드에 인쇄 정보
-            ? '<g aria-hidden="true" pointer-events="none"><rect x="1186" y="92" width="476" height="364" fill="none" stroke="' + jc.inner + '"/><circle cx="1424" cy="266" r="130" fill="none" stroke="' + jc.line + '" stroke-width="2"/><circle cx="1424" cy="266" r="119" fill="none" stroke="' + jc.line + '" opacity=".5"/><circle cx="1424" cy="266" r="43" fill="none" stroke="' + jc.line + '"/><circle cx="1424" cy="266" r="6" fill="' + jc.title + '"/><text x="1424" y="434" font-family="Arial" font-size="14" letter-spacing="4" text-anchor="middle" fill="' + jc.sub + '">STEREO RECORDING</text></g>' +
-              '<image id="ttCoverImage" x="1170" y="76" width="508" height="396" opacity="0" href="' + PHONO_BASE + RECORD.cover + '" preserveAspectRatio="xMidYMin slice" clip-path="url(#ttJacketClip)"/>' +
-              '<rect x="1170" y="472" width="508" height="3" fill="' + RECORD.accent + '"/>' +
-              '<text x="1424" y="510" font-family="Georgia, serif" font-size="' + (RECORD.jTitle.length > 16 ? 20 : RECORD.jTitle.length > 11 ? 24 : 28) + '" font-weight="700" fill="' + jc.title + '" text-anchor="middle">' + RECORD.jTitle + '</text>' +
-              '<text x="1424" y="535" font-family="Arial" font-size="13" fill="' + jc.sub + '" text-anchor="middle">' + RECORD.jSub1 + ' · ' + RECORD.jSub2 + '</text>' +
-              '<text x="1424" y="558" font-family="Georgia, serif" font-style="italic" font-size="13" fill="' + jc.perf + '" text-anchor="middle">' + RECORD.performer + '</text>' +
-              '<text x="1424" y="577" font-family="Arial" font-size="9" letter-spacing="2" fill="' + jc.sub + '" text-anchor="middle" opacity="0.8">MAD FOR AUDIO RECORDS &#183; STEREO</text>'
-            // 커버가 없는 음반 — 활자 중심의 인쇄 재킷
-            : '<rect x="1186" y="92" width="476" height="476" fill="none" stroke="' + jc.inner + '" stroke-width="1" opacity="0.6"/>' +
-              '<text x="1424" y="230" font-family="Georgia, serif" font-size="' + (RECORD.jTitle.length > 16 ? 32 : RECORD.jTitle.length > 11 ? 40 : RECORD.jTitle.length > 6 ? 58 : 84) + '" font-weight="700" fill="' + jc.title + '" text-anchor="middle">' + RECORD.jTitle + '</text>' +
-              '<text x="1424" y="286" font-family="Arial" font-size="26" fill="' + jc.sub + '" text-anchor="middle">' + RECORD.jSub1 + '</text>' +
-              '<text x="1424" y="322" font-family="Arial" font-size="20" fill="' + jc.sub + '" text-anchor="middle">' + RECORD.jSub2 + '</text>' +
-              '<line x1="1280" y1="352" x2="1568" y2="352" stroke="' + jc.line + '" stroke-width="1"/>' +
-              '<text x="1424" y="392" font-family="Georgia, serif" font-style="italic" font-size="21" fill="' + jc.perf + '" text-anchor="middle">' + RECORD.performer + '</text>' +
-              '<rect x="1186" y="500" width="476" height="56" fill="' + RECORD.accent + '"/>' +
-              '<text x="1424" y="536" font-family="Arial" font-size="17" letter-spacing="2" fill="#f0e8d0" text-anchor="middle">MAD FOR AUDIO RECORDS &#183; STEREO</text>') +
-        '<rect x="1170" y="76" width="508" height="508" rx="4" fill="none" stroke="' + jc.frame + '" stroke-width="2"/>' +
-        // 트랙 리스트
-        '<text x="1690" y="86" font-family="Arial" font-size="14" font-weight="700" letter-spacing="2" fill="' + (ttSkin.muted || "#8a7d70") + '">SIDE ' + (RECORD.side || 'A') + '</text>' +
-        '<g clip-path="url(#ttListClip)">' + rows + '</g>' +
-        // 컨트롤 — 재킷 아래 한 줄: START · 33 · 45 · 이전/다음 음반
-        '<rect id="ttPowerBtn" x="1046" y="592" width="110" height="58" rx="8" fill="#26262b" stroke="#4a4a52" stroke-width="2" style="cursor:pointer"><title>턴테이블 전원 — 끄면 톤암이 복귀하고, 대기 중인 방송이 있으면 연결됩니다</title></rect>' +
-        '<circle id="ttPwrLed" cx="1072" cy="621" r="6" fill="#3a2012"/>' +
-        '<text x="1114" y="627" font-family="Arial" font-size="13" font-weight="700" letter-spacing="1.5" fill="#e6e5e8" text-anchor="middle" pointer-events="none">POWER</text>' +
-        '<rect id="ttStartBtn" x="1170" y="592" width="180" height="58" rx="8" fill="#26262b" stroke="#4a4a52" stroke-width="2" style="cursor:pointer"><title>START/STOP</title></rect>' +
-        '<text id="ttStartLabel" x="1260" y="628" font-family="Arial" font-size="18" font-weight="700" letter-spacing="3" fill="#e6e5e8" text-anchor="middle" pointer-events="none">START</text>' +
-        '<rect id="tt33" x="1370" y="595" width="85" height="52" rx="8" fill="#26262b" stroke="#4a4a52" style="cursor:pointer"><title>33 1/3 RPM</title></rect>' +
-        '<text x="1413" y="627" font-family="Arial" font-size="15" font-weight="700" fill="#e6e5e8" text-anchor="middle" pointer-events="none">33&#8531;</text>' +
-        '<rect id="tt45" x="1470" y="595" width="85" height="52" rx="8" fill="#26262b" stroke="#4a4a52" style="cursor:pointer"><title>45 RPM (빠른 재생)</title></rect>' +
-        '<text x="1513" y="627" font-family="Arial" font-size="15" font-weight="700" fill="#e6e5e8" text-anchor="middle" pointer-events="none">45</text>' +
-        '<circle id="ttPrevRec" cx="1600" cy="621" r="24" fill="#26262b" stroke="#4a4a52" stroke-width="2" style="cursor:pointer"><title>이전 음반</title></circle>' +
-        '<text x="1600" y="630" font-family="Georgia, serif" font-size="26" fill="#d9cfc0" text-anchor="middle" pointer-events="none">&#8249;</text>' +
-        '<circle id="ttNextRec" cx="1656" cy="621" r="24" fill="#26262b" stroke="#4a4a52" stroke-width="2" style="cursor:pointer"><title>다음 음반</title></circle>' +
-        '<rect id="ttJacketHit" x="1170" y="76" width="508" height="508" fill="#000000" fill-opacity="0" style="cursor:zoom-in"><title>재킷 크게 보기</title></rect>' +
-        '<text x="1656" y="630" font-family="Georgia, serif" font-size="26" fill="#d9cfc0" text-anchor="middle" pointer-events="none">&#8250;</text>' +
-        '<text x="60" y="672" font-family="Arial" font-size="12" fill="' + (ttSkin.muted || "#8a7d70") + '">' + RECORD.credit + '</text>' +
         '</svg>';
 
+    refTurntableLayout(document.getElementById("ttStage"), { ...RECORD, __plinth: ttSkin.plinth }, recordIdx, RECORDS.length);
     const coverImage = document.getElementById("ttCoverImage");
     if (coverImage) coverImage.addEventListener("load", () => coverImage.setAttribute("opacity", "1"), { once: true });
     applyPanelLighting(document.querySelector("#ttStage svg"));
@@ -3675,6 +3627,10 @@ function mountTurntable() {
     svgButtonize("ttPrevRec", "이전 음반");
     svgButtonize("ttNextRec", "다음 음반");
     svgButtonize("ttCrateBtn", "음반 수납장 열기");
+    for (const [id, target, label] of [["ttHardwareStart", "ttStartBtn", "기기 START/STOP"], ["ttHardwarePower", "ttPowerBtn", "기기 전원"]]) {
+        const part = document.getElementById(id);
+        if (part) { part.addEventListener('click', () => document.getElementById(target).click()); svgButtonize(part, label); }
+    }
     RECORD.tracks.forEach((tr, i) => svgButtonize("ttTrackHit" + i, tr.t + " 재생"));
     updatePhonoVisuals();
 }
@@ -3773,15 +3729,15 @@ function updatePhonoVisuals() {
     const pwrLed = document.getElementById("ttPwrLed");
     if (pwrLed) pwrLed.setAttribute("fill", phonoActive ? "#ff7a2a" : "#3a2012");
     RECORD.tracks.forEach((tr, i) => {
-        const bg = document.getElementById("ttTrackBg" + i);
-        if (bg) bg.setAttribute("opacity", i === phonoTrack ? "0.22" : "0");
+        const row = document.getElementById("ttTrackHit" + i);
+        if (row) row.setAttribute("aria-current", String(i === phonoTrack));
     });
     const lbl = document.getElementById("ttStartLabel");
     if (lbl) lbl.textContent = (phonoActive && isPlaying) ? "STOP" : "START";
     const p33 = document.getElementById("tt33");
     const p45 = document.getElementById("tt45");
-    if (p33) p33.setAttribute("fill", ttRpm45 ? "#26262b" : "#6b3a22");
-    if (p45) p45.setAttribute("fill", ttRpm45 ? "#6b3a22" : "#26262b");
+    if (p33) p33.setAttribute("aria-pressed", String(!ttRpm45));
+    if (p45) p45.setAttribute("aria-pressed", String(ttRpm45));
 }
 
 
@@ -5077,7 +5033,7 @@ function ttFrame(now) {
     const dustG = document.getElementById("ttDustG");
     if (dustG) dustG.setAttribute("opacity", (ttDust * 0.85).toFixed(2));
     const dustBar = document.getElementById("ttDustBar");
-    if (dustBar) dustBar.setAttribute("width", (ttDust * 156).toFixed(1));
+    if (dustBar) dustBar.style.width = (ttDust * 100).toFixed(1) + "%";
     const brushPad = document.getElementById("ttBrushPad");
     if (brushPad) brushPad.setAttribute("opacity", cleaning ? "1" : "0");
 
@@ -5213,6 +5169,10 @@ function ttFrame(now) {
         const n = document.getElementById(id);
         if (!n) return;
         let sig = id.startsWith("amp") ? vuSig * ampWarm : deckSig;
+        if (id.startsWith("amp") && ampModelId === "mc2105") {
+            const range = fpGet('mc2105.meterRange', 0);
+            sig = range === 'off' ? 0 : Math.min(1, sig * Math.pow(10, -Number(range) / 20));
+        }
         if (id.startsWith("amp") && ampRectUntil && now < ampRectUntil) sig = 0;   // 정류관 예열 중
         // 8B: BIAS 모드에서는 좌측 미터가 신호 대신 채널 바이어스를 가리킨다 —
         // 켠 직후엔 낮았다가 관이 달아오르며 정격(중앙)으로 올라온다
@@ -5231,7 +5191,7 @@ function ttFrame(now) {
                     const on = segmentIndex < lit;
                     const color = on ? segment.dataset.on : segment.dataset.off;
                     segment.style.fill = color;
-                    segment.style.filter = (on && !IS_TV) ? "drop-shadow(0 0 3px " + color + ")" : "none";
+                    segment.style.filter = (on && !IS_TV && n.dataset.meterGlow !== "none") ? "drop-shadow(0 0 3px " + color + ")" : "none";
                 });
             }
             return;

@@ -25,7 +25,7 @@ const selectors = {
     eq: "#eqStage svg",
     amp: "#ampStage svg",
     deck: "#deckStage svg",
-    turntable: "#ttStage svg",
+    turntable: "#ttStage",
     timer: "#timerStage svg",
     solo: "#soloStage svg",
 };
