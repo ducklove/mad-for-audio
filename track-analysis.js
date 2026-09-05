@@ -10,7 +10,7 @@
     const pending = new Map();
     const completed = new Set();
     const previewURLs = new Set();
-    let sending = false, refreshing = false, connected = false;
+    let sending = false, refreshing = false, connected = false, available = false;
     const host = document.getElementById("trackAnalysisPanel");
     if (!host) return;
     const el = (tag, text, cls) => {
@@ -29,6 +29,14 @@
     enabledInput.checked = config.enabled === true;
     cloudInput.checked = config.cloudFallback !== false;
     capInput.value = Number.isInteger(config.maxCloudSeconds) ? config.maxCloudSeconds / 60 : 10;
+    function setAvailable(value) {
+        available = value;
+        // 직접 PC 연결 링크를 연 경우에만 실패/설치 안내를 표시한다.
+        host.hidden = !available && pairingTicket === null;
+        [enabledInput, cloudInput, capInput].forEach(input => { input.disabled = !available; });
+        document.querySelectorAll("[data-analysis-res]").forEach(button => { button.hidden = !available; });
+    }
+    setAvailable(false);
     function save() {
         config = {token: tokenInput.value.trim(), enabled: enabledInput.checked,
             cloudFallback: cloudInput.checked, maxCloudSeconds: Math.max(0, Math.min(60, Number(capInput.value) || 0)) * 60};
@@ -36,6 +44,7 @@
     }
     [enabledInput, cloudInput, capInput].forEach(input => input.addEventListener("change", save));
     function options() {
+        if (!available) return null;
         return {enabled: true, cloudFallback: config.cloudFallback !== false,
             maxCloudSeconds: Number.isInteger(config.maxCloudSeconds) ? config.maxCloudSeconds : 600};
     }
@@ -160,14 +169,15 @@
         try {
             const health = await (await request("/health")).json();
             connected = true;
+            setAvailable(health.localConfigured === true);
             message.textContent = `${health.localConfigured ? "PC 분석 서비스 연결됨" : "PC 모델 설치가 필요합니다"} · ${health.geminiConfigured ? (health.geminiProvider === "openrouter" ? "OpenRouter · Gemini 보완 사용 가능" : "Gemini 보완 사용 가능") : "Gemini 키 미등록 · 로컬 분석 사용"}${pending.size ? ` · 전송 대기 ${pending.size}건` : ""}`;
             render(await (await request("/jobs")).json());
-        } catch (error) { connected = false; message.textContent = error.message; }
+        } catch (error) { connected = false; setAvailable(false); message.textContent = error.message; }
         finally { refreshing = false; }
         if (connected) void flush();
     }
     async function flush() {
-        if (sending || !config.token || !pending.size) return;
+        if (sending || !available || !config.token || !pending.size) return;
         sending = true;
         try {
             for (const [id, record] of pending) {
@@ -195,9 +205,10 @@
     host.querySelector("[data-analysis-connect]").addEventListener("click", () => { save(); void refresh(); });
     host.querySelector("[data-analysis-refresh]").addEventListener("click", () => void refresh());
     window.MFA_TrackAnalysis = Object.freeze({register, options,
-        forNewReservation: () => config.enabled ? options() : null});
+        isAvailable: () => available,
+        forNewReservation: () => available && config.enabled ? options() : null});
     // 연결이 꺼져 있어도 다음 앱 실행 시 IndexedDB의 원본에서 재전송한다.
-    setInterval(() => { if (config.token) { void flush(); if (!host.closest("[hidden]")) void refresh(); } }, 15000);
+    setInterval(() => { if (config.token) void refresh(); }, 15000);
     async function pairPC() {
         // 이 파일 뒤에 bootstrap.js가 MFA_READY를 만든다. 첫 방문의 느린 로딩도 기다린다.
         if (document.readyState === "loading") {

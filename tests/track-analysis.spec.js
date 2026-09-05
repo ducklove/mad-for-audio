@@ -15,6 +15,57 @@ test.describe("예약 녹음 곡 분리", () => {
         await page.evaluate(() => { openSchedule(); schedSetView("res"); document.getElementById("trackAnalysisPanel").open = true; });
     }
 
+    async function addReservationForTest(page, title, trackAnalysis) {
+        return page.evaluate(({title, trackAnalysis}) => {
+            const day = new Date(Date.now() + 86400000);
+            return addReservation({stationId: "kbs1fm", title, startMin: 1200, endMin: 1260,
+                repeat: "once", ymd: FMSchedule.ymdOf(day), ...(trackAnalysis === undefined ? {} : {trackAnalysis})});
+        }, {title, trackAnalysis});
+    }
+
+    test("미연결 기기는 곡 분리 메뉴·버튼·PC 접속 시도가 없음", async ({page, context}) => {
+        let requests = 0;
+        await context.route("http://127.0.0.1:8766/**", route => { requests++; return route.abort(); });
+        await page.setViewportSize({width: 390, height: 844});
+        await page.reload();
+        await show(page);
+        const reservation = await addReservationForTest(page, "일반 녹음");
+        expect(reservation.trackAnalysis).toBeNull();
+        await expect(page.locator("#trackAnalysisPanel")).toBeHidden();
+        await expect(page.getByRole("button", {name: /^곡 분리/})).toHaveCount(0);
+        await expect(page.getByRole("button", {name: "＋ 직접 입력 예약"})).toBeVisible();
+        expect(requests).toBe(0);
+    });
+
+    test("서버 연결과 모델 준비에 따라 표시하고 기존 설정은 보존", async ({page, context}) => {
+        let ready = true, offline = false;
+        await context.route("http://127.0.0.1:8766/**", route => {
+            if (offline) return route.abort();
+            return route.fulfill({json: route.request().url().endsWith("/health") ? {localConfigured: ready} : []});
+        });
+        await page.evaluate(() => localStorage.setItem("fmRadio.trackAnalysis", JSON.stringify({token: "test", enabled: true})));
+        await page.reload(); await show(page);
+        await expect(page.locator("#trackAnalysisPanel")).toBeVisible();
+        const original = await addReservationForTest(page, "분리 예약");
+        expect(original.trackAnalysis.enabled).toBe(true);
+        await expect(page.getByRole("button", {name: "곡 분리 켬", exact: true})).toBeVisible();
+        ready = false;
+        await page.getByRole("button", {name: "분석 결과 새로고침"}).click();
+        await expect(page.locator("#trackAnalysisPanel")).toBeHidden();
+        expect((await addReservationForTest(page, "모델 미설치 예약")).trackAnalysis).toBeNull();
+        await expect(page.getByRole("button", {name: /^곡 분리/})).toHaveCount(0);
+        offline = true;
+        await page.reload(); await show(page);
+        await expect(page.locator("#trackAnalysisPanel")).toBeHidden();
+        expect((await addReservationForTest(page, "연결 끊김 예약")).trackAnalysis).toBeNull();
+        expect(await page.evaluate(() => JSON.parse(localStorage.getItem("fmRadio.trackAnalysis")).enabled)).toBe(true);
+        offline = false; ready = true;
+        await page.reload(); await show(page);
+        await expect(page.locator("#trackAnalysisPanel")).toBeVisible();
+        await expect(page.getByRole("button", {name: "곡 분리 켬", exact: true})).toHaveCount(1);
+        expect((await addReservationForTest(page, "재연결 예약")).trackAnalysis.enabled).toBe(true);
+    });
+
     test("PC 연결 링크를 한 번 교환하고 배포 환경 설정을 유지", async ({page, context}) => {
         const ticket = "t".repeat(43), token = "p".repeat(43);
         let pairs = 0;
@@ -42,8 +93,13 @@ test.describe("예약 녹음 곡 분리", () => {
         expect(pairs).toBe(1);
     });
 
-    test("예약별 선택 저장과 기존 예약 기본값 유지", async ({page}) => {
+    test("예약별 선택 저장과 기존 예약 기본값 유지", async ({page, context}) => {
+        await context.route("http://127.0.0.1:8766/**", route => route.fulfill({json:
+            route.request().url().endsWith("/health") ? {localConfigured: true} : []}));
+        await page.evaluate(() => localStorage.setItem("fmRadio.trackAnalysis", JSON.stringify({token: "test"})));
+        await page.reload();
         await show(page);
+        await expect(page.locator("#trackAnalysisPanel")).toBeVisible();
         const add = async title => page.evaluate(title => {
             const day = new Date(Date.now() + 86400000);
             return addReservation({stationId: "kbs1fm", title, startMin: 1200, endMin: 1260,

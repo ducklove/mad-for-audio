@@ -428,6 +428,7 @@
 }
 /* PC 곡 분리 설정과 결과는 예약 녹음 화면 안에서 관리한다. */
 .analysis-panel { margin: 12px 0; padding: 12px; border: 1px solid #766249; border-radius: 6px; color: inherit; }
+.analysis-panel[hidden], [data-analysis-res][hidden] { display: none !important; }
 .analysis-panel summary { cursor: pointer; font-weight: 600; }
 .analysis-panel p { font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
 .analysis-panel label { display: block; margin: 10px 0; font-size: 12px; }

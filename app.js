@@ -8106,10 +8106,13 @@ function renderResList() {
         const btnAnalysis = document.createElement("button");
         btnAnalysis.type = "button";
         btnAnalysis.className = "res-btn";
+        btnAnalysis.dataset.analysisRes = "";
+        btnAnalysis.hidden = !window.MFA_TrackAnalysis?.isAvailable();
         btnAnalysis.textContent = res.trackAnalysis?.enabled ? "곡 분리 켬" : "곡 분리 끔";
         btnAnalysis.setAttribute("aria-pressed", String(!!res.trackAnalysis?.enabled));
         btnAnalysis.title = "다음 녹음부터 적용됩니다. 켤 때 위 PC 분석 설정을 사용합니다.";
         btnAnalysis.addEventListener("click", () => {
+            if (!window.MFA_TrackAnalysis?.isAvailable()) return;
             res.trackAnalysis = res.trackAnalysis?.enabled ? null : window.MFA_TrackAnalysis?.options();
             resSave();
             renderResList();
