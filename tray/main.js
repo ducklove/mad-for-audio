@@ -143,6 +143,8 @@ function isAllowedPermission(webContents, permission, details = {}, isCheck = fa
     const trusted = isTrustedPermissionOrigin(requestUrl(details, webContents));
     if (!trusted) return false;
     if (permission === "fullscreen") return true;
+    // 공식 랙 페이지에서만 같은 PC의 곡 분리 서비스로 접속한다. LAN 권한은 열지 않는다.
+    if (permission === "loopback-network") return true;
     return permission === "media"
         && ((isCheck && !Array.isArray(details.mediaTypes))
             || (Array.isArray(details.mediaTypes)

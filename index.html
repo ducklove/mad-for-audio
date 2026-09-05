@@ -42,7 +42,7 @@
     </script>
     <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-    <link rel="stylesheet" href="styles.css?v=176">
+    <link rel="stylesheet" href="styles.css?v=177">
 </head>
 <body>
     <div class="page-shell">
@@ -235,6 +235,24 @@
             <div class="sched-list" id="schedList" role="tabpanel" aria-labelledby="schedTabD0"></div>
             <div class="sched-res" id="schedResPane" role="tabpanel" aria-labelledby="schedTabRes" hidden>
                 <div class="res-diag" id="resDiag" title="예약 녹음 엔진 상태"></div>
+                <details class="analysis-panel" id="trackAnalysisPanel">
+                    <summary>곡별 자동 분리 · PC 분석</summary>
+                    <p>녹음이 끝나면 PC에서 음악만 곡별로 저장합니다. 원본은 유지하며 곡명·작곡가·연주자와 분리 구간을 확인·수정할 수 있습니다.</p>
+                    <label><input type="checkbox" data-analysis-enabled> 새 예약에 곡별 자동 분리 적용</label>
+                    <label><input type="checkbox" data-analysis-cloud checked> 불확실한 구간만 Gemini 3.8 Flash로 보완</label>
+                    <label>녹음 파일당 Gemini 전송 한도(분) <input type="number" data-analysis-cap min="0" max="60" step="1" value="10"></label>
+                    <p class="analysis-help">설정은 새 예약에 적용됩니다. 기존 예약은 각 예약의 ‘곡 분리’ 버튼으로 설정하세요. 브라우저의 로컬 네트워크 접근을 허용해야 합니다.</p>
+                    <details>
+                        <summary>PC 서비스 연결 설정</summary>
+                        <p>이 PC에서 분석 서비스를 실행한 뒤 로컬 설정 파일의 연결 코드를 입력하세요. Gemini API 키는 PC 설정 파일에만 저장합니다.</p>
+                        <label>PC 연결 코드 <input type="password" data-analysis-token autocomplete="off" spellcheck="false"></label>
+                        <button type="button" class="res-btn" data-analysis-connect>연결·저장</button>
+                        <a href="docs/RADIO_TRACK_ANALYSIS.md" target="_blank" rel="noopener">설치·사용 안내</a>
+                    </details>
+                    <p data-analysis-status role="status">PC 분석 서비스 연결을 설정하세요. 자동 분리를 꺼도 예약 녹음은 정상 작동합니다.</p>
+                    <button type="button" class="res-btn" data-analysis-refresh>분석 결과 새로고침</button>
+                    <div data-analysis-jobs></div>
+                </details>
                 <div class="res-list" id="resList"></div>
                 <button class="res-form-toggle" id="resFormToggle" type="button" onclick="toggleResForm()">＋ 직접 입력 예약</button>
                 <form class="res-form" id="resForm" hidden>
@@ -295,25 +313,26 @@
 
     <audio id="audioPlayer" crossorigin="anonymous"></audio>
 
-    <script src="stations.js?v=176"></script>
-    <script src="player-core.js?v=176"></script>
-    <script src="native-hls-capture.js?v=176"></script>
-    <script src="store.js?v=176"></script>
-    <script src="schedule.js?v=176"></script>
-    <script src="skins.js?v=176"></script>
-    <script src="component-skins.js?v=176"></script>
-    <script src="solo-skins.js?v=176"></script>
-    <script src="reference-layouts.js?v=176"></script>
-    <script src="model-registry.js?v=176"></script>
-    <script src="animation-scheduler.js?v=176"></script>
-    <script src="engine.js?v=176"></script>
-    <script src="deck.js?v=176"></script>
-    <script src="bootstrap.js?v=176"></script>
-    <script src="ui-controls.js?v=176"></script>
+    <script src="stations.js?v=177"></script>
+    <script src="player-core.js?v=177"></script>
+    <script src="native-hls-capture.js?v=177"></script>
+    <script src="store.js?v=177"></script>
+    <script src="track-analysis.js?v=177"></script>
+    <script src="schedule.js?v=177"></script>
+    <script src="skins.js?v=177"></script>
+    <script src="component-skins.js?v=177"></script>
+    <script src="solo-skins.js?v=177"></script>
+    <script src="reference-layouts.js?v=177"></script>
+    <script src="model-registry.js?v=177"></script>
+    <script src="animation-scheduler.js?v=177"></script>
+    <script src="engine.js?v=177"></script>
+    <script src="deck.js?v=177"></script>
+    <script src="bootstrap.js?v=177"></script>
+    <script src="ui-controls.js?v=177"></script>
     <script>
         // 실행 중 버전 — 자산 링크의 ?v=가 단일 진실 (bump-version.py가 올린다)
         const RUNNING_ASSET_VERSION = (() => {
-            const link = document.querySelector('link[rel="stylesheet"][href^="styles.css?v=176"]');
+            const link = document.querySelector('link[rel="stylesheet"][href^="styles.css?v=177"]');
             const m = link && /[?&]v=(\d+)/.exec(link.getAttribute("href"));
             return m ? Number(m[1]) : null;
         })();

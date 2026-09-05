@@ -4,7 +4,7 @@
  * 네트워크로 그대로 통과시킨다 — 오디오 range 요청과 실시간성을 깨지 않기 위함.
  */
 const CACHE_PREFIX = "fm-radio-";
-const CACHE = "fm-radio-v176";
+const CACHE = "fm-radio-v177";
 // 일반 URL과 분리한 합성 키를 사용한다. manual.html 같은 다른 내비게이션 응답이
 // 오프라인 앱 셸을 덮어쓰지 못하게 하기 위함이다.
 const NAVIGATION_CACHE_KEY = new URL("__mfa_navigation_shell__", self.registration.scope).href;
@@ -17,29 +17,30 @@ const CORE = [
     "widget.html",
     "turntable.html",
     "embed.html",
-    "styles.css?v=176",
-    "styles-foundation.css?v=176",
-    "styles-library.css?v=176",
-    "styles-schedule.css?v=176",
-    "styles-tape.css?v=176",
-    "stations.js?v=176",
-    "player-core.js?v=176",
-    "app-runtime-core.js?v=176",
-    "native-hls-capture.js?v=176",
-    "store.js?v=176",
-    "schedule.js?v=176",
-    "model-registry.js?v=176",
-    "skins.js?v=176",
-    "component-skins.js?v=176",
-    "solo-skins.js?v=176",
-    "reference-layouts.js?v=176",
-    "engine.js?v=176",
-    "animation-scheduler.js?v=176",
-    "deck.js?v=176",
-    "ui-controls.js?v=176",
-    "records.json?v=176",
-    "bootstrap.js?v=176",
-    "app.js?v=176",
+    "styles.css?v=177",
+    "styles-foundation.css?v=177",
+    "styles-library.css?v=177",
+    "styles-schedule.css?v=177",
+    "styles-tape.css?v=177",
+    "stations.js?v=177",
+    "player-core.js?v=177",
+    "app-runtime-core.js?v=177",
+    "native-hls-capture.js?v=177",
+    "store.js?v=177",
+    "track-analysis.js?v=177",
+    "schedule.js?v=177",
+    "model-registry.js?v=177",
+    "skins.js?v=177",
+    "component-skins.js?v=177",
+    "solo-skins.js?v=177",
+    "reference-layouts.js?v=177",
+    "engine.js?v=177",
+    "animation-scheduler.js?v=177",
+    "deck.js?v=177",
+    "ui-controls.js?v=177",
+    "records.json?v=177",
+    "bootstrap.js?v=177",
+    "app.js?v=177",
     "manifest.webmanifest",
     "icons/icon.svg",
     "icons/icon-192.png",
@@ -58,7 +59,7 @@ const CDN = [
 // 특정 셸에서만 쓰는 자산은 설치 실패를 유발하지 않게 best-effort로 캐싱한다.
 // 트레이 iframe이 오프라인으로 열릴 때는 캐시가 있으면 그대로 사용할 수 있다.
 const OPTIONAL = [
-    "tray-bridge.js?v=176"
+    "tray-bridge.js?v=177"
 ];
 
 const CORE_PATHS = new Set(CORE.map((asset) => new URL(asset, self.registration.scope).pathname));

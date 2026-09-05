@@ -9,6 +9,9 @@ ref_*.jpg
 # Python 도구 실행 산출물
 __pycache__/
 *.py[cod]
+local-analysis/.venv/
+local-analysis/.moss-audio/
+local-analysis/.runtime/
 
 # 트레이 앱 (Electron)
 tray/node_modules/

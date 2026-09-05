@@ -1,0 +1,8 @@
+fastapi==0.136.0
+uvicorn==0.44.0
+httpx==0.28.1
+qwen-asr==0.0.6
+numpy>=2.0,<3
+soundfile>=0.12,<1
+tiktoken>=0.12,<1
+einops>=0.8,<1
