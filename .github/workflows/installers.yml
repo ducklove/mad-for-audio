@@ -1,0 +1,60 @@
+name: 라디오 앱 설치 파일
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: windows
+            build: npm run dist
+          - os: macos-latest
+            target: macos
+            build: npm run dist:mac
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: tray
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tray/package-lock.json
+      - run: npm ci
+      - run: npm run check
+      - run: ${{ matrix.build }}
+      - name: Windows 설치 실행
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem dist/MadForAudio-Setup-*-win-x64.exe | Select-Object -First 1
+          $installPath = Join-Path $env:RUNNER_TEMP 'MadForAudioInstalled'
+          $process = Start-Process -FilePath $installer.FullName -ArgumentList @('/S', '/currentuser', "/D=$installPath") -WindowStyle Hidden -PassThru -Wait
+          if ($process.ExitCode -ne 0) { throw "설치 실패: $($process.ExitCode)" }
+          "MFA_INSTALL_PATH=$installPath" >> $env:GITHUB_ENV
+      - name: 검증 도구 설치
+        run: npm ci --prefix ../tests --ignore-scripts
+      - name: 패키지 실행 및 설치 파일 검증
+        run: node verify-package.cjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MadForAudio-installers-${{ matrix.target }}
+          path: |
+            tray/dist/MadForAudio-*.exe
+            tray/dist/MadForAudio-*.dmg
+            tray/dist/SHA256SUMS-*.txt
+            tray/dist/verification-*.json
+          if-no-files-found: error
+          retention-days: 30

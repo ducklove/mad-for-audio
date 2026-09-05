@@ -135,13 +135,16 @@ cd tests && npm run catalog
 
 ## 트레이·메뉴바 앱 (Electron · Windows/macOS)
 
-**Windows 배포본**: [Releases에서 포터블 exe 내려받기](https://github.com/ducklove/mad-for-audio/releases/latest)
-— 설치 없이 실행하면 기본 튜너 창을 바로 열고 트레이에 상주한다
-(서명이 없어 SmartScreen 경고가 뜨면 '추가 정보 → 실행').
+**설치 파일**: [라디오 앱 1.1.0 내려받기](https://github.com/ducklove/mad-for-audio/releases/tag/tray-v1.1.0)
 
-**macOS 배포본 (Apple Silicon)**: [1.0.0 zip 내려받기](https://github.com/ducklove/mad-for-audio/releases/download/tray-v1.0.0/MadForAudio-tray-1.0.0-mac-arm64.zip)
-— 압축을 풀고 `Mad for Audio.app`을 응용 프로그램 폴더로 옮겨 실행하면 메뉴바에 상주한다
-(서명이 없어 처음 열 때 차단되면 시스템 설정 → 개인정보 보호 및 보안 → '확인 없이 열기').
+- **Windows x64**: `MadForAudio-Setup-1.1.0-win-x64.exe`를 실행해 설치 위치를 선택한다. 시작 메뉴·바탕화면 바로가기와 제거 프로그램을 제공한다.
+- **Mac Apple Silicon**: `MadForAudio-1.1.0-mac-arm64.dmg`를 열고 앱을 Applications 폴더로 드래그한다.
+- **Mac Intel**: `MadForAudio-1.1.0-mac-x64.dmg`를 같은 방법으로 설치한다.
+
+설치 파일은 **라디오 앱만** 포함한다. Python·AI 모델·곡 분석 서버·API 키는 포함하지 않는다.
+전체 오디오 시스템 화면과 방송 스트림에는 인터넷 연결이 필요하다. 곡 분석 서버는 별도 설치다.
+Windows 코드 서명과 Apple Developer ID 서명·공증은 적용하지 않아 운영체제의 실행 확인이나 차단이 발생할 수 있다.
+설정·테이프는 기존 앱과 같은 사용자 프로필에 보존하며, Windows 제거 시에도 사용자 데이터를 자동 삭제하지 않는다.
 
 시스템 트레이(Windows)·메뉴바(macOS)에 상주하며 라디오를 재생하는 Electron 앱.
 크로미엄 엔진이라 **EQ·진공관 앰프 음색과 파워미터·스펙트럼 계기가 데스크톱에서 완전 동작**한다.
@@ -166,9 +169,12 @@ macOS에서는 트레이 문법이 메뉴바에 맞게 바뀐다 — 독·Cmd+Ta
 cd tray
 npm install
 npm start          # 개발 실행 (양 플랫폼)
-npm run dist       # dist/에 Windows 포터블 exe 빌드
-npm run dist:mac   # dist/에 macOS .app(zip) 빌드
+npm run dist       # dist/에 Windows x64 설치 exe 빌드
+npm run dist:mac   # Mac에서 Apple Silicon·Intel용 dmg 빌드
 ```
+
+GitHub Actions의 **라디오 앱 설치 파일** 워크플로를 수동 실행하면 Windows·Mac에서 각각 빌드하고,
+Windows 실제 설치·실행 및 Mac 앱 실행·DMG 무결성을 검사한다. 결과에는 SHA-256 검증 파일도 포함된다.
 
 ## macOS 경량 메뉴바 앱 (WKWebView)
 
