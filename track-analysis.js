@@ -199,6 +199,10 @@
     // 연결이 꺼져 있어도 다음 앱 실행 시 IndexedDB의 원본에서 재전송한다.
     setInterval(() => { if (config.token) { void flush(); if (!host.closest("[hidden]")) void refresh(); } }, 15000);
     async function pairPC() {
+        // 이 파일 뒤에 bootstrap.js가 MFA_READY를 만든다. 첫 방문의 느린 로딩도 기다린다.
+        if (document.readyState === "loading") {
+            await new Promise(resolve => document.addEventListener("DOMContentLoaded", resolve, {once: true}));
+        }
         await window.MFA_READY;
         if (typeof window.openSchedule === "function") window.openSchedule();
         if (typeof window.schedSetView === "function") window.schedSetView("res");

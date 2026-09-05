@@ -32,6 +32,7 @@ test.describe("예약 녹음 곡 분리", () => {
         });
         await page.goto("/index.html#pc-analysis-pair=" + ticket);
         await expect(page.locator("[data-analysis-status]")).toContainText("OpenRouter · Gemini 보완 사용 가능");
+        await expect(page.locator("[data-analysis-status]")).toBeVisible();
         expect(page.url()).not.toContain(ticket);
         expect(await page.evaluate(() => JSON.parse(localStorage.getItem("fmRadio.trackAnalysis")).token)).toBe(token);
         await page.reload();
