@@ -109,6 +109,7 @@ test.describe("예약 녹음 곡 분리", () => {
                 repeat: "once", ymd: FMSchedule.ymdOf(day)});
         }, title);
         expect((await add("기존 방식")).trackAnalysis).toBeNull();
+        await page.locator("[data-analysis-settings] > summary").click();
         await page.locator("[data-analysis-enabled]").check();
         await page.locator("[data-analysis-cloud]").uncheck();
         expect((await add("곡 분리 예약")).trackAnalysis).toEqual({enabled: true, cloudFallback: false, maxCloudSeconds: 600});
@@ -182,10 +183,12 @@ test.describe("예약 녹음 곡 분리", () => {
         });
         await page.evaluate(() => localStorage.setItem("fmRadio.trackAnalysis", JSON.stringify({token: "test"})));
         await page.reload(); await show(page);
+        await page.locator(".analysis-broadcast > summary").click();
+        await page.locator(".analysis-files > summary").click();
         await page.locator(".analysis-job > summary").click();
         await expect(page.getByText(job.metadataNotice)).toBeVisible();
         await page.getByRole("button", {name: "곡 정보만 재검토", exact: true}).click();
-        expect(metadataRequests).toBe(1);
+        await expect.poll(() => metadataRequests).toBe(1);
     });
 
     test("확인 필요 곡의 메타데이터 표시와 수정", async ({page, context}) => {
@@ -202,7 +205,7 @@ test.describe("예약 녹음 곡 분리", () => {
         });
         await page.evaluate(() => localStorage.setItem("fmRadio.trackAnalysis", JSON.stringify({token: "test"})));
         await page.reload(); await page.evaluate(() => window.MFA_READY); await show(page);
-        await page.locator(".analysis-job > summary").click();
+        await page.locator(".analysis-broadcast > summary").click();
         await page.locator(".analysis-track > summary").click();
         await expect(page.locator(".analysis-track > summary")).toContainText("연주자 미확인");
         await page.locator('.analysis-edit input[name="title"]').fill("피아노 소나타");
@@ -245,9 +248,59 @@ test.describe("예약 녹음 곡 분리", () => {
         await page.getByRole("button", {name: "서버 녹음 끄기", exact: true}).click();
         await expect.poll(() => rules[1].enabled).toBe(false);
         await expect(page.getByRole("button", {name: "서버 녹음 켜기", exact: true})).toHaveCount(2);
+        await page.locator(".analysis-broadcast > summary").click();
+        await page.locator(".analysis-files > summary").click();
         await page.locator(".analysis-job > summary").click();
         const downloadPromise = page.waitForEvent("download");
         await page.getByRole("button", {name: "녹음 원본 저장", exact: true}).click();
         expect((await downloadPromise).suggestedFilename()).toBe("서버 검증.m4a");
+    });
+
+    test("방송별 카드로 묶고 날짜·채널 분리 및 곡 검색·갱신 유지", async ({page, context}, testInfo) => {
+        const make = (id, date, stationId = "kbs1fm", status = "review") => ({
+            id, name: `${stationId === "kbs1fm" ? "KBS 1FM" : "CBS 음악FM"} · 명연주 명음반`, stationId,
+            program: {title: "명연주 명음반", scheduleKnown: true, rerun: false},
+            startedAt: date, status, message: "MOSS-Audio 분석 상세 로그", source: "server-recorder",
+            tracks: [{id: 1, start: 10, end: 640, title: '피아노 소나타 17번 D장조, D.850 "가슈타이너"',
+                composer: "프란츠 슈베르트", performer: "아르카디 볼로도스 (피아노)", review: true}]
+        });
+        const jobs = [make("part-b", "2026-09-05T15:00:00+09:00"), make("part-a", "2026-09-05T14:00:00+09:00"),
+            make("yesterday", "2026-09-04T14:00:00+09:00"), make("other-channel", "2026-09-05T14:00:00+09:00", "cbsmusic", "done")];
+        jobs[0].status = "running";
+        jobs[3].tracks[0] = {...jobs[3].tracks[0], title: "첼로 모음곡 1번", composer: "바흐", performer: "요요 마", review: false};
+        await context.route("http://127.0.0.1:8766/**", route => route.fulfill({json:
+            route.request().url().endsWith("/health") ? {localConfigured: true, metadataReview: true} : jobs}));
+        await page.evaluate(() => localStorage.setItem("fmRadio.trackAnalysis", JSON.stringify({token: "test"})));
+        await page.setViewportSize({width: 520, height: 900});
+        await page.reload(); await show(page);
+        await expect(page.locator(".analysis-broadcast")).toHaveCount(3);
+        await expect(page.locator("[data-analysis-count]")).toContainText("3개 방송 · 4곡");
+        const card = page.locator(".analysis-broadcast").filter({has: page.locator(".analysis-eyebrow", {hasText: "2026-09-05 · KBS 1FM"})});
+        await expect(card.locator(".analysis-badges")).toContainText("2곡");
+        await expect(card.locator(".analysis-badges")).toContainText("분석 중");
+        await expect(page.getByText("MOSS-Audio 분석 상세 로그").first()).toBeHidden();
+        await expect(page.locator("[data-analysis-enabled]")).toBeHidden();
+        await page.screenshot({path: testInfo.outputPath("방송별-목록.png")});
+        await card.locator(":scope > summary").click();
+        await expect(card.locator(".analysis-track")).toHaveCount(2);
+        await expect(card.locator(".analysis-track-number")).toHaveText(["01", "02"]);
+        expect(await card.locator(".analysis-track").first().getAttribute("data-key")).toBe("track:part-a-1");
+        await page.screenshot({path: testInfo.outputPath("방송별-곡목록.png")});
+        expect(await page.locator("#schedResPane").evaluate(node => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
+        await page.setViewportSize({width: 390, height: 844});
+        expect(await page.locator("#schedResPane").evaluate(node => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
+        // 갱신해도 열린 방송과 곡 선택은 유지하고 새 상태는 반영한다.
+        jobs[0].status = "done";
+        await page.getByRole("button", {name: "분석 결과 새로고침"}).click();
+        await expect(card.locator(".analysis-badges")).not.toContainText("분석 중");
+        await expect(card).toHaveAttribute("open", "");
+        await page.getByRole("searchbox", {name: "방송·곡·연주자 검색"}).fill("요요 마");
+        await expect(page.locator(".analysis-broadcast")).toHaveCount(1);
+        await expect(page.locator(".analysis-eyebrow")).toContainText("CBS 음악FM");
+        await page.getByRole("searchbox").clear();
+        await page.getByLabel("방송 상태 필터").selectOption("review");
+        await expect(page.locator(".analysis-broadcast")).toHaveCount(2);
+        await page.getByLabel("방송 상태 필터").selectOption("active");
+        await expect(page.getByText("조건에 맞는 방송이 없습니다.")).toBeVisible();
     });
 });

@@ -427,7 +427,7 @@
     border-color: rgba(255, 255, 255, 0.25);
 }
 /* PC 곡 분리 설정과 결과는 예약 녹음 화면 안에서 관리한다. */
-.analysis-panel { margin: 12px 0; padding: 12px; border: 1px solid #766249; border-radius: 6px; color: inherit; }
+.analysis-panel { margin: 12px 0 20px; padding: 14px; border: 1px solid var(--line); border-radius: 14px; color: inherit; background: rgba(255,255,255,.015); }
 .analysis-panel[hidden], [data-analysis-res][hidden] { display: none !important; }
 .analysis-panel summary { cursor: pointer; font-weight: 600; }
 .analysis-panel p { font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
@@ -437,14 +437,51 @@
 .analysis-panel input[type=password] { width: min(320px, 95%); }
 .analysis-panel input[type=checkbox] { accent-color: #a88048; }
 .analysis-panel a { color: inherit; text-decoration: underline; }
-.analysis-panel button { margin: 4px; }
+.analysis-panel button { margin: 4px 4px 4px 0; }
 .analysis-panel select, .analysis-panel textarea { display: block; max-width: 100%; width: 100%; margin-top: 5px; color: inherit; background: #27231e; border: 1px solid #87765e; padding: 5px; }
 .analysis-panel .recorder-days { display: flex; flex-wrap: wrap; gap: 10px; }
 .analysis-panel .recorder-days label { display: inline-flex; gap: 4px; align-items: center; }
 .recorder-rule { border-top: 1px solid #766249; padding: 8px 0; }
 [data-recorder-panel][hidden] { display: none !important; }
-.analysis-job { border-top: 1px solid #786c5755; padding: 12px 0; overflow-wrap: anywhere; }
-.analysis-track { margin: 10px 0 0 10px; padding: 8px; border: 1px solid #786c5755; }
+.analysis-library-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; }
+.analysis-library-head h3 { margin: 0; font-size: 1rem; letter-spacing: -.02em; }
+.analysis-library-head p { margin: 5px 0 0; color: var(--muted); }
+.analysis-panel .analysis-connection { color: var(--muted); font-size: 11px; margin: 10px 0 16px; font-weight: 400; }
+.analysis-filters { display: flex; gap: 8px; margin-bottom: 14px; }
+.analysis-panel .analysis-filters input, .analysis-panel .analysis-filters select { min-width: 0; margin: 0; border: 1px solid var(--line); border-radius: 8px; padding: 10px; font: inherit; font-size: 12px; box-sizing: border-box; }
+.analysis-panel .analysis-filters input { flex: 1; width: 100%; }
+.analysis-panel .analysis-filters select { flex: 0 0 112px; width: 112px; }
+.analysis-broadcast { border: 1px solid var(--line); border-radius: 11px; background: rgba(255,255,255,.025); margin: 10px 0; overflow: hidden; }
+.analysis-broadcast-summary { display: flex; gap: 12px; padding: 16px; list-style: none; }
+.analysis-broadcast-summary::-webkit-details-marker, .analysis-track-summary::-webkit-details-marker { display: none; }
+.analysis-broadcast-summary::after { content: "＋"; margin-left: auto; color: var(--muted); font-size: 16px; align-self: center; }
+.analysis-broadcast[open] > .analysis-broadcast-summary::after { content: "−"; }
+.analysis-broadcast[open] > .analysis-broadcast-summary { border-bottom: 1px solid var(--line); }
+.analysis-broadcast-heading { min-width: 0; }
+.analysis-eyebrow { display: block; font-size: 11px; color: var(--muted); font-weight: 400; margin-bottom: 6px; }
+.analysis-broadcast-title { display: block; font-size: 15px; line-height: 1.45; overflow-wrap: anywhere; }
+.analysis-badges { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+.analysis-badge { border-radius: 5px; padding: 3px 6px; color: var(--muted); background: rgba(255,255,255,.045); font-size: 10px; font-weight: 500; }
+.analysis-badge.is-active { color: #b7d9c6; background: rgba(101,172,130,.12); }
+.analysis-badge.is-review { color: #d5b88d; background: rgba(192,150,86,.10); }
+.analysis-broadcast-body { padding: 0 14px 12px; }
+.analysis-panel .analysis-broadcast-meta { font-size: 11px; color: var(--muted); font-weight: 400; margin: 12px 0; }
+.analysis-track { margin: 0; border-top: 1px solid var(--line); }
+.analysis-track-summary { display: flex; list-style: none; align-items: baseline; gap: 10px; padding: 13px 0; }
+.analysis-track-number, .analysis-track-length { color: var(--muted); font-size: 11px; font-weight: 400; font-variant-numeric: tabular-nums; flex: none; }
+.analysis-track-name { display: grid; min-width: 0; flex: 1; gap: 4px; overflow-wrap: anywhere; }
+.analysis-track-name strong { font-size: 13px; line-height: 1.5; }
+.analysis-track-composer, .analysis-track-performer { font-size: 11px; line-height: 1.5; font-weight: 400; color: var(--muted); }
+.analysis-track-review { font-size: 10px; color: #d5b88d; font-weight: 400; margin-top: 2px; }
+.analysis-track-content { padding: 0 0 14px; }
+.analysis-files { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 6px; }
+.analysis-files > summary { font-size: 11px; color: var(--muted); }
+.analysis-job { padding: 12px 0; overflow-wrap: anywhere; }
+.analysis-job > summary { font-size: 12px; }
+.analysis-panel .analysis-empty { padding: 18px 4px; font-weight: 400; color: var(--muted); }
+.analysis-settings { border-top: 1px solid var(--line); margin-top: 16px; padding: 14px 0 0; }
+.analysis-settings > summary { color: var(--muted); font-size: 12px; }
+.analysis-panel summary:focus-visible, .analysis-panel button:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .analysis-track audio { width: 100%; margin: 8px 0; }
 .analysis-track blockquote { margin: 8px; padding-left: 10px; border-left: 2px solid #9c8159; font-size: 12px; white-space: pre-wrap; }
 .analysis-edit { display: flex; flex-wrap: wrap; gap: 8px; }

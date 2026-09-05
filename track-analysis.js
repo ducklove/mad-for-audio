@@ -25,6 +25,53 @@
     const enabledInput = host.querySelector("[data-analysis-enabled]");
     const cloudInput = host.querySelector("[data-analysis-cloud]");
     const capInput = host.querySelector("[data-analysis-cap]");
+    const searchInput = host.querySelector("[data-analysis-search]");
+    const filterInput = host.querySelector("[data-analysis-filter]");
+    let latestJobs = [], shownBroadcasts = 12;
+    const expanded = new Set();
+    const activeStatuses = new Set(["recording", "queued", "running", "editing"]);
+    const statusNames = {recording: "녹음 중", queued: "분석 대기", running: "분석 중", editing: "수정 중",
+        error: "처리 중단", review: "확인 필요", done: "저장 완료", recorded: "원본 저장"};
+    const needsReview = track => track.review || !track.title || !track.composer || !track.performer;
+    const stamp = job => Date.parse(job.startedAt) || Number(job.createdAt || 0) * 1000;
+    const dayOf = ms => ms ? new Date(ms + 9 * 3600000).toISOString().slice(0, 10) : "날짜 미확인";
+    const clockOf = ms => ms ? new Date(ms).toLocaleTimeString("ko-KR", {timeZone: "Asia/Seoul", hour12: false, hour: "2-digit", minute: "2-digit"}) : "시간 미확인";
+    function disclosure(cls, key, opened = false) {
+        const node = el("details", "", cls);
+        node.dataset.key = key; node.open = expanded.has(key) || opened;
+        node.addEventListener("toggle", () => {
+            if (!node.isConnected) return;
+            if (node.open) expanded.add(key); else expanded.delete(key);
+        });
+        return node;
+    }
+    function broadcasts(jobs) {
+        const groups = new Map();
+        for (const job of jobs) {
+            const time = stamp(job), date = dayOf(time);
+            const known = job.program?.scheduleKnown && job.program?.title;
+            const title = known ? job.program.title : job.name || "라디오 녹음";
+            const station = known ? (job.name || "").split(" · ")[0] : "";
+            // 편성이 없는 수동 녹음은 이름만으로 같은 방송이라고 단정하지 않는다.
+            const key = known ? JSON.stringify([job.stationId || station, title, date, job.program.rerun]) : job.id;
+            if (!groups.has(key)) groups.set(key, {key, title, station, date, time, jobs: []});
+            const group = groups.get(key);
+            group.time = Math.min(group.time, time); group.jobs.push(job);
+        }
+        return [...groups.values()].sort((a, b) => b.time - a.time).map(group => {
+            group.jobs.sort((a, b) => stamp(a) - stamp(b));
+            group.tracks = group.jobs.flatMap(job => (job.tracks || []).map(track => ({job, track})))
+                .sort((a, b) => (stamp(a.job) + a.track.start * 1000) - (stamp(b.job) + b.track.start * 1000));
+            group.review = group.tracks.filter(({track}) => needsReview(track)).length;
+            group.errors = group.jobs.filter(job => job.status === "error").length;
+            group.unresolved = group.jobs.reduce((n, job) => n + (job.unresolved || []).length, 0);
+            group.active = group.jobs.some(job => activeStatuses.has(job.status));
+            return group;
+        });
+    }
+    for (const input of [searchInput, filterInput]) input.addEventListener("input", () => {
+        shownBroadcasts = 12; render(latestJobs);
+    });
     tokenInput.value = config.token || "";
     enabledInput.checked = config.enabled === true;
     cloudInput.checked = config.cloudFallback !== false;
@@ -105,71 +152,122 @@
         return input;
     }
     function render(jobs) {
+        latestJobs = jobs;
         // 편집 중인 입력과 재생 중인 미리 듣기를 주기 갱신으로 날리지 않는다.
-        if (jobsEl.contains(document.activeElement) || [...jobsEl.querySelectorAll("audio")].some(a => !a.paused)) return;
-        const opened = new Set([...jobsEl.querySelectorAll("details[open]")].map(d => d.dataset.key));
+        if ((jobsEl.contains(document.activeElement) && document.activeElement.closest("form")) || [...jobsEl.querySelectorAll("audio")].some(a => !a.paused)) return;
+        jobsEl.querySelectorAll("details").forEach(node => {
+            if (node.open) expanded.add(node.dataset.key); else expanded.delete(node.dataset.key);
+        });
         for (const url of previewURLs) URL.revokeObjectURL(url);
         previewURLs.clear();
         jobsEl.replaceChildren();
-        for (const job of jobs.slice(0, 50)) {
-            const details = el("details", "", "analysis-job");
-            details.dataset.key = job.id; details.open = opened.has(job.id);
-            details.append(el("summary", `${job.name} · ${job.message}`));
-            const started = job.startedAt ? new Date(job.startedAt).toLocaleString("ko-KR") : "";
-            details.append(el("p", `${started} · Gemini 전송 ${Math.ceil(job.cloudSeconds || 0)}초 / ${job.cloudCalls || 0}회`));
-            if (["error", "review"].includes(job.status)) details.append(button("다시 분석", async () => {
-                await request(`/jobs/${job.id}/retry`, {method: "POST"}); await refresh();
-            }));
-            if (["done", "review"].includes(job.status)) details.append(button("전체 곡 ZIP 저장", () =>
-                download(`/jobs/${job.id}/archive`, `${job.name}-분리된-곡.zip`)));
-            if (metadataReviewAvailable && ["done", "review"].includes(job.status) && job.tracks?.length) details.append(button("곡 정보만 재검토", async () => {
-                await request(`/jobs/${job.id}/metadata`, {method: "POST"}); await refresh();
-            }));
-            if (job.metadataNotice) details.append(el("p", job.metadataNotice, "analysis-warning"));
-            if (job.source === "server-recorder" && job.status !== "recording") details.append(button("녹음 원본 저장", () =>
-                download(`/jobs/${job.id}/files/original`, `${job.name}.m4a`)));
-            if (job.recordingNote) details.append(el("p", job.recordingNote));
-            for (const part of job.unresolved || []) details.append(el("p",
-                `${part.start.toFixed(1)}~${part.end.toFixed(1)}초 미분리 · ${part.reason}`, "analysis-warning"));
-            for (const track of job.tracks || []) {
-                const row = el("details", "", "analysis-track");
-                row.dataset.key = `${job.id}-${track.id}`; row.open = opened.has(row.dataset.key);
-                row.append(el("summary", `${track.id}. ${track.title || "곡명 미확인"} · ${track.composer || "작곡가 미확인"} · ${track.performer || "연주자 미확인"}${track.review ? " · 확인 필요" : ""}`));
-                row.append(el("p", `${track.start.toFixed(1)}~${track.end.toFixed(1)}초 · ${track.source === "user" ? "직접 확인" : track.source === "gemini-review" ? "Gemini 참고 정보" : track.source === "transcript-review" ? "멘트 전사에서 추출 · 인명 표기 확인 필요" : "로컬 분석"}`));
-                if (track.evidence) row.append(el("blockquote", track.evidence));
-                if (track.note) row.append(el("p", track.note, "analysis-warning"));
-                const audio = el("audio"); audio.controls = true; audio.hidden = true;
-                const path = `/jobs/${job.id}/files/track-${track.id}.flac`;
-                row.append(button("곡 미리 듣기", () => download(path, "", audio)),
-                    button("곡 저장", () => download(path, `${track.id} ${track.title || "곡명 미확인"}.flac`)));
-                if (job.duration) {
-                    for (const [label, point] of [["시작 경계 듣기", track.start], ["종료 경계 듣기", track.end]]) {
-                        row.append(button(label, () => download(`/jobs/${job.id}/preview?start=${Math.max(0, point - 10)}&end=${Math.min(job.duration, point + 10)}`, "", audio)));
-                    }
-                }
-                row.append(audio);
-                const form = el("form", "", "analysis-edit");
-                field(form, "곡명", "title", track.title);
-                field(form, "작곡가", "composer", track.composer);
-                field(form, "연주자·지휘자·악단", "performer", track.performer);
-                field(form, "시작(초)", "start", track.start, true);
-                field(form, "종료(초)", "end", track.end, true);
-                const submit = el("button", "수정·확인 후 저장", "res-btn"); submit.type = "submit"; form.append(submit);
-                form.addEventListener("submit", async event => {
-                    event.preventDefault(); submit.disabled = true;
-                    try {
-                        const data = Object.fromEntries(new FormData(form));
-                        await request(`/jobs/${job.id}/tracks/${track.id}`, {method: "POST",
-                            headers: {"Content-Type": "application/json"}, body: JSON.stringify(data)});
-                        submit.blur(); await refresh(); message.textContent = "곡 파일과 태그를 수정했습니다.";
-                    } catch (error) { message.textContent = error.message; }
-                    finally { submit.disabled = false; }
-                });
-                row.append(form); details.append(row);
+        const all = broadcasts(jobs), query = searchInput.value.trim().toLocaleLowerCase();
+        const filtered = all.filter(group => {
+            if (filterInput.value === "active" && !group.active) return false;
+            if (filterInput.value === "review" && !(group.review || group.errors || group.unresolved || group.jobs.some(j => j.status === "review"))) return false;
+            return !query || [group.title, group.station, group.date, ...group.tracks.flatMap(({track}) =>
+                [track.title, track.composer, track.performer])].join(" ").toLocaleLowerCase().includes(query);
+        });
+        host.querySelector("[data-analysis-count]").textContent = `${all.length}개 방송 · ${all.reduce((n, g) => n + g.tracks.length, 0)}곡${jobs.length >= 50 ? " · 최근 녹음 50개 기준" : ""}`;
+        for (const group of filtered.slice(0, shownBroadcasts)) {
+            const card = disclosure("analysis-broadcast", "broadcast:" + group.key);
+            const summary = el("summary", "", "analysis-broadcast-summary");
+            const heading = el("div", "", "analysis-broadcast-heading");
+            heading.append(el("span", `${group.date} · ${group.station || "직접 녹음"}`, "analysis-eyebrow"),
+                el("strong", group.title, "analysis-broadcast-title"));
+            const badges = el("div", "", "analysis-badges");
+            badges.append(el("span", `${group.tracks.length}곡`, "analysis-badge"));
+            if (group.active) {
+                const live = group.jobs.find(j => j.status === "recording") || group.jobs.find(j => activeStatuses.has(j.status));
+                badges.append(el("span", statusNames[live.status], "analysis-badge is-active"));
             }
-            jobsEl.append(details);
+            if (group.review) badges.append(el("span", `정보 확인 ${group.review}`, "analysis-badge is-review"));
+            if (group.errors) badges.append(el("span", `처리 중단 ${group.errors}`, "analysis-badge is-review"));
+            if (group.unresolved) badges.append(el("span", `미분리 ${group.unresolved}`, "analysis-badge is-review"));
+            heading.append(badges); summary.append(heading); card.append(summary);
+            const body = el("div", "", "analysis-broadcast-body");
+            body.append(el("p", `${clockOf(group.time)}부터 녹음 · 원본 ${group.jobs.length}개 · 한국 시간`, "analysis-broadcast-meta"));
+            const trackList = el("div", "", "analysis-track-list");
+            group.tracks.forEach(({job, track}, index) => trackList.append(renderTrack(job, track, index + 1)));
+            if (!group.tracks.length) trackList.append(el("p", group.active ? "곡을 준비하고 있습니다. 분석이 끝나면 여기에 표시됩니다." : "저장된 곡이 없습니다. 아래 녹음 파일에서 원본과 처리 상태를 확인하세요.", "analysis-empty"));
+            body.append(trackList);
+            const files = disclosure("analysis-files", "files:" + group.key);
+            files.append(el("summary", `녹음 파일 및 분석 관리 · ${group.jobs.length}개`));
+            group.jobs.forEach((job, index) => files.append(renderJob(job, index + 1)));
+            body.append(files); card.append(body); jobsEl.append(card);
         }
-        if (!jobs.length) jobsEl.append(el("p", "자동 분리를 켠 예약 녹음이 끝나면 이곳에 곡이 표시됩니다."));
+        if (filtered.length > shownBroadcasts) jobsEl.append(button(`방송 더 보기 (${filtered.length - shownBroadcasts}개)`, () => {
+            shownBroadcasts += 12; render(latestJobs);
+        }));
+        if (!filtered.length) jobsEl.append(el("p", jobs.length ? "조건에 맞는 방송이 없습니다." : "녹음한 방송이 아직 없습니다. 아래에서 예약 곡 분리나 PC 상시 녹음을 설정하세요.", "analysis-empty"));
+    }
+    function renderJob(job, number) {
+        const details = disclosure("analysis-job", "job:" + job.id);
+        details.append(el("summary", `원본 ${String(number).padStart(2, "0")} · ${clockOf(stamp(job))} · ${statusNames[job.status] || "상태 확인"}`));
+        details.append(el("p", job.message || "처리 상태를 확인하세요."));
+        details.append(el("p", `Gemini 전송 ${Math.ceil(job.cloudSeconds || 0)}초 / ${job.cloudCalls || 0}회`));
+        if (["error", "review"].includes(job.status)) details.append(button("다시 분석", async () => {
+            await request(`/jobs/${job.id}/retry`, {method: "POST"}); await refresh();
+        }));
+        if (["done", "review"].includes(job.status)) details.append(button("이 파일의 곡 ZIP 저장", () =>
+            download(`/jobs/${job.id}/archive`, `${job.name}-분리된-곡.zip`)));
+        if (metadataReviewAvailable && ["done", "review"].includes(job.status) && job.tracks?.length) details.append(button("곡 정보만 재검토", async () => {
+            await request(`/jobs/${job.id}/metadata`, {method: "POST"}); await refresh();
+        }));
+        if (job.metadataNotice) details.append(el("p", job.metadataNotice, "analysis-warning"));
+        if (job.source === "server-recorder" && job.status !== "recording") details.append(button("녹음 원본 저장", () =>
+            download(`/jobs/${job.id}/files/original`, `${job.name}.m4a`)));
+        if (job.recordingNote) details.append(el("p", job.recordingNote));
+        for (const part of job.unresolved || []) details.append(el("p",
+            `${part.start.toFixed(1)}~${part.end.toFixed(1)}초 미분리 · ${part.reason}`, "analysis-warning"));
+        return details;
+    }
+    function renderTrack(job, track, number) {
+        const row = disclosure("analysis-track", `track:${job.id}-${track.id}`);
+        const summary = el("summary", "", "analysis-track-summary");
+        const name = el("span", "", "analysis-track-name");
+        name.append(el("strong", track.title || "곡명 미확인"),
+            el("span", track.composer || "작곡가 미확인", "analysis-track-composer"),
+            el("span", track.performer || "연주자 미확인", "analysis-track-performer"));
+        if (needsReview(track)) name.append(el("span", "정보 확인 필요", "analysis-track-review"));
+        const length = Math.max(0, Math.round(track.end - track.start));
+        summary.append(el("span", String(number).padStart(2, "0"), "analysis-track-number"), name,
+            el("span", `${Math.floor(length / 60)}:${String(length % 60).padStart(2, "0")}`, "analysis-track-length"));
+        row.append(summary);
+        const content = el("div", "", "analysis-track-content");
+        content.append(el("p", `원본 ${clockOf(stamp(job))} · 파일 내 ${track.start.toFixed(1)}~${track.end.toFixed(1)}초`));
+        content.append(el("p", track.source === "user" ? "직접 확인한 정보" : "자동 추출한 정보입니다. 소개 멘트와 대조해 곡명·연주자를 확인하세요."));
+        if (track.evidence) content.append(el("blockquote", track.evidence));
+        if (track.note) content.append(el("p", track.note, "analysis-warning"));
+        const audio = el("audio"); audio.controls = true; audio.hidden = true;
+        const path = `/jobs/${job.id}/files/track-${track.id}.flac`;
+        content.append(button("곡 미리 듣기", () => download(path, "", audio)),
+            button("곡 저장", () => download(path, `${track.id} ${track.title || "곡명 미확인"}.flac`)));
+        if (job.duration) {
+            for (const [label, point] of [["시작 경계 듣기", track.start], ["종료 경계 듣기", track.end]]) {
+                content.append(button(label, () => download(`/jobs/${job.id}/preview?start=${Math.max(0, point - 10)}&end=${Math.min(job.duration, point + 10)}`, "", audio)));
+            }
+        }
+        content.append(audio);
+        const form = el("form", "", "analysis-edit");
+        field(form, "곡명", "title", track.title);
+        field(form, "작곡가", "composer", track.composer);
+        field(form, "연주자·지휘자·악단", "performer", track.performer);
+        field(form, "시작(초)", "start", track.start, true);
+        field(form, "종료(초)", "end", track.end, true);
+        const submit = el("button", "수정·확인 후 저장", "res-btn"); submit.type = "submit"; form.append(submit);
+        form.addEventListener("submit", async event => {
+            event.preventDefault(); submit.disabled = true;
+            try {
+                const data = Object.fromEntries(new FormData(form));
+                await request(`/jobs/${job.id}/tracks/${track.id}`, {method: "POST",
+                    headers: {"Content-Type": "application/json"}, body: JSON.stringify(data)});
+                submit.blur(); await refresh(); message.textContent = "곡 파일과 태그를 수정했습니다.";
+            } catch (error) { message.textContent = error.message; }
+            finally { submit.disabled = false; }
+        });
+        content.append(form); row.append(content);
+        return row;
     }
     async function refresh() {
         if (refreshing || !config.token) return;
