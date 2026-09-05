@@ -191,4 +191,43 @@ test.describe("예약 녹음 곡 분리", () => {
         await expect.poll(() => update?.title).toBe("피아노 소나타");
         expect(update.performer).toBe("김연주");
     });
+
+    test("PC 서버 상시 녹음의 채널 추가·설정·중지와 원본 저장", async ({page, context}) => {
+        const initial = {stationId: "kbs1fm", enabled: false, startMinute: 0, endMinute: 1440,
+            weekdays: [0,1,2,3,4,5,6], programs: [], excludeReruns: true, splitTracks: true,
+            cloudFallback: true, maxCloudSeconds: 600, segmentMinutes: 120};
+        let rules = [initial], saved;
+        const state = () => ({rules, channels: [{id: "kbs1fm", name: "KBS 1FM", rerunSupported: true, scheduleSupported: true},
+            {id: "cbsmusic", name: "CBS 음악FM", rerunSupported: false, scheduleSupported: true}], runtime: {}, queuedJobs: 0, freeBytes: 50 * 1024 ** 3});
+        await context.route("http://127.0.0.1:8766/**", async route => {
+            const request = route.request(), path = new URL(request.url()).pathname;
+            if (path === "/health") return route.fulfill({json: {localConfigured: true, serverRecorder: true}});
+            if (path === "/recorder") {
+                if (request.method() === "PUT") { saved = request.postDataJSON(); rules = saved.rules; }
+                return route.fulfill({json: state()});
+            }
+            if (path.endsWith("/files/original")) return route.fulfill({body: "audio", contentType: "audio/mp4"});
+            return route.fulfill({json: [{id: "test-original", name: "서버 검증", source: "server-recorder", status: "recorded", message: "PC 원본 녹음 저장 완료", tracks: []}]});
+        });
+        await page.evaluate(() => localStorage.setItem("fmRadio.trackAnalysis", JSON.stringify({token: "test"})));
+        await page.reload(); await show(page);
+        await page.locator("[data-recorder-panel] > summary").click();
+        await expect(page.locator("[data-recorder-channels] option")).toHaveCount(2);
+        await page.locator("[data-recorder-channels]").selectOption(["cbsmusic"]);
+        await page.locator("[data-recorder-start]").fill("23:00");
+        await page.locator("[data-recorder-end]").fill("01:00");
+        await page.locator("[data-recorder-mode]").selectOption("original");
+        await page.locator("[data-recorder-reruns]").uncheck();
+        await page.getByRole("button", {name: "설정 저장·녹음 시작"}).click();
+        await expect.poll(() => rules.length).toBe(2);
+        expect(rules[0]).toEqual(initial);
+        expect(rules[1]).toMatchObject({stationId: "cbsmusic", enabled: true, startMinute: 1380, endMinute: 60, splitTracks: false, excludeReruns: false});
+        await page.getByRole("button", {name: "서버 녹음 끄기", exact: true}).click();
+        await expect.poll(() => rules[1].enabled).toBe(false);
+        await expect(page.getByRole("button", {name: "서버 녹음 켜기", exact: true})).toHaveCount(2);
+        await page.locator(".analysis-job > summary").click();
+        const downloadPromise = page.waitForEvent("download");
+        await page.getByRole("button", {name: "녹음 원본 저장", exact: true}).click();
+        expect((await downloadPromise).suggestedFilename()).toBe("서버 검증.m4a");
+    });
 });

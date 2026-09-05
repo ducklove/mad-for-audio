@@ -9,8 +9,8 @@ if (-not $analysisProcess) { Write-Output '기록된 프로세스가 이미 종�
 if ($analysisProcess.CommandLine -notmatch [regex]::Escape($analysisScript)) { throw '다른 프로세스이므로 종료하지 않았습니다.' }
 $analysisConfig = Get-Content -LiteralPath (Join-Path $analysisData 'config.json') -Raw | ConvertFrom-Json
 $analysisJobs = Invoke-RestMethod 'http://127.0.0.1:8766/jobs' -Headers @{ Authorization = 'Bearer ' + $analysisConfig.token } -TimeoutSec 10
-if ($analysisJobs | Where-Object { $_.status -in @('running', 'queued', 'editing') }) {
-    throw '분석이나 편집이 진행 중입니다. 작업이 끝난 뒤 종료하세요.'
+if ($analysisJobs | Where-Object { $_.status -in @('running', 'queued', 'editing', 'recording') }) {
+    throw '녹음·분석·편집이 진행 중입니다. 서버 녹음을 끄고 작업이 끝난 뒤 종료하세요.'
 }
 & taskkill.exe /PID $analysisProcessId /T /F
 if ($LASTEXITCODE -ne 0) { throw '서비스 종료에 실패했습니다.' }

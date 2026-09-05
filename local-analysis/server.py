@@ -22,6 +22,7 @@ from starlette.background import BackgroundTask
 
 from pipeline import Pipeline, export_track, FIELDS, clip
 from cloud_config import cloud_connection, load_cloud_keys
+from recorder import Recorder
 
 # MSIX 앱의 LocalAppData 가상화에 영향을 받지 않는 사용자 폴더를 사용한다.
 DATA = Path(os.environ.get("MFA_ANALYSIS_HOME", str(Path.home() / ".mad-for-audio" / "analysis")))
@@ -121,18 +122,22 @@ class Jobs:
 def create_app(root=DATA, config=None, start_worker=True):
     config = config or load_config(root)
     jobs = Jobs(root, config)
+    recorder = Recorder(root, config, jobs)
     pairing_tickets = {}
 
     @asynccontextmanager
     async def lifespan(app):
         if start_worker:
             jobs.start()
+            recorder.start()
         yield
         if start_worker:
+            await run_in_threadpool(recorder.close)
             jobs.queue.put(None)
 
     app = FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
     app.state.jobs = jobs
+    app.state.recorder = recorder
     origins = config.get("allowedOrigins", ORIGINS)
     app.add_middleware(CORSMiddleware, allow_origins=origins,
                        allow_methods=["GET", "PUT", "POST", "DELETE"],
@@ -189,7 +194,23 @@ def create_app(root=DATA, config=None, start_worker=True):
         return {"ok": True, "version": 1, "localConfigured": Path(config["modelPython"]).is_file()
                 and (Path(config["mossSource"]) / "src").is_dir() and (root / "models-ready.json").is_file(),
                 "geminiConfigured": bool(key), "geminiProvider": provider,
-                "geminiModel": model, "maxCloudSeconds": config.get("maxCloudSeconds", 600)}
+                "geminiModel": model, "maxCloudSeconds": config.get("maxCloudSeconds", 600), "serverRecorder": True}
+
+    @app.get("/recorder")
+    def recorder_status():
+        return recorder.snapshot()
+
+    @app.put("/recorder")
+    async def recorder_update(request: Request):
+        body = await request.body()
+        if len(body) > 64000:
+            raise HTTPException(413, "녹음 설정이 너무 큽니다.")
+        try:
+            return recorder.update(json.loads(body))
+        except ValueError as error:
+            raise HTTPException(400, str(error)[:300]) from None
+        except (TypeError, KeyError):
+            raise HTTPException(400, "채널·요일·시간·프로그램·재방송 지원 여부를 확인하세요.") from None
 
     @app.get("/jobs")
     def listing():
@@ -304,7 +325,9 @@ def create_app(root=DATA, config=None, start_worker=True):
         job = jobs.read(job_id)
         folder = jobs.folder(job_id)
         if filename == "original":
-            return FileResponse(folder / "original.bin", filename="원본-녹음.bin")
+            if job["status"] == "recording":
+                raise HTTPException(409, "녹음 구간이 끝난 뒤 원본을 내려받으세요.")
+            return FileResponse(folder / "original.bin", filename="원본-녹음.m4a" if job.get("source") == "server-recorder" else "원본-녹음.bin")
         if filename == "source":
             path = folder / "source.wav"
             if not path.exists():

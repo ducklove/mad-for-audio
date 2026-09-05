@@ -121,6 +121,9 @@
             }));
             if (["done", "review"].includes(job.status)) details.append(button("전체 곡 ZIP 저장", () =>
                 download(`/jobs/${job.id}/archive`, `${job.name}-분리된-곡.zip`)));
+            if (job.source === "server-recorder" && job.status !== "recording") details.append(button("녹음 원본 저장", () =>
+                download(`/jobs/${job.id}/files/original`, `${job.name}.m4a`)));
+            if (job.recordingNote) details.append(el("p", job.recordingNote));
             for (const part of job.unresolved || []) details.append(el("p",
                 `${part.start.toFixed(1)}~${part.end.toFixed(1)}초 미분리 · ${part.reason}`, "analysis-warning"));
             for (const track of job.tracks || []) {
@@ -172,6 +175,7 @@
             setAvailable(health.localConfigured === true);
             message.textContent = `${health.localConfigured ? "PC 분석 서비스 연결됨" : "PC 모델 설치가 필요합니다"} · ${health.geminiConfigured ? (health.geminiProvider === "openrouter" ? "OpenRouter · Gemini 보완 사용 가능" : "Gemini 보완 사용 가능") : "Gemini 키 미등록 · 로컬 분석 사용"}${pending.size ? ` · 전송 대기 ${pending.size}건` : ""}`;
             render(await (await request("/jobs")).json());
+            if (health.serverRecorder) await refreshRecorder();
         } catch (error) { connected = false; setAvailable(false); message.textContent = error.message; }
         finally { refreshing = false; }
         if (connected) void flush();
@@ -235,4 +239,81 @@
     }
     if (pairingTicket !== null) void pairPC();
     else if (config.token) void refresh();
+
+    const recorderPanel = host.querySelector("[data-recorder-panel]");
+    const recorderForm = host.querySelector("[data-recorder-form]");
+    const recorderMessage = host.querySelector("[data-recorder-status]");
+    const recorderRules = host.querySelector("[data-recorder-rules]");
+    const control = name => host.querySelector(`[data-recorder-${name}]`);
+    let recorderData = null;
+    const hhmm = minute => `${String(Math.floor(minute / 60)).padStart(2, "0")}:${String(minute % 60).padStart(2, "0")}`;
+    const minuteOf = value => { const [h, m] = value.split(":").map(Number); return h * 60 + m; };
+    function fillRecorder(rule) {
+        for (const option of control("channels").options) option.selected = option.value === rule.stationId;
+        control("start").value = hhmm(rule.startMinute);
+        control("end").value = hhmm(rule.endMinute);
+        control("programs").value = rule.programs.join("\n");
+        control("mode").value = rule.splitTracks ? "tracks" : "original";
+        control("reruns").checked = rule.excludeReruns;
+        control("cloud").checked = rule.cloudFallback;
+        control("cap").value = rule.maxCloudSeconds / 60;
+        control("segment").value = rule.segmentMinutes;
+        for (const input of control("days").querySelectorAll("input")) input.checked = rule.weekdays.includes(Number(input.value));
+    }
+    async function refreshRecorder() {
+        try {
+            const data = await (await request("/recorder")).json();
+            if (!recorderData) {
+                for (const channel of data.channels) {
+                    const option = el("option", channel.name + (channel.rerunSupported ? "" : " · 재방 구분 미지원"));
+                    option.value = channel.id; option.selected = channel.id === "kbs1fm";
+                    control("channels").append(option);
+                }
+                ["월", "화", "수", "목", "금", "토", "일"].forEach((day, index) => {
+                    const label = el("label", day), input = el("input");
+                    input.type = "checkbox"; input.value = index; input.checked = true;
+                    label.prepend(input); control("days").append(label);
+                });
+                if (data.rules.length) fillRecorder(data.rules[0]);
+            }
+            recorderData = data;
+            recorderPanel.hidden = false;
+            recorderMessage.textContent = `PC 녹음 설정 ${data.rules.length}개 · 분석 대기 ${data.queuedJobs}건 · 여유 ${(data.freeBytes / 1024 ** 3).toFixed(1)}GB`;
+            recorderRules.replaceChildren();
+            for (const rule of data.rules) {
+                const channel = data.channels.find(c => c.id === rule.stationId);
+                const row = el("div", "", "recorder-rule");
+                row.append(el("p", `${channel.name} · ${rule.enabled ? "켜짐" : "꺼짐"} · ${hhmm(rule.startMinute)}–${hhmm(rule.endMinute)} · ${rule.splitTracks ? "곡 분리" : "원본만"}`));
+                row.append(el("p", data.runtime[rule.stationId]?.message || "녹음 대기"));
+                row.append(button("설정 불러오기", () => fillRecorder(rule)));
+                row.append(button(rule.enabled ? "서버 녹음 끄기" : "서버 녹음 켜기", async () => {
+                    await saveRecorder(data.rules.map(r => r.stationId === rule.stationId ? {...r, enabled: !r.enabled} : r));
+                }));
+                row.append(button("녹음 설정 삭제", () => saveRecorder(data.rules.filter(r => r.stationId !== rule.stationId))));
+                recorderRules.append(row);
+            }
+        } catch (error) { recorderMessage.textContent = error.message; }
+    }
+    async function saveRecorder(rules) {
+        await request("/recorder", {method: "PUT", headers: {"Content-Type": "application/json"}, body: JSON.stringify({rules})});
+        await refreshRecorder();
+        await refresh();
+    }
+    recorderForm?.addEventListener("submit", async event => {
+        event.preventDefault();
+        if (!recorderData || !available) return;
+        const submit = recorderForm.querySelector("button[type=submit]");
+        submit.disabled = true;
+        try {
+            const selected = [...control("channels").selectedOptions].map(option => option.value);
+            const weekdays = [...control("days").querySelectorAll("input:checked")].map(input => Number(input.value));
+            const rule = {enabled: true, startMinute: minuteOf(control("start").value), endMinute: minuteOf(control("end").value),
+                weekdays, programs: control("programs").value.split("\n").map(value => value.trim()).filter(Boolean),
+                splitTracks: control("mode").value === "tracks", excludeReruns: control("reruns").checked,
+                cloudFallback: control("cloud").checked, maxCloudSeconds: Number(control("cap").value) * 60,
+                segmentMinutes: Number(control("segment").value)};
+            await saveRecorder([...recorderData.rules.filter(r => !selected.includes(r.stationId)), ...selected.map(stationId => ({...rule, stationId}))]);
+        } catch (error) { recorderMessage.textContent = error.message; }
+        finally { submit.disabled = false; }
+    });
 })();
