@@ -21,6 +21,7 @@ from starlette.concurrency import run_in_threadpool
 from starlette.background import BackgroundTask
 
 from pipeline import Pipeline, export_track, FIELDS, clip
+from cloud_config import cloud_connection, load_cloud_keys
 
 # MSIX 앱의 LocalAppData 가상화에 영향을 받지 않는 사용자 폴더를 사용한다.
 DATA = Path(os.environ.get("MFA_ANALYSIS_HOME", str(Path.home() / ".mad-for-audio" / "analysis")))
@@ -40,7 +41,7 @@ def load_config(root=DATA):
     config = json.loads(path.read_text(encoding="utf-8"))
     if len(config.get("token", "")) < 32:
         raise ValueError("로컬 연결 코드가 너무 짧습니다. 32자 이상으로 설정하세요.")
-    return config
+    return load_cloud_keys(config)
 
 
 class Jobs:
@@ -156,10 +157,11 @@ def create_app(root=DATA, config=None, start_worker=True):
 
     @app.get("/health")
     def health():
+        provider, model, key = cloud_connection(config)
         return {"ok": True, "version": 1, "localConfigured": Path(config["modelPython"]).is_file()
                 and (Path(config["mossSource"]) / "src").is_dir() and (root / "models-ready.json").is_file(),
-                "geminiConfigured": bool(config.get("geminiApiKey") or os.environ.get("GEMINI_API_KEY")),
-                "geminiModel": "gemini-3.8-flash", "maxCloudSeconds": config.get("maxCloudSeconds", 600)}
+                "geminiConfigured": bool(key), "geminiProvider": provider,
+                "geminiModel": model, "maxCloudSeconds": config.get("maxCloudSeconds", 600)}
 
     @app.get("/jobs")
     def listing():

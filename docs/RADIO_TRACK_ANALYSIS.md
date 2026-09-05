@@ -52,7 +52,7 @@ NVIDIA 드라이버와 `ffmpeg`·`ffprobe`가 PATH에 있어야 한다.
 | 값 | 용도 |
 |---|---|
 | `token` | 브라우저와 PC 서비스 연결 코드. Gemini 키와 다른 값이다. |
-| `geminiApiKey` | Gemini API 키. 빈 값이면 로컬 분석만 동작한다. |
+| `geminiApiKey` | Google 직접 연결용 API 키. OpenRouter 키가 없을 때 사용한다. |
 | `maxCloudSeconds` | 파일당 클라우드 전송 상한(기본 600초). 예약의 한도와 비교해 작은 값을 적용한다. |
 | `modelPython` | 전용 CUDA Python 실행 파일 |
 | `modelCache` | Hugging Face 모델 캐시 위치 |
@@ -61,8 +61,19 @@ NVIDIA 드라이버와 `ffmpeg`·`ffprobe`가 PATH에 있어야 한다.
 
 설정을 바꾸면 작업이 끝난 뒤 `local-analysis\stop.ps1`로 종료하고 `start.ps1`로 다시 실행한다.
 종료 스크립트는 이 설치에서 시작한 프로세스인지 검사하고 진행 중인 작업이 있으면 종료하지 않는다.
-Gemini 키는 설정 파일 또는 **서비스 프로세스의** `GEMINI_API_KEY` 환경 변수에만 넣는다.
+OpenRouter를 사용하려면 **저장소 루트의 `.env`**에 다음 값을 넣고 서비스를 다시 시작한다.
+
+```dotenv
+OPENROUTER_API_KEY=발급받은_키
+```
+
+서비스는 실행 디렉터리와 관계없이 이 파일을 읽으며 `.env`는 Git에서 제외된다.
+`OPENROUTER_API_KEY`가 있으면 **OpenRouter의 `google/gemini-3.8-flash`**를 우선 사용한다.
+서비스 환경 변수는 `.env`보다 우선하고, `.env`는 설정 파일보다 우선한다.
+Google 직접 연결 키는 설정 파일, `.env`의 `GEMINI_API_KEY` 또는 **서비스 프로세스의** 같은 이름 환경 변수에 넣는다.
+양쪽 키가 모두 없으면 로컬 분석만 사용한다. 키를 다른 설정 파일에 자동 복사하지 않는다.
 키를 브라우저 입력창·저장소·대화에 넣지 않는다. 서비스는 API 키를 프런트엔드에 반환하지 않는다.
+모델 프로세스에도 두 API 키를 전달하지 않는다.
 
 ## 분석 방식과 결과 해석
 
@@ -95,7 +106,8 @@ PC로 전송한 뒤에는 브라우저를 닫아도 분석은 계속된다. 서�
 전송량 상한에 포함한다. 각 파일당 **10회 + 전송 초 상한**을 모두 적용한다.
 
 `Gemini 전송 초`는 청구 토큰의 근사 지표이며 토큰 비용을 보장하는 예산 한도는 아니다.
-실제 API 응답의 `usageMetadata`도 작업 JSON에 저장한다. 키 미등록 상태에서는 API 호출 비용이 없다.
+실제 API 응답의 `usageMetadata`(Google) 또는 `usage`(OpenRouter, 반환된 토큰·비용 포함)를 작업 JSON에 저장한다.
+호출한 제공자와 모델도 기록하며 OpenRouter 제공자 자동 재시도는 끈다. 키 미등록 상태에서는 API 호출 비용이 없다.
 
 작업 폴더에는 원본(`original.bin`), 편집용 PCM(`source.wav`), 곡 파일, `job.json`, 모델 입력·출력 및 로그가 남는다.
 자동 삭제는 하지 않는다. PCM만 시간당 약 0.69GB이므로 상시 운영할 때 보관 기간과 저장 공간을 관리해야 한다.
@@ -124,8 +136,14 @@ KBS 1FM 실제 3분 녹음도 API 업로드·작업 큐를 거쳐 두 음악 구
 음악만 있는 구간에서 모델이 곡명을 추측하거나 10초 단위로 나누는 출력이 관찰되어,
 전사 근거가 없는 필드·인용을 지우고 이어지는 동일 음악 구간을 합치는 처리를 검증했다.
 외국 인명 전사 오류 및 첫 곡의 작곡가 미확인은 그대로 확인 대상으로 남겼다.
-짧은 샘플의 실행 확인이며 전체 방송 정확도나 상시 처리 속도 보장은 아니다. Gemini 실호출은 키 미등록으로 검증하지 않았다.
+짧은 샘플의 실행 확인이며 전체 방송 정확도나 상시 처리 속도 보장은 아니다.
+
+이후 `.env`의 OpenRouter 키로 Gemini 3.8 Flash 오디오 입력을 실제 검증했다.
+소개 멘트와 음악을 포함한 20초 샘플 1회 호출에서 JSON 구간, 바흐 작품명·작곡가·존 미셸 연주자 정보를 받았다.
+응답 사용량은 입력 1,004토큰(오디오 500), 출력 159토큰, 비용 **$0.00134925**였다.
+이는 해당 검증 호출의 반환 비용이며 다른 방송의 비용이나 인식 정확도를 보장하지 않는다.
 
 공식 구현 자료: [Qwen3-ASR](https://github.com/QwenLM/Qwen3-ASR),
 [MOSS-Audio](https://github.com/OpenMOSS/MOSS-Audio),
-[Gemini 3.8 Flash](https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash).
+[Gemini 3.8 Flash](https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash),
+[OpenRouter 오디오 입력](https://openrouter.ai/docs/guides/overview/multimodal/audio).

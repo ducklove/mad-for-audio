@@ -5,6 +5,9 @@ sansui_tu9900.jpg
 marantz10b.jpg
 ref_*.jpg
 .DS_Store
+.env
+.env.*
+!.env.example
 
 # Python 도구 실행 산출물
 __pycache__/

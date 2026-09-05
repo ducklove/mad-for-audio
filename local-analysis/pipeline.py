@@ -10,6 +10,7 @@ import subprocess
 import sys
 
 import httpx
+from cloud_config import cloud_connection
 
 FIELDS = ("title", "composer", "performer")
 SCHEMA = {
@@ -203,6 +204,7 @@ class Pipeline:
                    PYTHONIOENCODING="utf-8", HF_HUB_OFFLINE="1", TRANSFORMERS_OFFLINE="1")
         # API 키를 모델 프로세스에 전달하지 않는다.
         env.pop("GEMINI_API_KEY", None)
+        env.pop("OPENROUTER_API_KEY", None)
         log = folder / f"{kind}.log"
         with log.open("wb") as stream:
             result = subprocess.run([self.config["modelPython"], str(Path(__file__).with_name("model_runner.py")),
@@ -215,9 +217,9 @@ class Pipeline:
     def gemini(self, files, instruction, job, save):
         seconds = sum(end - start for _, start, end in files)
         cap = min(job["options"]["maxCloudSeconds"], int(self.config.get("maxCloudSeconds", 600)))
-        key = self.config.get("geminiApiKey") or os.environ.get("GEMINI_API_KEY")
+        provider, model, key = cloud_connection(self.config)
         if not key:
-            raise ValueError("Gemini API 키가 없어 해당 구간은 확인이 필요합니다.")
+            raise ValueError("OpenRouter 또는 Gemini API 키가 없어 해당 구간은 확인이 필요합니다.")
         if job["cloudSeconds"] + seconds > cap or job["cloudCalls"] >= 10:
             raise ValueError("이 녹음의 Gemini 사용 한도에 도달했습니다.")
         parts = [{"text": instruction}]
@@ -227,21 +229,42 @@ class Pipeline:
         # 실패/재시작 시에도 유료 호출을 중복 집행하지 않도록 요청 전에 사용량을 기록한다.
         job["cloudSeconds"] += seconds
         job["cloudCalls"] += 1
+        job["cloudProvider"] = provider
+        job["cloudModel"] = model
         save(job)
-        response = httpx.post(
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent",
-            headers={"x-goog-api-key": key}, json={
-                "contents": [{"role": "user", "parts": parts}],
-                "generationConfig": {"responseMimeType": "application/json", "maxOutputTokens": 4096,
-                                     "thinkingConfig": {"thinkingLevel": "low"}},
-            }, timeout=180,
-        )
+        if provider == "openrouter":
+            content = [{"type": "text", "text": p["text"]} if "text" in p else
+                       {"type": "input_audio", "input_audio": {"data": p["inlineData"]["data"], "format": "wav"}}
+                       for p in parts]
+            response = httpx.post("https://openrouter.ai/api/v1/chat/completions",
+                headers={"Authorization": "Bearer " + key}, json={
+                    "model": model, "messages": [{"role": "user", "content": content}],
+                    "response_format": {"type": "json_object"}, "max_tokens": 4096,
+                    "reasoning": {"effort": "low"}, "provider": {"allow_fallbacks": False},
+                }, timeout=180)
+        else:
+            response = httpx.post(
+                f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+                headers={"x-goog-api-key": key}, json={
+                    "contents": [{"role": "user", "parts": parts}],
+                    "generationConfig": {"responseMimeType": "application/json", "maxOutputTokens": 4096,
+                                         "thinkingConfig": {"thinkingLevel": "low"}},
+                }, timeout=180,
+            )
         if response.status_code != 200:
             # 서버 응답/URL에 비밀이 포함될 수 있으므로 UI에 전달하지 않는다.
             raise ValueError(f"Gemini 호출 실패 (HTTP {response.status_code}). 자동 재호출하지 않았습니다.")
         data = response.json()
-        job.setdefault("usage", []).append(data.get("usageMetadata", {}))
+        job.setdefault("usage", []).append(data.get("usage", {}) if provider == "openrouter" else data.get("usageMetadata", {}))
         save(job)
+        if provider == "openrouter":
+            choices = data.get("choices", [])
+            if data.get("error") or not choices or choices[0].get("finish_reason") != "stop":
+                raise ValueError("OpenRouter Gemini 응답이 실패하거나 차단·잘림 처리됐습니다.")
+            text = choices[0].get("message", {}).get("content")
+            if not isinstance(text, str) or not text.strip():
+                raise ValueError("OpenRouter Gemini 응답 본문이 없습니다.")
+            return text
         candidates = data.get("candidates", [])
         if not candidates or candidates[0].get("finishReason") != "STOP":
             raise ValueError("Gemini 응답이 차단되거나 잘렸습니다.")

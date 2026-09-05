@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 import tempfile
 import unittest
@@ -8,6 +9,7 @@ from uuid import uuid4
 from fastapi.testclient import TestClient
 from pipeline import Pipeline, duration, export_track, ffmpeg, ground_metadata, merge_music, parse_segments, run, spoken_credits
 from server import create_app
+from cloud_config import load_cloud_keys, cloud_connection
 
 
 def segment(start, end, kind="music", title="소나타", **kw):
@@ -17,6 +19,9 @@ def segment(start, end, kind="music", title="소나타", **kw):
 
 class AnalysisTests(unittest.TestCase):
     def setUp(self):
+        self.environment = patch.dict(os.environ, {"OPENROUTER_API_KEY": "", "GEMINI_API_KEY": ""})
+        self.environment.start()
+        self.addCleanup(self.environment.stop)
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name)
         self.config = {"token": "test-" * 8, "geminiApiKey": "", "maxCloudSeconds": 600,
@@ -120,6 +125,50 @@ class AnalysisTests(unittest.TestCase):
             self.assertEqual(snapshots[0]["cloudSeconds"], 60)
             self.assertEqual(snapshots[0]["cloudCalls"], 1)
             self.assertNotIn("test-key", str(snapshots))
+
+    def test_dotenv_keys_are_private_and_openrouter_takes_precedence(self):
+        env_path = self.root / ".env"
+        env_path.write_text('\ufeffOPENROUTER_API_KEY="router-test"\nGEMINI_API_KEY=google-test\nIGNORED_SETTING=1\n', encoding="utf-8")
+        loaded = load_cloud_keys(dict(self.config), env_path)
+        self.assertEqual(cloud_connection(loaded), ("openrouter", "google/gemini-3.8-flash", "router-test"))
+        self.assertNotIn("IGNORED_SETTING", loaded)
+        self.assertFalse(os.environ.get("OPENROUTER_API_KEY"))
+        with patch.dict(os.environ, {"OPENROUTER_API_KEY": "environment-test"}):
+            self.assertEqual(load_cloud_keys({}, env_path)["openrouterApiKey"], "environment-test")
+        client = TestClient(create_app(self.root, loaded, start_worker=False), base_url="http://127.0.0.1")
+        response = client.get("/health", headers=self.headers)
+        self.assertTrue(response.json()["geminiConfigured"])
+        self.assertEqual(response.json()["geminiProvider"], "openrouter")
+        self.assertNotIn("router-test", response.text)
+        self.assertNotIn("google-test", response.text)
+
+    def test_openrouter_audio_json_usage_and_failures(self):
+        import httpx
+        self.config["openrouterApiKey"] = "router-test"
+        audio = self.root / "clip.wav"
+        audio.write_bytes(b"audio")
+        job = {"options": {"maxCloudSeconds": 30}, "cloudCalls": 0, "cloudSeconds": 0}
+        response = {"choices": [{"finish_reason": "stop", "message": {"content": '{"title":"곡"}'}}],
+                    "usage": {"prompt_tokens": 50, "completion_tokens": 10, "cost": 0.0001}}
+        with patch("pipeline.httpx.post", return_value=httpx.Response(200, json=response)) as post:
+            result = Pipeline(self.config).gemini([(audio, 10, 15)], "분석", job, lambda _: None)
+            self.assertEqual(json.loads(result)["title"], "곡")
+            self.assertEqual(post.call_args.args[0], "https://openrouter.ai/api/v1/chat/completions")
+            payload = post.call_args.kwargs["json"]
+            self.assertEqual(payload["model"], "google/gemini-3.8-flash")
+            self.assertEqual(payload["messages"][0]["content"][2]["input_audio"]["format"], "wav")
+            self.assertEqual(job["usage"][0]["cost"], 0.0001)
+            self.assertEqual(job["cloudSeconds"], 5)
+            self.assertNotIn("router-test", json.dumps(job))
+        for response in (httpx.Response(401), httpx.Response(200, json={"error": {"message": "private"}}),
+                         httpx.Response(200, json={"choices": [{"finish_reason": "length"}]})):
+            with patch("pipeline.httpx.post", return_value=response) as post:
+                with self.assertRaises(ValueError) as error:
+                    Pipeline(self.config).gemini([(audio, 0, 5)], "분석", job, lambda _: None)
+                self.assertEqual(post.call_count, 1)
+                self.assertNotIn("private", str(error.exception))
+        self.assertEqual(job["cloudCalls"], 4)
+        self.assertEqual(job["cloudSeconds"], 20)
 
     def test_real_ffmpeg_pipeline_tags_edit_and_zip(self):
         job_id = str(uuid4())
