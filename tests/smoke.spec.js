@@ -2076,7 +2076,8 @@ test.describe("데스크톱", () => {
         }
 
         await page.evaluate(() => setVolume(20));
-        await page.waitForTimeout(100);
+        // 실제 예열·AudioParam 램프가 끝난 뒤 값을 확인한다.
+        await expect.poll(() => page.evaluate(() => window.MFA_AmpDSP.runtime().masterGain)).toBeCloseTo(.2, 2);
         const quietRuntime = await page.evaluate(() => window.MFA_AmpDSP.runtime());
         expect(quietRuntime.graphReady).toBe(true);
         expect(quietRuntime.masterGain).toBeCloseTo(.2, 2);
@@ -2084,7 +2085,9 @@ test.describe("데스크톱", () => {
         expect(quietRuntime.speakerWet).toBeLessThan(.02);
 
         await page.locator("#ampPicker .skin-btn", { hasText: "300B · 91E" }).click();
-        await page.waitForTimeout(100);
+        await expect.poll(() => page.evaluate(() => window.MFA_AmpDSP.runtime().masterGain)).toBeCloseTo(.2, 2);
+        await expect.poll(() => page.evaluate(() => window.MFA_AmpDSP.runtime().speakerWet)).toBeGreaterThan(.12);
+        await expect.poll(() => page.evaluate(() => window.MFA_AmpDSP.runtime().speakerFeedback)).toBeGreaterThan(.5);
         const looseRuntime = await page.evaluate(() => window.MFA_AmpDSP.runtime());
         expect(looseRuntime.masterGain).toBeCloseTo(.2, 2);
         expect(looseRuntime.inputTrim).toBeCloseTo(1, 2);

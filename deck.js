@@ -1022,11 +1022,13 @@ function deckRefreshShelf() {
     const others = tapes.filter((t) => t !== deckTape && t !== deckBTape);
     // 보관함 입구 — 마지막 슬롯 자리에 카세트 크기의 '서랍' 카드로 상시 노출
     let html = '<g id="deckCaseBtn" role="button" tabindex="0" aria-label="테이프 보관함 열기" style="cursor:pointer">' +
-        '<rect x="1792" y="430" width="156" height="72" rx="6" fill="#26292f" stroke="#5f646d" stroke-width="1.6" stroke-dasharray="6 3"/>' +
-        '<text x="1870" y="461" font-family="Arial" font-size="13" font-weight="700" fill="#ccd0d6" text-anchor="middle">&#9656; 테이프 보관함</text>' +
-        '<text x="1870" y="482" font-family="Arial" font-size="10" fill="#8a8e94" text-anchor="middle">' + tapes.length + '개 &#183; 라벨/삭제/가져오기</text></g>';
+        '<rect x="1792" y="433" width="156" height="72" rx="4" fill="#08090b"/>' +
+        '<rect x="1792" y="430" width="156" height="72" rx="4" fill="#252a2f" stroke="#656d75" stroke-width="1.2"/>' +
+        '<path d="M1800 434 H1940" stroke="#b8bfc4" opacity=".25"/><path d="M1849 492 H1891" stroke="#07090a" stroke-width="4" stroke-linecap="round"/>' +
+        '<text x="1870" y="456" font-family="Arial" font-size="14" font-weight="600" fill="#e0e4e6" text-anchor="middle">테이프 보관함</text>' +
+        '<text x="1870" y="479" font-family="Arial" font-size="12" fill="#b2bac0" text-anchor="middle">' + tapes.length + '개 &#183; 열기</text></g>';
     if (!others.length) {
-        html += '<text x="1440" y="472" font-family="Arial" font-size="12" letter-spacing="1" fill="#55555c" text-anchor="middle">TAPE RACK &#183; EJECT하면 테이프가 이곳에 보관됩니다</text>';
+        html += '<text x="1440" y="472" font-family="Arial" font-size="14" letter-spacing=".5" fill="#91999f" text-anchor="middle">꺼낸 테이프가 여기에 보관됩니다</text>';
     } else {
         others.slice(0, 4).forEach((t, i) => {
             const x = 1120 + i * 168;

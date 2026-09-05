@@ -753,6 +753,7 @@ test.describe("안전성 코어 경계", () => {
         const target = page.frameLocator("#target");
         await target.locator("#audioPlayer").waitFor({ state: "attached" });
         const targetFrame = page.frames().find((frame) => frame.url().includes("chrome=tray"));
+        await targetFrame.waitForFunction(() => !!window.MFA_READY);
         await targetFrame.evaluate(() => window.MFA_READY);
         expect(await targetFrame.evaluate(() => MFA_TrayBridge.inspect())).toMatchObject({
             active: true,

@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const { chromium, webkit } = require("playwright");
+const { mockExternal } = require("./fixtures");
 
 const BASE = process.env.MFA_CAPTURE_BASE || "http://127.0.0.1:8147/";
 const runtimeScale = process.argv.includes("--runtime");
@@ -11,10 +12,12 @@ const BROWSER_TYPE = BROWSER_NAME === "webkit" ? webkit : chromium;
 
 const groups = {
     tuner: ["t2", "mr78", "m10b"],
-    eq: ["ge5", "se9"],
+    eq: ["ge5", "se9", "sh8065"],
     amp: ["mc2105", "el34", "300b", "e303", "ma2375"],
     deck: ["dragon", "b215", "tcd3014", "ctf1250", "w990"],
     turntable: ["sl1200", "td124", "g301", "lp12"],
+    timer: ["black", "silver"],
+    solo: ["victorv", "a501", "trc931"],
 };
 
 const selectors = {
@@ -23,6 +26,8 @@ const selectors = {
     amp: "#ampStage svg",
     deck: "#deckStage svg",
     turntable: "#ttStage svg",
+    timer: "#timerStage svg",
+    solo: "#soloStage svg",
 };
 
 const pickers = {
@@ -62,9 +67,11 @@ async function forcePoweredAppearance(page, selector) {
         serviceWorkers: "block",
     });
     const page = await context.newPage();
+    await mockExternal(context);
+    // 시각 비교에서는 실제 재킷을 사용하고 방송·미디어 요청만 모킹한다.
+    await context.route("https://upload.wikimedia.org/**", route => route.continue());
     page.on("pageerror", (error) => console.error("PAGEERROR", error.message));
     await page.addInitScript(() => {
-        localStorage.clear();
         localStorage.setItem("fmRadio.coachDone", "true");
         localStorage.setItem("fmRadio.lastStation", JSON.stringify("kbs1fm"));
         localStorage.setItem("fmRadio.units", JSON.stringify({ tuner: true, eq: true, amp: true, deck: true, tt: true }));
@@ -93,6 +100,10 @@ async function forcePoweredAppearance(page, selector) {
             const id = ids[index];
             if (group === "tuner") {
                 await page.evaluate((modelId) => initTunerSkin(modelId), id);
+            } else if (group === "timer") {
+                await page.evaluate((finish) => { timerFinish = finish; mountTimer(); }, id);
+            } else if (group === "solo") {
+                await page.evaluate((modelId) => setSoloModel(modelId), id);
             } else {
                 await page.evaluate(({ picker, itemIndex }) => {
                     const button = document.querySelectorAll(picker)[itemIndex];
@@ -104,12 +115,22 @@ async function forcePoweredAppearance(page, selector) {
             // Chromium이 합성 레이어를 완성하기 전에 캡처하면 검은 타일이 섞일 수 있어 한 프레임 더 안정화한다.
             await page.waitForTimeout(id === "w990" ? 700 : 240);
             await forcePoweredAppearance(page, selectors[group]);
+            if (group === "turntable") {
+                await page.waitForFunction(() => {
+                    const cover = document.getElementById("ttCoverImage");
+                    return !cover || cover.getAttribute("opacity") === "1";
+                }, null, { timeout: 5000 }).catch(() => console.log("재킷 대체 표지 사용", id));
+            }
             const target = page.locator(selectors[group]);
             await target.waitFor({ state: "visible" });
             const outPath = path.join(OUT, group + "-" + id + ".png");
             await target.screenshot({ path: outPath, animations: "disabled" });
             const box = await target.boundingBox();
             console.log(group + "/" + id, box && Math.round(box.width) + "x" + Math.round(box.height));
+            if (group === "solo" && id === "a501") {
+                await page.evaluate(() => setSoloModel("a501", "mint"));
+                await target.screenshot({ path: path.join(OUT, "solo-a501-mint.png"), animations: "disabled" });
+            }
         }
     }
 

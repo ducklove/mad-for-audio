@@ -2,3 +2,4 @@ node_modules/
 .stream/
 test-results/
 playwright-report/
+artifacts/

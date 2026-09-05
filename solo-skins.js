@@ -389,11 +389,11 @@ function mfaVictorVSvg() {
         '<circle r="100" fill="none" stroke="#000" stroke-width="2" opacity=".35"/>' +
         '<circle r="94" fill="none" stroke="#eadfc4" stroke-width="2.5" opacity=".55"/>' +
         '<circle r="86" fill="none" stroke="#eadfc4" stroke-width="1" opacity=".35"/>' +
-        '<text font-family="Georgia, serif" font-size="16" letter-spacing="2.2" fill="#f6ead0"><textPath href="#gvLabelArc" startOffset="50%" text-anchor="middle">MAD FOR AUDIO RECORDS</textPath></text>' +
-        '<text id="gvLabelBig" x="0" y="-6" font-family="Georgia, serif" font-size="27" font-weight="700" fill="#f8f0da" text-anchor="middle">78</text>' +
+        '<text class="gv-label-ink" font-family="Georgia, serif" font-size="16" letter-spacing="2.2" fill="#f6ead0"><textPath href="#gvLabelArc" startOffset="50%" text-anchor="middle">MAD FOR AUDIO RECORDS</textPath></text>' +
+        '<text id="gvLabelBig" x="0" y="-24" font-family="Georgia, serif" font-size="27" font-weight="700" fill="#f8f0da" text-anchor="middle">78</text>' +
         '<text id="gvLabelTitle" x="0" y="22" font-family="Arial" font-size="14" fill="#f2e6c8" text-anchor="middle"></text>' +
         '<text id="gvLabelArtist" x="0" y="44" font-family="Arial" font-size="12" fill="#e6d5ae" text-anchor="middle"></text>' +
-        '<text x="0" y="70" font-family="Arial" font-size="12.5" font-weight="700" letter-spacing="1.6" fill="#f8f0da" text-anchor="middle">78 R.P.M.</text>' +
+        '<text class="gv-label-ink" x="0" y="70" font-family="Arial" font-size="12.5" font-weight="700" letter-spacing="1.6" fill="#f8f0da" text-anchor="middle">78 R.P.M.</text>' +
         // 물때 조수선 — 물이 스미고 마르며 가장자리에만 광물이 침착된다. 얼룩 안쪽보다
         // 경계선이 진한 것이 물때의 결정적 신호다. 그리고 리드아웃을 넘은 바늘이 라벨을 긁었다.
         '<path d="M-96 -22 Q-52 26 6 44 Q62 60 98 26" fill="none" stroke="#6b5330" stroke-width="3" opacity=".3"/>' +
@@ -423,7 +423,7 @@ function mfaVictorVSvg() {
         gvHornSeams() +
         // 백 년 된 놋쇠 — 라커가 벗겨지며 얼룩덜룩 변색한다. 변색은 광택보다 아래에 깔려야
         // 한다: 닦인 곳은 여전히 반사하고, 변색한 곳만 빛을 잃는다.
-        '<rect x="80" y="10" width="860" height="730" fill="#000" filter="url(#gvTarnish)" opacity=".34"/>' +
+        '<rect x="80" y="10" width="860" height="730" fill="#000" filter="url(#gvTarnish)" opacity=".2"/>' +
         // 녹청은 목 둘레의 골에만 아주 얇게 — 넓게 깔면 곰팡이처럼 보인다
         '<ellipse cx="' + GV_THROAT.x + '" cy="' + GV_THROAT.y + '" rx="120" ry="100" fill="#000" filter="url(#gvVerdigris)" opacity=".22"/>' +
         // 원뿔 안쪽 벽에 고인 빛 — 목 반대편(오른쪽 아래) 곡면이 키 라이트를 받는다.
@@ -530,9 +530,9 @@ function mfaVictorVSvg() {
         '<ellipse cx="880" cy="1080" rx="220" ry="100" fill="url(#gvWoodBlotch)"/>' +
         // 100년치 그을음과 손때 — 니스 표면에 얼룩덜룩 앉는다
         '<g clip-path="url(#gvFrontClip)">' +
-        '<rect x="190" y="930" width="820" height="220" fill="#000" filter="url(#gvGrime)" opacity=".38"/>' +
+        '<rect x="190" y="930" width="820" height="220" fill="#000" filter="url(#gvGrime)" opacity=".18"/>' +
         // 셸락 니스의 크레이징 — 표면에 그물처럼 얽힌 미세 균열망
-        '<rect x="190" y="930" width="820" height="220" fill="#000" filter="url(#gvCrazeF)" opacity=".62"/>' +
+        '<rect x="190" y="930" width="820" height="220" fill="#000" filter="url(#gvCrazeF)" opacity=".22"/>' +
         // 모서리와 기둥 각은 마감이 닳아 생나무가 비친다
         '<rect x="190" y="930" width="820" height="220" fill="url(#gvRubEdge)"/>' +
         // 물잔 자국 — 찬 잔 밑의 물이 셸락막에 스며 미세 공극을 만들고 빛을 산란시킨다.
@@ -648,16 +648,16 @@ function mfaVictorVSvg() {
         '<circle id="gvSleeveLabel" cx="1701" cy="343" r="104" fill="#b7472f"/>' +
         '<circle cx="1701" cy="343" r="104" fill="none" stroke="#000" stroke-width="2" opacity=".3"/>' +
         '<circle cx="1701" cy="343" r="97" fill="none" stroke="#eadfc4" stroke-width="2" opacity=".55"/>' +
-        '<text id="gvSleeveBig" x="1701" y="314" font-family="Georgia, serif" font-size="27" font-weight="700" fill="#f8f0da" text-anchor="middle"></text>' +
-        '<text id="gvSleeveTitle" x="1701" y="345" font-family="Arial" font-size="14" fill="#f4e9cc" text-anchor="middle"></text>' +
-        '<text id="gvSleeveArtist" x="1701" y="369" font-family="Arial" font-size="12" fill="#e6d5ae" text-anchor="middle"></text>' +
-        '<text x="1701" y="398" font-family="Arial" font-size="11.5" font-weight="700" letter-spacing="1.8" fill="#f4e9cc" text-anchor="middle">78 R.P.M.</text>' +
+        '<text id="gvSleeveBig" x="1701" y="298" font-family="Georgia, serif" font-size="27" font-weight="700" fill="#f8f0da" text-anchor="middle"></text>' +
+        '<text id="gvSleeveTitle" x="1701" y="323" font-family="Arial" font-size="14" fill="#f4e9cc" text-anchor="middle"></text>' +
+        '<text id="gvSleeveArtist" x="1701" y="382" font-family="Arial" font-size="12" fill="#e6d5ae" text-anchor="middle"></text>' +
+        '<text class="gv-label-ink" x="1701" y="410" font-family="Arial" font-size="11.5" font-weight="700" letter-spacing="1.8" fill="#f4e9cc" text-anchor="middle">78 R.P.M.</text>' +
         '<circle cx="1701" cy="343" r="7" fill="#0d0b09"/>' +
         '<path d="M1470 112 H1932 M1470 574 H1932" stroke="#8a7752" stroke-width="1" opacity=".5"/>' +
         '<text x="1494" y="154" font-family="Georgia, serif" font-size="20" font-style="italic" fill="#5f4f33">Victor Record</text>' +
         '<text id="gvSleeveNote" x="1494" y="546" font-family="Arial" font-size="13" fill="#5f4f33"></text>' +
         // 100년 묵은 종이 — 갈색 폭싱 반점, 가장자리 갈변, 접힌 자국, 안에 든 판이 눌러 만든 원형 자국
-        '<rect x="1470" y="112" width="462" height="462" fill="#000" filter="url(#gvFoxing)" opacity=".3"/>' +
+        '<rect x="1470" y="112" width="462" height="462" fill="#000" filter="url(#gvFoxing)" opacity=".12"/>' +
         '<rect x="1470" y="112" width="462" height="462" fill="url(#gvPaperEdge)"/>' +
         '<path d="M1470 236 H1932" stroke="#8a7146" stroke-width="2.4" opacity=".22"/>' +
         '<path d="M1470 233 H1932" stroke="#efe4c8" stroke-width="1.6" opacity=".2"/>' +
@@ -848,7 +848,7 @@ function mfaA501Svg(finish) {
         '<path d="M205 214 Q1000 112 1795 214 L1790 268 Q1000 168 210 268 Z" fill="#e8e4d6" opacity=".09" filter="url(#soSoft)"/>' +
         // 70년치 잔 스크래치와 손때 — 광택이 죽고 표면이 고르지 않다
         '<rect x="150" y="96" width="1700" height="704" fill="#000" filter="url(#a5Soil)" opacity=".22"/>' +
-        '<rect x="150" y="96" width="1700" height="704" fill="#000" filter="url(#a5CrazeF)" opacity=".22"/>' +
+        '<rect x="150" y="96" width="1700" height="704" fill="#000" filter="url(#a5CrazeF)" opacity=".1"/>' +
         '<path d="M150 800 H1850 L1795 200 Q1000 96 205 200 Z" fill="url(#a5Gloss)"/>' +
         '</g>' +
         // 윗면 — 뒤로 넘어간 곡면
@@ -879,9 +879,9 @@ function mfaA501Svg(finish) {
         '<g clip-path="url(#a5GrilleClip)" pointer-events="none">' +
         '<rect x="250" y="243" width="643" height="392" fill="url(#a5GrilleShade)"/>' +
         // 구멍마다 앉은 70년치 때 — 얼룩덜룩 번져 그릴 톤을 고르지 않게 만든다
-        '<rect x="250" y="243" width="643" height="392" fill="#000" filter="url(#a5Soil)" opacity=".55"/>' +
+        '<rect x="250" y="243" width="643" height="392" fill="#000" filter="url(#a5Soil)" opacity=".2"/>' +
         '<rect x="250" y="243" width="643" height="392" fill="#000" filter="url(#a5Pit)" opacity=".3"/>' +
-        '<rect x="250" y="243" width="643" height="392" fill="#000" filter="url(#a5CrazeF)" opacity=".22"/>' +
+        '<rect x="250" y="243" width="643" height="392" fill="#000" filter="url(#a5CrazeF)" opacity=".1"/>' +
         '<rect x="250" y="243" width="643" height="18" fill="url(#a5InsetTop)"/>' +
         '</g>' +
         '<rect x="250" y="243" width="643" height="392" rx="7" fill="none" stroke="#8f8770" stroke-width="1.8" opacity=".6"/>' +
@@ -919,8 +919,8 @@ function mfaA501Svg(finish) {
         '</g>' +
         // 현재 방송 이름 — 다이얼 유리에 인쇄된 국명 자리
         '<text id="a5StationText" x="1330" y="516" font-family="Arial" font-size="24" font-weight="600" letter-spacing="1.6" fill="' + t.ink + '" text-anchor="middle" opacity=".88"></text>' +
-        '<text x="1332" y="614" font-family="Georgia, serif" font-size="27" font-style="italic" font-weight="700" letter-spacing="3" fill="#f6eeda" opacity=".26" text-anchor="middle">TWO BAND SUPER HETERODYNE</text>' +
-        '<text x="1330" y="612" font-family="Georgia, serif" font-size="27" font-style="italic" font-weight="700" letter-spacing="3" fill="' + t.sub + '" text-anchor="middle" opacity=".95">TWO BAND SUPER HETERODYNE</text>' +
+        '<text x="1332" y="614" font-family="Georgia, serif" font-size="20" font-style="italic" font-weight="700" letter-spacing="3" fill="#f6eeda" opacity=".26" text-anchor="middle">TWO BAND SUPER HETERODYNE</text>' +
+        '<text x="1330" y="612" font-family="Georgia, serif" font-size="20" font-style="italic" font-weight="700" letter-spacing="3" fill="' + t.sub + '" text-anchor="middle" opacity=".95">TWO BAND SUPER HETERODYNE</text>' +
         // 유리면 반사
         // 유리 뒷면 인쇄는 바래고, 앞면에는 먼지 필름과 얼룩이 앉았다
         '<rect x="905" y="243" width="845" height="392" fill="#000" filter="url(#a5Soil)" opacity=".3" pointer-events="none"/>' +
@@ -947,8 +947,8 @@ function mfaA501Svg(finish) {
         '<path d="M256 566 L372 558 M1628 558 L1744 566" stroke="#cdd0cb" stroke-width="1.8" opacity=".5"/>' +
         // 70년 된 크롬은 거울이 아니다 — 점 부식으로 검게 얼룩지고 도금이 벗겨져 흰 각질이 인다
         '<g clip-path="url(#a5SpearClip)">' +
-        '<rect x="256" y="530" width="1490" height="72" fill="#000" filter="url(#a5Corrode)" opacity=".72"/>' +
-        '<rect x="256" y="530" width="1490" height="72" fill="#000" filter="url(#a5Flake)" opacity=".5"/>' +
+        '<rect x="256" y="530" width="1490" height="72" fill="#000" filter="url(#a5Corrode)" opacity=".24"/>' +
+        '<rect x="256" y="530" width="1490" height="72" fill="#000" filter="url(#a5Flake)" opacity=".16"/>' +
         '</g>' +
 
         // 다이얼 드래그 히트존
@@ -1063,7 +1063,7 @@ function mfaBoomboxSvg() {
             '<rect x="' + (x - 10) + '" y="530" width="20" height="1.2" fill="#0a0b0d" opacity=".7"/>' +
             '</g>' +
             '<rect id="bbEqHit' + i + '" x="' + (x - 32) + '" y="458" width="64" height="130" fill="#000" fill-opacity="0" style="cursor:ns-resize;touch-action:none" tabindex="0" role="slider" aria-label="EQ ' + eqLabels[i] + ' — 위아래로 끌어 조절" aria-valuemin="-10" aria-valuemax="10" aria-valuenow="0"><title>' + eqLabels[i] + ' ±10dB</title></rect>' +
-            '<text x="' + x + '" y="595" font-family="Arial" font-size="8.5" fill="#9aa0a6" text-anchor="middle">' + eqLabels[i] + '</text>';
+            '<text x="' + x + '" y="595" font-family="Arial" font-size="11" fill="#c4c7c9" text-anchor="middle">' + eqLabels[i] + '</text>';
         return out;
     }).join("");
 
@@ -1141,7 +1141,7 @@ function mfaBoomboxSvg() {
         const label = k.tag
             ? '<rect x="' + (kc - 26) + '" y="999" width="52" height="14" rx="2.5" fill="' + k.tag + '"/>' +
               '<text x="' + kc + '" y="1009.5" font-family="Arial" font-size="8" font-weight="700" letter-spacing="1" fill="' + (k.tag === "#d9ba43" ? "#14120a" : "#f6efe4") + '" text-anchor="middle">' + k.label + '</text>'
-            : '<text x="' + kc + '" y="1009.5" font-family="Arial" font-size="8" font-weight="600" letter-spacing="1" fill="#b8bcc2" text-anchor="middle">' + k.label + '</text>';
+            : '<text x="' + kc + '" y="1009.5" font-family="Arial" font-size="10" font-weight="600" letter-spacing=".7" fill="#d5d6d4" text-anchor="middle">' + k.label + '</text>';
         return label +
             '<g id="' + k.id + 'G">' +
             '<rect x="' + x + '" y="1018" width="74" height="52" rx="5" fill="url(#bbKey)" stroke="#050608" stroke-width="1.5"/>' +
@@ -1290,7 +1290,7 @@ function mfaBoomboxSvg() {
         // 다이얼 유리
         '<rect x="430" y="276" width="1200" height="118" rx="8" fill="url(#bbGlass)" stroke="#000" stroke-width="2"/>' +
         '<rect x="430" y="276" width="1200" height="14" fill="#000" opacity=".28"/>' +
-        '<text x="507" y="314" font-family="Arial" font-size="9" fill="#8a8d92">ST</text>' +
+        '<text x="507" y="314" font-family="Arial" font-size="11" fill="#c1c4c6">ST</text>' +
         '<circle id="bbStLed" cx="527" cy="310" r="4.5" fill="#3a1512" stroke="#000" stroke-width="1"/>' +
         '<g id="bbRowFM">' + fmRow + '<g id="bbStMarks"></g></g>' + '<g id="bbRowAM">' + amRow + '</g><g id="bbRowSW">' + swRow + '</g>' +
         '<g id="bbNeedle"><rect x="558.2" y="280" width="3.6" height="112" fill="#e8554a" opacity=".95"/>' +
@@ -1428,13 +1428,13 @@ function mfaBoomboxSvg() {
         '<text x="822" y="852.5" font-family="Arial" font-size="7" font-weight="700" letter-spacing="1" fill="#f6efe4" text-anchor="middle">TAPE SCALE</text>' +
         '<path d="M786 866 H904" stroke="#4a4d54" stroke-width="1.5" opacity=".7"/>' +
         '<path d="M790 866 V860 M810 866 V862 M830 866 V860 M850 866 V862 M870 866 V860 M890 866 V862" stroke="#4a4d54" stroke-width="1.2" opacity=".6"/>' +
-        '<text x="794" y="996" font-family="Arial" font-size="9" fill="#8a8d92">TAPE B</text>' +
+        '<text x="794" y="996" font-family="Arial" font-size="11" fill="#c1c4c6">TAPE B</text>' +
         '<text x="1055" y="996" font-family="Arial" font-size="9.5" letter-spacing="2.5" fill="#b8bcc2" text-anchor="middle">STEREO CASSETTE RECORDER</text>' +
         '<rect x="915" y="842" width="290" height="112" rx="8" fill="url(#bbTapeGlass)" stroke="#000" stroke-width="2.5"/>' +
         '<rect x="925" y="850" width="270" height="96" rx="6" fill="#202227" stroke="#0a0b0d" stroke-width="1.5"/>' +
         '<rect x="940" y="856" width="240" height="30" rx="3" fill="#d9d3c4" opacity=".9"/>' +
         '<text id="bbTapeTitle" x="1060" y="869" font-family="Arial" font-size="10.5" font-weight="700" fill="#3a3428" text-anchor="middle"></text>' +
-        '<text id="bbTapeArtist" x="1060" y="881.5" font-family="Arial" font-size="8" fill="#6a6254" text-anchor="middle"></text>' +
+        '<text id="bbTapeArtist" x="1060" y="881.5" font-family="Arial" font-size="10" fill="#484238" text-anchor="middle"></text>' +
         '<circle cx="990" cy="915" r="30" fill="#191512"/>' +
         '<circle cx="1130" cy="915" r="22" fill="#191512"/>' +
         hub("bbHubBL", 990, 915) + hub("bbHubBR", 1130, 915) +

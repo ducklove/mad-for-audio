@@ -1639,7 +1639,7 @@ function timerPaint() {
     const vfdGroup = document.getElementById("dtVfdGroup");
     if (vfdGroup) {
         const pending = timerArmed && !!(next || activeResRec);
-        vfdGroup.style.opacity = recActive ? ".94" : pending || sleepDeadline > 0 ? ".78" : timerArmed ? ".62" : ".48";
+        vfdGroup.style.opacity = recActive ? ".94" : pending || sleepDeadline > 0 ? ".9" : timerArmed ? ".84" : ".74";
     }
 
     const lamp = (id, onColor, on) => {
@@ -1805,7 +1805,7 @@ function mountEq() {
             '<rect x="' + (cx - hw + 3) + '" y="-16" width="' + (EQ_CAPW - 6) + '" height="9" rx="3" fill="' + theme.capTop + '" opacity=".72"/>' +
             '<path d="M' + (cx - hw + 4) + ' -12 H' + (cx + hw - 4) + '" stroke="#fff" stroke-width="1.2" opacity=".35"/>' +
             '<rect x="' + (cx - hw + 3) + '" y="-3" width="' + (EQ_CAPW - 6) + '" height="6" rx="2" fill="' + theme.mark + '"/>' +
-            (dualChannel ? '<text x="' + cx + '" y="14" font-family="Arial" font-size="7" font-weight="700" fill="' + theme.fieldInk + '" text-anchor="middle">' + channel + '</text>' : '');
+            (dualChannel ? '<text x="' + cx + '" y="14" font-family="Arial" font-size="9" font-weight="700" fill="' + theme.fieldInk + '" text-anchor="middle">' + channel + '</text>' : '');
         const caps = dualChannel ? capAt(x - 20, 'L') + capAt(x + 20, 'R') : capAt(x, '');
         return slots +
             spectrum +
@@ -1842,7 +1842,7 @@ function mountEq() {
                     '<rect x="' + x + '" y="' + y + '" width="88" height="25" rx="4" fill="#191b21" stroke="#3a3e46" stroke-width="1.2"/>' +
                     '<path d="M' + (x + 4) + ' ' + (y + 3.5) + ' H' + (x + 84) + '" stroke="#fff" stroke-width="1.2" opacity=".16" pointer-events="none"/>' +
                     '<circle id="eqKeyLed_' + keyDef.id + '" cx="' + (x + 9) + '" cy="' + (y + 12.5) + '" r="2.8" fill="#1c3527" pointer-events="none"/>' +
-                    '<text x="' + (x + 48) + '" y="' + (y + 17) + '" font-family="Arial" font-size="9.5" font-weight="700" letter-spacing=".6" fill="#c4c8ce" text-anchor="middle" pointer-events="none">' + keyDef.key + '</text></g>';
+                    '<text x="' + (x + 48) + '" y="' + (y + 17) + '" font-family="Arial" font-size="11.5" font-weight="600" letter-spacing=".3" fill="#e0e2e4" text-anchor="middle" pointer-events="none">' + keyDef.key + '</text></g>';
             }).join("");
     }
     let modelTrim = "";
@@ -1903,7 +1903,7 @@ function mountEq() {
         (isMemory ? keyBank :
             '<rect x="392" y="70" width="202" height="276" rx="10" fill="#07090b" stroke="' + theme.edge + '" stroke-width="2"/>' +
             '<rect x="402" y="80" width="182" height="256" rx="6" fill="url(#eqField)" stroke="#000"/>' +
-            '<text x="545" y="101" font-family="Arial" font-size="13" font-weight="700" letter-spacing="1.8" fill="#d4d7da" text-anchor="middle">OUTPUT LEVEL</text>' +
+            '<text x="545" y="84" font-family="Arial" font-size="12" font-weight="600" letter-spacing="1" fill="#d4d7da" text-anchor="middle">LEVEL</text>' +
             '<text x="503" y="113" font-family="Arial" font-size="11" fill="#9ca0a5" text-anchor="end">+12</text>' +
             '<text x="503" y="310" font-family="Arial" font-size="11" fill="#9ca0a5" text-anchor="end">-12</text>' +
             lvl) +
@@ -2058,7 +2058,7 @@ function mountEq8065() {
         const oct = SH8065_OCTAVE.has(f);
         slots += '<rect x="' + (x - 2.4) + '" y="66" width="4.8" height="106" rx="2.4" fill="url(#eq8Slot)" stroke="#08090b" stroke-width=".8"/>' +
                  '<rect x="' + (x - 2.4) + '" y="200" width="4.8" height="106" rx="2.4" fill="url(#eq8Slot)" stroke="#08090b" stroke-width=".8"/>';
-        labelStrip += '<text x="' + x + '" y="190" font-family="Arial" font-size="' + (oct ? 10 : 8) + '" font-weight="' + (oct ? 700 : 600) + '" fill="' + (oct ? "#eff1ed" : "#a2a6a0") + '" text-anchor="middle">' + labels[i] + '</text>';
+        labelStrip += '<text x="' + x + '" y="190" font-family="Arial" font-size="' + (oct ? 12 : 10) + '" font-weight="' + (oct ? 700 : 600) + '" fill="' + (oct ? "#eff1ed" : "#a2a6a0") + '" text-anchor="middle">' + labels[i] + '</text>';
         caps += '<g id="eq8capL' + i + '" transform="translate(0,' + eq8YFor(g[i] || 0, EQ8_L, range).toFixed(1) + ')" filter="url(#eq8HandleShadow)">' + cap(x) + '</g>' +
                 '<g id="eq8capR' + i + '" transform="translate(0,' + eq8YFor(g[i] || 0, EQ8_R, range).toFixed(1) + ')" filter="url(#eq8HandleShadow)">' + cap(x) + '</g>';
         hits += '<rect id="eq8HitL' + i + '" x="' + (x - hitHw) + '" y="68" width="' + (hitHw * 2) + '" height="110" fill-opacity="0" style="cursor:ns-resize;touch-action:none" tabindex="0" role="slider" aria-label="좌 ' + labels[i] + 'Hz" aria-valuemin="-' + range + '" aria-valuemax="' + range + '"><title>L · ' + labels[i] + 'Hz</title></rect>' +
@@ -2077,20 +2077,20 @@ function mountEq8065() {
     });
     // 행별 축 레이블 + 채널 태그
     const axis = (row, tag) =>
-        '<text x="' + (EQ8_FX + 34) + '" y="' + (row.t + 5) + '" font-family="Arial" font-size="11" font-weight="700" fill="#cfe6f1" text-anchor="end">+' + range + '</text>' +
-        '<text x="' + (EQ8_FX + 34) + '" y="' + ((row.t + row.b) / 2 + 4) + '" font-family="Arial" font-size="11" font-weight="700" fill="#eef4f7" text-anchor="end">0</text>' +
-        '<text x="' + (EQ8_FX + 34) + '" y="' + (row.b + 5) + '" font-family="Arial" font-size="11" font-weight="700" fill="#cfe6f1" text-anchor="end">−' + range + '</text>' +
+        '<text x="' + (EQ8_FX + 25) + '" y="' + (row.t + 5) + '" font-family="Arial" font-size="11" font-weight="700" fill="#cfe6f1" text-anchor="end">+' + range + '</text>' +
+        '<text x="' + (EQ8_FX + 25) + '" y="' + ((row.t + row.b) / 2 + 4) + '" font-family="Arial" font-size="11" font-weight="700" fill="#eef4f7" text-anchor="end">0</text>' +
+        '<text x="' + (EQ8_FX + 25) + '" y="' + (row.b + 5) + '" font-family="Arial" font-size="11" font-weight="700" fill="#cfe6f1" text-anchor="end">−' + range + '</text>' +
         '<text x="' + (fieldR - 12) + '" y="' + ((row.t + row.b) / 2 - 8) + '" font-family="Arial" font-size="15" font-weight="800" fill="#8fd0ec" text-anchor="end" opacity=".82">' + tag + '</text>';
 
     // 좌측 컨트롤 존 — 2단 토글 스위치 헬퍼
     const swi = (x, y, id, up, down, title, isUp) =>
-        '<text x="' + (x + 20) + '" y="' + (y - 7) + '" font-family="Arial" font-size="9.5" font-weight="700" letter-spacing=".4" fill="#33352f" text-anchor="middle">' + up + '</text>' +
+        '<text x="' + (x + 20) + '" y="' + (y - 7) + '" font-family="Arial" font-size="12" font-weight="600" letter-spacing=".3" fill="#292c29" text-anchor="middle">' + up + '</text>' +
         '<rect x="' + x + '" y="' + y + '" width="40" height="60" rx="6" fill="#111310" stroke="#7f827b" stroke-width="1.4"/>' +
         '<rect x="' + (x + 3) + '" y="' + (y + 3) + '" width="34" height="54" rx="4" fill="#08090a"/>' +
         '<g id="' + id + '_lev" data-up="' + (y + 4) + '" data-down="' + (y + 30) + '" transform="translate(0,' + (isUp ? 0 : 26) + ')">' +
         '<rect x="' + (x + 5) + '" y="' + (y + 4) + '" width="30" height="26" rx="4" fill="url(#eq8Cap)" stroke="#2f3236" stroke-width="1"/>' +
         '<path d="M' + (x + 8) + ' ' + (y + 9) + ' H' + (x + 32) + '" stroke="#fff" stroke-width="1.5" opacity=".5"/></g>' +
-        '<text x="' + (x + 20) + '" y="' + (y + 75) + '" font-family="Arial" font-size="9.5" font-weight="700" letter-spacing=".4" fill="#33352f" text-anchor="middle">' + down + '</text>' +
+        '<text x="' + (x + 20) + '" y="' + (y + 75) + '" font-family="Arial" font-size="12" font-weight="600" letter-spacing=".3" fill="#292c29" text-anchor="middle">' + down + '</text>' +
         '<rect id="' + id + '_hit" x="' + (x - 6) + '" y="' + (y - 18) + '" width="52" height="98" fill-opacity="0" style="cursor:pointer"><title>' + title + '</title></rect>';
 
     const rangeUp = range === 12, invOn = fpGet("eq8065.inv", false), inputHi = fpGet("eq8065.input", false);
@@ -2135,7 +2135,7 @@ function mountEq8065() {
         '<rect x="' + (EQ8_FX + 4) + '" y="64" width="' + EQ8_FW + '" height="256" rx="9" fill="#000" opacity=".5" filter="url(#eq8SlotShadow)"/>' +
         '<rect x="' + EQ8_FX + '" y="60" width="' + EQ8_FW + '" height="256" rx="8" fill="url(#eq8Field)" stroke="#5c6066" stroke-width="2.2"/>' +
         '<path d="M' + (EQ8_FX + 10) + ' 70 H' + (fieldR - 10) + '" stroke="#fff" stroke-width="1.6" opacity=".12"/>' +
-        '<rect x="' + (EQ8_FX + 34) + '" y="176" width="' + (EQ8_FW - 48) + '" height="26" fill="#0a0d11" opacity=".55"/>' +
+        '<rect x="' + (EQ8_FX + 25) + '" y="176" width="' + (EQ8_FW - 48) + '" height="26" fill="#0a0d11" opacity=".55"/>' +
         rowGrid + slots +
         '<path id="eq8curveL" d="' + curveD(EQ8_L) + '" fill="none" stroke="#efc169" stroke-width="1.6" stroke-linejoin="round" opacity=".55" pointer-events="none"/>' +
         '<path id="eq8curveR" d="' + curveD(EQ8_R) + '" fill="none" stroke="#efc169" stroke-width="1.6" stroke-linejoin="round" opacity=".55" pointer-events="none"/>' +
@@ -3402,7 +3402,7 @@ function ttVisualSpec(id, skin) {
     const specs = {
         sl1200: {
             body: '<path d="M48 18 Q48 0 68 0 H1118 Q1144 0 1144 28 V596 Q1144 622 1118 622 H68 Q44 622 44 596 Z" fill="url(#ttCastSilver)" stroke="#5a5d61" stroke-width="4"/><path d="M68 28 H1118 V590 H68 Z" fill="none" stroke="#fff" stroke-width="2" opacity=".45"/><path d="M84 44 H1098" stroke="#fff" stroke-width="4" opacity=".28"/><rect x="48" y="2" width="1094" height="618" rx="18" fill="url(#ttMetalGrain)" opacity=".46" pointer-events="none"/>',
-            brand: '<text x="70" y="68" font-family="Arial" font-size="28" font-style="italic" font-weight="800" letter-spacing="-1" fill="#25272a">Technics</text><text x="72" y="98" font-family="Arial" font-size="13" font-weight="700" letter-spacing="2.3" fill="#45484c">SL-1200MK2 · QUARTZ DIRECT DRIVE</text>',
+            brand: '<text x="70" y="68" font-family="Arial" font-size="28" font-style="italic" font-weight="800" letter-spacing="-1" fill="#25272a">Technics</text><text x="72" y="98" font-family="Arial" font-size="13" font-weight="700" letter-spacing="2.3" fill="#45484c">SL-1200MK2</text>',
             platterBase: '<ellipse cx="570" cy="348" rx="294" ry="286" fill="#000" opacity=".42" filter="url(#ttShadow)"/><circle cx="560" cy="330" r="288" fill="url(#ttChrome)" stroke="#33353a" stroke-width="3"/><circle cx="560" cy="330" r="278" fill="#1c1e21"/><circle cx="560" cy="330" r="273" fill="url(#ttRubber)"/>',
             spinTrim: '<g id="ttStrobeRing">' + strobe + '</g><circle cx="560" cy="330" r="257" fill="none" stroke="#090a0c" stroke-width="6"/>',
             armBase: '<ellipse cx="1070" cy="132" rx="64" ry="60" fill="#000" opacity=".4" filter="url(#ttShadow)"/><circle cx="1065" cy="120" r="55" fill="url(#ttChrome)" stroke="#42454a" stroke-width="3"/><circle cx="1065" cy="120" r="40" fill="#303338" stroke="#f2f2ee" stroke-width="2"/><path d="M1027 120 H1103 M1065 82 V158" stroke="#9ea1a5" stroke-width="4"/><circle cx="1065" cy="120" r="19" fill="url(#ttDarkMetal)"/><rect x="916" y="476" width="30" height="51" rx="7" fill="#292c30" stroke="#6f7277"/><rect x="908" y="474" width="46" height="13" rx="5" fill="url(#ttChrome)"/>',
@@ -3433,8 +3433,8 @@ function ttVisualSpec(id, skin) {
                 '<rect id="ttBrakeHit" x="176" y="330" width="72" height="102" fill="#000" fill-opacity="0" style="cursor:pointer;touch-action:none" tabindex="0" role="button" aria-label="브레이크 — 누르는 동안 플래터 정지"><title>BRAKE — 누르는 동안 플래터를 즉시 세웁니다</title></rect>' + modelScrew(84, 562, true) + modelScrew(1094, 562, true)
         },
         lp12: {
-            body: '<rect x="30" y="-14" width="1138" height="662" rx="8" fill="url(#ttRosewood)" stroke="#21120b" stroke-width="6"/><rect x="58" y="18" width="1080" height="598" rx="3" fill="#121316" stroke="#666970" stroke-width="2"/><path d="M44 4 H1152 M44 630 H1152" stroke="#df9561" stroke-width="3" opacity=".38"/><rect x="42" y="-2" width="1112" height="638" rx="6" fill="url(#ttWoodLines)" opacity=".5" pointer-events="none"/>',
-            brand: '<text x="72" y="75" font-family="Arial" font-size="31" font-weight="300" letter-spacing="7" fill="#efede6">LINN</text><text x="74" y="103" font-family="Arial" font-size="12" font-weight="700" letter-spacing="3.2" fill="#9b9c9c">SONDEK LP12 · SUSPENDED SUBCHASSIS</text>',
+            body: '<rect x="30" y="-14" width="1138" height="662" rx="8" fill="url(#ttRosewood)" stroke="#21120b" stroke-width="6"/><rect x="42" y="-2" width="1112" height="638" rx="6" fill="url(#ttWoodLines)" opacity=".24" pointer-events="none"/><rect x="58" y="18" width="1080" height="598" rx="3" fill="#121316" stroke="#666970" stroke-width="2"/><path d="M44 4 H1152 M44 630 H1152" stroke="#df9561" stroke-width="3" opacity=".38"/>',
+            brand: '<text x="72" y="75" font-family="Arial" font-size="31" font-weight="300" letter-spacing="7" fill="#efede6">LINN</text><text x="74" y="103" font-family="Arial" font-size="12" font-weight="700" letter-spacing="3.2" fill="#9b9c9c">SONDEK LP12</text>',
             platterBase: '<ellipse cx="570" cy="348" rx="286" ry="280" fill="#000" opacity=".62" filter="url(#ttShadow)"/><circle cx="560" cy="330" r="279" fill="#08090b" stroke="#5c5e62" stroke-width="2"/><circle cx="560" cy="330" r="273" fill="#202125"/><circle cx="560" cy="330" r="266" fill="url(#ttRubber)"/>',
             spinTrim: '<circle cx="560" cy="330" r="263" fill="none" stroke="#55575c" stroke-width="2"/><circle cx="560" cy="330" r="258" fill="none" stroke="#0a0b0d" stroke-width="5"/>',
             armBase: '<ellipse cx="1070" cy="130" rx="52" ry="51" fill="#000" opacity=".6" filter="url(#ttShadow)"/><circle cx="1065" cy="120" r="45" fill="#111216" stroke="#666970" stroke-width="2"/><circle cx="1065" cy="120" r="28" fill="#25272c"/><circle cx="1065" cy="120" r="11" fill="url(#ttChrome)"/><rect x="919" y="480" width="24" height="46" rx="4" fill="#111216" stroke="#55585d"/><path d="M913 482 H949" stroke="#383a3f" stroke-width="10" stroke-linecap="round"/>',
@@ -3460,11 +3460,11 @@ function mountTurntable() {
     const ttSkin = TT_MODELS[ttModelId];
     const ttVisual = ttVisualSpec(ttModelId, ttSkin);
     let grooves = "";
-    for (let r = 108; r <= 246; r += 7) {
+    for (let r = 108; r <= 246; r += 2.5) {
         grooves += '<circle cx="560" cy="330" r="' + r + '" fill="none" stroke="#000" stroke-width="0.8" opacity="0.5"/>';
     }
     for (let i = 0; i < 6; i++) {
-        grooves += '<circle cx="560" cy="330" r="' + (116 + i * 22) + '" fill="none" stroke="#2e2e33" stroke-width="4" opacity="0.5"/>';
+        grooves += '<circle cx="560" cy="330" r="' + (116 + i * 22) + '" fill="none" stroke="#2e2e33" stroke-width="1.4" opacity="0.32"/>';
     }
     // 먼지 알갱이 — 홈 위에 흩뿌려 두고 ttFrame이 먼지량(ttDust)에 따라 불투명도를 올린다
     let dustSpecks = '<g id="ttDustG" opacity="0" pointer-events="none">';
@@ -3537,23 +3537,24 @@ function mountTurntable() {
         '<rect x="0" y="-40" width="2000" height="720" rx="10" fill="' + ttSkin.plinth + '"/>' +
         '<rect x="24" y="-16" width="1952" height="672" rx="8" fill="' + ttSkin.deck + '" stroke="#0a0a0c" stroke-width="2"/>' +
         '<rect x="1147" y="-16" width="7" height="672" fill="#000" opacity=".36"/><path d="M1155 -8 V648" stroke="#fff" stroke-width="1" opacity=".13"/>' +
-        ttVisual.body + ttVisual.brand +
+        ttVisual.body +
+        '<path d="M30 638 H1168 V652 H30 Z" fill="#08090b" opacity=".42" pointer-events="none"/><path d="M46 639 H1140" stroke="#fff" stroke-width="1.4" opacity=".2" pointer-events="none"/>' + ttVisual.brand +
         // 레코드 브러시 — 쌓인 먼지를 닦아낸다. 게이지는 현재 먼지량.
-        '<rect id="ttCleanBtn" x="44" y="150" width="200" height="56" rx="8" fill="#26262b" stroke="#4a4a52" stroke-width="2" style="cursor:pointer"><title>레코드 브러시 — 판의 먼지를 닦아냅니다</title></rect>' +
+        '<g transform="translate(0 -24)"><rect id="ttCleanBtn" x="44" y="150" width="200" height="56" rx="8" fill="#26262b" stroke="#4a4a52" stroke-width="2" style="cursor:pointer"><title>레코드 브러시 — 판의 먼지를 닦아냅니다</title></rect>' +
         '<rect x="60" y="170" width="44" height="16" rx="4" fill="#4a3524" pointer-events="none"/>' +
         '<rect x="60" y="166" width="44" height="6" rx="2" fill="#6b5138" pointer-events="none"/>' +
         '<text x="170" y="185" font-family="Arial" font-size="15" font-weight="700" letter-spacing="1" fill="#e6e5e8" text-anchor="middle" pointer-events="none">클리닝</text>' +
         '<text x="44" y="238" font-family="Arial" font-size="10" letter-spacing="2" fill="#8a7d70">DUST</text>' +
         '<rect x="88" y="229" width="156" height="10" rx="5" fill="#101013" stroke="#3a3a40"/>' +
-        '<rect id="ttDustBar" x="88" y="229" width="0" height="10" rx="5" fill="#b06a2a"/>' +
+        '<rect id="ttDustBar" x="88" y="229" width="0" height="10" rx="5" fill="#b06a2a"/></g>' +
         // 플래터
         ttVisual.platterBase +
         '<g id="ttSpinG">' +
         ttVisual.spinTrim +
         '<circle cx="560" cy="330" r="252" fill="url(#ttVinyl)"/>' +
         grooves +
-        '<path d="M 560 330 L 560 78 A 252 252 0 0 1 738 156 Z" fill="url(#ttSheen)"/>' +
-        '<path d="M 560 330 L 560 582 A 252 252 0 0 1 382 504 Z" fill="url(#ttSheen)" opacity="0.6"/>' +
+        '<path d="M 560 330 L 560 78 A 252 252 0 0 1 738 156 Z" fill="url(#ttSheen)" opacity=".48"/>' +
+        '<path d="M 560 330 L 560 582 A 252 252 0 0 1 382 504 Z" fill="url(#ttSheen)" opacity=".22"/>' +
         '<circle cx="560" cy="330" r="86" fill="' + RECORD.labelBg + '"/>' +
         '<circle cx="560" cy="330" r="86" fill="none" stroke="' + RECORD.accent + '" stroke-width="3"/>' +
         '<circle cx="560" cy="330" r="79" fill="none" stroke="' + RECORD.accent + '" stroke-width="0.6" opacity="0.5"/>' +
@@ -3587,7 +3588,8 @@ function mountTurntable() {
         '<rect x="1170" y="76" width="508" height="508" rx="4" fill="' + RECORD.jacketBg + '"/>' +
         (RECORD.cover
             // 실제 이미지 재킷 — 위 3/4는 커버(초상·실물 커버), 아래 밴드에 인쇄 정보
-            ? '<image x="1170" y="76" width="508" height="396" href="' + PHONO_BASE + RECORD.cover + '" preserveAspectRatio="xMidYMin slice" clip-path="url(#ttJacketClip)"/>' +
+            ? '<g aria-hidden="true" pointer-events="none"><rect x="1186" y="92" width="476" height="364" fill="none" stroke="' + jc.inner + '"/><circle cx="1424" cy="266" r="130" fill="none" stroke="' + jc.line + '" stroke-width="2"/><circle cx="1424" cy="266" r="119" fill="none" stroke="' + jc.line + '" opacity=".5"/><circle cx="1424" cy="266" r="43" fill="none" stroke="' + jc.line + '"/><circle cx="1424" cy="266" r="6" fill="' + jc.title + '"/><text x="1424" y="434" font-family="Arial" font-size="14" letter-spacing="4" text-anchor="middle" fill="' + jc.sub + '">STEREO RECORDING</text></g>' +
+              '<image id="ttCoverImage" x="1170" y="76" width="508" height="396" opacity="0" href="' + PHONO_BASE + RECORD.cover + '" preserveAspectRatio="xMidYMin slice" clip-path="url(#ttJacketClip)"/>' +
               '<rect x="1170" y="472" width="508" height="3" fill="' + RECORD.accent + '"/>' +
               '<text x="1424" y="510" font-family="Georgia, serif" font-size="' + (RECORD.jTitle.length > 16 ? 20 : RECORD.jTitle.length > 11 ? 24 : 28) + '" font-weight="700" fill="' + jc.title + '" text-anchor="middle">' + RECORD.jTitle + '</text>' +
               '<text x="1424" y="535" font-family="Arial" font-size="13" fill="' + jc.sub + '" text-anchor="middle">' + RECORD.jSub1 + ' · ' + RECORD.jSub2 + '</text>' +
@@ -3621,9 +3623,11 @@ function mountTurntable() {
         '<circle id="ttNextRec" cx="1656" cy="621" r="24" fill="#26262b" stroke="#4a4a52" stroke-width="2" style="cursor:pointer"><title>다음 음반</title></circle>' +
         '<rect id="ttJacketHit" x="1170" y="76" width="508" height="508" fill="#000000" fill-opacity="0" style="cursor:zoom-in"><title>재킷 크게 보기</title></rect>' +
         '<text x="1656" y="630" font-family="Georgia, serif" font-size="26" fill="#d9cfc0" text-anchor="middle" pointer-events="none">&#8250;</text>' +
-        '<text x="60" y="648" font-family="Arial" font-size="12" fill="' + (ttSkin.muted || "#8a7d70") + '">' + RECORD.credit + '</text>' +
+        '<text x="60" y="672" font-family="Arial" font-size="12" fill="' + (ttSkin.muted || "#8a7d70") + '">' + RECORD.credit + '</text>' +
         '</svg>';
 
+    const coverImage = document.getElementById("ttCoverImage");
+    if (coverImage) coverImage.addEventListener("load", () => coverImage.setAttribute("opacity", "1"), { once: true });
     applyPanelLighting(document.querySelector("#ttStage svg"));
     RECORD.tracks.forEach((tr, i) => {
         document.getElementById("ttTrackHit" + i).addEventListener("click", () => playPhonoTrack(i));
@@ -3920,11 +3924,34 @@ function gvTrackRows() {
     }).join("");
 }
 
+// 좁은 기기 명판에서도 긴 제목이 옆 부품을 덮지 않도록 말줄임한다.
+// 원문은 접근성 이름과 title로 남기며, 다음 음반에서는 원래 크기로 다시 측정한다.
+function fitDeviceLabel(el, value, width) {
+    if (!el) return;
+    const full = String(value || "");
+    el.textContent = full;
+    el.setAttribute("aria-label", full);
+    if (el.getComputedTextLength() <= width) return;
+    const chars = Array.from(full);
+    let lo = 0, hi = chars.length;
+    while (lo < hi) {
+        const mid = Math.ceil((lo + hi) / 2);
+        el.textContent = chars.slice(0, mid).join("") + "…";
+        if (el.getComputedTextLength() <= width) lo = mid;
+        else hi = mid - 1;
+    }
+    el.textContent = chars.slice(0, lo).join("") + "…";
+    const title = document.createElementNS(SVG_NS, "title");
+    title.textContent = full;
+    el.appendChild(title);
+}
+
 // 음반이 바뀌면 라벨·종이 봉투 인쇄를 다시 찍는다
 function gvPaintRecord() {
     const set = (id, text) => {
         const el = document.getElementById(id);
-        if (el) el.textContent = text;
+        const width = id === "gvSleeveNote" ? 410 : id.startsWith("gvSleeve") ? 168 : id.startsWith("gvLabel") ? 156 : 1250;
+        fitDeviceLabel(el, text, width);
     };
     const paint = (id, color) => {
         const el = document.getElementById(id);
@@ -3933,6 +3960,9 @@ function gvPaintRecord() {
     const label = RECORD.labelBg || "#b7472f";
     paint("gvLabelDisc", label);
     paint("gvSleeveLabel", label);
+    const ink = jacketInk(label).title;
+    document.querySelectorAll('#soloStage .gv-label-ink, #gvLabelBig, #gvLabelTitle, #gvLabelArtist, #gvSleeveBig, #gvSleeveTitle, #gvSleeveArtist')
+        .forEach(el => el.setAttribute("fill", ink));
     set("gvLabelBig", RECORD.labelBig || "78");
     set("gvLabelTitle", RECORD.labelTitle || RECORD.jTitle || "");
     set("gvLabelArtist", RECORD.labelArtist || RECORD.performer || "");
@@ -4803,8 +4833,8 @@ function bbTapeSkip(d) {
 
 function bbSyncTape() {
     if (!soloIsBoombox()) return;
-    soloText("bbTapeTitle", RECORD ? RECORD.title : "");
-    soloText("bbTapeArtist", RECORD ? RECORD.performer : "");
+    fitDeviceLabel(document.getElementById("bbTapeTitle"), RECORD ? RECORD.title : "", 278);
+    fitDeviceLabel(document.getElementById("bbTapeArtist"), RECORD ? RECORD.performer : "", 278);
 }
 
 function mountBoombox() {

@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const { chromium, webkit } = require("playwright");
+const { mockExternal } = require("./fixtures");
 
 const BASE = process.env.MFA_CAPTURE_BASE || "http://127.0.0.1:8147/";
 const OUT = process.env.MFA_CAPTURE_OUT || "/tmp/mfa-rack-eval";
@@ -37,9 +38,10 @@ async function forcePoweredAppearance(page) {
         serviceWorkers: "block",
     });
     const page = await context.newPage();
+    await mockExternal(context);
+    await context.route("https://upload.wikimedia.org/**", route => route.continue());
     page.on("pageerror", (error) => console.error("PAGEERROR", error.message));
     await page.addInitScript(() => {
-        localStorage.clear();
         localStorage.setItem("fmRadio.coachDone", "true");
         localStorage.setItem("fmRadio.lastStation", JSON.stringify("kbs1fm"));
         localStorage.setItem("fmRadio.record", JSON.stringify(0));

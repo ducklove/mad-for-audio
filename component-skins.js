@@ -582,12 +582,12 @@ function mfaMa2375Meter(x, needleId) {
     return '<g>' +
         '<rect x="' + (x - 7) + '" y="167" width="398" height="216" rx="7" fill="#010305" stroke="#2c343b" stroke-width="6"/>' +
         '<rect x="' + x + '" y="174" width="384" height="202" rx="4" fill="#05080b" stroke="#10151a" stroke-width="12"/>' +
-        '<rect x="' + (x + 15) + '" y="189" width="354" height="172" rx="2" fill="url(#ma2375MeterBlue)" opacity=".34"/>' +
+        '<rect x="' + (x + 15) + '" y="189" width="354" height="172" rx="2" fill="url(#ma2375MeterBlue)" opacity=".82"/>' +
         '<g opacity=".74"><rect class="ampLamp ma2375-meter-light" data-lz-off=".018" data-lz-on=".48" x="' + (x + 15) + '" y="189" width="354" height="172" rx="2" fill="url(#ma2375MeterLamp)" opacity=".018" filter="url(#ma2375BlueGlow)"/></g>' +
-        '<rect x="' + (x + 15) + '" y="189" width="354" height="172" rx="2" fill="url(#ma2375MeterVignette)" opacity=".76" pointer-events="none"/>' +
+        '<rect x="' + (x + 15) + '" y="189" width="354" height="172" rx="2" fill="url(#ma2375MeterVignette)" opacity=".38" pointer-events="none"/>' +
         '<rect x="' + (x + 22) + '" y="196" width="340" height="158" rx="2" fill="none" stroke="#8edcff" stroke-width="1.5" opacity=".15"/>' +
         '<path class="ma2375-meter-arc" d="M' + (x + 51) + ' 288 A150 50 0 0 1 ' + (x + 333) + ' 288" fill="none" stroke="#153e5b" stroke-width="2"/>' + ticks +
-        '<g font-family="Arial" fill="#11334d" text-anchor="middle"><text x="' + (x + 57) + '" y="282" font-size="14" font-weight="700">.075</text><text x="' + (x + 126) + '" y="252" font-size="14" font-weight="700">.75</text><text x="' + (x + 258) + '" y="252" font-size="14" font-weight="700">7.5</text><text x="' + (x + 327) + '" y="282" font-size="14" font-weight="700">75</text><text x="' + cx + '" y="213" font-size="13" font-weight="700" letter-spacing="3">WATTS</text><text x="' + cx + '" y="316" font-size="13" font-weight="700" letter-spacing="2.5">DECIBELS</text><text x="' + cx + '" y="340" font-size="16" font-weight="700" letter-spacing="2">POWER OUTPUT</text></g>' +
+        '<g font-family="Arial" fill="#11334d" text-anchor="middle"><text x="' + (x + 57) + '" y="282" font-size="14" font-weight="700">.075</text><text x="' + (x + 126) + '" y="252" font-size="14" font-weight="700">.75</text><text x="' + (x + 258) + '" y="252" font-size="14" font-weight="700">7.5</text><text x="' + (x + 327) + '" y="282" font-size="14" font-weight="700">75</text><text x="' + cx + '" y="213" font-size="13" font-weight="700" letter-spacing="3">WATTS</text><text x="' + (cx + 94) + '" y="316" font-size="11" font-weight="600" letter-spacing="1">dB</text><text x="' + cx + '" y="335" font-size="13" font-weight="700" letter-spacing="2">POWER OUTPUT</text></g>' +
         '<line id="' + needleId + '" data-cx="' + cx + '" data-cy="' + cy + '" x1="' + cx + '" y1="' + cy + '" x2="' + cx + '" y2="248" stroke="#071019" stroke-width="4" transform="rotate(-42 ' + cx + ' ' + cy + ')"/>' +
         '<circle cx="' + cx + '" cy="' + cy + '" r="10" fill="#101820" stroke="#5c829c" stroke-width="2"/>' +
         '<rect class="meterDark" x="' + (x + 15) + '" y="189" width="354" height="172" rx="2" fill="#02070c" opacity=".56" pointer-events="none"/>' +
@@ -716,9 +716,9 @@ function mfaMa2375Svg() {
     <defs>
         <linearGradient id="ma2375Backdrop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14171b"/><stop offset=".68" stop-color="#07090c"/><stop offset="1" stop-color="#020304"/></linearGradient>
         <linearGradient id="ma2375Glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#03070b"/><stop offset=".35" stop-color="#111820"/><stop offset=".55" stop-color="#020406"/><stop offset="1" stop-color="#0b0e12"/></linearGradient>
-        <linearGradient id="ma2375Steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#545a5e"/><stop offset=".07" stop-color="#899094"/><stop offset=".16" stop-color="#d5d8d6"/><stop offset=".31" stop-color="#b7bcbd"/><stop offset=".47" stop-color="#d9dcda"/><stop offset=".64" stop-color="#979da0"/><stop offset=".78" stop-color="#cbd0ce"/><stop offset=".91" stop-color="#a9afb0"/><stop offset="1" stop-color="#6d7478"/></linearGradient>
+        <linearGradient id="ma2375Steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#626a6e"/><stop offset="0.05" stop-color="#ecedeb"/><stop offset="0.18" stop-color="#b5bcbd"/><stop offset="0.52" stop-color="#d4d8d6"/><stop offset="0.87" stop-color="#949eA1"/><stop offset="1" stop-color="#4f595e"/></linearGradient>
         <linearGradient id="ma2375SteelBand" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#555b5e"/><stop offset=".14" stop-color="#d4d7d4"/><stop offset=".5" stop-color="#8f9597"/><stop offset=".82" stop-color="#d9dbd8"/><stop offset="1" stop-color="#50565a"/></linearGradient>
-        <linearGradient id="ma2375LowerFace" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9dcda"/><stop offset=".1" stop-color="#c5c9c8"/><stop offset=".26" stop-color="#9ea5a8"/><stop offset=".46" stop-color="#747c81"/><stop offset=".62" stop-color="#626a70"/><stop offset=".78" stop-color="#aeb3b2"/><stop offset=".9" stop-color="#8c9396"/><stop offset="1" stop-color="#343a3e"/></linearGradient>
+        <linearGradient id="ma2375LowerFace" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e3e6e3"/><stop offset="0.06" stop-color="#b9c1c2"/><stop offset="0.55" stop-color="#a4aeb1"/><stop offset="0.9" stop-color="#8c979b"/><stop offset="1" stop-color="#414c52"/></linearGradient>
         <linearGradient id="ma2375GlassRefl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14181c" stop-opacity=".62"/><stop offset="1" stop-color="#14181c" stop-opacity="0"/></linearGradient>
         <linearGradient id="ma2375Edge" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#63666a"/><stop offset=".35" stop-color="#f0f0ed"/><stop offset=".62" stop-color="#96999c"/><stop offset="1" stop-color="#3d4044"/></linearGradient>
         <linearGradient id="ma2375Cage" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#34383b"/><stop offset=".2" stop-color="#cfd3d1"/><stop offset=".45" stop-color="#777d80"/><stop offset=".72" stop-color="#d7dad7"/><stop offset="1" stop-color="#43494c"/></linearGradient>
@@ -818,7 +818,8 @@ function mfaTransportButtons(y, fill) {
         return '<rect x="' + (d[0] + 3) + '" y="' + (y + 7) + '" width="' + w + '" height="72" rx="7" fill="#000" opacity=".38" filter="url(#lzSoft)" pointer-events="none"/>' +
             '<rect id="' + d[1] + '" x="' + d[0] + '" y="' + y + '" width="' + w + '" height="72" rx="6" fill="' + fill + '" stroke="' + (i === 5 ? '#9a473d' : '#62666c') + '" stroke-width="2" style="cursor:pointer;touch-action:none"><title>' + d[2] + '</title></rect>' +
             '<path d="M' + (d[0] + 8) + ' ' + (y + 8) + ' H' + (d[0] + w - 8) + '" stroke="#fff" stroke-width="2" opacity=".2" pointer-events="none"/>' +
-            (i === 5 ? '<circle cx="1008" cy="' + (y + 36) + '" r="14" fill="#d13c2d" pointer-events="none"/>' : '<path d="' + d[3] + '" fill="#d6d7d8" stroke="#d6d7d8" stroke-width="4" stroke-linejoin="round" pointer-events="none" transform="translate(0 ' + (y - 430) + ')"/>');
+            (i === 5 ? '<circle cx="1008" cy="' + (y + 26) + '" r="8" fill="#bf493c" pointer-events="none"/>' : '<path d="' + d[3] + '" fill="#d6d7d8" stroke="#d6d7d8" stroke-width="4" stroke-linejoin="round" pointer-events="none" transform="translate(' + (d[0] + w / 2) + ' ' + (y + 26) + ') scale(.58) translate(-' + (d[0] + w / 2) + ' -466)"/>') +
+            '<text x="' + (d[0] + w / 2) + '" y="' + (y + 58) + '" font-family="Arial" font-size="12" font-weight="600" letter-spacing="1" fill="#d6d7d8" text-anchor="middle" pointer-events="none">' + d[2] + '</text>';
     }).join("") + '</g>';
 }
 
@@ -830,17 +831,20 @@ function mfaDeckSvg(spec) {
     const ink = pale ? "#242628" : "#ece9e2";
     const sub = pale ? "#505357" : "#b1b4bb";
     const doorStroke = spec.signature === "tandberg" ? "#8a714a" : spec.signature === "sony" ? "#8a816c" : "#60656b";
+    const cassetteShell = '<path d="M474 134 H986 L998 148 V322 L984 338 H476 L462 322 V148 Z" fill="#323739" stroke="#747c7c" stroke-width="1.5"/>' +
+        '<path d="M478 140 H982" stroke="#c7ccca" opacity=".3"/><path d="M488 314 H972 L982 331 H478 Z" fill="#22272a" stroke="#454c4e"/>' +
+        '<g fill="#0c1012" stroke="#7f888a" stroke-width="1"><circle cx="476" cy="146" r="3"/><circle cx="984" cy="146" r="3"/><circle cx="476" cy="322" r="3"/><circle cx="984" cy="322" r="3"/></g>';
     const tapeDoor = spec.openTransport
         ? '<g><rect x="438" y="112" width="584" height="262" rx="10" fill="#000" opacity=".42" filter="url(#lzSoft)"/>' +
             '<rect x="442" y="116" width="576" height="254" rx="9" fill="url(#' + uid + 'DoorFrame)" stroke="' + doorStroke + '" stroke-width="3"/>' +
             '<rect x="454" y="126" width="552" height="230" rx="6" fill="url(#' + uid + 'Well)" stroke="#090a0c" stroke-width="3"/>' +
             '<path d="M464 136 H996" stroke="#fff" stroke-width="2" opacity=".11"/><circle cx="470" cy="342" r="5" fill="#2a2d31" stroke="#8c9095"/><circle cx="990" cy="342" r="5" fill="#2a2d31" stroke="#8c9095"/>' +
-            '<rect x="480" y="142" width="500" height="68" rx="4" fill="url(#' + uid + 'Label)"/><path d="M486 150 H974" stroke="#fff" stroke-width="2" opacity=".3"/>' +
+            cassetteShell + '<rect x="480" y="142" width="500" height="68" rx="4" fill="url(#' + uid + 'Label)"/><path d="M486 150 H974" stroke="#fff" stroke-width="2" opacity=".3"/>' +
             '<text id="deckLabel" x="730" y="171" font-family="Arial" font-size="18" font-weight="700" fill="#3a2b1e" text-anchor="middle">C-30 공테이프</text><text id="deckLabelSub" x="730" y="198" font-family="Arial" font-size="13" font-weight="700" fill="#6b5d4a" text-anchor="middle">사용 0:00 / 30:00</text></g>'
         : '<g><rect x="412" y="82" width="636" height="326" rx="12" fill="#000" opacity=".4" filter="url(#lzSoft)"/>' +
             '<rect x="416" y="86" width="628" height="318" rx="11" fill="url(#' + uid + 'DoorFrame)" stroke="' + doorStroke + '" stroke-width="3"/>' +
             '<rect x="440" y="104" width="580" height="280" rx="8" fill="url(#' + uid + 'Well)" stroke="#111317" stroke-width="3"/>' +
-            '<path d="M450 114 H1010" stroke="#fff" stroke-width="3" opacity=".12"/><rect x="480" y="134" width="500" height="70" rx="4" fill="url(#' + uid + 'Label)"/>' +
+            '<path d="M450 114 H1010" stroke="#fff" stroke-width="3" opacity=".12"/>' + cassetteShell + '<rect x="480" y="134" width="500" height="70" rx="4" fill="url(#' + uid + 'Label)"/>' +
             '<text id="deckLabel" x="730" y="165" font-family="Arial" font-size="18" font-weight="700" fill="#3a2b1e" text-anchor="middle">C-30 공테이프</text><text id="deckLabelSub" x="730" y="192" font-family="Arial" font-size="13" font-weight="700" fill="#6b5d4a" text-anchor="middle">사용 0:00 / 30:00</text>' +
             '<polygon points="445,108 720,108 590,382 445,382" fill="url(#' + uid + 'Glass)" opacity=".75" pointer-events="none"/></g>';
     const reels = '<rect x="512" y="208" width="436" height="108" rx="54" fill="#07090b" stroke="#52565c" stroke-width="2"/>' +
@@ -1368,11 +1372,11 @@ function mfaDt540Svg(finish) {
         '<rect x="484" y="50" width="952" height="146" rx="5" fill="url(#dtGlass)"/>' +
         '<g id="dtVfdGroup" opacity=".78">' +
         legend(512, 88, "dtLampTimer", "TIMER") + legend(512, 128, "dtLampRec", "REC") + legend(512, 168, "dtLampSleep", "SLEEP") +
-        '<g transform="skewX(-3)" style="filter: drop-shadow(0 0 4px rgba(102,215,168,.22))" font-family="Arial" font-weight="700" fill="' + vfd + '">' +
+        '<g style="filter: drop-shadow(0 0 2px rgba(102,215,168,.18))" font-family="Consolas, monospace" font-weight="700" fill="' + vfd + '">' +
         '<text id="dtClockH" x="927" y="153" font-size="86" letter-spacing="4" text-anchor="end">--</text>' +
         '<text id="dtClockColon" x="953" y="148" font-size="78" text-anchor="middle">:</text>' +
         '<text id="dtClockM" x="980" y="153" font-size="86" letter-spacing="4">--</text>' +
-        '<text id="dtClockSec" x="1213" y="153" font-size="34" letter-spacing="2">--</text>' +
+        '<text id="dtClockSec" x="1160" y="153" font-size="30" letter-spacing="2">--</text>' +
         '<text id="dtDayText" x="1414" y="82" font-size="20" letter-spacing="2.5" text-anchor="end">---</text>' +
         '</g>' +
         '<title id="dtProgTitle">PROGRAM --:--</title>' +

@@ -60,7 +60,7 @@ const LZ_DEFS = '<defs>' +
     '<pattern id="lzHairline" width="9" height="7" patternUnits="userSpaceOnUse"><path d="M0 .5H9 M0 3.5H9 M0 6.5H9" stroke="#ffffff" stroke-opacity="0.022" stroke-width="1"/><path d="M0 2H9 M0 5H9" stroke="#000000" stroke-opacity="0.025" stroke-width="1"/></pattern>' +
     '<pattern id="lzKnurl" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(24)"><path d="M1 0V8 M5 0V8" stroke="#ffffff" stroke-opacity="0.16" stroke-width="1"/><path d="M3 0V8 M7 0V8" stroke="#000000" stroke-opacity="0.28" stroke-width="1"/></pattern>' +
     '<filter id="lzContact" x="-35%" y="-35%" width="180%" height="190%"><feGaussianBlur in="SourceAlpha" stdDeviation="3" result="b"/><feOffset in="b" dx="2" dy="6" result="o"/><feFlood flood-color="#000000" flood-opacity="0.58" result="c"/><feComposite in="c" in2="o" operator="in" result="s"/><feMerge><feMergeNode in="s"/><feMergeNode in="SourceGraphic"/></feMerge></filter>' +
-    '<filter id="lzButtonDepth" x="-30%" y="-35%" width="160%" height="190%"><feGaussianBlur in="SourceAlpha" stdDeviation="3.2" result="lzBtnBlur"/><feOffset in="lzBtnBlur" dx="1.5" dy="6" result="lzBtnOffset"/><feFlood flood-color="#000000" flood-opacity="0.72" result="lzBtnColor"/><feComposite in="lzBtnColor" in2="lzBtnOffset" operator="in" result="lzBtnShadow"/><feMerge><feMergeNode in="lzBtnShadow"/><feMergeNode in="SourceGraphic"/></feMerge></filter>' +
+    '<filter id="lzButtonDepth" x="-30%" y="-35%" width="160%" height="190%"><feGaussianBlur in="SourceAlpha" stdDeviation="1.8" result="lzBtnBlur"/><feOffset in="lzBtnBlur" dx="1" dy="3" result="lzBtnOffset"/><feFlood flood-color="#000000" flood-opacity="0.72" result="lzBtnColor"/><feComposite in="lzBtnColor" in2="lzBtnOffset" operator="in" result="lzBtnShadow"/><feMerge><feMergeNode in="lzBtnShadow"/><feMergeNode in="SourceGraphic"/></feMerge></filter>' +
     '<filter id="lzButtonPressed" x="-22%" y="-25%" width="144%" height="160%"><feGaussianBlur in="SourceAlpha" stdDeviation="1.5" result="lzPressBlur"/><feOffset in="lzPressBlur" dx="0.5" dy="2" result="lzPressOffset"/><feFlood flood-color="#000000" flood-opacity="0.62" result="lzPressColor"/><feComposite in="lzPressColor" in2="lzPressOffset" operator="in" result="lzPressShadow"/><feMerge><feMergeNode in="lzPressShadow"/><feMergeNode in="SourceGraphic"/></feMerge></filter>' +
     '<filter id="lzKnobDepth" x="-35%" y="-35%" width="180%" height="190%"><feGaussianBlur in="SourceAlpha" stdDeviation="4" result="lzKnobBlur"/><feOffset in="lzKnobBlur" dx="3" dy="7" result="lzKnobOffset"/><feFlood flood-color="#000000" flood-opacity="0.62" result="lzKnobColor"/><feComposite in="lzKnobColor" in2="lzKnobOffset" operator="in" result="lzKnobShadow"/><feMerge><feMergeNode in="lzKnobShadow"/><feMergeNode in="SourceGraphic"/></feMerge></filter>' +
     '<filter id="lzSwitchDepth" x="-50%" y="-45%" width="200%" height="210%"><feGaussianBlur in="SourceAlpha" stdDeviation="1.8" result="lzSwBlur"/><feOffset in="lzSwBlur" dx="1" dy="3" result="lzSwOffset"/><feFlood flood-color="#000000" flood-opacity="0.68" result="lzSwColor"/><feComposite in="lzSwColor" in2="lzSwOffset" operator="in" result="lzSwShadow"/><feMerge><feMergeNode in="lzSwShadow"/><feMergeNode in="SourceGraphic"/></feMerge></filter>' +
@@ -115,8 +115,8 @@ function lzDecorateHardwareButton(el) {
     side.setAttribute("fill", "#07080a");
     side.setAttribute("stroke", "#020304");
     side.setAttribute("opacity", ".94");
-    if (tag === "rect") side.setAttribute("y", String(Number(el.getAttribute("y") || 0) + 7));
-    else side.setAttribute("cy", String(Number(el.getAttribute("cy") || 0) + 5));
+    if (tag === "rect") side.setAttribute("y", String(Number(el.getAttribute("y") || 0) + 3));
+    else side.setAttribute("cy", String(Number(el.getAttribute("cy") || 0) + 3));
     el.parentNode.insertBefore(side, el);
 
     const gloss = lzStripControlClone(el, "lz-hardware-gloss");
@@ -128,7 +128,7 @@ function lzDecorateHardwareButton(el) {
         ? "url(#" + svgPrefix + "lzControlGlossRound)"
         : "url(#" + svgPrefix + "lzControlGloss)");
     gloss.setAttribute("stroke", "none");
-    gloss.setAttribute("opacity", ".72");
+    gloss.setAttribute("opacity", ".46");
     el.parentNode.insertBefore(gloss, el.nextSibling);
 
     const setPressed = (pressed) => {
@@ -183,6 +183,33 @@ function applyPanelLighting(svg) {
     applyHardwareDepth(svg);
 }
 
+// 와트·dB 눈금과 바늘이 같은 원호를 쓰도록 구성한다. 인쇄는 회전축 양옆에 둔다.
+function mfaPowerScale(cx, cy) {
+    const p = (angle, radius) => {
+        const a = angle * Math.PI / 180;
+        return [cx + Math.sin(a) * radius, cy - Math.cos(a) * radius];
+    };
+    const point = (a, r) => p(a, r).map(v => v.toFixed(1)).join(' ');
+    let svg = '<path d="M' + point(-55, 122) + ' A122 122 0 0 1 ' + point(55, 122) + '" fill="none" stroke="#103d59" stroke-width="1.8"/>';
+    for (let i = 0; i <= 20; i++) {
+        const a = -55 + i * 5.5;
+        svg += '<path d="M' + point(a, 122) + ' L' + point(a, i % 4 ? 116 : 110) + '" stroke="#103d59" stroke-width="1.5"/>';
+    }
+    ['.2', '2', '20', '100', '200'].forEach((label, i) => {
+        const [x, y] = p(-55 + i * 27.5, 146);
+        svg += '<text x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" text-anchor="middle" font-size="14">' + label + '</text>';
+    });
+    ['−50', '−30', '−10', '0'].forEach((label, i) => {
+        const [x, y] = p(-48 + i * 28, 87);
+        svg += '<text x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" text-anchor="middle" font-size="12">' + label + '</text>';
+    });
+    return '<g class="mfa-power-scale" font-family="Arial" font-weight="600" fill="#10354d">' + svg +
+        '<text x="' + cx + '" y="112" text-anchor="middle" font-size="18" letter-spacing="3">WATTS</text>' +
+        '<text x="' + (cx - 42) + '" y="279" text-anchor="end" font-size="13" letter-spacing="1.5">POWER</text>' +
+        '<text x="' + (cx + 42) + '" y="279" font-size="13" letter-spacing="1.5">OUTPUT</text>' +
+        '<text x="' + (cx + 114) + '" y="250" font-size="11">dB</text></g>';
+}
+
 const TS_HIT_META = {
     power: { title: "전원 — 튜너 POWER (기기를 켭니다)", cursor: "pointer" },
     dial: { title: "드래그하여 주파수를 맞추세요", cursor: "ew-resize" },
@@ -214,8 +241,8 @@ const TUNER_SKINS = {
                 <linearGradient id="tnBevel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b2afa7"/><stop offset="0.5" stop-color="#918e86"/><stop offset="1" stop-color="#63605a"/></linearGradient>
                 <linearGradient id="tnDialWin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a0c07"/><stop offset="0.5" stop-color="#12140c"/><stop offset="1" stop-color="#181a10"/></linearGradient>
                 <linearGradient id="tnMeterWin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0c0e0a"/><stop offset="1" stop-color="#17170f"/></linearGradient>
-                <radialGradient id="tnKnobFace" cx="0.38" cy="0.34" r="0.85"><stop offset="0" stop-color="#56545c"/><stop offset="0.45" stop-color="#403e45"/><stop offset="1" stop-color="#262429"/></radialGradient>
-                <linearGradient id="tnKnobRim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5b5960"/><stop offset="1" stop-color="#201f24"/></linearGradient>
+                <radialGradient id="tnKnobFace" cx="0.3" cy="0.24" r="0.9"><stop offset="0" stop-color="#646a6e"/><stop offset="0.32" stop-color="#383d40"/><stop offset=".8" stop-color="#202528"/><stop offset="1" stop-color="#101416"/></radialGradient>
+                <linearGradient id="tnKnobRim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b0b7b9"/><stop offset=".1" stop-color="#575e61"/><stop offset=".74" stop-color="#181d20"/><stop offset="1" stop-color="#747c80"/></linearGradient>
                 <linearGradient id="tnSwitch" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2830"/><stop offset="1" stop-color="#3f3d45"/></linearGradient>
                 <filter id="tnGlow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.4"/></filter>
                 <pattern id="tnTicksMinor" width="13" height="30" patternUnits="userSpaceOnUse"><rect x="0" y="0" width="1.4" height="14" fill="#8f8a4a"/></pattern>
@@ -265,12 +292,12 @@ const TUNER_SKINS = {
             <rect id="tsPwrTop" x="140" y="172" width="24" height="15" rx="2" fill="#1c1a20"/>
             <rect id="tsPwrBot" x="140" y="190" width="24" height="15" rx="2" fill="#54525a"/>
             <g>
-                <rect x="254" y="172" width="40" height="42" rx="4" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><rect x="252" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwRec" x="262" y="171" width="20" height="18" rx="3" fill="#57555d"/>
-                <rect x="348" y="172" width="40" height="42" rx="4" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><rect x="346" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwBlend" x="356" y="171" width="20" height="18" rx="3" fill="#57555d"/>
-                <rect x="438" y="172" width="40" height="42" rx="4" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><rect x="436" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwMode" x="446" y="171" width="20" height="18" rx="3" fill="#57555d"/>
-                <rect x="530" y="172" width="40" height="42" rx="4" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><rect x="528" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwMute" x="538" y="171" width="20" height="18" rx="3" fill="#57555d"/>
-                <rect x="618" y="172" width="40" height="42" rx="4" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><rect x="616" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwIf" x="626" y="171" width="20" height="18" rx="3" fill="#57555d"/>
-                <rect x="704" y="172" width="40" height="42" rx="4" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><rect x="702" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwRf" x="712" y="171" width="20" height="18" rx="3" fill="#57555d"/>
+                <rect x="254" y="172" width="40" height="42" rx="4" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><rect x="252" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwRec" x="262" y="171" width="20" height="18" rx="3" fill="#65696c"/>
+                <rect x="348" y="172" width="40" height="42" rx="4" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><rect x="346" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwBlend" x="356" y="171" width="20" height="18" rx="3" fill="#65696c"/>
+                <rect x="438" y="172" width="40" height="42" rx="4" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><rect x="436" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwMode" x="446" y="171" width="20" height="18" rx="3" fill="#65696c"/>
+                <rect x="530" y="172" width="40" height="42" rx="4" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><rect x="528" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwMute" x="538" y="171" width="20" height="18" rx="3" fill="#65696c"/>
+                <rect x="618" y="172" width="40" height="42" rx="4" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><rect x="616" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwIf" x="626" y="171" width="20" height="18" rx="3" fill="#65696c"/>
+                <rect x="704" y="172" width="40" height="42" rx="4" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><rect x="702" y="168" width="40" height="42" rx="4" fill="url(#tnSwitch)" stroke="#25232a"/><rect id="tsSwRf" x="712" y="171" width="20" height="18" rx="3" fill="#65696c"/>
             </g>
             <g font-family="Arial, Helvetica, sans-serif" fill="#aaa7a0" text-anchor="middle">
                 <text x="820" y="165" font-size="12" font-weight="700" letter-spacing="1.8">QUARTZ LOCK</text>
@@ -323,11 +350,12 @@ const TUNER_SKINS = {
             <rect x="1424" y="204" width="196" height="8" fill="url(#lzInBot)" opacity="0.55"/>
             <rect x="1422" y="159" width="200" height="3" fill="#04050a" opacity="0.55"/>
             <rect x="1422" y="213" width="200" height="2.5" fill="#ffffff" opacity="0.09"/>
-            <ellipse cx="1863" cy="156" rx="113" ry="110" fill="#000000" opacity="0.45" filter="url(#lzSoft)"/><ellipse cx="1852" cy="140" rx="112" ry="110" fill="#1c1b20"/>
+            <ellipse cx="1863" cy="156" rx="113" ry="110" fill="#000000" opacity="0.45" filter="url(#lzSoft)"/><ellipse cx="1852" cy="140" rx="112" ry="110" fill="#141619"/>
             <g id="tsKnob">
                 <ellipse cx="1852" cy="138" rx="110" ry="108" fill="url(#tnKnobRim)"/>
                 <ellipse cx="1852" cy="138" rx="98" ry="97" fill="url(#tnKnobFace)"/>
-                <ellipse cx="1852" cy="138" rx="88" ry="87" fill="none" stroke="#77747c" stroke-width="6" stroke-dasharray="1.6 5" opacity=".38"/>
+                <ellipse cx="1852" cy="138" rx="103" ry="102" fill="none" stroke="#acb1b3" stroke-width="4" stroke-dasharray="1 4" opacity=".38"/>
+                <path d="M1781 88 A87 87 0 0 1 1866 51" fill="none" stroke="#e2e6e5" stroke-width="2" opacity=".3"/>
                 <ellipse cx="1852" cy="138" rx="68" ry="67" fill="none" stroke="#1b1a1e" stroke-width="1.4" opacity=".8"/>
                 <circle cx="1852" cy="62" r="7" fill="#191820"/>
             </g>
@@ -355,7 +383,7 @@ const TUNER_SKINS = {
                 <linearGradient id="mrPanel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#222328"/><stop offset="0.055" stop-color="#15161a"/><stop offset="0.5" stop-color="#0d0e12"/><stop offset="0.88" stop-color="#08090c"/><stop offset="1" stop-color="#050608"/></linearGradient>
                 <linearGradient id="mrRail" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#474c55"/><stop offset="0.18" stop-color="#eef0f5"/><stop offset="0.42" stop-color="#9ca2ad"/><stop offset="0.7" stop-color="#f2f3f5"/><stop offset="1" stop-color="#444952"/></linearGradient>
                 <linearGradient id="mrMeter" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#95e4da"/><stop offset="1" stop-color="#5cb6ad"/></linearGradient>
-                <radialGradient id="mrKnob" cx="0.38" cy="0.32" r="0.9"><stop offset="0" stop-color="#3a3a40"/><stop offset="0.6" stop-color="#1c1c22"/><stop offset="1" stop-color="#0c0c10"/></radialGradient>
+                <radialGradient id="mrKnob" cx="0.38" cy="0.32" r="0.9"><stop offset="0" stop-color="#4b5358"/><stop offset="0.6" stop-color="#252c31"/><stop offset="1" stop-color="#0d1317"/></radialGradient>
                 <linearGradient id="mrGlass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#17242d" stop-opacity=".72"/><stop offset=".14" stop-color="#071016" stop-opacity=".18"/><stop offset=".62" stop-color="#020406" stop-opacity=".08"/><stop offset="1" stop-color="#000000" stop-opacity=".48"/></linearGradient>
                 <linearGradient id="mrChrome" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#30343a"/><stop offset=".12" stop-color="#d9dde0"/><stop offset=".28" stop-color="#777d84"/><stop offset=".46" stop-color="#f5f6f4"/><stop offset=".62" stop-color="#8c9299"/><stop offset=".82" stop-color="#e2e5e6"/><stop offset="1" stop-color="#353a41"/></linearGradient>
                 <linearGradient id="mrEdgeFade" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000711" stop-opacity=".76"/><stop offset=".1" stop-color="#00101c" stop-opacity="0"/><stop offset=".88" stop-color="#00101c" stop-opacity="0"/><stop offset="1" stop-color="#00050b" stop-opacity=".72"/></linearGradient>
@@ -502,10 +530,10 @@ const TUNER_SKINS = {
                 <circle cx="1584" cy="541" r="43" fill="#000" opacity=".48" filter="url(#lzSoft)"/><circle cx="1580" cy="533" r="43" fill="url(#mrChrome)" stroke="#dfe2e4" stroke-width="1.2"/><circle cx="1580" cy="533" r="34" fill="url(#mrKnob)" stroke="#111318" stroke-width="2"/><path d="M1554 516 A31 31 0 0 1 1585 502" stroke="#fff" stroke-width="1.8" opacity=".18" fill="none" stroke-linecap="round" pointer-events="none"/><rect id="tsSwPwr" x="1578" y="497" width="4" height="18" rx="2" fill="#e3e5e6"/>
             </g>
             <!-- PANLOC (좌 = 채널 목록, 우 = 몰입 모드와 대칭인 장식) -->
-            <circle cx="105" cy="560" r="20" fill="#1c1c22" stroke="#8a8a92" stroke-width="1.6"/>
+            <circle cx="105" cy="560" r="20" fill="#252c31" stroke="#8a8a92" stroke-width="1.6"/>
             <circle cx="105" cy="556" r="9" fill="#55555c"/>
             <text x="105" y="608" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" letter-spacing="1.7" fill="#7ee08a" text-anchor="middle">PANLOC</text>
-            <circle cx="1895" cy="560" r="20" fill="#1c1c22" stroke="#8a8a92" stroke-width="1.6"/>
+            <circle cx="1895" cy="560" r="20" fill="#252c31" stroke="#8a8a92" stroke-width="1.6"/>
             <circle cx="1895" cy="556" r="9" fill="#55555c"/>
             <text x="1895" y="608" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" letter-spacing="1.7" fill="#7ee08a" text-anchor="middle">PANLOC</text>
             <!-- 하단 로고 -->
@@ -517,7 +545,7 @@ const TUNER_SKINS = {
     m10b: {
         label: "Marantz 10B",
         cfg: {
-            freq: { x88: 430, px: 57.5, drawX: 1005 },
+            freq: { x88: 820, px: 38, drawX: 1200 },
             mark: { y: 340, h: 7, hOn: 12, color: "#4ac8c8", colorOn: "#ff7a2a" },
             signal: { drawX: 1530, baseX: 1460, travel: 140 },
             tune: { travel: 140 },
@@ -525,7 +553,7 @@ const TUNER_SKINS = {
             swTravel: 6,
             led: { on: "#ff3a2a", off: "#2a0d0a" },
             digit: { lit: "#ff4a2a", glow: "#d02a12", dim: "#3a1410", dimGlow: "#200c08" },
-            hits: { power: [1450, 450, 140, 140], dial: [430, 292, 1150, 92], rec: [300, 225, 60, 60], blend: [410, 450, 140, 140], mode: [610, 450, 140, 140], mute: [1650, 450, 140, 140], if: [1250, 450, 140, 140], rf: [1640, 225, 60, 60], knob: [1000, 515, 100] }
+            hits: { power: [1450, 450, 140, 140], dial: [802, 292, 800, 92], rec: [300, 225, 60, 60], blend: [410, 450, 140, 140], mode: [610, 450, 140, 140], mute: [1650, 450, 140, 140], if: [1250, 450, 140, 140], rf: [1640, 225, 60, 60], knob: [1000, 515, 100] }
         },
         svg: `<svg class="tuner-svg" viewBox="0 0 2000 730" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="Marantz Model 10B Stereo FM Tuner">
             <defs>
@@ -535,7 +563,7 @@ const TUNER_SKINS = {
                 <linearGradient id="mzScope" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#04170b"/><stop offset="1" stop-color="#020a05"/></linearGradient>
                 <filter id="mzGlow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.6"/></filter>
                 <pattern id="mzBrush" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="1" fill="#ffffff" opacity="0.04"/></pattern>
-                <pattern id="mzTick" width="11.5" height="14" patternUnits="userSpaceOnUse"><circle cx="2" cy="7" r="1.9" fill="#4ac8c8"/></pattern>
+                <pattern id="mzTick" width="7.6" height="14" patternUnits="userSpaceOnUse"><circle cx="2" cy="7" r="1.9" fill="#4ac8c8"/></pattern>
                 <pattern id="mzWoodGrain" width="180" height="42" patternUnits="userSpaceOnUse"><path d="M-20 9 C25 -3 52 20 96 8 S164 4 210 16 M-12 28 C35 17 64 42 112 27 S170 22 205 34" fill="none" stroke="#d69a65" stroke-width="2" opacity=".14"/><path d="M-10 18 C42 8 70 31 126 16 S184 13 218 23" fill="none" stroke="#241108" stroke-width="1.2" opacity=".28"/></pattern>
                 <linearGradient id="mzBevel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff9e8"/><stop offset=".18" stop-color="#d8ceb3"/><stop offset=".82" stop-color="#a69b7e"/><stop offset="1" stop-color="#766d59"/></linearGradient>
                 <filter id="mzScopeBloom" x="-35%" y="-35%" width="170%" height="170%"><feGaussianBlur stdDeviation="5"/></filter>
@@ -581,15 +609,16 @@ const TUNER_SKINS = {
             <text id="tsLedStereo" data-on="#ff4a3a" data-off="#241012" x="1515" y="225" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" letter-spacing="2.5" fill="#241012" text-anchor="middle">STEREO</text>
             <circle id="tsLedLock" data-on="#62e07a" data-off="#12300f" cx="1608" cy="207" r="6" fill="#12300f"/>
             <circle id="tsLedBlend" data-on="#ffb03a" data-off="#3a2a10" cx="1608" cy="230" r="6" fill="#3a2a10"/>
-            <!-- 주파수 스케일 -->
-            <g class="dialScale" font-family="Georgia, 'Times New Roman', serif" font-size="30" fill="#e6dfc6" text-anchor="middle">
-                <text x="430" y="332">88</text><text x="545" y="332">90</text><text x="660" y="332">92</text><text x="775" y="332">94</text><text x="890" y="332">96</text><text x="1005" y="332">98</text><text x="1120" y="332">100</text><text x="1235" y="332">102</text><text x="1350" y="332">104</text><text x="1465" y="332">106</text><text x="1580" y="332">108</text>
+            <!-- CRT와 독립된 주파수 창 -->
+            <rect x="800" y="288" width="808" height="87" rx="3" fill="#11130f" stroke="#5e5946" stroke-width="1.2"/>
+            <g class="dialScale" font-family="Georgia, 'Times New Roman', serif" font-size="25" fill="#f1e7cc" text-anchor="middle">
+                <text x="820" y="332">88</text><text x="896" y="332">90</text><text x="972" y="332">92</text><text x="1048" y="332">94</text><text x="1124" y="332">96</text><text x="1200" y="332">98</text><text x="1276" y="332">100</text><text x="1352" y="332">102</text><text x="1428" y="332">104</text><text x="1504" y="332">106</text><text x="1580" y="332">108</text>
             </g>
             <g id="tsStationMarks"></g>
-            <rect class="dialScale" x="430" y="348" width="1150" height="14" fill="url(#mzTick)"/>
+            <rect class="dialScale" x="820" y="348" width="760" height="14" fill="url(#mzTick)"/>
             <g id="tsDialPtr">
-                <rect x="1003" y="302" width="4" height="66" fill="#ff7a2a" filter="url(#mzGlow)"/>
-                <rect x="1004" y="302" width="2" height="66" fill="#ffb07a"/>
+                <rect x="1198" y="302" width="4" height="66" fill="#ff7a2a" filter="url(#mzGlow)"/>
+                <rect x="1199" y="302" width="2" height="66" fill="#ffb07a"/>
             </g>
             <!-- Vert./Hor. 소형 버튼 -->
             <circle cx="330" cy="255" r="10" fill="url(#mzKnob)" stroke="#8f8a76" stroke-width="1.4"/>
@@ -1103,22 +1132,9 @@ AMP_MODELS.tr.svg = `<svg class="amp-svg" viewBox="0 0 2000 560" xmlns="http://w
         <rect x="262" y="66" width="536" height="232" rx="6" fill="#071019"/>
         <ellipse class="ampGlow" cx="530" cy="212" rx="238" ry="118" fill="#289fe8" opacity=".02" filter="url(#m5BlueBloom)"/>
         <rect class="ampLamp" x="262" y="66" width="536" height="232" rx="6" fill="url(#m5Face)" opacity="0.02"/>
-        <path d="M 340 246 A 235 235 0 0 1 720 246" fill="none" stroke="#0b365e" stroke-width="2.5"/>
-        <g stroke="#0b365e" stroke-width="2">
-            <line x1="348" y1="240" x2="360" y2="250"/><line x1="398" y1="196" x2="408" y2="208"/><line x1="470" y1="168" x2="476" y2="182"/><line x1="530" y1="160" x2="530" y2="174"/><line x1="590" y1="168" x2="584" y2="182"/><line x1="662" y1="196" x2="652" y2="208"/><line x1="712" y1="240" x2="700" y2="250"/>
-        </g>
-        <line id="ampVuL" data-cx="530" data-cy="286" x1="530" y1="286" x2="530" y2="120" stroke="#0d1119" stroke-width="3.5" transform="rotate(-42 530 286)"/>
-        <text x="530" y="112" font-family="Arial" font-size="19" font-weight="700" letter-spacing="4" fill="#082d52" text-anchor="middle">WATTS</text>
-        <g font-family="Arial" font-size="14.5" font-weight="700" fill="#082d52">
-            <text x="354" y="228">.2</text><text x="406" y="188">2.0</text><text x="522" y="154">20</text><text x="642" y="188">100</text><text x="686" y="228">200</text>
-        </g>
-        <g font-family="Arial" font-size="12.5" font-weight="650" fill="#0a3157">
-            <text x="380" y="256">-50</text><text x="434" y="218">-30</text><text x="526" y="198">-10</text><text x="622" y="218">0</text>
-        </g>
-        <text x="530" y="267" font-family="Arial" font-size="12" font-weight="700" letter-spacing="2" fill="#092f55" stroke="#52c1ed" stroke-width="3" paint-order="stroke fill" text-anchor="middle">DECIBELS</text>
-        <g font-family="Arial" font-size="15.5" font-weight="650" letter-spacing="3.4" fill="#082b4c" stroke="#43b6e8" stroke-width="3.5" paint-order="stroke fill">
-            <text x="510" y="289" text-anchor="end">POWER</text><text x="550" y="289">OUTPUT</text>
-        </g>
+${mfaPowerScale(530, 286)}
+        <line id="ampVuL" data-cx="530" data-cy="286" x1="530" y1="286" x2="530" y2="164" stroke="#10222d" stroke-width="2.6" transform="rotate(-42 530 286)"/>
+        <circle cx="530" cy="286" r="5" fill="#12232e"/>
         <polygon points="262,66 560,66 380,298 262,298" fill="url(#lzStreak)" opacity="0.7"/>
         <rect x="262" y="66" width="536" height="34" fill="url(#lzInset)" opacity="0.62"/>
         <rect x="262" y="66" width="14" height="232" fill="url(#lzInL)" opacity="0.5"/>
@@ -1138,22 +1154,9 @@ AMP_MODELS.tr.svg = `<svg class="amp-svg" viewBox="0 0 2000 560" xmlns="http://w
         <rect x="1202" y="66" width="536" height="232" rx="6" fill="#071019"/>
         <ellipse class="ampGlow" cx="1470" cy="212" rx="238" ry="118" fill="#289fe8" opacity=".02" filter="url(#m5BlueBloom)"/>
         <rect class="ampLamp" x="1202" y="66" width="536" height="232" rx="6" fill="url(#m5Face)" opacity="0.02"/>
-        <path d="M 1280 246 A 235 235 0 0 1 1660 246" fill="none" stroke="#0b365e" stroke-width="2.5"/>
-        <g stroke="#0b365e" stroke-width="2">
-            <line x1="1288" y1="240" x2="1300" y2="250"/><line x1="1338" y1="196" x2="1348" y2="208"/><line x1="1410" y1="168" x2="1416" y2="182"/><line x1="1470" y1="160" x2="1470" y2="174"/><line x1="1530" y1="168" x2="1524" y2="182"/><line x1="1602" y1="196" x2="1592" y2="208"/><line x1="1652" y1="240" x2="1640" y2="250"/>
-        </g>
-        <line id="ampVuR" data-cx="1470" data-cy="286" x1="1470" y1="286" x2="1470" y2="120" stroke="#0d1119" stroke-width="3.5" transform="rotate(-42 1470 286)"/>
-        <text x="1470" y="112" font-family="Arial" font-size="19" font-weight="700" letter-spacing="4" fill="#082d52" text-anchor="middle">WATTS</text>
-        <g font-family="Arial" font-size="14.5" font-weight="700" fill="#082d52">
-            <text x="1294" y="228">.2</text><text x="1346" y="188">2.0</text><text x="1462" y="154">20</text><text x="1582" y="188">100</text><text x="1626" y="228">200</text>
-        </g>
-        <g font-family="Arial" font-size="12.5" font-weight="650" fill="#0a3157">
-            <text x="1320" y="256">-50</text><text x="1374" y="218">-30</text><text x="1466" y="198">-10</text><text x="1562" y="218">0</text>
-        </g>
-        <text x="1470" y="267" font-family="Arial" font-size="12" font-weight="700" letter-spacing="2" fill="#092f55" stroke="#52c1ed" stroke-width="3" paint-order="stroke fill" text-anchor="middle">DECIBELS</text>
-        <g font-family="Arial" font-size="15.5" font-weight="650" letter-spacing="3.4" fill="#082b4c" stroke="#43b6e8" stroke-width="3.5" paint-order="stroke fill">
-            <text x="1450" y="289" text-anchor="end">POWER</text><text x="1490" y="289">OUTPUT</text>
-        </g>
+${mfaPowerScale(1470, 286)}
+        <line id="ampVuR" data-cx="1470" data-cy="286" x1="1470" y1="286" x2="1470" y2="164" stroke="#10222d" stroke-width="2.6" transform="rotate(-42 1470 286)"/>
+        <circle cx="1470" cy="286" r="5" fill="#12232e"/>
         <polygon points="1202,66 1500,66 1320,298 1202,298" fill="url(#lzStreak)" opacity="0.7"/>
         <rect x="1202" y="66" width="536" height="34" fill="url(#lzInset)" opacity="0.62"/>
         <rect x="1202" y="66" width="14" height="232" fill="url(#lzInL)" opacity="0.5"/>
@@ -1207,7 +1210,7 @@ AMP_MODELS.tr.svg = `<svg class="amp-svg" viewBox="0 0 2000 560" xmlns="http://w
 
 AMP_MODELS.el34.svg = `<svg class="amp-svg" viewBox="0 0 2000 540" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="Marantz 8B Tribute EL34 진공관 앰프">
     <defs>
-        <linearGradient id="m8Face" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0e7cd"/><stop offset=".08" stop-color="#ded4b9"/><stop offset="0.5" stop-color="#c9bea0"/><stop offset=".84" stop-color="#aba185"/><stop offset="1" stop-color="#8f866f"/></linearGradient>
+        <linearGradient id="m8Face" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0e7cd"/><stop offset=".08" stop-color="#ded4b9"/><stop offset="0.5" stop-color="#d5caae"/><stop offset=".84" stop-color="#b5ab91"/><stop offset="1" stop-color="#8f866f"/></linearGradient>
         <linearGradient id="m8Win" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c1812"/><stop offset="1" stop-color="#0b0906"/></linearGradient>
         <linearGradient id="m8Glass" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#211d16" stop-opacity="0.9"/><stop offset="0.3" stop-color="#5c5644" stop-opacity="0.45"/><stop offset="0.55" stop-color="#8a8168" stop-opacity="0.25"/><stop offset="1" stop-color="#171310" stop-opacity="0.92"/></linearGradient>
         <linearGradient id="m8Can" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#08080a"/><stop offset="0.35" stop-color="#22222a"/><stop offset="0.5" stop-color="#32323c"/><stop offset="0.7" stop-color="#1a1a22"/><stop offset="1" stop-color="#050507"/></linearGradient>
@@ -1269,7 +1272,7 @@ AMP_MODELS.el34.svg = `<svg class="amp-svg" viewBox="0 0 2000 540" xmlns="http:/
         <g font-family="Arial" font-size="10.5" font-weight="700" fill="#5b4a32" text-anchor="middle"><text x="214" y="420">-10</text><text x="250" y="396">0</text><text x="286" y="420">+10</text></g>
         <line id="ampVuL" data-cx="250" data-cy="446" x1="250" y1="446" x2="250" y2="360" stroke="#d4501e" stroke-width="2.8" transform="rotate(-42 250 446)"/>
         <circle cx="250" cy="446" r="6" fill="#1a1610"/>
-        <text id="ampBiasLbl" x="250" y="470" font-family="Arial" font-size="13" font-weight="700" letter-spacing="2" fill="#655d4e" text-anchor="middle">BIAS</text>
+        <text id="ampBiasLbl" x="250" y="470" font-family="Arial" font-size="13" font-weight="700" letter-spacing="2" fill="#473f31" text-anchor="middle">BIAS</text>
         <polygon points="188,344 268,344 214,468 188,468" fill="url(#lzStreak)"/>
         <circle cx="250" cy="406" r="68" fill="url(#lzInCirc)"/>
         <circle cx="250" cy="406" r="69.5" fill="none" stroke="#04050a" stroke-width="3" opacity="0.45"/>
@@ -1301,7 +1304,7 @@ AMP_MODELS.el34.svg = `<svg class="amp-svg" viewBox="0 0 2000 540" xmlns="http:/
     <g font-family="Arial" font-size="10.5" font-weight="700" fill="#4e473a" text-anchor="middle"><text x="1700" y="454">COM</text><text x="1740" y="454">4 Ω</text><text x="1780" y="454">8 Ω</text><text x="1820" y="454">16 Ω</text></g>
     <g fill="url(#m8Edge)" stroke="#625842" stroke-width="1"><circle cx="1830" cy="350" r="8"/><circle cx="1870" cy="350" r="8"/></g>
     <text x="1850" y="390" font-family="Arial" font-size="13.5" font-weight="700" letter-spacing="1.5" fill="#50483b" text-anchor="middle">TEST POINTS</text>
-    <path d="M820 494H1240" stroke="#736956" stroke-width="1.3" opacity=".56"/><text x="1030" y="490" font-family="Arial" font-size="10.5" font-weight="650" letter-spacing="1.7" fill="#5f5748" text-anchor="middle">CHANNEL A · BIAS NULL · CHANNEL B</text>
+    <path d="M820 494H1240" stroke="#736956" stroke-width="1.3" opacity=".56"/><text x="1030" y="490" font-family="Arial" font-size="13" font-weight="600" letter-spacing="1.4" fill="#453f34" text-anchor="middle">CHANNEL A · BIAS NULL · CHANNEL B</text>
     <text x="1540" y="514" font-family="Arial" font-size="13.5" font-weight="650" letter-spacing="2" fill="#554e42" text-anchor="middle">HAND-WIRED · SERIAL 8B-34018</text>
 </svg>`;
 
@@ -1387,7 +1390,7 @@ AMP_MODELS["300b"].svg = `<svg class="amp-svg" viewBox="0 0 2000 560" xmlns="htt
     <rect x="426" y="327" width="188" height="3" fill="#04050a" opacity="0.55"/>
     <rect x="426" y="515" width="188" height="2.5" fill="#ffffff" opacity="0.09"/>
     <rect class="meterDark" x="428" y="330" width="184" height="184" rx="3" fill="#0d0a06" opacity="0.55"/>
-    <text x="520" y="510" font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-size="12" fill="#8a2020" text-anchor="middle">Western Electric</text>
+    <text x="520" y="464" font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-size="12" fill="#8a2020" text-anchor="middle">Western Electric</text>
     <ellipse cx="880" cy="530" rx="120" ry="20" fill="url(#weShadow)"/>
     <circle cx="880" cy="424" r="108" fill="#7e765f"/>
     <circle cx="890.4" cy="438.7" r="106.1" fill="#000000" opacity="0.4" filter="url(#lzSoft)"/><circle cx="880" cy="420" r="104" fill="url(#weKnob)" stroke="#a49d87" stroke-width="2"/><path d="M 805.1 368.0 A 91.5 91.5 0 0 1 892.5 330.6" stroke="#ffffff" stroke-width="6.2" opacity="0.3" fill="none" stroke-linecap="round" pointer-events="none"/>
