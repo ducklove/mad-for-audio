@@ -31,12 +31,13 @@
     capInput.value = Number.isInteger(config.maxCloudSeconds) ? config.maxCloudSeconds / 60 : 10;
     function setAvailable(value) {
         available = value;
-        // 직접 PC 연결 링크를 연 경우에만 실패/설치 안내를 표시한다.
-        host.hidden = !available && pairingTicket === null;
+        // 연결 코드는 이 기기에만 저장된다. 연결했던 PC는 오프라인 안내도 남긴다.
+        host.hidden = !available && !config.token && pairingTicket === null;
         [enabledInput, cloudInput, capInput].forEach(input => { input.disabled = !available; });
         document.querySelectorAll("[data-analysis-res]").forEach(button => { button.hidden = !available; });
     }
     setAvailable(false);
+    if (config.token) message.textContent = "PC 분석 서비스 연결 확인 중…";
     function save() {
         config = {token: tokenInput.value.trim(), enabled: enabledInput.checked,
             cloudFallback: cloudInput.checked, maxCloudSeconds: Math.max(0, Math.min(60, Number(capInput.value) || 0)) * 60};
@@ -56,7 +57,7 @@
                 ...init.headers, Authorization: "Bearer " + config.token
             }, signal: AbortSignal.timeout(init.body instanceof Blob ? 900000 : 120000)});
         } catch (_) {
-            throw new Error("PC 분석 서비스에 연결할 수 없습니다. 서비스 실행과 브라우저의 로컬 네트워크 접근 허용을 확인하세요.");
+            throw new Error("PC 분석 서비스 연결 끊김 · 15초마다 다시 연결합니다. 계속 연결되지 않으면 PC 분석 서비스를 실행하고 로컬 네트워크 접근 허용을 확인하세요.");
         }
         if (!response.ok) {
             const data = await response.json().catch(() => ({}));
