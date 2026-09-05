@@ -10,7 +10,7 @@
     const pending = new Map();
     const completed = new Set();
     const previewURLs = new Set();
-    let sending = false, refreshing = false, connected = false, available = false, metadataReviewAvailable = false;
+    let sending = false, refreshing = false, connected = false, available = false, metadataReviewAvailable = false, albumQualityAvailable = false;
     const host = document.getElementById("trackAnalysisPanel");
     if (!host) return;
     const el = (tag, text, cls) => {
@@ -29,9 +29,9 @@
     const filterInput = host.querySelector("[data-analysis-filter]");
     let latestJobs = [], shownBroadcasts = 12;
     const expanded = new Set();
-    const activeStatuses = new Set(["recording", "queued", "running", "editing"]);
+    const activeStatuses = new Set(["recording", "queued", "running", "editing", "awaiting-album"]);
     const statusNames = {recording: "녹음 중", queued: "분석 대기", running: "분석 중", editing: "수정 중",
-        error: "처리 중단", review: "확인 필요", done: "저장 완료", recorded: "원본 저장"};
+        error: "처리 중단", review: "확인 필요", done: "저장 완료", recorded: "원본 저장", "awaiting-album": "방송 종료 대기"};
     const needsReview = track => track.review || !track.title || !track.composer || !track.performer;
     const stamp = job => Date.parse(job.startedAt) || Number(job.createdAt || 0) * 1000;
     const dayOf = ms => ms ? new Date(ms + 9 * 3600000).toISOString().slice(0, 10) : "날짜 미확인";
@@ -186,7 +186,20 @@
             if (group.unresolved) badges.append(el("span", `미분리 ${group.unresolved}`, "analysis-badge is-review"));
             heading.append(badges); summary.append(heading); card.append(summary);
             const body = el("div", "", "analysis-broadcast-body");
-            body.append(el("p", `${clockOf(group.time)}부터 녹음 · 원본 ${group.jobs.length}개 · 한국 시간`, "analysis-broadcast-meta"));
+            body.append(el("p", `${clockOf(group.time)}부터 녹음 · 원본 ${group.jobs.reduce((n,j) => n + (j.sourceJobIds?.length || 1),0)}개 · 한국 시간`, "analysis-broadcast-meta"));
+            const album = group.jobs.find(j => j.source === 'broadcast-album');
+            if (album && ['done','review'].includes(album.status)) {
+                body.append(button('방송 음반 ZIP 저장', () => download(`/jobs/${album.id}/archive`, `${album.name}-방송음반.zip`)));
+                const usage = album.usage || [], priced = usage.filter(u => typeof u.cost === 'number');
+                const cost = priced.length ? `API 비용 $${priced.reduce((sum,u) => sum + u.cost,0).toFixed(3)}${priced.length < album.cloudCalls ? ' · 일부 요청 비용 미확인' : ''}` : 'API 비용 응답 없음';
+                body.append(el('p', `전체 음성 검토 · 원본 ${album.sourceJobIds.length}개 통합 · ${cost}`, 'analysis-broadcast-meta'));
+                if (album.recordingGaps?.length) body.append(el('p', `수신 연결 간격 ${album.recordingGaps.length}곳 · 해당 곡의 누락·중복을 확인하세요.`, 'analysis-warning'));
+            } else if (albumQualityAvailable && !album && group.jobs.some(j => j.program?.scheduleKnown) && !group.active) {
+                body.append(button('방송 전체 정밀 분석', async () => {
+                    await request(`/jobs/${group.jobs[0].id}/album`, {method:'POST'}); await refresh();
+                }));
+                body.append(el('p', '방송 전체 음성을 Gemini로 전송해 곡 목록과 경계를 새로 검토합니다. 원본과 이전 분석은 보존하며 추가 API 비용이 발생합니다.', 'analysis-broadcast-meta'));
+            }
             const trackList = el("div", "", "analysis-track-list");
             group.tracks.forEach(({job, track}, index) => trackList.append(renderTrack(job, track, index + 1)));
             if (!group.tracks.length) trackList.append(el("p", group.active ? "곡을 준비하고 있습니다. 분석이 끝나면 여기에 표시됩니다." : "저장된 곡이 없습니다. 아래 녹음 파일에서 원본과 처리 상태를 확인하세요.", "analysis-empty"));
@@ -211,13 +224,15 @@
         }));
         if (["done", "review"].includes(job.status)) details.append(button("이 파일의 곡 ZIP 저장", () =>
             download(`/jobs/${job.id}/archive`, `${job.name}-분리된-곡.zip`)));
-        if (metadataReviewAvailable && ["done", "review"].includes(job.status) && job.tracks?.length) details.append(button("곡 정보만 재검토", async () => {
+        if (metadataReviewAvailable && job.source !== 'broadcast-album' && ["done", "review"].includes(job.status) && job.tracks?.length) details.append(button("곡 정보만 재검토", async () => {
             await request(`/jobs/${job.id}/metadata`, {method: "POST"}); await refresh();
         }));
         if (job.metadataNotice) details.append(el("p", job.metadataNotice, "analysis-warning"));
         if (job.source === "server-recorder" && job.status !== "recording") details.append(button("녹음 원본 저장", () =>
             download(`/jobs/${job.id}/files/original`, `${job.name}.m4a`)));
         if (job.recordingNote) details.append(el("p", job.recordingNote));
+        for (const [index, original] of (job.sourceFiles || []).entries()) details.append(button(`원본 ${index + 1} 저장`, () =>
+            download(`/jobs/${original.id}/files/original`, `${job.name}-원본-${index + 1}.m4a`)));
         for (const part of job.unresolved || []) details.append(el("p",
             `${part.start.toFixed(1)}~${part.end.toFixed(1)}초 미분리 · ${part.reason}`, "analysis-warning"));
         return details;
@@ -238,6 +253,15 @@
         content.append(el("p", `원본 ${clockOf(stamp(job))} · 파일 내 ${track.start.toFixed(1)}~${track.end.toFixed(1)}초`));
         content.append(el("p", track.source === "user" ? "직접 확인한 정보" : "자동 추출한 정보입니다. 소개 멘트와 대조해 곡명·연주자를 확인하세요."));
         if (track.evidence) content.append(el("blockquote", track.evidence));
+        for (const reference of (track.references || [])) {
+            try {
+                const url = new URL(reference.url);
+                if (url.protocol !== 'https:') continue;
+                const link = el('a', `교정 근거 · ${reference.title || url.hostname}`);
+                link.href = url.href; link.target = '_blank'; link.rel = 'noopener noreferrer';
+                content.append(link);
+            } catch (_) { /* 손상된 출처는 링크로 만들지 않는다. */ }
+        }
         if (track.note) content.append(el("p", track.note, "analysis-warning"));
         const audio = el("audio"); audio.controls = true; audio.hidden = true;
         const path = `/jobs/${job.id}/files/track-${track.id}.flac`;
@@ -275,6 +299,7 @@
         try {
             const health = await (await request("/health")).json();
             metadataReviewAvailable = health.metadataReview === true;
+            albumQualityAvailable = health.albumQuality === true;
             connected = true;
             setAvailable(health.localConfigured === true);
             message.textContent = `${health.localConfigured ? "PC 분석 서비스 연결됨" : "PC 모델 설치가 필요합니다"} · ${health.geminiConfigured ? (health.geminiProvider === "openrouter" ? "OpenRouter · Gemini 보완 사용 가능" : "Gemini 보완 사용 가능") : "Gemini 키 미등록 · 로컬 분석 사용"}${pending.size ? ` · 전송 대기 ${pending.size}건` : ""}`;
@@ -360,6 +385,7 @@
         control("mode").value = rule.splitTracks ? "tracks" : "original";
         control("reruns").checked = rule.excludeReruns;
         control("cloud").checked = rule.cloudFallback;
+        control("quality").checked = rule.qualityMode === true;
         control("cap").value = rule.maxCloudSeconds / 60;
         control("segment").value = rule.segmentMinutes;
         for (const input of control("days").querySelectorAll("input")) input.checked = rule.weekdays.includes(Number(input.value));
@@ -414,7 +440,7 @@
             const rule = {enabled: true, startMinute: minuteOf(control("start").value), endMinute: minuteOf(control("end").value),
                 weekdays, programs: control("programs").value.split("\n").map(value => value.trim()).filter(Boolean),
                 splitTracks: control("mode").value === "tracks", excludeReruns: control("reruns").checked,
-                cloudFallback: control("cloud").checked, maxCloudSeconds: Number(control("cap").value) * 60,
+                cloudFallback: control("cloud").checked, qualityMode: control("quality").checked, maxCloudSeconds: Number(control("cap").value) * 60,
                 segmentMinutes: Number(control("segment").value)};
             await saveRecorder([...recorderData.rules.filter(r => !selected.includes(r.stationId)), ...selected.map(stationId => ({...rule, stationId}))]);
         } catch (error) { recorderMessage.textContent = error.message; }

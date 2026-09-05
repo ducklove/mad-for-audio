@@ -18,7 +18,7 @@ from radio_sources import KST, RadioSources
 def default_rule():
     return {"stationId": "kbs1fm", "enabled": False, "startMinute": 0, "endMinute": 1440,
             "weekdays": list(range(7)), "programs": [], "excludeReruns": True, "splitTracks": True,
-            "cloudFallback": True, "maxCloudSeconds": 600, "segmentMinutes": 120}
+            "cloudFallback": True, "maxCloudSeconds": 600, "segmentMinutes": 120, "qualityMode": False}
 
 
 def validate_rules(data, stations):
@@ -29,7 +29,7 @@ def validate_rules(data, stations):
         if not isinstance(value, dict) or value.get("stationId") not in stations or value["stationId"] in seen:
             raise ValueError("채널이 잘못됐거나 중복됐습니다.")
         rule = default_rule() | value
-        for key in ("enabled", "excludeReruns", "splitTracks", "cloudFallback"):
+        for key in ("enabled", "excludeReruns", "splitTracks", "cloudFallback", "qualityMode"):
             if type(rule[key]) is not bool:
                 raise ValueError("녹음 옵션은 켬/끔이어야 합니다.")
         for key, low, high in (("startMinute", 0, 1439), ("endMinute", 0, 1440),
@@ -88,6 +88,8 @@ def plan(rule, now, sources):
     if end - now < 2:
         return None, "다음 방송 구간 대기"
     return {"end": end, "title": program["title"] if program else "시간 녹음",
+            "broadcastStart": program["start"] if program else now,
+            "broadcastEnd": min(recording_window(rule, now), program["end"]) if program else end,
             "scheduleKnown": program is not None, "rerun": program["rerun"] if program else None}, "녹음 준비"
 
 
@@ -189,6 +191,7 @@ class Recorder:
                "status": "recording", "message": "PC 서버에서 녹음 중", "tracks": [],
                "cloudSeconds": 0, "cloudCalls": 0, "splitTracks": rule["splitTracks"],
                "program": target, "options": {"cloudFallback": rule["cloudFallback"], "maxCloudSeconds": rule["maxCloudSeconds"]}}
+        job['qualityMode'] = rule.get('qualityMode', False) and rule['cloudFallback']
         self.jobs.save(job)
         process = None
         capture_env = dict(os.environ)
@@ -253,10 +256,15 @@ class Recorder:
             job.update(status="error", message="녹음 파일을 확인하지 못했습니다. 원본·로그는 보존했습니다.")
             self.jobs.save(job)
             return
-        job["status"] = "queued" if job["splitTracks"] else "recorded"
+        precise = (job.get('qualityMode') and job['splitTracks'] and job.get('options',{}).get('cloudFallback')
+                   and job.get('program',{}).get('scheduleKnown'))
+        job["status"] = "awaiting-album" if precise else "queued" if job["splitTracks"] else "recorded"
         job["message"] = "PC 녹음 완료 · 곡 분석 대기" if job["splitTracks"] else "PC 원본 녹음 저장 완료"
+        if precise:
+            job['message'] = '방송 종료 후 전체 음성으로 음반 정밀 분석 대기'
+            job['albumReadyAt'] = job.get('program',{}).get('broadcastEnd', time.time()) + 30
         self.jobs.save(job)
-        if job["splitTracks"]:
+        if job["splitTracks"] and not precise:
             self.jobs.queue.put(job["id"])
 
     def recover(self, job):

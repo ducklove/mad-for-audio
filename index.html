@@ -42,7 +42,7 @@
     </script>
     <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-    <link rel="stylesheet" href="styles.css?v=184">
+    <link rel="stylesheet" href="styles.css?v=185">
 </head>
 <body>
     <div class="page-shell">
@@ -274,6 +274,8 @@
                             <label><input data-recorder-reruns type="checkbox" checked> 재방송 제외 (현재 KBS 지원, 확인 불가 시 대기)</label>
                             <label>파일 최대 길이(분)<input data-recorder-segment type="number" min="15" max="120" value="120" required></label>
                             <label><input data-recorder-cloud type="checkbox" checked> 불확실한 구간만 Gemini로 보완</label>
+                            <label><input data-recorder-quality type="checkbox"> 방송 전체 정밀 분석 · 한 방송을 한 음반으로 저장</label>
+                            <p>정밀 분석은 방송 전체 음성과 곡 경계를 Gemini로 검토하고, 의심되는 인명·작품을 공식 음반 자료와 대조합니다. 아래 짧은 보완 한도와 별도로 방송당 최대 6시간 분량·48회, 공식 자료 검색 최대 6회를 사용하며 비용이 증가합니다. Gemini 보완과 편성 정보가 있는 방송에 적용됩니다.</p>
                             <label>파일당 Gemini 전송 한도(분)<input data-recorder-cap type="number" min="0" max="60" value="10" required></label>
                             <button type="submit" class="res-btn">설정 저장·녹음 시작</button>
                         </form>
@@ -341,26 +343,26 @@
 
     <audio id="audioPlayer" crossorigin="anonymous"></audio>
 
-    <script src="stations.js?v=184"></script>
-    <script src="player-core.js?v=184"></script>
-    <script src="native-hls-capture.js?v=184"></script>
-    <script src="store.js?v=184"></script>
-    <script src="track-analysis.js?v=184"></script>
-    <script src="schedule.js?v=184"></script>
-    <script src="skins.js?v=184"></script>
-    <script src="component-skins.js?v=184"></script>
-    <script src="solo-skins.js?v=184"></script>
-    <script src="reference-layouts.js?v=184"></script>
-    <script src="model-registry.js?v=184"></script>
-    <script src="animation-scheduler.js?v=184"></script>
-    <script src="engine.js?v=184"></script>
-    <script src="deck.js?v=184"></script>
-    <script src="bootstrap.js?v=184"></script>
-    <script src="ui-controls.js?v=184"></script>
+    <script src="stations.js?v=185"></script>
+    <script src="player-core.js?v=185"></script>
+    <script src="native-hls-capture.js?v=185"></script>
+    <script src="store.js?v=185"></script>
+    <script src="track-analysis.js?v=185"></script>
+    <script src="schedule.js?v=185"></script>
+    <script src="skins.js?v=185"></script>
+    <script src="component-skins.js?v=185"></script>
+    <script src="solo-skins.js?v=185"></script>
+    <script src="reference-layouts.js?v=185"></script>
+    <script src="model-registry.js?v=185"></script>
+    <script src="animation-scheduler.js?v=185"></script>
+    <script src="engine.js?v=185"></script>
+    <script src="deck.js?v=185"></script>
+    <script src="bootstrap.js?v=185"></script>
+    <script src="ui-controls.js?v=185"></script>
     <script>
         // 실행 중 버전 — 자산 링크의 ?v=가 단일 진실 (bump-version.py가 올린다)
         const RUNNING_ASSET_VERSION = (() => {
-            const link = document.querySelector('link[rel="stylesheet"][href^="styles.css?v=184"]');
+            const link = document.querySelector('link[rel="stylesheet"][href^="styles.css?v=185"]');
             const m = link && /[?&]v=(\d+)/.exec(link.getAttribute("href"));
             return m ? Number(m[1]) : null;
         })();

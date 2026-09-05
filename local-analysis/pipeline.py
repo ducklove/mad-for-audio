@@ -190,6 +190,7 @@ def export_track(folder, track):
     tags = {"title": track["title"] or "곡명 미확인", "composer": track["composer"] or "작곡가 미확인",
             "artist": track["performer"] or "연주자 미확인", "performer": track["performer"] or "연주자 미확인",
             "track": str(track["id"]), "comment": track.get("evidence", "")}
+    tags.update({key: str(track[key]) for key in ("album", "album_artist", "date", "tracktotal", "disc", "disctotal") if track.get(key)})
     metadata = [arg for key, value in tags.items() for arg in ("-metadata", f"{key}={value}")]
     ffmpeg("-ss", str(track["start"]), "-i", folder / "source.wav", "-t", str(track["end"] - track["start"]),
            "-map", "0:a:0", "-c:a", "flac", *metadata, temp)

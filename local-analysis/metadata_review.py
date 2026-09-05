@@ -16,6 +16,11 @@ def announcement(text):
     return bool(ANNOUNCEMENT.search(text or ""))
 
 
+def clean_transcript(text):
+    # ASR가 힌트 문구를 실제 발화처럼 되풀이한 경우 근거로 사용하지 않는다.
+    return re.sub(r"라디오 음악 방송\.\s*소개 멘트의 용어:[^.]*\.", "", text).strip()
+
+
 def canonical_title(title, composer):
     # 사람 이름을 사전 없이 치환하지 않는다. 슈베르트의 작품목록 명칭만 문맥으로 바로잡는다.
     if "슈베르트" in title + composer or "schubert" in (title + composer).lower():
@@ -72,7 +77,7 @@ def split_people(value):
 def context_for(tracks, manifest, transcripts):
     rows, seen = [], set()
     for item in manifest:
-        text = transcripts.get(item["index"], "")
+        text = clean_transcript(transcripts.get(item["index"], ""))
         if not announcement(text) or not any(
             item["start"] <= edge + 120 and item["end"] >= edge - 120
             for track in tracks for edge in (track["start"], track["end"])):
@@ -143,7 +148,8 @@ def instruction(tracks, contexts):
         "곡명에는 작품번호·조성·악장을 보존하되 다른 곡의 번호를 섞지 마세요. "
         "도이치 번호는 슈베르트의 D. 작품번호이며 도시 번호가 아닙니다. "
         "반드시 아래 JSON만 반환하세요: {tracks:[{id:정수,title:{value:문자열,evidence:문자열},"
-        "composer:{value:문자열,evidence:문자열},performer:{value:문자열,evidence:문자열},note:문자열}]}. "
+        "composer:{value:문자열,evidence:문자열,heard:문자열},performer:{value:문자열,evidence:문자열,heard:문자열},note:문자열}]}. "
+        "composer와 performer의 heard에는 evidence에서 인명을 들은 표기를 그대로 넣으세요. value는 그 이름의 통용 표기이며 원어 이름으로 번역해도 됩니다. "
         "각 evidence는 해당 값을 뒷받침하는 제공 전사의 정확한 부분 인용입니다(오자를 고치지 않은 원문). 연주/지휘/작곡/곡 소개 표현까지 포함하여 가사와 구별하세요. "
         "값의 표기만 교정하고 원문 근거를 보존하세요. 제공 전사에 근거가 없으면 value와 evidence 모두 빈 문자열입니다. "
         "짧은 음악 조각만으로 경계나 곡 동일성을 확정하지 마세요.\n"
@@ -168,7 +174,13 @@ def apply_review(track, extra, contexts):
         if not value.strip() and not quote.strip():
             fields[key] = ""
         elif len(normalized(quote)) >= 2 and any(normalized(quote) in normalized(row["text"]) and announcement(row["text"]) for row in contexts):
-            if key == "performer":
+            heard = field.get("heard", "")
+            entity_grounded = isinstance(heard, str) and len(normalized(heard)) >= 2 and normalized(heard) in normalized(quote)
+            if key in ("composer", "performer") and entity_grounded:
+                # 의미를 해석하는 모델이 원문 인명과 표준 이름을 명시적으로 대응했다.
+                # 다른 문자권이라는 이유만으로 정상적인 이름을 버리지 않는다.
+                fields[key] = value.strip()
+            elif key == "performer":
                 names = split_people(value)
                 accepted = [name for name in names if supported_person(name, quote)]
                 fields[key] = ", ".join(accepted)

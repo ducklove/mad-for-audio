@@ -152,6 +152,17 @@ class RecorderTests(unittest.TestCase):
         self.assertEqual(self.jobs.read(job_id)["status"], "recorded")
         self.assertTrue((folder / "original.bin").exists())
 
+    def test_quality_waits_for_whole_broadcast_and_unknown_schedule_uses_local_path(self):
+        for known in (True,False):
+            job={'id':str(uuid4()),'createdAt':time.time(),'status':'recording','splitTracks':True,
+                 'qualityMode':True,'options':{'cloudFallback':True},
+                 'program':{'scheduleKnown':known,'broadcastEnd':time.time()+600}}
+            self.jobs.save(job)
+            with patch('recorder.duration',return_value=120): self.recorder.finish(job,'정상 종료')
+            self.assertEqual(job['status'],'awaiting-album' if known else 'queued')
+            if known: self.assertGreater(job['albumReadyAt'],time.time()+600)
+        self.assertEqual(self.jobs.queue.qsize(),1)
+
 
 if __name__ == "__main__":
     unittest.main()

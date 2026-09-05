@@ -256,6 +256,34 @@ test.describe("예약 녹음 곡 분리", () => {
         expect((await downloadPromise).suggestedFilename()).toBe("서버 검증.m4a");
     });
 
+    test("전체 방송 정밀 분석과 음반 저장 및 원본 연결", async ({page, context}) => {
+        let started = 0;
+        const original = {id:'source-a',name:'KBS 1FM · 실황',stationId:'kbs1fm',source:'server-recorder',
+            program:{title:'실황',scheduleKnown:true},startedAt:'2026-09-05T20:00:00+09:00',status:'review',tracks:[]};
+        let rows=[original];
+        await context.route('http://127.0.0.1:8766/**', route => {
+            const path=new URL(route.request().url()).pathname;
+            if(path.endsWith('/album')) {
+                started++;
+                rows=[{...original,id:'album-a',source:'broadcast-album',sourceJobIds:['source-a'],
+                    sourceFiles:[{id:'source-a'}],usage:[{cost:.18}],tracks:[{id:1,start:10,end:200,title:'교향곡',composer:'브루크너',performer:'BBC',review:false}]}];
+                return route.fulfill({json:rows[0]});
+            }
+            return route.fulfill({json:path==='/health'?{localConfigured:true,albumQuality:true}:rows});
+        });
+        await page.evaluate(() => localStorage.setItem('fmRadio.trackAnalysis',JSON.stringify({token:'test'})));
+        await page.reload(); await show(page);
+        await page.locator('.analysis-broadcast > summary').click();
+        await page.getByRole('button',{name:'방송 전체 정밀 분석',exact:true}).click();
+        await expect.poll(() => started).toBe(1);
+        await expect(page.getByRole('button',{name:'방송 음반 ZIP 저장'})).toBeVisible();
+        await expect(page.getByText(/API 비용 \$0.180/)).toBeVisible();
+        await page.locator('.analysis-files > summary').click();
+        await page.locator('.analysis-job > summary').click();
+        await expect(page.getByRole('button',{name:'원본 1 저장',exact:true})).toBeVisible();
+        await expect(page.getByRole('button',{name:'곡 정보만 재검토'})).toHaveCount(0);
+    });
+
     test("방송별 카드로 묶고 날짜·채널 분리 및 곡 검색·갱신 유지", async ({page, context}, testInfo) => {
         const make = (id, date, stationId = "kbs1fm", status = "review") => ({
             id, name: `${stationId === "kbs1fm" ? "KBS 1FM" : "CBS 음악FM"} · 명연주 명음반`, stationId,

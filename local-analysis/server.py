@@ -13,6 +13,7 @@ import time
 from uuid import UUID
 import zipfile
 import tempfile
+from album_quality import AlbumQuality, episode_key, album_id
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -54,6 +55,7 @@ class Jobs:
         self.lock = threading.RLock()
         self.uploads = set()
         self.worker = None
+        self.closing = threading.Event()
 
     def folder(self, job_id):
         try:
@@ -97,11 +99,66 @@ class Jobs:
                 self.queue.put(job["id"])
         self.worker = threading.Thread(target=self.work, daemon=True)
         self.worker.start()
+        self.album_scheduler = threading.Thread(target=self.schedule_albums, daemon=True)
+        self.album_scheduler.start()
+
+    def enqueue_album(self, seed_id):
+        with self.lock:
+            seed = self.read(seed_id)
+            key = episode_key(seed)
+            if not key: raise HTTPException(409, '편성이 확인된 PC 서버 녹음에서 방송 음반을 만들 수 있습니다.')
+            sources = sorted([j for j in self.listing() if episode_key(j)==key], key=lambda j:j['startedAt'])
+            if any(j['status'] in ('recording','running','editing','queued') for j in sources):
+                raise HTTPException(409, '방송 녹음·파일 분석이 끝난 뒤 정밀 분석을 시작하세요.')
+            ready = max((j.get('albumReadyAt',0) for j in sources),default=0)
+            if ready > time.time(): raise HTTPException(409, '방송이 끝날 때까지 원본을 모으고 있습니다.')
+            usable = [j for j in sources if j.get('duration',0)>0 and (self.folder(j['id'])/'original.bin').is_file()]
+            if not usable: raise HTTPException(409, '분석할 수 있는 녹음 원본이 없습니다.')
+            if not all(j.get('options',{}).get('cloudFallback') for j in usable):
+                raise HTTPException(409, '이 방송의 일부 원본에서 Gemini 사용이 꺼져 있습니다.')
+            if not cloud_connection(self.config)[2]: raise HTTPException(409, 'Gemini 연결 설정이 필요합니다.')
+            source_ids = [j['id'] for j in usable]
+            ident = album_id(key + json.dumps(source_ids))
+            if (self.folder(ident)/'job.json').exists(): return self.read(ident)
+            job = {'id':ident,'name':seed['name'],'stationId':seed['stationId'],'program':seed['program'],
+                'source':'broadcast-album','episodeKey':key,'sourceJobIds':source_ids,
+                'sourceFiles':[{'id':j['id'],'startedAt':j['startedAt'],'duration':j['duration']} for j in usable],
+                'omittedSourceIds':[j['id'] for j in sources if j not in usable],
+                'startedAt':usable[0]['startedAt'],'createdAt':time.time(),'status':'queued','tracks':[],
+                'message':'방송 전체 음성 정밀 분석 대기','cloudCalls':0,'cloudSeconds':0,
+                'options':{'cloudFallback':True,'maxCloudSeconds':self.config.get('albumMaxCloudSeconds',21600)}}
+            self.save(job); self.queue.put(ident)
+            return job
+
+    def schedule_albums(self):
+        while not self.closing.wait(15):
+            for job in self.listing():
+                if job['status'] != 'awaiting-album' or job.get('albumReadyAt',0)>time.time(): continue
+                try:
+                    album=self.enqueue_album(job['id'])
+                    with self.lock:
+                        current=self.read(job['id'])
+                        if current['status']=='awaiting-album':
+                            current.update(status='recorded',albumId=album['id'],message='원본 보관 · 방송 음반에서 정밀 분석')
+                            self.save(current)
+                except HTTPException:
+                    continue
+
+    def library(self):
+        rows=self.listing()
+        albums={}
+        for job in rows:
+            if job.get('source')=='broadcast-album' and job.get('episodeKey') not in albums:
+                albums[job['episodeKey']]=job
+        hidden={ident for album in albums.values() if album['status'] in ('done','review') for ident in album['sourceJobIds']}
+        return [j for j in rows if j['id'] not in hidden and
+                (j.get('source')!='broadcast-album' or albums[j['episodeKey']]['id']==j['id'])][:50]
 
     def work(self):
         while True:
             job_id = self.queue.get()
             if job_id is None:
+                self.closing.set()
                 return
             job = None
             try:
@@ -111,7 +168,10 @@ class Jobs:
                 job["status"] = "running"
                 self.save(job)
                 pipeline = Pipeline(self.config)
-                if job.pop("metadataOnly", False):
+                if job.get('source') == 'broadcast-album':
+                    sources=[self.read(ident) for ident in job['sourceJobIds']]
+                    AlbumQuality(self.root,self.config).process(self.folder(job_id),job,sources,self.save)
+                elif job.pop("metadataOnly", False):
                     pipeline.review_metadata(self.folder(job_id), job, self.save)
                 else:
                     pipeline.process(self.folder(job_id), job, self.save)
@@ -136,6 +196,7 @@ def create_app(root=DATA, config=None, start_worker=True):
             recorder.start()
         yield
         if start_worker:
+            jobs.closing.set()
             await run_in_threadpool(recorder.close)
             jobs.queue.put(None)
 
@@ -199,7 +260,8 @@ def create_app(root=DATA, config=None, start_worker=True):
                 and (Path(config["mossSource"]) / "src").is_dir() and (root / "models-ready.json").is_file(),
                 "geminiConfigured": bool(key), "geminiProvider": provider,
                 "geminiModel": model, "maxCloudSeconds": config.get("maxCloudSeconds", 600), "serverRecorder": True,
-                "metadataReview": True}
+                "metadataReview": True, "albumQuality": True,
+                "albumMaxCloudSeconds": config.get('albumMaxCloudSeconds',21600)}
 
     @app.get("/recorder")
     def recorder_status():
@@ -219,7 +281,11 @@ def create_app(root=DATA, config=None, start_worker=True):
 
     @app.get("/jobs")
     def listing():
-        return jobs.listing(limit=50)
+        return jobs.library()
+
+    @app.post('/jobs/{job_id}/album')
+    def album(job_id: str):
+        return jobs.enqueue_album(job_id)
 
     @app.get("/jobs/{job_id}")
     def read(job_id: str):
@@ -279,6 +345,13 @@ def create_app(root=DATA, config=None, start_worker=True):
             job = jobs.read(job_id)
             if job["status"] not in ("error", "review"):
                 raise HTTPException(409, "실패했거나 확인이 필요한 작업만 재시도할 수 있습니다.")
+            if job.get('source')=='broadcast-album':
+                job['retryRequests']=[]
+                for path in jobs.folder(job_id).glob('*.json'):
+                    if '.previous-' in path.name: continue
+                    record=json.loads(path.read_text(encoding='utf-8'))
+                    if isinstance(record,dict) and record.get('state') in ('requested','failed','responded'):
+                        job['retryRequests'].append(path.name)
             job.update(status="queued", message="다시 분석 대기 중")
             jobs.save(job)  # 사용량 카운터는 초기화하지 않는다.
             jobs.queue.put(job_id)
@@ -349,6 +422,8 @@ def create_app(root=DATA, config=None, start_worker=True):
         if filename == "original":
             if job["status"] == "recording":
                 raise HTTPException(409, "녹음 구간이 끝난 뒤 원본을 내려받으세요.")
+            if job.get('source')=='broadcast-album':
+                return FileResponse(folder/'source.wav',filename='방송-통합원본.wav',media_type='audio/wav')
             return FileResponse(folder / "original.bin", filename="원본-녹음.m4a" if job.get("source") == "server-recorder" else "원본-녹음.bin")
         if filename == "source":
             path = folder / "source.wav"
