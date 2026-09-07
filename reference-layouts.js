@@ -205,6 +205,18 @@ function refTurntableLayout(stage, record, index, count) {
     info.querySelector('.tt-record-performer').textContent=record.performer;
     info.querySelector('.tt-record-count').textContent=`${index+1} / ${count} · ${record.tracks.length}곡`;
     if(record.cover){ const img=document.createElement('img');img.id='ttCoverImage';img.alt='';img.setAttribute('opacity','0');img.src=PHONO_BASE+record.cover;info.querySelector('.tt-cover-art').append(img); }
-    record.tracks.forEach((track,i)=>{const li=document.createElement('li');const b=document.createElement('button');b.type='button';b.id='ttTrackHit'+i;const num=document.createElement('span');num.className='tt-track-number';num.textContent=String(i+1).padStart(2,'0');const label=document.createElement('span');label.textContent=track.t;b.append(num,label);li.append(b);info.querySelector('ol').append(li);});
+    record.tracks.forEach((track,i)=>{
+        const li=document.createElement('li'), b=document.createElement('button');b.type='button';b.id='ttTrackHit'+i;
+        const num=document.createElement('span');num.className='tt-track-number';num.textContent=String(i+1).padStart(2,'0');
+        const label=document.createElement('span');label.textContent=track.t;
+        if (record.archive) {
+            const details=document.createElement('small');details.className='archive-track-detail';
+            const seconds=Math.round(track.durationSeconds);
+            details.textContent=[track.review?'검토 필요':'',Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0'),
+                Number.isFinite(track.sizeBytes)?(track.sizeBytes/1024/1024).toFixed(1)+' MiB':'크기 미확인',track.performer].filter(Boolean).join(' · ');
+            label.append(details);
+        }
+        b.append(num,label);li.append(b);info.querySelector('ol').append(li);
+    });
     workspace.append(machine,info);stage.replaceChildren(workspace);
 }

@@ -24,11 +24,18 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="Mad for Audio">
     <script>
+        // 일회용 연결 표는 분석 스크립트보다 먼저 주소에서 제거한다.
+        const archiveFragment = new URLSearchParams(location.hash.slice(1));
+        if (archiveFragment.has('radio-archive-pair')) {
+            window.MFA_ARCHIVE_PAIR_TICKET = archiveFragment.get('radio-archive-pair');
+            archiveFragment.delete('radio-archive-pair');
+            history.replaceState(null, '', location.pathname+location.search+(archiveFragment.size?'#'+archiveFragment.toString():''));
+        }
         // 분석 스크립트는 켜자마자 받지 않는다 — TV에서 시작 직후 0.45초를 회선·CPU에서
         // 가져가며 랙이 뜨는 시간을 밀어냈다(실측). 큐만 먼저 만들어 두고 로드는 화면이
         // 다 뜬 뒤로 미룬다. gtag() 호출부는 그대로 두면 된다.
         window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
+        function gtag(){if (!window.MFA_PRIVATE_PLAYBACK) dataLayer.push(arguments);}
         gtag('js', new Date());
         gtag('config', 'G-S8GLTG1KYZ');
         window.addEventListener('load', function () {
@@ -42,7 +49,7 @@
     </script>
     <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-    <link rel="stylesheet" href="styles.css?v=186">
+    <link rel="stylesheet" href="styles.css?v=187">
 </head>
 <body>
     <div class="page-shell">
@@ -285,6 +292,11 @@
                 <button class="crate-mix-btn" id="crateMixBtn" type="button" aria-pressed="false">♾ 무한 랜덤 재생</button>
             </div>
             <div class="crate-mix-status" id="crateMixStatus" role="status">장르를 고르면 조건에 맞는 곡을 중복 없이 섞어 계속 재생합니다.</div>
+            <details class="crate-archive" id="archivePanel"><summary>내 방송 음반 · Radio Archive</summary>
+                <p id="archiveStatus" role="status">Radio Archive 관리 화면에서 연결할 수 있습니다.</p>
+                <div class="archive-tools"><a href="http://127.0.0.1:8766/" target="_blank" rel="noopener noreferrer">이 PC의 보관함 열기</a>
+                <button id="archiveRefresh" type="button">음반 새로고침</button><button id="archiveDisconnect" type="button">이 앱 연결 지우기</button></div>
+            </details><div id="archiveCurrentSide" class="archive-tools"></div>
             <div class="crate-grid" id="crateGrid" role="list"></div>
             <div class="crate-empty" id="crateEmpty" hidden>검색 결과가 없습니다.</div>
         </div>
@@ -295,25 +307,26 @@
 
     <audio id="audioPlayer" crossorigin="anonymous"></audio>
 
-    <script src="stations.js?v=186"></script>
-    <script src="player-core.js?v=186"></script>
-    <script src="native-hls-capture.js?v=186"></script>
-    <script src="store.js?v=186"></script>
-    <script src="schedule.js?v=186"></script>
-    <script src="skins.js?v=186"></script>
-    <script src="component-skins.js?v=186"></script>
-    <script src="solo-skins.js?v=186"></script>
-    <script src="reference-layouts.js?v=186"></script>
-    <script src="model-registry.js?v=186"></script>
-    <script src="animation-scheduler.js?v=186"></script>
-    <script src="engine.js?v=186"></script>
-    <script src="deck.js?v=186"></script>
-    <script src="bootstrap.js?v=186"></script>
-    <script src="ui-controls.js?v=186"></script>
+    <script src="stations.js?v=187"></script>
+    <script src="player-core.js?v=187"></script>
+    <script src="native-hls-capture.js?v=187"></script>
+    <script src="store.js?v=187"></script>
+    <script src="schedule.js?v=187"></script>
+    <script src="skins.js?v=187"></script>
+    <script src="component-skins.js?v=187"></script>
+    <script src="solo-skins.js?v=187"></script>
+    <script src="reference-layouts.js?v=187"></script>
+    <script src="model-registry.js?v=187"></script>
+    <script src="animation-scheduler.js?v=187"></script>
+    <script src="engine.js?v=187"></script>
+    <script src="deck.js?v=187"></script>
+    <script src="radio-archive-client.js?v=187"></script>
+    <script src="bootstrap.js?v=187"></script>
+    <script src="ui-controls.js?v=187"></script>
     <script>
         // 실행 중 버전 — 자산 링크의 ?v=가 단일 진실 (bump-version.py가 올린다)
         const RUNNING_ASSET_VERSION = (() => {
-            const link = document.querySelector('link[rel="stylesheet"][href^="styles.css?v=186"]');
+            const link = document.querySelector('link[rel="stylesheet"][href^="styles.css?v=187"]');
             const m = link && /[?&]v=(\d+)/.exec(link.getAttribute("href"));
             return m ? Number(m[1]) : null;
         })();

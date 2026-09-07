@@ -817,3 +817,6 @@ body.focus-unit-zoomed .unit-zoomed {
 body[data-focus-compact="true"] .unit-zoom-btn {
     display: none !important;
 }
+
+.crate-archive{margin:8px 18px 14px;padding:12px 14px;border:1px solid var(--line,#474038);border-radius:8px;font-size:13px}.crate-archive summary{cursor:pointer}.crate-archive p{margin:10px 0;color:var(--muted,#bdb5a8)}.archive-tools{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:4px 18px 12px;font-size:12px}.crate-archive .archive-tools{padding:0}.archive-tools button,.archive-tools a{font:inherit;padding:7px 10px;color:inherit;background:transparent;border:1px solid var(--line,#474038);border-radius:5px}.archive-tools button:disabled{opacity:.5}.archive-tools>span{max-width:100%;overflow-wrap:anywhere}
+.archive-track-detail { display:block; margin-top:4px; color:var(--text-muted,#a8aaa0); font-size:.78em; line-height:1.4; }

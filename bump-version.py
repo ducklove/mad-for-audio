@@ -15,7 +15,7 @@ ASSETS = [
     "styles.css", "styles-foundation.css", "styles-library.css", "styles-schedule.css", "styles-tape.css",
     "stations.js", "player-core.js", "app-runtime-core.js", "tray-bridge.js", "native-hls-capture.js", "store.js", "schedule.js",
     "skins.js", "component-skins.js", "solo-skins.js", "reference-layouts.js", "model-registry.js", "animation-scheduler.js",
-    "engine.js", "deck.js", "records.json", "bootstrap.js", "ui-controls.js", "app.js",
+    "engine.js", "deck.js", "radio-archive-client.js", "records.json", "bootstrap.js", "ui-controls.js", "app.js",
 ]
 
 idx = (root / "index.html").read_text(encoding="utf-8")

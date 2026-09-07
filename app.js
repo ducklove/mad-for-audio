@@ -2962,7 +2962,7 @@ function phonoPlaybackGain() {
 // 체인(EQ·앰프·크랙클)을 통과할 수 있다.
 const BOOTSTRAP_STATE = window.MFA_BOOTSTRAP || null;
 const RECORDS = Array.isArray(window.MFA_RECORDS) ? window.MFA_RECORDS : [];
-const PHONO_AVAILABLE = RECORDS.length > 0
+let PHONO_AVAILABLE = RECORDS.length > 0
     && !(BOOTSTRAP_STATE && BOOTSTRAP_STATE.capabilities && BOOTSTRAP_STATE.capabilities.phono === false);
 const EMPTY_RECORD = Object.freeze({
     title: "음반 카탈로그 사용 불가", composer: "", performer: "", credit: "",
@@ -3030,6 +3030,7 @@ function setRecord(i, opts) {
     }
     recordIdx = idx;
     RECORD = RECORDS[recordIdx];
+    window.MFA_PRIVATE_PLAYBACK = !!RECORD.archive;
     // 붐박스의 테이프 선택과 턴테이블의 바이닐 선택은 서로 다른 매체로 따로 기억한다
     if (soloIsBoombox()) {
         if (RECORD.id) saveJson("fmRadio.bbTapeId", RECORD.id);
@@ -3039,6 +3040,8 @@ function setRecord(i, opts) {
     }
     if (phonoActive) stopPlay();
     mountTurntable();
+    renderArchiveSides();
+    if (RECORD.archive && window.RadioArchiveClient) void RadioArchiveClient.audioUrl(RECORD.tracks[0]).catch(() => {});
     // 축음기가 서 있으면 그 위의 판과 종이 봉투도 함께 갈아 끼운다
     if (soloIsPhono()) {
         gvArmFr = GV_REST;
@@ -3289,8 +3292,9 @@ function openJacketView() {
         art.innerHTML = "";
     } else {
         art.style.background = RECORD.jacketBg;
-        art.innerHTML = '<div class="jbig-type"><div class="jbig-title" style="color:' + jc.title + '">' + RECORD.jTitle +
-            '</div><div class="jbig-sub" style="color:' + jc.sub + '">' + RECORD.jSub1 + " · " + RECORD.jSub2 + "</div></div>";
+        art.innerHTML = '<div class="jbig-type"><div class="jbig-title" style="color:' + jc.title + '"></div><div class="jbig-sub" style="color:' + jc.sub + '"></div></div>';
+        art.querySelector('.jbig-title').textContent = RECORD.jTitle;
+        art.querySelector('.jbig-sub').textContent = RECORD.jSub1 + ' · ' + RECORD.jSub2;
     }
     cap.textContent = RECORD.title + " — " + RECORD.performer + " · SIDE " + (RECORD.side || "A");
     const sourceTrack = RECORD.tracks[Math.max(0, phonoTrack)] || RECORD.tracks[0];
@@ -3362,12 +3366,17 @@ function phonoSrc(track) {
     // 문자열(과거 호출부)과 트랙 객체 양쪽을 받는다 — 객체면 host로 소스를 고른다.
     const f = typeof track === "string" ? track : (track && track.f) || "";
     const host = track && typeof track === "object" ? track.host : "commons";
+    if (host === 'radio-archive') return ''; // 전용 연결 표를 받아야 하며 공개 음원으로 우회하지 않는다.
     if (TEST_MEDIA_BASE) return TEST_MEDIA_BASE + "?f=" + encodeURIComponent(f);
     if (host === "local") return f;                   // 앱과 같은 출처의 자체 음원 (붐박스 데모 테이프)
     if (host === "archive") return ARCHIVE_BASE + f;  // archive는 mp3라 WebKit도 그대로 재생
     if (!needsTranscode(f)) return PHONO_BASE + f;
     const name = f.split("/").pop();
     return PHONO_BASE + "transcoded/" + f + "/" + name + ".mp3";
+}
+
+function recordSvgText(value) {
+    return String(value || '').replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[character]));
 }
 
 // 45회전 배속 — 프레임 루프 대입이 금지된 엔진에서는 전환 순간에만 1회 대입한다
@@ -3501,7 +3510,7 @@ function mountTurntable() {
             const f = nTracks <= 4 ? 8.5 : nTracks <= 6 ? 7.5 : 6.8;
             const step = nTracks <= 4 ? 13.5 : nTracks <= 6 ? 11 : 9.2;
             return RECORD.tracks.map((tr, i) =>
-                '<text x="560" y="' + (344 + i * step) + '" font-family="Arial" font-size="' + f + '" fill="#3a2b1e" text-anchor="middle">' + (i + 1) + '. ' + tr.t + '</text>'
+                '<text x="560" y="' + (344 + i * step) + '" font-family="Arial" font-size="' + f + '" fill="#3a2b1e" text-anchor="middle">' + (i + 1) + '. ' + recordSvgText(tr.t) + '</text>'
             ).join("");
         }
         const rowsN = Math.ceil(nTracks / 2);
@@ -3509,7 +3518,7 @@ function mountTurntable() {
         return RECORD.tracks.map((tr, i) => {
             const x = i < rowsN ? 516 : 604;
             const row = i < rowsN ? i : i - rowsN;
-            return '<text x="' + x + '" y="' + (342 + row * step) + '" font-family="Arial" font-size="5.8" fill="#3a2b1e" text-anchor="middle">' + (i + 1) + '. ' + tr.t + '</text>';
+            return '<text x="' + x + '" y="' + (342 + row * step) + '" font-family="Arial" font-size="5.8" fill="#3a2b1e" text-anchor="middle">' + (i + 1) + '. ' + recordSvgText(tr.t) + '</text>';
         }).join("");
     })();
     document.getElementById("ttStage").innerHTML =
@@ -3675,9 +3684,7 @@ function playPhonoTrack(i, auto, fromLibraryMix) {
     const src = phonoSrc(RECORD.tracks[i]);
     const playbackToken = PlaybackController.begin("phono", RECORD.tracks[i].t);
     setAudioState("resolving", "PHONO");
-    audio.src = src;
-    PlaybackController.bind(playbackToken, src, null);
-    audio.play().catch((error) => {
+    const failed = (error) => {
         if (!PlaybackController.isCurrent(playbackToken)) return;
         // 자동재생 정책 거부는 사용자의 재생 제스처를 기다리지만, 코덱/CORS/파일 오류는
         // 카페 믹스가 영구 정지하지 않도록 해당 후보만 제외하고 다음 곡으로 넘긴다.
@@ -3690,7 +3697,24 @@ function playPhonoTrack(i, auto, fromLibraryMix) {
         setAudioState("blocked");
         clearLibraryMixWatchdog();
         updatePlayButton();
-    });
+        if (RECORD.archive && error?.message) playerSubtext.textContent = error.message;
+    };
+    const start = resolved => {
+        if (!PlaybackController.isCurrent(playbackToken)) return;
+        streamLoaded = true;
+        audio.src = resolved;
+        PlaybackController.bind(playbackToken, resolved, null);
+        audio.play().catch(failed);
+    };
+    if (RECORD.tracks[i].host === 'radio-archive') {
+        streamLoaded = false;
+        audio.pause();audio.removeAttribute('src');audio.load();
+        if (window.RadioArchiveClient) {
+            const cached=RadioArchiveClient.cachedAudioUrl(RECORD.tracks[i]);
+            if (cached) start(cached);else void RadioArchiveClient.audioUrl(RECORD.tracks[i]).then(start).catch(failed);
+        }
+        else failed(Error('방송 음반 연결 기능을 불러오지 못했습니다. 앱을 새로고침하세요.'));
+    } else start(src);
     if (SAFARI_LIKE && ttRpm45) applyRpmRate();
     if (!auto) needleThump();
     nowStation.textContent = RECORD.tracks[i].t + " — " + RECORD.composer;
@@ -5672,7 +5696,7 @@ function catalogFilterLabel(filters) {
 }
 
 function filteredCatalogTracks(filters) {
-    const candidates = filterCatalogTracks(RECORDS, filters || currentCrateFilters());
+    const candidates = filterCatalogTracks(RECORDS.map(record => record.archive ? {...record,tracks:record.archiveAllTracks} : record), filters || currentCrateFilters());
     // 붐박스 밖에서는 카세트 전용 레코드가 수납장·믹스 후보에 서지 않는다
     return soloIsBoombox() ? candidates : candidates.filter((c) => !recordIsTape(c.record));
 }
@@ -5680,6 +5704,7 @@ function filteredCatalogTracks(filters) {
 function renderCrate(q) {
     const grid = document.getElementById("crateGrid");
     const empty = document.getElementById("crateEmpty");
+    renderArchiveSides();
     grid.innerHTML = "";
     const filters = currentCrateFilters();
     if (typeof q === "string") filters.query = q.trim();
@@ -5720,6 +5745,52 @@ function openCrate() {
 
 function closeCrate() {
     document.getElementById("crateOverlay").hidden = true;
+}
+
+function renderArchiveSides() {
+    const target = document.getElementById('archiveCurrentSide');
+    if (!target) return;
+    target.replaceChildren();
+    if (!RECORD.archive) return;
+    const label = document.createElement('span');label.textContent = RECORD.title+' · ';
+    target.append(label);
+    for (const side of RECORD.archiveSides) {
+        const button=document.createElement('button');button.type='button';button.textContent=side+'면';
+        button.disabled=RECORD.side===side;button.onclick=()=>selectArchiveSide(side);target.append(button);
+    }
+}
+
+function selectArchiveSide(side) {
+    if (!RECORD.archive || !RECORD.archiveSides.includes(side)) return;
+    if (phonoActive) stopPlay();
+    if (libraryMix.active) stopLibraryMix({stopAudio:false,silent:true});
+    RECORD.side=side;RECORD.tracks=RECORD.archiveAllTracks.filter(track=>track.side===side);
+    saveJson('fmRadio.archiveSide/'+RECORD.archiveAlbumId,side);
+    setRecord(recordIdx,{silent:true});renderCrate();
+    playerSubtext.textContent=RECORD.title+' · '+side+'면으로 바꿨습니다.';
+}
+
+function receiveArchiveRecords(records) {
+    const selectedId = RECORD.archive ? RECORD.id : loadJson('fmRadio.recordId','');
+    const previous = RECORD;
+    // 서버 음반은 불변이므로 현재 재생 중인 객체는 유지한다.
+    for (const record of records) {
+        const side = record.id === previous.id ? previous.side : loadJson('fmRadio.archiveSide/'+record.archiveAlbumId,'A');
+        record.side=record.archiveSides.includes(side)?side:record.archiveSides[0];
+        record.tracks=record.archiveAllTracks.filter(track=>track.side===record.side);
+    }
+    if (libraryMix.active) stopLibraryMix({stopAudio:false,silent:true});
+    const keep=RECORDS.filter(record=>!record.archive);
+    if (phonoActive && previous.archive && !records.some(record=>record.id===previous.id)) stopPlay();
+    const merged=records.map(record=>phonoActive&&record.id===previous.id?previous:record);
+    RECORDS.splice(0,RECORDS.length,...keep,...merged);
+    PHONO_AVAILABLE=RECORDS.length>0;
+    let next=RECORDS.findIndex(record=>record.id===selectedId);
+    if(next<0 || (!soloIsBoombox()&&recordIsTape(RECORDS[next])))next=vinylFallbackIdx();
+    recordIdx=next;RECORD=RECORDS[next]||EMPTY_RECORD;
+    window.MFA_PRIVATE_PLAYBACK=!!RECORD.archive;
+    if(!phonoActive){mountTurntable();if(soloActive())mountSolo();}
+    if(!document.getElementById('crateOverlay').hidden)renderCrate();
 }
 
 function pickRecord(i) {
@@ -5849,11 +5920,17 @@ function playLibraryMixNext() {
 
     recordIdx = candidate.recordIndex;
     RECORD = RECORDS[recordIdx];
+    if (RECORD.archive) {
+        RECORD.side = candidate.track.side;
+        RECORD.tracks = RECORD.archiveAllTracks.filter(track => track.side === RECORD.side);
+    }
+    window.MFA_PRIVATE_PLAYBACK = !!RECORD.archive;
     saveJson("fmRadio.record", recordIdx);
     if (RECORD.id) saveJson("fmRadio.recordId", RECORD.id);
     mountTurntable();
     libraryMix.currentKey = candidate.key;
-    libraryMix.generation = playPhonoTrack(candidate.trackIndex, true, true) || 0;
+    const mixIndex = RECORD.archive ? RECORD.tracks.findIndex(track => track.id === candidate.track.id) : candidate.trackIndex;
+    libraryMix.generation = playPhonoTrack(mixIndex, true, true) || 0;
     armLibraryMixWatchdog();
     const meta = catalogTrackMetadata(RECORD, candidate.track);
     playerSubtext.textContent = `♾ ${meta.genre || libraryMix.genre || "모든 장르"} · ${RECORD.title}`;
@@ -7395,7 +7472,13 @@ audio.addEventListener("ended", () => {
     }
     // 포노: 트랙이 끝나면 다음 트랙으로 (음반 한 면을 이어 재생 — 바늘은 그대로, 낙침음 없음)
     if (phonoActive && phonoTrack >= 0 && phonoTrack < RECORD.tracks.length - 1) {
-        playPhonoTrack(phonoTrack + 1, true);
+        const next=phonoTrack+1, record=RECORD, token=PlaybackController.inspect().generation;
+        if (RECORD.archive && RECORD.gapSeconds>0) {
+            isPlaying=false;updatePlayButton();
+            setTimeout(()=>{
+                if (PlaybackController.isCurrent(token) && phonoActive && RECORD===record && phonoTrack===next-1) playPhonoTrack(next,true);
+            },RECORD.gapSeconds*1000);
+        } else playPhonoTrack(next, true);
     } else if (phonoActive) {
         const done = phonoTrack;
         stopPhono();
@@ -8868,4 +8951,18 @@ if (new URLSearchParams(location.search).get("boot") === "tv") {
     } else {
         tvBootApply();
     }
+}
+
+// 관리·분석 기능은 독립 서버에 두고, 이 앱은 발급된 읽기 권한으로 음반만 가져온다.
+if (window.RadioArchiveClient && document.getElementById('archiveStatus')) {
+    if (window.MFA_ARCHIVE_PAIR_TICKET) { openCrate();document.getElementById('archivePanel').open=true; }
+    RadioArchiveClient.init({onRecords:receiveArchiveRecords,onStatus:message=>{
+        document.getElementById('archiveStatus').textContent=message;
+    }});
+    document.getElementById('archiveRefresh').onclick=async()=>{
+        const button=document.getElementById('archiveRefresh');button.disabled=true;
+        try{await RadioArchiveClient.refresh();}catch(error){document.getElementById('archiveStatus').textContent=error.message;}
+        finally{button.disabled=false;}
+    };
+    document.getElementById('archiveDisconnect').onclick=()=>RadioArchiveClient.disconnect();
 }
