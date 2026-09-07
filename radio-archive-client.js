@@ -66,7 +66,7 @@
         if (!uuid.test(pair.clientId) || typeof pair.token !== 'string' || pair.token.length < 32
             || pair.token.length > 200 || !Number.isFinite(pair.expiresAt) || pair.expiresAt*1000<=Date.now()
             || pair.scope !== 'albums:read audio:read') throw Error('읽기 전용 연결을 확인하지 못했습니다.');
-        connection = pair;localStorage.setItem(KEY, JSON.stringify(pair));
+        connection = pair;audioCache.clear();localStorage.setItem(KEY, JSON.stringify(pair));
         return refresh();
     }
     function disconnect() {
@@ -77,13 +77,16 @@
         if (!connection) throw Error('Radio Archive 관리 화면에서 다시 연결하세요.');
         if (!track || track.host !== 'radio-archive' || !uuid.test(track.archiveAlbumId)
             || !Number.isInteger(track.archivePosition)) throw Error('방송 곡 연결 정보가 올바르지 않습니다.');
+        const currentConnection=connection;
         const ticket = await request(`/player/albums/${track.archiveAlbumId}/tickets/${track.archivePosition}`, { method: 'POST', signal });
+        if(connection!==currentConnection)throw Error('플레이어 연결이 바뀌었습니다. 곡을 다시 선택하세요.');
         if (!/^\/player\/audio\/[A-Za-z0-9_-]{40,100}$/.test(ticket.path)) throw Error('음원 주소를 확인하지 못했습니다.');
         const url=BASE+ticket.path;
         audioCache.set(track.id,{url,expires:Date.now()+Math.max(0,Number(ticket.expiresIn)||0)*1000});
         return url;
     }
     function cachedAudioUrl(track) { const cached=audioCache.get(track?.id);return cached&&cached.expires>Date.now()+15000?cached.url:''; }
+    function invalidateAudioUrl(track) { audioCache.delete(track?.id); }
     function init(options) {
         if (initialized) return;initialized = true;
         receive = options.onRecords;notify = options.onStatus;connection = read(KEY);
@@ -94,7 +97,7 @@
             status('이 PC의 방송 음반 서버를 확인합니다.');void refresh().catch(error => status(error.message));
         } else status('Radio Archive 관리 화면의 ‘mad-for-audio에서 듣기’에서 연결할 수 있습니다.');
     }
-    const api = { recordsFromAlbums, init, refresh, disconnect, audioUrl, cachedAudioUrl };
+    const api = { recordsFromAlbums, init, refresh, disconnect, audioUrl, cachedAudioUrl, invalidateAudioUrl };
     root.RadioArchiveClient = api;
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window === 'undefined' ? globalThis : window);

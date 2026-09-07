@@ -48,6 +48,9 @@ test('방송 음반 연결·A/B면·검토 표시·재생·연결 해제',async(
     expect(await page.evaluate(()=>({count:RECORDS.filter(r=>r.archive).length,side:RECORD.side,title:RECORD.tracks[0].t}))).toEqual({count:1,side:'B',title:'개인 곡 2'});
     await page.evaluate(()=>{closeCrate();playPhonoTrack(0);});await page.waitForFunction(()=>isPlaying && audio.currentTime>0);
     expect(await page.evaluate(()=>audio.currentSrc)).toContain('/player/audio/');
+    await page.evaluate(()=>audio.dispatchEvent(new Event('error')));
+    expect(await page.evaluate(()=>RadioArchiveClient.cachedAudioUrl(RECORD.tracks[phonoTrack]))).toBe('');
+    await page.evaluate(()=>playPhonoTrack(0));await page.waitForFunction(()=>isPlaying && audio.currentTime>0);
     expect(await page.evaluate(()=>JSON.stringify(window.dataLayer||[]))).not.toContain('개인 곡');
     expect(await page.locator('img[onerror]').count()).toBe(0);
     await page.evaluate(()=>RadioArchiveClient.disconnect());expect(await page.evaluate(()=>({records:RECORDS.filter(r=>r.archive).length,active:phonoActive,stored:localStorage.getItem('fmRadio.archiveClient')}))).toEqual({records:0,active:false,stored:null});

@@ -7539,11 +7539,12 @@ audio.addEventListener("playing", () => {
 audio.addEventListener("error", () => {
     if (!PlaybackController.acceptsMediaEvent()) return;
     if (player) return; // PlayerCore가 HLS·native·direct 오류를 generation guard와 함께 처리한다
+    if (phonoActive && RECORD.archive) window.RadioArchiveClient?.invalidateAudioUrl(RECORD.tracks[phonoTrack]);
     if (libraryMix.active && phonoActive && handleLibraryMixFailure()) return;
     const token = PlaybackController.inspect().generation;
     handlePlaybackFailure(token, {
         label: "미디어 오류",
-        message: "오디오 파일을 재생하지 못했습니다. 다른 소스를 선택해 주세요.",
+        message: phonoActive && RECORD.archive ? "방송 음원을 재생하지 못했습니다. 서버 실행을 확인하고 곡을 다시 선택해 새 재생 주소를 받으세요." : "오디오 파일을 재생하지 못했습니다. 다른 소스를 선택해 주세요.",
         reason: audio.error && audio.error.code ? "media-error-" + audio.error.code : "media-error"
     });
 });
