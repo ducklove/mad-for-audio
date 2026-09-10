@@ -15,6 +15,13 @@
     window.MFA_BOOTSTRAP = bootstrapState;
     window.MFA_RECORDS = bootstrapState.catalog.records;
 
+    // 실행 순서는 유지하면서 큰 본체 파일은 카탈로그와 병렬로 내려받는다.
+    const appPreload = document.createElement("link");
+    appPreload.rel = "preload";
+    appPreload.as = "script";
+    appPreload.href = assetUrl("app.js");
+    document.head.appendChild(appPreload);
+
     function publishState() {
         window.dispatchEvent(new CustomEvent("mfa:bootstrap-state", { detail: bootstrapState }));
     }
@@ -75,7 +82,10 @@
         console.warn("음반 카탈로그 degraded 모드:", error);
     }
 
-    const catalogReady = fetch(assetUrl("records.json"), { credentials: "same-origin" })
+    // 응답이 끝나지 않는 카탈로그도 라디오 부팅을 무한정 막지 않는다.
+    const catalogAbort = new AbortController();
+    const catalogTimer = setTimeout(() => catalogAbort.abort(), 8000);
+    const catalogReady = fetch(assetUrl("records.json"), { credentials: "same-origin", signal: catalogAbort.signal })
         .then((response) => {
             if (!response.ok) throw new Error(`음반 카탈로그 응답 오류: ${response.status}`);
             return response.json();
@@ -97,7 +107,8 @@
             window.MFA_RECORDS = bootstrapState.catalog.records;
             publishState();
             return bootstrapState.catalog.records;
-        });
+        })
+        .finally(() => clearTimeout(catalogTimer));
 
     // DOM과 독립적인 상태/포맷 코어는 실제 ES module로 먼저 준비한다. app.js의
     // classic 전역 계약은 유지하되, 이후 기능별 분리를 위한 명시적 로딩 경계를 만든다.
@@ -122,8 +133,26 @@
         })
         .then(() => {
             bootstrapState.phase = "ready";
+            document.body.classList.remove("app-loading");
             if (!bootstrapState.capabilities.phono) showCatalogWarning(bootstrapState.catalog.error);
             publishState();
             return bootstrapState;
         });
+
+    // 필수 스크립트 실패는 빈 랙 대신 사용자에게 복구 버튼을 제공한다.
+    window.MFA_READY.catch((error) => {
+        bootstrapState.phase = "error";
+        bootstrapState.error = serializeError(error);
+        const title = document.getElementById("listeningTitle");
+        const hint = document.getElementById("listeningHint");
+        const button = document.getElementById("listeningStart");
+        if (title) title.textContent = "오디오를 불러오지 못했습니다";
+        if (hint) hint.textContent = "연결을 확인한 뒤 다시 불러와 주세요.";
+        if (button) {
+            button.disabled = false;
+            button.textContent = "다시 불러오기";
+            button.addEventListener("click", () => location.reload(), { once: true });
+        }
+        publishState();
+    });
 })();

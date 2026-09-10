@@ -8,6 +8,7 @@ const http = require("http");
 
 const ALLOWED_CHANNELS = new Set(["sfm", "mfm"]);
 const PORT = 3689;
+const TLS_CERT_NAME = process.env.TLS_CERT_NAME || "ducklove.duckdns.org";
 
 // ----- 원격 HTML/텍스트 가져오기 (타임아웃 포함) -----
 function fetchText(url) {
@@ -185,10 +186,25 @@ function handler(req, res) {
 // 인증서가 있으면 HTTPS(운영), 없으면 HTTP(로컬 개발)로 뜬다
 let server;
 try {
-    server = https.createServer({
-        cert: fs.readFileSync("/etc/letsencrypt/live/cantabile.tplinkdns.com/fullchain.pem"),
-        key: fs.readFileSync("/etc/letsencrypt/live/cantabile.tplinkdns.com/privkey.pem"),
-    }, handler);
+    const readTls = () => ({
+        cert: fs.readFileSync(`/etc/letsencrypt/live/${TLS_CERT_NAME}/fullchain.pem`, "utf8"),
+        key: fs.readFileSync(`/etc/letsencrypt/live/${TLS_CERT_NAME}/privkey.pem`, "utf8"),
+    });
+    let tls = readTls();
+    server = https.createServer(tls, handler);
+    // 인증서 파일이 갱신돼도 Node의 TLS 문맥은 자동으로 바뀌지 않는다.
+    // 연결을 끊지 않고 새 인증서를 반영해 다음 만료 때의 재발을 막는다.
+    setInterval(() => {
+        try {
+            const next = readTls();
+            if (next.cert === tls.cert && next.key === tls.key) return;
+            server.setSecureContext(next);
+            tls = next;
+            console.log("TLS 인증서 갱신 반영 완료");
+        } catch (error) {
+            console.warn("TLS 인증서 갱신을 읽지 못했습니다:", error.code || error.name);
+        }
+    }, 60 * 60 * 1000).unref();
 } catch (error) {
     console.warn("인증서를 읽지 못해 HTTP로 시작합니다 (로컬 개발 모드)");
     server = http.createServer(handler);

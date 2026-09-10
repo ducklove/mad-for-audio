@@ -6,6 +6,7 @@ const { defineConfig } = require("@playwright/test");
 module.exports = defineConfig({
     testDir: __dirname,
     testMatch: "**/*.spec.js",
+    testIgnore: "**/artifacts/**",
     timeout: 60000,
     retries: 1,
     reporter: [["list"]],
@@ -17,6 +18,14 @@ module.exports = defineConfig({
     },
     projects: [
         {
+            name: "chromium-autoplay",
+            testMatch: "**/startup-review.spec.js",
+            use: {
+                browserName: "chromium",
+                launchOptions: { args: ["--autoplay-policy=document-user-activation-required"] },
+            },
+        },
+        {
             name: "chromium",
             use: {
                 browserName: "chromium",
@@ -27,7 +36,7 @@ module.exports = defineConfig({
             // Safari 경로 회귀 방지 — 예약·테이프와 Mac 전체 화면/DRAGON 기하를 WebKit으로 한 번 더
             name: "webkit",
             use: { browserName: "webkit" },
-            grep: /예약 녹음|예약 발화|테이프 보관함|테이프 가져오기|몰입 모드|DRAGON 릴 정렬|스코프된 하드웨어 필터|실물 정체성|프런트패널 소생|음반 장르|기기 디자인 회귀|레퍼런스 재설계/,
+            grep: /첫 재생 UX|예약 녹음|예약 발화|테이프 보관함|테이프 가져오기|몰입 모드|DRAGON 릴 정렬|스코프된 하드웨어 필터|실물 정체성|프런트패널 소생|음반 장르|기기 디자인 회귀|레퍼런스 재설계/,
         },
     ],
     webServer: {

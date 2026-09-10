@@ -3,7 +3,7 @@
 // KBS·MBC·SBS는 CORS가 열려 있어 브라우저에서 직접 가져오고,
 // CBS·EBS·YTN은 CORS가 없어 자가 프록시(mbc-proxy.js)가 HTML을 파싱해 준다.
 (function () {
-    const PROXY_BASE = "https://cantabile.tplinkdns.com:3689";
+    const PROXY_BASE = "https://ducklove.duckdns.org:3689";
     const CACHE_TTL_MS = 3 * 60 * 60 * 1000;   // 편성은 자주 안 바뀐다 — 3시간 캐시
 
     // 채널별 데이터 소스. 여기 없는 채널(국악방송·극동방송)은 편성 미지원 — 직접 입력 예약만 가능.

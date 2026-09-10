@@ -34,7 +34,7 @@
                 labelBig: 'ARCHIVE', labelTitle: 'RADIO COLLECTION', labelArtist: 'PRIVATE LIBRARY' };
         });
     }
-    let connection = null, notify = () => {}, receive = () => {}, initialized = false;
+    let connection = null, notify = () => {}, receive = () => {}, initialized = false, connectionEpoch = 0;
     const audioCache = new Map();
     function read(key) { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch (_) { return null; } }
     function status(message) { notify(message); }
@@ -54,7 +54,10 @@
     }
     async function refresh() {
         if (!connection) throw Error('Radio Archive 관리 화면에서 플레이어 연결 링크를 열어 주세요.');
+        const requestedConnection = connection;
         const data = await request('/player/albums');
+        // 연결 해제·교체 뒤 늦게 도착한 목록이 개인 음반과 저장된 캐시를 되살리면 안 된다.
+        if (connection !== requestedConnection) return [];
         const records = recordsFromAlbums(data);
         localStorage.setItem(CACHE, JSON.stringify(data));
         receive(records);status(`내 방송 음반 ${records.length}장 연결됨 · 파일은 서버에서 재생합니다.`);
@@ -62,7 +65,9 @@
     }
     async function connect(ticket) {
         if (!/^[A-Za-z0-9_-]{40,100}$/.test(ticket || '')) throw Error('플레이어 연결 링크 형식이 올바르지 않습니다.');
+        const epoch = ++connectionEpoch;
         const pair = await request('/player/pair', { method: 'POST' }, ticket);
+        if (epoch !== connectionEpoch) return [];
         if (!uuid.test(pair.clientId) || typeof pair.token !== 'string' || pair.token.length < 32
             || pair.token.length > 200 || !Number.isFinite(pair.expiresAt) || pair.expiresAt*1000<=Date.now()
             || pair.scope !== 'albums:read audio:read') throw Error('읽기 전용 연결을 확인하지 못했습니다.');
@@ -70,6 +75,7 @@
         return refresh();
     }
     function disconnect() {
+        connectionEpoch += 1;
         connection = null;audioCache.clear();localStorage.removeItem(KEY);localStorage.removeItem(CACHE);
         receive([]);status('이 앱의 방송 음반 연결을 지웠습니다. 서버에서 연결 해제하면 발급한 재생 주소도 만료됩니다.');
     }

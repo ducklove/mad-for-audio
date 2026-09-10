@@ -1283,6 +1283,15 @@ function ensureAudioGraph() {
     }
 }
 
+// 주소 조회를 기다리기 전에 사용자 클릭의 실행 흐름 안에서 오디오를 깨운다.
+// 이미 만들어진 그래프와 실패 후 직결 폴백도 같은 진입점을 사용한다.
+function resumeListeningAudio() {
+    if (!SAFARI_LIKE) ensureAudioGraph();
+    for (const context of [audioCtx, audioGraphFallbackContext]) {
+        if (context && context.state === "suspended") context.resume().catch(() => {});
+    }
+}
+
 window.MFA_AudioGraph = Object.freeze({
     inspect: () => Object.freeze({
         state: audioGraphInitState,

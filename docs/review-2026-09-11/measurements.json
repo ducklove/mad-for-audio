@@ -1,0 +1,2925 @@
+{
+  "baselineCommit": "53cee973cb73ad753ad3cdd80ecfba34b6af520c",
+  "version": 189,
+  "cpuThrottle": 4,
+  "samplesPerViewport": 3,
+  "summary": [
+    {
+      "phase": "before",
+      "width": 1440,
+      "readyMs": 1245.699999988079,
+      "cls": 0.038263776488755466,
+      "idleTaskMs": 64.49700000000024,
+      "idleScriptMs": 20.676000000000027,
+      "lcpMs": 348,
+      "longTaskBlockingMs": 774,
+      "domNodes": 4083,
+      "bytes": 1613298,
+      "axeViolations": 0
+    },
+    {
+      "phase": "before",
+      "width": 390,
+      "readyMs": 1143.9000000059605,
+      "cls": 0.9411550991300597,
+      "idleTaskMs": 882.9219999999998,
+      "idleScriptMs": 23.328999999999933,
+      "lcpMs": 304,
+      "longTaskBlockingMs": 703,
+      "domNodes": 4077,
+      "bytes": 1613298,
+      "axeViolations": 0
+    },
+    {
+      "phase": "after",
+      "width": 1440,
+      "readyMs": 1219.5,
+      "cls": 0.00028944339621377746,
+      "idleTaskMs": 58.04000000000009,
+      "idleScriptMs": 20.33000000000007,
+      "lcpMs": 256,
+      "longTaskBlockingMs": 670,
+      "domNodes": 4084,
+      "bytes": 1615264,
+      "axeViolations": 0
+    },
+    {
+      "phase": "after",
+      "width": 390,
+      "readyMs": 1212.1000000238419,
+      "cls": 0.006933882109220714,
+      "idleTaskMs": 56.26499999999979,
+      "idleScriptMs": 20.40299999999995,
+      "lcpMs": 1144,
+      "longTaskBlockingMs": 688,
+      "domNodes": 4084,
+      "bytes": 1615264,
+      "axeViolations": 0
+    }
+  ],
+  "rows": [
+    {
+      "phase": "before",
+      "run": 1,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cpuThrottle": 4,
+      "readyMs": 1245.699999988079,
+      "initial": {
+        "state": "idle",
+        "playing": false,
+        "unitPower": {
+          "tuner": true,
+          "amp": true,
+          "deck": true
+        },
+        "hint": "원하는 채널을 누르면 바로 연결을 시도합니다.",
+        "playVisible": false,
+        "startVisible": false,
+        "overflowPx": 0,
+        "domNodes": 4083,
+        "resourceBytes": 1613298,
+        "longTasks": [
+          269,
+          100,
+          100,
+          374,
+          166,
+          65
+        ],
+        "lcp": 360,
+        "cls": 0.038263776488755466,
+        "shifts": [
+          {
+            "value": 0.0017533196343315972,
+            "sources": [
+              {
+                "target": "header-actions",
+                "before": {
+                  "x": 691,
+                  "y": 27,
+                  "width": 625,
+                  "height": 38,
+                  "top": 27,
+                  "right": 1316,
+                  "bottom": 65,
+                  "left": 691
+                },
+                "after": {
+                  "x": 705,
+                  "y": 26,
+                  "width": 611,
+                  "height": 38,
+                  "top": 26,
+                  "right": 1316,
+                  "bottom": 64,
+                  "left": 705
+                }
+              },
+              {
+                "target": "site-footer",
+                "before": {
+                  "x": 120,
+                  "y": 336,
+                  "width": 1200,
+                  "height": 21,
+                  "top": 336,
+                  "right": 1320,
+                  "bottom": 357,
+                  "left": 120
+                },
+                "after": {
+                  "x": 120,
+                  "y": 319,
+                  "width": 1200,
+                  "height": 20,
+                  "top": 319,
+                  "right": 1320,
+                  "bottom": 339,
+                  "left": 120
+                }
+              },
+              {
+                "target": "list-toggle-wrap",
+                "before": {
+                  "x": 120,
+                  "y": 271,
+                  "width": 1200,
+                  "height": 43,
+                  "top": 271,
+                  "right": 1320,
+                  "bottom": 314,
+                  "left": 120
+                },
+                "after": {
+                  "x": 120,
+                  "y": 258,
+                  "width": 1200,
+                  "height": 39,
+                  "top": 258,
+                  "right": 1320,
+                  "bottom": 297,
+                  "left": 120
+                }
+              },
+              {
+                "target": "playerSubtext",
+                "before": {
+                  "x": 213,
+                  "y": 205,
+                  "width": 699,
+                  "height": 20,
+                  "top": 205,
+                  "right": 912,
+                  "bottom": 225,
+                  "left": 213
+                },
+                "after": {
+                  "x": 213,
+                  "y": 197,
+                  "width": 701,
+                  "height": 16,
+                  "top": 197,
+                  "right": 914,
+                  "bottom": 213,
+                  "left": 213
+                }
+              },
+              {
+                "target": "player-side",
+                "before": {
+                  "x": 924,
+                  "y": 158,
+                  "width": 365,
+                  "height": 44,
+                  "top": 158,
+                  "right": 1289,
+                  "bottom": 202,
+                  "left": 924
+                },
+                "after": {
+                  "x": 926,
+                  "y": 152,
+                  "width": 363,
+                  "height": 44,
+                  "top": 152,
+                  "right": 1289,
+                  "bottom": 196,
+                  "left": 926
+                }
+              }
+            ]
+          },
+          {
+            "value": 0.00007681487911522633,
+            "sources": [
+              {
+                "before": {
+                  "x": 120,
+                  "y": 321,
+                  "width": 1200,
+                  "height": 15,
+                  "top": 321,
+                  "right": 1320,
+                  "bottom": 336,
+                  "left": 120
+                },
+                "after": {
+                  "x": 120,
+                  "y": 321,
+                  "width": 1200,
+                  "height": 15,
+                  "top": 321,
+                  "right": 1320,
+                  "bottom": 336,
+                  "left": 120
+                }
+              },
+              {
+                "target": "appVersion",
+                "before": {
+                  "x": 984,
+                  "y": 319,
+                  "width": 32,
+                  "height": 20,
+                  "top": 319,
+                  "right": 1016,
+                  "bottom": 339,
+                  "left": 984
+                },
+                "after": {
+                  "x": 976,
+                  "y": 319,
+                  "width": 48,
+                  "height": 20,
+                  "top": 319,
+                  "right": 1024,
+                  "bottom": 339,
+                  "left": 976
+                }
+              }
+            ]
+          },
+          {
+            "value": 0.03643364197530864,
+            "sources": [
+              {
+                "target": "header-actions",
+                "before": {
+                  "x": 705,
+                  "y": 26,
+                  "width": 611,
+                  "height": 38,
+                  "top": 26,
+                  "right": 1316,
+                  "bottom": 64,
+                  "left": 705
+                },
+                "after": {
+                  "x": 866,
+                  "y": 26,
+                  "width": 450,
+                  "height": 38,
+                  "top": 26,
+                  "right": 1316,
+                  "bottom": 64,
+                  "left": 866
+                }
+              },
+              {
+                "target": "site-footer",
+                "before": {
+                  "x": 120,
+                  "y": 319,
+                  "width": 1200,
+                  "height": 20,
+                  "top": 319,
+                  "right": 1320,
+                  "bottom": 339,
+                  "left": 120
+                },
+                "after": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0,
+                  "top": 0,
+                  "right": 0,
+                  "bottom": 0,
+                  "left": 0
+                }
+              }
+            ]
+          }
+        ],
+        "frames": 120
+      },
+      "idle": {
+        "frames": 5,
+        "taskMs": 62.92600000000004,
+        "scriptMs": 19.97300000000002,
+        "heapBytes": 6011328
+      },
+      "accessibility": {
+        "passes": 27,
+        "violations": []
+      },
+      "playback": {
+        "available": false
+      },
+      "errors": []
+    },
+    {
+      "phase": "before",
+      "run": 1,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "cpuThrottle": 4,
+      "readyMs": 1132.300000011921,
+      "initial": {
+        "state": "idle",
+        "playing": false,
+        "unitPower": {
+          "tuner": true,
+          "amp": true,
+          "deck": true
+        },
+        "hint": "원하는 채널을 누르면 바로 연결을 시도합니다.",
+        "playVisible": true,
+        "startVisible": false,
+        "overflowPx": 0,
+        "domNodes": 4077,
+        "resourceBytes": 1613298,
+        "longTasks": [
+          238,
+          85,
+          103,
+          386,
+          128,
+          63
+        ],
+        "lcp": 300,
+        "cls": 0.9411550991300597,
+        "shifts": [
+          {
+            "value": 0.004902702087091283,
+            "sources": [
+              {
+                "before": {
+                  "x": 9,
+                  "y": 326,
+                  "width": 372,
+                  "height": 15,
+                  "top": 326,
+                  "right": 381,
+                  "bottom": 341,
+                  "left": 9
+                },
+                "after": {
+                  "x": 9,
+                  "y": 321,
+                  "width": 372,
+                  "height": 15,
+                  "top": 321,
+                  "right": 381,
+                  "bottom": 336,
+                  "left": 9
+                }
+              },
+              {
+                "target": "headerTapeBtn",
+                "before": {
+                  "x": 248,
+                  "y": 69,
+                  "width": 84,
+                  "height": 44,
+                  "top": 69,
+                  "right": 332,
+                  "bottom": 113,
+                  "left": 248
+                },
+                "after": {
+                  "x": 242,
+                  "y": 68,
+                  "width": 81,
+                  "height": 44,
+                  "top": 68,
+                  "right": 323,
+                  "bottom": 112,
+                  "left": 242
+                }
+              },
+              {
+                "target": "mini-open",
+                "before": {
+                  "x": 132,
+                  "y": 121,
+                  "width": 98,
+                  "height": 44,
+                  "top": 121,
+                  "right": 230,
+                  "bottom": 165,
+                  "left": 132
+                },
+                "after": {
+                  "x": 127,
+                  "y": 120,
+                  "width": 94,
+                  "height": 44,
+                  "top": 120,
+                  "right": 221,
+                  "bottom": 164,
+                  "left": 127
+                }
+              },
+              {
+                "target": "player-bar",
+                "before": {
+                  "x": 0,
+                  "y": 701,
+                  "width": 390,
+                  "height": 143,
+                  "top": 701,
+                  "right": 390,
+                  "bottom": 844,
+                  "left": 0
+                },
+                "after": {
+                  "x": 0,
+                  "y": 706,
+                  "width": 390,
+                  "height": 138,
+                  "top": 706,
+                  "right": 390,
+                  "bottom": 844,
+                  "left": 0
+                }
+              },
+              {
+                "target": "footer-link",
+                "before": {
+                  "x": 192,
+                  "y": 313,
+                  "width": 98,
+                  "height": 42,
+                  "top": 313,
+                  "right": 290,
+                  "bottom": 355,
+                  "left": 192
+                },
+                "after": {
+                  "x": 179,
+                  "y": 309,
+                  "width": 94,
+                  "height": 39,
+                  "top": 309,
+                  "right": 273,
+                  "bottom": 348,
+                  "left": 179
+                }
+              }
+            ]
+          },
+          {
+            "value": 0.0002334396969969228,
+            "sources": [
+              {
+                "target": "footer-link",
+                "before": {
+                  "x": 179,
+                  "y": 309,
+                  "width": 94,
+                  "height": 39,
+                  "top": 309,
+                  "right": 273,
+                  "bottom": 348,
+                  "left": 179
+                },
+                "after": {
+                  "x": 171,
+                  "y": 309,
+                  "width": 94,
+                  "height": 39,
+                  "top": 309,
+                  "right": 265,
+                  "bottom": 348,
+                  "left": 171
+                }
+              },
+              {
+                "before": {
+                  "x": 9,
+                  "y": 321,
+                  "width": 372,
+                  "height": 15,
+                  "top": 321,
+                  "right": 381,
+                  "bottom": 336,
+                  "left": 9
+                },
+                "after": {
+                  "x": 9,
+                  "y": 321,
+                  "width": 372,
+                  "height": 15,
+                  "top": 321,
+                  "right": 381,
+                  "bottom": 336,
+                  "left": 9
+                }
+              },
+              {
+                "target": "appVersion",
+                "before": {
+                  "x": 286,
+                  "y": 319,
+                  "width": 32,
+                  "height": 20,
+                  "top": 319,
+                  "right": 318,
+                  "bottom": 339,
+                  "left": 286
+                },
+                "after": {
+                  "x": 278,
+                  "y": 319,
+                  "width": 48,
+                  "height": 20,
+                  "top": 319,
+                  "right": 326,
+                  "bottom": 339,
+                  "left": 278
+                }
+              }
+            ]
+          },
+          {
+            "value": 0.9360189573459715,
+            "sources": [
+              {
+                "target": "site-footer",
+                "before": {
+                  "x": 9,
+                  "y": 294,
+                  "width": 372,
+                  "height": 54,
+                  "top": 294,
+                  "right": 381,
+                  "bottom": 348,
+                  "left": 9
+                },
+                "after": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0,
+                  "top": 0,
+                  "right": 0,
+                  "bottom": 0,
+                  "left": 0
+                }
+              },
+              {
+                "target": "hero-visual",
+                "before": {
+                  "x": 0,
+                  "y": 106,
+                  "width": 390,
+                  "height": 214,
+                  "top": 106,
+                  "right": 390,
+                  "bottom": 320,
+                  "left": 0
+                },
+                "after": {
+                  "x": 0,
+                  "y": 54,
+                  "width": 390,
+                  "height": 790,
+                  "top": 54,
+                  "right": 390,
+                  "bottom": 844,
+                  "left": 0
+                }
+              },
+              {
+                "target": "mini-open",
+                "before": {
+                  "x": 127,
+                  "y": 120,
+                  "width": 94,
+                  "height": 44,
+                  "top": 120,
+                  "right": 221,
+                  "bottom": 164,
+                  "left": 127
+                },
+                "after": {
+                  "x": 266,
+                  "y": 68,
+                  "width": 94,
+                  "height": 44,
+                  "top": 68,
+                  "right": 360,
+                  "bottom": 112,
+                  "left": 266
+                }
+              },
+              {
+                "target": "player-side",
+                "before": {
+                  "x": 57,
+                  "y": 790,
+                  "width": 313,
+                  "height": 36,
+                  "top": 790,
+                  "right": 370,
+                  "bottom": 826,
+                  "left": 57
+                },
+                "after": {
+                  "x": 44,
+                  "y": 790,
+                  "width": 326,
+                  "height": 36,
+                  "top": 790,
+                  "right": 370,
+                  "bottom": 826,
+                  "left": 44
+                }
+              },
+              {
+                "target": "list-toggle-wrap",
+                "before": {
+                  "x": 9,
+                  "y": 228,
+                  "width": 372,
+                  "height": 44,
+                  "top": 228,
+                  "right": 381,
+                  "bottom": 272,
+                  "left": 9
+                },
+                "after": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0,
+                  "top": 0,
+                  "right": 0,
+                  "bottom": 0,
+                  "left": 0
+                }
+              }
+            ]
+          }
+        ],
+        "frames": 120
+      },
+      "idle": {
+        "frames": 5,
+        "taskMs": 871.9800000000002,
+        "scriptMs": 21.70899999999998,
+        "heapBytes": 4512992
+      },
+      "accessibility": {
+        "passes": 26,
+        "violations": []
+      },
+      "playback": {
+        "playing": true,
+        "state": "playing",
+        "context": "running",
+        "speakerOpen": true,
+        "gain": 1,
+        "time": 0.043537
+      },
+      "errors": []
+    },
+    {
+      "phase": "before",
+      "run": 2,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cpuThrottle": 4,
+      "readyMs": 1207.5999999940395,
+      "initial": {
+        "state": "idle",
+        "playing": false,
+        "unitPower": {
+          "tuner": true,
+          "amp": true,
+          "deck": true
+        },
+        "hint": "원하는 채널을 누르면 바로 연결을 시도합니다.",
+        "playVisible": false,
+        "startVisible": false,
+        "overflowPx": 0,
+        "domNodes": 4083,
+        "resourceBytes": 1613298,
+        "longTasks": [
+          262,
+          104,
+          107,
+          372,
+          150,
+          66
+        ],
+        "lcp": 348,
+        "cls": 0.038263776488755466,
+        "shifts": [
+          {
+            "value": 0.0017533196343315972,
+            "sources": [
+              {
+                "target": "header-actions",
+                "before": {
+                  "x": 691,
+                  "y": 27,
+                  "width": 625,
+                  "height": 38,
+                  "top": 27,
+                  "right": 1316,
+                  "bottom": 65,
+                  "left": 691
+                },
+                "after": {
+                  "x": 705,
+                  "y": 26,
+                  "width": 611,
+                  "height": 38,
+                  "top": 26,
+                  "right": 1316,
+                  "bottom": 64,
+                  "left": 705
+                }
+              },
+              {
+                "target": "site-footer",
+                "before": {
+                  "x": 120,
+                  "y": 336,
+                  "width": 1200,
+                  "height": 21,
+                  "top": 336,
+                  "right": 1320,
+                  "bottom": 357,
+                  "left": 120
+                },
+                "after": {
+                  "x": 120,
+                  "y": 319,
+                  "width": 1200,
+                  "height": 20,
+                  "top": 319,
+                  "right": 1320,
+                  "bottom": 339,
+                  "left": 120
+                }
+              },
+              {
+                "target": "list-toggle-wrap",
+                "before": {
+                  "x": 120,
+                  "y": 271,
+                  "width": 1200,
+                  "height": 43,
+                  "top": 271,
+                  "right": 1320,
+                  "bottom": 314,
+                  "left": 120
+                },
+                "after": {
+                  "x": 120,
+                  "y": 258,
+                  "width": 1200,
+                  "height": 39,
+                  "top": 258,
+                  "right": 1320,
+                  "bottom": 297,
+                  "left": 120
+                }
+              },
+              {
+                "target": "playerSubtext",
+                "before": {
+                  "x": 213,
+                  "y": 205,
+                  "width": 699,
+                  "height": 20,
+                  "top": 205,
+                  "right": 912,
+                  "bottom": 225,
+                  "left": 213
+                },
+                "after": {
+                  "x": 213,
+                  "y": 197,
+                  "width": 701,
+                  "height": 16,
+                  "top": 197,
+                  "right": 914,
+                  "bottom": 213,
+                  "left": 213
+                }
+              },
+              {
+                "target": "player-side",
+                "before": {
+                  "x": 924,
+                  "y": 158,
+                  "width": 365,
+                  "height": 44,
+                  "top": 158,
+                  "right": 1289,
+                  "bottom": 202,
+                  "left": 924
+                },
+                "after": {
+                  "x": 926,
+                  "y": 152,
+                  "width": 363,
+                  "height": 44,
+                  "top": 152,
+                  "right": 1289,
+                  "bottom": 196,
+                  "left": 926
+                }
+              }
+            ]
+          },
+          {
+            "value": 0.00007681487911522633,
+            "sources": [
+              {
+                "before": {
+                  "x": 120,
+                  "y": 321,
+                  "width": 1200,
+                  "height": 15,
+                  "top": 321,
+                  "right": 1320,
+                  "bottom": 336,
+                  "left": 120
+                },
+                "after": {
+                  "x": 120,
+                  "y": 321,
+                  "width": 1200,
+                  "height": 15,
+                  "top": 321,
+                  "right": 1320,
+                  "bottom": 336,
+                  "left": 120
+                }
+              },
+              {
+                "target": "appVersion",
+                "before": {
+                  "x": 984,
+                  "y": 319,
+                  "width": 32,
+                  "height": 20,
+                  "top": 319,
+                  "right": 1016,
+                  "bottom": 339,
+                  "left": 984
+                },
+                "after": {
+                  "x": 976,
+                  "y": 319,
+                  "width": 48,
+                  "height": 20,
+                  "top": 319,
+                  "right": 1024,
+                  "bottom": 339,
+                  "left": 976
+                }
+              }
+            ]
+          },
+          {
+            "value": 0.03643364197530864,
+            "sources": [
+              {
+                "target": "header-actions",
+                "before": {
+                  "x": 705,
+                  "y": 26,
+                  "width": 611,
+                  "height": 38,
+                  "top": 26,
+                  "right": 1316,
+                  "bottom": 64,
+                  "left": 705
+                },
+                "after": {
+                  "x": 866,
+                  "y": 26,
+                  "width": 450,
+                  "height": 38,
+                  "top": 26,
+                  "right": 1316,
+                  "bottom": 64,
+                  "left": 866
+                }
+              },
+              {
+                "target": "site-footer",
+                "before": {
+                  "x": 120,
+                  "y": 319,
+                  "width": 1200,
+                  "height": 20,
+                  "top": 319,
+                  "right": 1320,
+                  "bottom": 339,
+                  "left": 120
+                },
+                "after": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0,
+                  "top": 0,
+                  "right": 0,
+                  "bottom": 0,
+                  "left": 0
+                }
+              }
+            ]
+          }
+        ],
+        "frames": 120
+      },
+      "idle": {
+        "frames": 5,
+        "taskMs": 67.19700000000017,
+        "scriptMs": 22.37,
+        "heapBytes": 5989320
+      },
+      "accessibility": {
+        "passes": 27,
+        "violations": []
+      },
+      "playback": {
+        "available": false
+      },
+      "errors": []
+    },
+    {
+      "phase": "before",
+      "run": 2,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "cpuThrottle": 4,
+      "readyMs": 1143.9000000059605,
+      "initial": {
+        "state": "idle",
+        "playing": false,
+        "unitPower": {
+          "tuner": true,
+          "amp": true,
+          "deck": true
+        },
+        "hint": "원하는 채널을 누르면 바로 연결을 시도합니다.",
+        "playVisible": true,
+        "startVisible": false,
+        "overflowPx": 0,
+        "domNodes": 4077,
+        "resourceBytes": 1613298,
+        "longTasks": [
+          244,
+          52,
+          61,
+          104,
+          376,
+          134,
+          64
+        ],
+        "lcp": 304,
+        "cls": 0.9431413432017496,
+        "shifts": [
+          {
+            "value": 0.007122385855778086,
+            "sources": [
+              {
+                "before": {
+                  "x": 9,
+                  "y": 326,
+                  "width": 372,
+                  "height": 15,
+                  "top": 326,
+                  "right": 381,
+                  "bottom": 341,
+                  "left": 9
+                },
+                "after": {
+                  "x": 9,
+                  "y": 321,
+                  "width": 372,
+                  "height": 15,
+                  "top": 321,
+                  "right": 381,
+                  "bottom": 336,
+                  "left": 9
+                }
+              },
+              {
+                "target": "headerTapeBtn",
+                "before": {
+                  "x": 248,
+                  "y": 69,
+                  "width": 84,
+                  "height": 44,
+                  "top": 69,
+                  "right": 332,
+                  "bottom": 113,
+                  "left": 248
+                },
+                "after": {
+                  "x": 242,
+                  "y": 68,
+                  "width": 81,
+                  "height": 44,
+                  "top": 68,
+                  "right": 323,
+                  "bottom": 112,
+                  "left": 242
+                }
+              },
+              {
+                "target": "mini-open",
+                "before": {
+                  "x": 132,
+                  "y": 121,
+                  "width": 98,
+                  "height": 44,
+                  "top": 121,
+                  "right": 230,
+                  "bottom": 165,
+                  "left": 132
+                },
+                "after": {
+                  "x": 127,
+                  "y": 120,
+                  "width": 94,
+                  "height": 44,
+                  "top": 120,
+                  "right": 221,
+                  "bottom": 164,
+                  "left": 127
+                }
+              },
+              {
+                "target": "player-bar",
+                "before": {
+                  "x": 0,
+                  "y": 701,
+                  "width": 390,
+                  "height": 143,
+                  "top": 701,
+                  "right": 390,
+                  "bottom": 844,
+                  "left": 0
+                },
+                "after": {
+                  "x": 0,
+                  "y": 706,
+                  "width": 390,
+                  "height": 138,
+                  "top": 706,
+                  "right": 390,
+                  "bottom": 844,
+                  "left": 0
+                }
+              },
+              {
+                "target": "footer-link",
+                "before": {
+                  "x": 192,
+                  "y": 313,
+                  "width": 98,
+                  "height": 42,
+                  "top": 313,
+                  "right": 290,
+                  "bottom": 355,
+                  "left": 192
+                },
+                "after": {
+                  "x": 171,
+                  "y": 309,
+                  "width": 94,
+                  "height": 39,
+                  "top": 309,
+                  "right": 265,
+                  "bottom": 348,
+                  "left": 171
+                }
+              }
+            ]
+          },
+          {
+            "value": 0.9360189573459715,
+            "sources": [
+              {
+                "target": "site-footer",
+                "before": {
+                  "x": 9,
+                  "y": 294,
+                  "width": 372,
+                  "height": 54,
+                  "top": 294,
+                  "right": 381,
+                  "bottom": 348,
+                  "left": 9
+                },
+                "after": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0,
+                  "top": 0,
+                  "right": 0,
+                  "bottom": 0,
+                  "left": 0
+                }
+              },
+              {
+                "target": "hero-visual",
+                "before": {
+                  "x": 0,
+                  "y": 106,
+                  "width": 390,
+                  "height": 214,
+                  "top": 106,
+                  "right": 390,
+                  "bottom": 320,
+                  "left": 0
+                },
+                "after": {
+                  "x": 0,
+                  "y": 54,
+                  "width": 390,
+                  "height": 790,
+                  "top": 54,
+                  "right": 390,
+                  "bottom": 844,
+                  "left": 0
+                }
+              },
+              {
+                "target": "mini-open",
+                "before": {
+                  "x": 127,
+                  "y": 120,
+                  "width": 94,
+                  "height": 44,
+                  "top": 120,
+                  "right": 221,
+                  "bottom": 164,
+                  "left": 127
+                },
+                "after": {
+                  "x": 266,
+                  "y": 68,
+                  "width": 94,
+                  "height": 44,
+                  "top": 68,
+                  "right": 360,
+                  "bottom": 112,
+                  "left": 266
+                }
+              },
+              {
+                "target": "player-side",
+                "before": {
+                  "x": 57,
+                  "y": 790,
+                  "width": 313,
+                  "height": 36,
+                  "top": 790,
+                  "right": 370,
+                  "bottom": 826,
+                  "left": 57
+                },
+                "after": {
+                  "x": 44,
+                  "y": 790,
+                  "width": 326,
+                  "height": 36,
+                  "top": 790,
+                  "right": 370,
+                  "bottom": 826,
+                  "left": 44
+                }
+              },
+              {
+                "target": "list-toggle-wrap",
+                "before": {
+                  "x": 9,
+                  "y": 228,
+                  "width": 372,
+                  "height": 44,
+                  "top": 228,
+                  "right": 381,
+                  "bottom": 272,
+                  "left": 9
+                },
+                "after": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0,
+                  "top": 0,
+                  "right": 0,
+                  "bottom": 0,
+                  "left": 0
+                }
+              }
+            ]
+          }
+        ],
+        "frames": 120
+      },
+      "idle": {
+        "frames": 5,
+        "taskMs": 1003.7279999999997,
+        "scriptMs": 27.837,
+        "heapBytes": 6025744
+      },
+      "accessibility": {
+        "passes": 26,
+        "violations": []
+      },
+      "playback": {
+        "playing": true,
+        "state": "playing",
+        "context": "running",
+        "speakerOpen": true,
+        "gain": 1,
+        "time": 0.03483
+      },
+      "errors": []
+    },
+    {
+      "phase": "before",
+      "run": 3,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cpuThrottle": 4,
+      "readyMs": 1258.5999999940395,
+      "initial": {
+        "state": "idle",
+        "playing": false,
+        "unitPower": {
+          "tuner": true,
+          "amp": true,
+          "deck": true
+        },
+        "hint": "원하는 채널을 누르면 바로 연결을 시도합니다.",
+        "playVisible": false,
+        "startVisible": false,
+        "overflowPx": 0,
+        "domNodes": 4083,
+        "resourceBytes": 1613298,
+        "longTasks": [
+          263,
+          108,
+          105,
+          399,
+          150,
+          71
+        ],
+        "lcp": 348,
+        "cls": 0.038263776488755466,
+        "shifts": [
+          {
+            "value": 0.0017533196343315972,
+            "sources": [
+              {
+                "target": "header-actions",
+                "before": {
+                  "x": 691,
+                  "y": 27,
+                  "width": 625,
+                  "height": 38,
+                  "top": 27,
+                  "right": 1316,
+                  "bottom": 65,
+                  "left": 691
+                },
+                "after": {
+                  "x": 705,
+                  "y": 26,
+                  "width": 611,
+                  "height": 38,
+                  "top": 26,
+                  "right": 1316,
+                  "bottom": 64,
+                  "left": 705
+                }
+              },
+              {
+                "target": "site-footer",
+                "before": {
+                  "x": 120,
+                  "y": 336,
+                  "width": 1200,
+                  "height": 21,
+                  "top": 336,
+                  "right": 1320,
+                  "bottom": 357,
+                  "left": 120
+                },
+                "after": {
+                  "x": 120,
+                  "y": 319,
+                  "width": 1200,
+                  "height": 20,
+                  "top": 319,
+                  "right": 1320,
+                  "bottom": 339,
+                  "left": 120
+                }
+              },
+              {
+                "target": "list-toggle-wrap",
+                "before": {
+                  "x": 120,
+                  "y": 271,
+                  "width": 1200,
+                  "height": 43,
+                  "top": 271,
+                  "right": 1320,
+                  "bottom": 314,
+                  "left": 120
+                },
+                "after": {
+                  "x": 120,
+                  "y": 258,
+                  "width": 1200,
+                  "height": 39,
+                  "top": 258,
+                  "right": 1320,
+                  "bottom": 297,
+                  "left": 120
+                }
+              },
+              {
+                "target": "playerSubtext",
+                "before": {
+                  "x": 213,
+                  "y": 205,
+                  "width": 699,
+                  "height": 20,
+                  "top": 205,
+                  "right": 912,
+                  "bottom": 225,
+                  "left": 213
+                },
+                "after": {
+                  "x": 213,
+                  "y": 197,
+                  "width": 701,
+                  "height": 16,
+                  "top": 197,
+                  "right": 914,
+                  "bottom": 213,
+                  "left": 213
+                }
+              },
+              {
+                "target": "player-side",
+                "before": {
+                  "x": 924,
+                  "y": 158,
+                  "width": 365,
+                  "height": 44,
+                  "top": 158,
+                  "right": 1289,
+                  "bottom": 202,
+                  "left": 924
+                },
+                "after": {
+                  "x": 926,
+                  "y": 152,
+                  "width": 363,
+                  "height": 44,
+                  "top": 152,
+                  "right": 1289,
+                  "bottom": 196,
+                  "left": 926
+                }
+              }
+            ]
+          },
+          {
+            "value": 0.00007681487911522633,
+            "sources": [
+              {
+                "before": {
+                  "x": 120,
+                  "y": 321,
+                  "width": 1200,
+                  "height": 15,
+                  "top": 321,
+                  "right": 1320,
+                  "bottom": 336,
+                  "left": 120
+                },
+                "after": {
+                  "x": 120,
+                  "y": 321,
+                  "width": 1200,
+                  "height": 15,
+                  "top": 321,
+                  "right": 1320,
+                  "bottom": 336,
+                  "left": 120
+                }
+              },
+              {
+                "target": "appVersion",
+                "before": {
+                  "x": 984,
+                  "y": 319,
+                  "width": 32,
+                  "height": 20,
+                  "top": 319,
+                  "right": 1016,
+                  "bottom": 339,
+                  "left": 984
+                },
+                "after": {
+                  "x": 976,
+                  "y": 319,
+                  "width": 48,
+                  "height": 20,
+                  "top": 319,
+                  "right": 1024,
+                  "bottom": 339,
+                  "left": 976
+                }
+              }
+            ]
+          },
+          {
+            "value": 0.03643364197530864,
+            "sources": [
+              {
+                "target": "header-actions",
+                "before": {
+                  "x": 705,
+                  "y": 26,
+                  "width": 611,
+                  "height": 38,
+                  "top": 26,
+                  "right": 1316,
+                  "bottom": 64,
+                  "left": 705
+                },
+                "after": {
+                  "x": 866,
+                  "y": 26,
+                  "width": 450,
+                  "height": 38,
+                  "top": 26,
+                  "right": 1316,
+                  "bottom": 64,
+                  "left": 866
+                }
+              },
+              {
+                "target": "site-footer",
+                "before": {
+                  "x": 120,
+                  "y": 319,
+                  "width": 1200,
+                  "height": 20,
+                  "top": 319,
+                  "right": 1320,
+                  "bottom": 339,
+                  "left": 120
+                },
+                "after": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0,
+                  "top": 0,
+                  "right": 0,
+                  "bottom": 0,
+                  "left": 0
+                }
+              }
+            ]
+          }
+        ],
+        "frames": 120
+      },
+      "idle": {
+        "frames": 5,
+        "taskMs": 64.49700000000024,
+        "scriptMs": 20.676000000000027,
+        "heapBytes": 5986536
+      },
+      "accessibility": {
+        "passes": 27,
+        "violations": []
+      },
+      "playback": {
+        "available": false
+      },
+      "errors": []
+    },
+    {
+      "phase": "before",
+      "run": 3,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "cpuThrottle": 4,
+      "readyMs": 1184.2999999821186,
+      "initial": {
+        "state": "idle",
+        "playing": false,
+        "unitPower": {
+          "tuner": true,
+          "amp": true,
+          "deck": true
+        },
+        "hint": "원하는 채널을 누르면 바로 연결을 시도합니다.",
+        "playVisible": true,
+        "startVisible": false,
+        "overflowPx": 0,
+        "domNodes": 4077,
+        "resourceBytes": 1613298,
+        "longTasks": [
+          260,
+          100,
+          104,
+          385,
+          138,
+          74
+        ],
+        "lcp": 328,
+        "cls": 0.9411550991300597,
+        "shifts": [
+          {
+            "value": 0.004902702087091283,
+            "sources": [
+              {
+                "before": {
+                  "x": 9,
+                  "y": 326,
+                  "width": 372,
+                  "height": 15,
+                  "top": 326,
+                  "right": 381,
+                  "bottom": 341,
+                  "left": 9
+                },
+                "after": {
+                  "x": 9,
+                  "y": 321,
+                  "width": 372,
+                  "height": 15,
+                  "top": 321,
+                  "right": 381,
+                  "bottom": 336,
+                  "left": 9
+                }
+              },
+              {
+                "target": "headerTapeBtn",
+                "before": {
+                  "x": 248,
+                  "y": 69,
+                  "width": 84,
+                  "height": 44,
+                  "top": 69,
+                  "right": 332,
+                  "bottom": 113,
+                  "left": 248
+                },
+                "after": {
+                  "x": 242,
+                  "y": 68,
+                  "width": 81,
+                  "height": 44,
+                  "top": 68,
+                  "right": 323,
+                  "bottom": 112,
+                  "left": 242
+                }
+              },
+              {
+                "target": "mini-open",
+                "before": {
+                  "x": 132,
+                  "y": 121,
+                  "width": 98,
+                  "height": 44,
+                  "top": 121,
+                  "right": 230,
+                  "bottom": 165,
+                  "left": 132
+                },
+                "after": {
+                  "x": 127,
+                  "y": 120,
+                  "width": 94,
+                  "height": 44,
+                  "top": 120,
+                  "right": 221,
+                  "bottom": 164,
+                  "left": 127
+                }
+              },
+              {
+                "target": "player-bar",
+                "before": {
+                  "x": 0,
+                  "y": 701,
+                  "width": 390,
+                  "height": 143,
+                  "top": 701,
+                  "right": 390,
+                  "bottom": 844,
+                  "left": 0
+                },
+                "after": {
+                  "x": 0,
+                  "y": 706,
+                  "width": 390,
+                  "height": 138,
+                  "top": 706,
+                  "right": 390,
+                  "bottom": 844,
+                  "left": 0
+                }
+              },
+              {
+                "target": "footer-link",
+                "before": {
+                  "x": 192,
+                  "y": 313,
+                  "width": 98,
+                  "height": 42,
+                  "top": 313,
+                  "right": 290,
+                  "bottom": 355,
+                  "left": 192
+                },
+                "after": {
+                  "x": 179,
+                  "y": 309,
+                  "width": 94,
+                  "height": 39,
+                  "top": 309,
+                  "right": 273,
+                  "bottom": 348,
+                  "left": 179
+                }
+              }
+            ]
+          },
+          {
+            "value": 0.0002334396969969228,
+            "sources": [
+              {
+                "target": "footer-link",
+                "before": {
+                  "x": 179,
+                  "y": 309,
+                  "width": 94,
+                  "height": 39,
+                  "top": 309,
+                  "right": 273,
+                  "bottom": 348,
+                  "left": 179
+                },
+                "after": {
+                  "x": 171,
+                  "y": 309,
+                  "width": 94,
+                  "height": 39,
+                  "top": 309,
+                  "right": 265,
+                  "bottom": 348,
+                  "left": 171
+                }
+              },
+              {
+                "before": {
+                  "x": 9,
+                  "y": 321,
+                  "width": 372,
+                  "height": 15,
+                  "top": 321,
+                  "right": 381,
+                  "bottom": 336,
+                  "left": 9
+                },
+                "after": {
+                  "x": 9,
+                  "y": 321,
+                  "width": 372,
+                  "height": 15,
+                  "top": 321,
+                  "right": 381,
+                  "bottom": 336,
+                  "left": 9
+                }
+              },
+              {
+                "target": "appVersion",
+                "before": {
+                  "x": 286,
+                  "y": 319,
+                  "width": 32,
+                  "height": 20,
+                  "top": 319,
+                  "right": 318,
+                  "bottom": 339,
+                  "left": 286
+                },
+                "after": {
+                  "x": 278,
+                  "y": 319,
+                  "width": 48,
+                  "height": 20,
+                  "top": 319,
+                  "right": 326,
+                  "bottom": 339,
+                  "left": 278
+                }
+              }
+            ]
+          },
+          {
+            "value": 0.9360189573459715,
+            "sources": [
+              {
+                "target": "site-footer",
+                "before": {
+                  "x": 9,
+                  "y": 294,
+                  "width": 372,
+                  "height": 54,
+                  "top": 294,
+                  "right": 381,
+                  "bottom": 348,
+                  "left": 9
+                },
+                "after": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0,
+                  "top": 0,
+                  "right": 0,
+                  "bottom": 0,
+                  "left": 0
+                }
+              },
+              {
+                "target": "hero-visual",
+                "before": {
+                  "x": 0,
+                  "y": 106,
+                  "width": 390,
+                  "height": 214,
+                  "top": 106,
+                  "right": 390,
+                  "bottom": 320,
+                  "left": 0
+                },
+                "after": {
+                  "x": 0,
+                  "y": 54,
+                  "width": 390,
+                  "height": 790,
+                  "top": 54,
+                  "right": 390,
+                  "bottom": 844,
+                  "left": 0
+                }
+              },
+              {
+                "target": "mini-open",
+                "before": {
+                  "x": 127,
+                  "y": 120,
+                  "width": 94,
+                  "height": 44,
+                  "top": 120,
+                  "right": 221,
+                  "bottom": 164,
+                  "left": 127
+                },
+                "after": {
+                  "x": 266,
+                  "y": 68,
+                  "width": 94,
+                  "height": 44,
+                  "top": 68,
+                  "right": 360,
+                  "bottom": 112,
+                  "left": 266
+                }
+              },
+              {
+                "target": "player-side",
+                "before": {
+                  "x": 57,
+                  "y": 790,
+                  "width": 313,
+                  "height": 36,
+                  "top": 790,
+                  "right": 370,
+                  "bottom": 826,
+                  "left": 57
+                },
+                "after": {
+                  "x": 44,
+                  "y": 790,
+                  "width": 326,
+                  "height": 36,
+                  "top": 790,
+                  "right": 370,
+                  "bottom": 826,
+                  "left": 44
+                }
+              },
+              {
+                "target": "list-toggle-wrap",
+                "before": {
+                  "x": 9,
+                  "y": 228,
+                  "width": 372,
+                  "height": 44,
+                  "top": 228,
+                  "right": 381,
+                  "bottom": 272,
+                  "left": 9
+                },
+                "after": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0,
+                  "top": 0,
+                  "right": 0,
+                  "bottom": 0,
+                  "left": 0
+                }
+              }
+            ]
+          }
+        ],
+        "frames": 119
+      },
+      "idle": {
+        "frames": 5,
+        "taskMs": 882.9219999999998,
+        "scriptMs": 23.328999999999933,
+        "heapBytes": 4510324
+      },
+      "accessibility": {
+        "passes": 26,
+        "violations": []
+      },
+      "playback": {
+        "playing": true,
+        "state": "playing",
+        "context": "running",
+        "speakerOpen": true,
+        "gain": 1,
+        "time": 0.031927
+      },
+      "errors": []
+    },
+    {
+      "phase": "after",
+      "run": 1,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cpuThrottle": 4,
+      "readyMs": 1219.5,
+      "initial": {
+        "state": "idle",
+        "playing": false,
+        "unitPower": {
+          "tuner": true,
+          "amp": true,
+          "deck": true
+        },
+        "hint": "원하는 채널을 누르면 바로 연결을 시도합니다.",
+        "playVisible": false,
+        "startVisible": true,
+        "overflowPx": 0,
+        "domNodes": 4084,
+        "resourceBytes": 1615264,
+        "longTasks": [
+          172,
+          85,
+          102,
+          411,
+          137,
+          63
+        ],
+        "lcp": 256,
+        "cls": 0.00028944339621377746,
+        "shifts": [
+          {
+            "value": 0.00008943040217228224,
+            "sources": [
+              {
+                "target": "header-actions",
+                "before": {
+                  "x": 876,
+                  "y": 27,
+                  "width": 440,
+                  "height": 38,
+                  "top": 27,
+                  "right": 1316,
+                  "bottom": 65,
+                  "left": 876
+                },
+                "after": {
+                  "x": 883,
+                  "y": 26,
+                  "width": 433,
+                  "height": 38,
+                  "top": 26,
+                  "right": 1316,
+                  "bottom": 64,
+                  "left": 883
+                }
+              },
+              {
+                "target": "listeningStart",
+                "before": {
+                  "x": 1185,
+                  "y": 112,
+                  "width": 101,
+                  "height": 46,
+                  "top": 112,
+                  "right": 1286,
+                  "bottom": 158,
+                  "left": 1185
+                },
+                "after": {
+                  "x": 1189,
+                  "y": 112,
+                  "width": 97,
+                  "height": 44,
+                  "top": 112,
+                  "right": 1286,
+                  "bottom": 156,
+                  "left": 1189
+                }
+              }
+            ]
+          },
+          {
+            "value": 0.0002000129940414952,
+            "sources": [
+              {
+                "target": "header-actions",
+                "before": {
+                  "x": 883,
+                  "y": 26,
+                  "width": 433,
+                  "height": 38,
+                  "top": 26,
+                  "right": 1316,
+                  "bottom": 64,
+                  "left": 883
+                },
+                "after": {
+                  "x": 866,
+                  "y": 26,
+                  "width": 450,
+                  "height": 38,
+                  "top": 26,
+                  "right": 1316,
+                  "bottom": 64,
+                  "left": 866
+                }
+              },
+              {
+                "target": "listeningStart",
+                "before": {
+                  "x": 1189,
+                  "y": 112,
+                  "width": 97,
+                  "height": 44,
+                  "top": 112,
+                  "right": 1286,
+                  "bottom": 156,
+                  "left": 1189
+                },
+                "after": {
+                  "x": 1202,
+                  "y": 112,
+                  "width": 84,
+                  "height": 44,
+                  "top": 112,
+                  "right": 1286,
+                  "bottom": 156,
+                  "left": 1202
+                }
+              }
+            ]
+          }
+        ],
+        "frames": 120
+      },
+      "idle": {
+        "frames": 5,
+        "taskMs": 57.004000000000055,
+        "scriptMs": 18.550999999999984,
+        "heapBytes": 5981692
+      },
+      "accessibility": {
+        "passes": 27,
+        "violations": []
+      },
+      "playback": {
+        "playing": true,
+        "state": "playing",
+        "context": "running",
+        "speakerOpen": true,
+        "gain": 1,
+        "time": 0.031927
+      },
+      "errors": []
+    },
+    {
+      "phase": "after",
+      "run": 1,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "cpuThrottle": 4,
+      "readyMs": 1380.6000000238419,
+      "initial": {
+        "state": "idle",
+        "playing": false,
+        "unitPower": {
+          "tuner": true,
+          "amp": true,
+          "deck": true
+        },
+        "hint": "원하는 채널을 누르면 바로 연결을 시도합니다.",
+        "playVisible": true,
+        "startVisible": true,
+        "overflowPx": 0,
+        "domNodes": 4084,
+        "resourceBytes": 1615264,
+        "longTasks": [
+          207,
+          110,
+          119,
+          438,
+          168,
+          60
+        ],
+        "lcp": 1280,
+        "cls": 0.006933882109220714,
+        "shifts": [
+          {
+            "value": 0.006933882109220714,
+            "sources": [
+              {
+                "target": "mini-open",
+                "before": {
+                  "x": 156,
+                  "y": 69,
+                  "width": 110,
+                  "height": 44,
+                  "top": 69,
+                  "right": 266,
+                  "bottom": 113,
+                  "left": 156
+                },
+                "after": {
+                  "x": 152,
+                  "y": 68,
+                  "width": 106,
+                  "height": 44,
+                  "top": 68,
+                  "right": 258,
+                  "bottom": 112,
+                  "left": 152
+                }
+              },
+              {
+                "target": "mini-open",
+                "before": {
+                  "x": 274,
+                  "y": 69,
+                  "width": 99,
+                  "height": 44,
+                  "top": 69,
+                  "right": 373,
+                  "bottom": 113,
+                  "left": 274
+                },
+                "after": {
+                  "x": 266,
+                  "y": 68,
+                  "width": 94,
+                  "height": 44,
+                  "top": 68,
+                  "right": 360,
+                  "bottom": 112,
+                  "left": 266
+                }
+              },
+              {
+                "target": "listeningHint",
+                "before": {
+                  "x": 33,
+                  "y": 174,
+                  "width": 324,
+                  "height": 18,
+                  "top": 174,
+                  "right": 357,
+                  "bottom": 192,
+                  "left": 33
+                },
+                "after": {
+                  "x": 33,
+                  "y": 171,
+                  "width": 324,
+                  "height": 18,
+                  "top": 171,
+                  "right": 357,
+                  "bottom": 189,
+                  "left": 33
+                }
+              },
+              {
+                "target": "listeningStart",
+                "before": {
+                  "x": 33,
+                  "y": 204,
+                  "width": 324,
+                  "height": 46,
+                  "top": 204,
+                  "right": 357,
+                  "bottom": 250,
+                  "left": 33
+                },
+                "after": {
+                  "x": 33,
+                  "y": 201,
+                  "width": 324,
+                  "height": 44,
+                  "top": 201,
+                  "right": 357,
+                  "bottom": 245,
+                  "left": 33
+                }
+              },
+              {
+                "target": "rackColumn",
+                "before": {
+                  "x": 20,
+                  "y": 275,
+                  "width": 350,
+                  "height": 569,
+                  "top": 275,
+                  "right": 370,
+                  "bottom": 844,
+                  "left": 20
+                },
+                "after": {
+                  "x": 20,
+                  "y": 270,
+                  "width": 350,
+                  "height": 574,
+                  "top": 270,
+                  "right": 370,
+                  "bottom": 844,
+                  "left": 20
+                }
+              }
+            ]
+          }
+        ],
+        "frames": 117
+      },
+      "idle": {
+        "frames": 5,
+        "taskMs": 56.26499999999979,
+        "scriptMs": 20.42699999999997,
+        "heapBytes": 5993548
+      },
+      "accessibility": {
+        "passes": 26,
+        "violations": []
+      },
+      "playback": {
+        "playing": true,
+        "state": "playing",
+        "context": "running",
+        "speakerOpen": true,
+        "gain": 1,
+        "time": 0.041688
+      },
+      "errors": []
+    },
+    {
+      "phase": "after",
+      "run": 2,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cpuThrottle": 4,
+      "readyMs": 1400,
+      "initial": {
+        "state": "idle",
+        "playing": false,
+        "unitPower": {
+          "tuner": true,
+          "amp": true,
+          "deck": true
+        },
+        "hint": "원하는 채널을 누르면 바로 연결을 시도합니다.",
+        "playVisible": false,
+        "startVisible": true,
+        "overflowPx": 0,
+        "domNodes": 4084,
+        "resourceBytes": 1615118,
+        "longTasks": [
+          189,
+          112,
+          120,
+          467,
+          162,
+          50,
+          59
+        ],
+        "lcp": 276,
+        "cls": 0.00028944339621377746,
+        "shifts": [
+          {
+            "value": 0.00008943040217228224,
+            "sources": [
+              {
+                "target": "header-actions",
+                "before": {
+                  "x": 876,
+                  "y": 27,
+                  "width": 440,
+                  "height": 38,
+                  "top": 27,
+                  "right": 1316,
+                  "bottom": 65,
+                  "left": 876
+                },
+                "after": {
+                  "x": 883,
+                  "y": 26,
+                  "width": 433,
+                  "height": 38,
+                  "top": 26,
+                  "right": 1316,
+                  "bottom": 64,
+                  "left": 883
+                }
+              },
+              {
+                "target": "listeningStart",
+                "before": {
+                  "x": 1185,
+                  "y": 112,
+                  "width": 101,
+                  "height": 46,
+                  "top": 112,
+                  "right": 1286,
+                  "bottom": 158,
+                  "left": 1185
+                },
+                "after": {
+                  "x": 1189,
+                  "y": 112,
+                  "width": 97,
+                  "height": 44,
+                  "top": 112,
+                  "right": 1286,
+                  "bottom": 156,
+                  "left": 1189
+                }
+              }
+            ]
+          },
+          {
+            "value": 0.0002000129940414952,
+            "sources": [
+              {
+                "target": "header-actions",
+                "before": {
+                  "x": 883,
+                  "y": 26,
+                  "width": 433,
+                  "height": 38,
+                  "top": 26,
+                  "right": 1316,
+                  "bottom": 64,
+                  "left": 883
+                },
+                "after": {
+                  "x": 866,
+                  "y": 26,
+                  "width": 450,
+                  "height": 38,
+                  "top": 26,
+                  "right": 1316,
+                  "bottom": 64,
+                  "left": 866
+                }
+              },
+              {
+                "target": "listeningStart",
+                "before": {
+                  "x": 1189,
+                  "y": 112,
+                  "width": 97,
+                  "height": 44,
+                  "top": 112,
+                  "right": 1286,
+                  "bottom": 156,
+                  "left": 1189
+                },
+                "after": {
+                  "x": 1202,
+                  "y": 112,
+                  "width": 84,
+                  "height": 44,
+                  "top": 112,
+                  "right": 1286,
+                  "bottom": 156,
+                  "left": 1202
+                }
+              }
+            ]
+          }
+        ],
+        "frames": 118
+      },
+      "idle": {
+        "frames": 5,
+        "taskMs": 62.89699999999998,
+        "scriptMs": 22.83299999999999,
+        "heapBytes": 6007280
+      },
+      "accessibility": {
+        "passes": 27,
+        "violations": []
+      },
+      "playback": {
+        "playing": true,
+        "state": "playing",
+        "context": "running",
+        "speakerOpen": true,
+        "gain": 1,
+        "time": 0.042951
+      },
+      "errors": []
+    },
+    {
+      "phase": "after",
+      "run": 2,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "cpuThrottle": 4,
+      "readyMs": 1179.699999988079,
+      "initial": {
+        "state": "idle",
+        "playing": false,
+        "unitPower": {
+          "tuner": true,
+          "amp": true,
+          "deck": true
+        },
+        "hint": "원하는 채널을 누르면 바로 연결을 시도합니다.",
+        "playVisible": true,
+        "startVisible": true,
+        "overflowPx": 0,
+        "domNodes": 4084,
+        "resourceBytes": 1615118,
+        "longTasks": [
+          194,
+          99,
+          102,
+          381,
+          125,
+          54
+        ],
+        "lcp": 1112,
+        "cls": 0.006933882109220714,
+        "shifts": [
+          {
+            "value": 0.006933882109220714,
+            "sources": [
+              {
+                "target": "mini-open",
+                "before": {
+                  "x": 156,
+                  "y": 69,
+                  "width": 110,
+                  "height": 44,
+                  "top": 69,
+                  "right": 266,
+                  "bottom": 113,
+                  "left": 156
+                },
+                "after": {
+                  "x": 152,
+                  "y": 68,
+                  "width": 106,
+                  "height": 44,
+                  "top": 68,
+                  "right": 258,
+                  "bottom": 112,
+                  "left": 152
+                }
+              },
+              {
+                "target": "mini-open",
+                "before": {
+                  "x": 274,
+                  "y": 69,
+                  "width": 99,
+                  "height": 44,
+                  "top": 69,
+                  "right": 373,
+                  "bottom": 113,
+                  "left": 274
+                },
+                "after": {
+                  "x": 266,
+                  "y": 68,
+                  "width": 94,
+                  "height": 44,
+                  "top": 68,
+                  "right": 360,
+                  "bottom": 112,
+                  "left": 266
+                }
+              },
+              {
+                "target": "listeningHint",
+                "before": {
+                  "x": 33,
+                  "y": 174,
+                  "width": 324,
+                  "height": 18,
+                  "top": 174,
+                  "right": 357,
+                  "bottom": 192,
+                  "left": 33
+                },
+                "after": {
+                  "x": 33,
+                  "y": 171,
+                  "width": 324,
+                  "height": 18,
+                  "top": 171,
+                  "right": 357,
+                  "bottom": 189,
+                  "left": 33
+                }
+              },
+              {
+                "target": "listeningStart",
+                "before": {
+                  "x": 33,
+                  "y": 204,
+                  "width": 324,
+                  "height": 46,
+                  "top": 204,
+                  "right": 357,
+                  "bottom": 250,
+                  "left": 33
+                },
+                "after": {
+                  "x": 33,
+                  "y": 201,
+                  "width": 324,
+                  "height": 44,
+                  "top": 201,
+                  "right": 357,
+                  "bottom": 245,
+                  "left": 33
+                }
+              },
+              {
+                "target": "rackColumn",
+                "before": {
+                  "x": 20,
+                  "y": 275,
+                  "width": 350,
+                  "height": 569,
+                  "top": 275,
+                  "right": 370,
+                  "bottom": 844,
+                  "left": 20
+                },
+                "after": {
+                  "x": 20,
+                  "y": 270,
+                  "width": 350,
+                  "height": 574,
+                  "top": 270,
+                  "right": 370,
+                  "bottom": 844,
+                  "left": 20
+                }
+              }
+            ]
+          }
+        ],
+        "frames": 119
+      },
+      "idle": {
+        "frames": 5,
+        "taskMs": 56.90200000000001,
+        "scriptMs": 20.40299999999995,
+        "heapBytes": 5986072
+      },
+      "accessibility": {
+        "passes": 26,
+        "violations": []
+      },
+      "playback": {
+        "playing": true,
+        "state": "playing",
+        "context": "running",
+        "speakerOpen": true,
+        "gain": 1,
+        "time": 0.031927
+      },
+      "errors": []
+    },
+    {
+      "phase": "after",
+      "run": 3,
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cpuThrottle": 4,
+      "readyMs": 1192.6000000238419,
+      "initial": {
+        "state": "idle",
+        "playing": false,
+        "unitPower": {
+          "tuner": true,
+          "amp": true,
+          "deck": true
+        },
+        "hint": "원하는 채널을 누르면 바로 연결을 시도합니다.",
+        "playVisible": false,
+        "startVisible": true,
+        "overflowPx": 0,
+        "domNodes": 4084,
+        "resourceBytes": 1615118,
+        "longTasks": [
+          170,
+          86,
+          96,
+          399,
+          141,
+          53
+        ],
+        "lcp": 256,
+        "cls": 0.00028944339621377746,
+        "shifts": [
+          {
+            "value": 0.00008943040217228224,
+            "sources": [
+              {
+                "target": "header-actions",
+                "before": {
+                  "x": 876,
+                  "y": 27,
+                  "width": 440,
+                  "height": 38,
+                  "top": 27,
+                  "right": 1316,
+                  "bottom": 65,
+                  "left": 876
+                },
+                "after": {
+                  "x": 883,
+                  "y": 26,
+                  "width": 433,
+                  "height": 38,
+                  "top": 26,
+                  "right": 1316,
+                  "bottom": 64,
+                  "left": 883
+                }
+              },
+              {
+                "target": "listeningStart",
+                "before": {
+                  "x": 1185,
+                  "y": 112,
+                  "width": 101,
+                  "height": 46,
+                  "top": 112,
+                  "right": 1286,
+                  "bottom": 158,
+                  "left": 1185
+                },
+                "after": {
+                  "x": 1189,
+                  "y": 112,
+                  "width": 97,
+                  "height": 44,
+                  "top": 112,
+                  "right": 1286,
+                  "bottom": 156,
+                  "left": 1189
+                }
+              }
+            ]
+          },
+          {
+            "value": 0.0002000129940414952,
+            "sources": [
+              {
+                "target": "header-actions",
+                "before": {
+                  "x": 883,
+                  "y": 26,
+                  "width": 433,
+                  "height": 38,
+                  "top": 26,
+                  "right": 1316,
+                  "bottom": 64,
+                  "left": 883
+                },
+                "after": {
+                  "x": 866,
+                  "y": 26,
+                  "width": 450,
+                  "height": 38,
+                  "top": 26,
+                  "right": 1316,
+                  "bottom": 64,
+                  "left": 866
+                }
+              },
+              {
+                "target": "listeningStart",
+                "before": {
+                  "x": 1189,
+                  "y": 112,
+                  "width": 97,
+                  "height": 44,
+                  "top": 112,
+                  "right": 1286,
+                  "bottom": 156,
+                  "left": 1189
+                },
+                "after": {
+                  "x": 1202,
+                  "y": 112,
+                  "width": 84,
+                  "height": 44,
+                  "top": 112,
+                  "right": 1286,
+                  "bottom": 156,
+                  "left": 1202
+                }
+              }
+            ]
+          }
+        ],
+        "frames": 118
+      },
+      "idle": {
+        "frames": 5,
+        "taskMs": 58.04000000000009,
+        "scriptMs": 20.33000000000007,
+        "heapBytes": 5961924
+      },
+      "accessibility": {
+        "passes": 27,
+        "violations": []
+      },
+      "playback": {
+        "playing": true,
+        "state": "playing",
+        "context": "running",
+        "speakerOpen": true,
+        "gain": 1,
+        "time": 0.031927
+      },
+      "errors": []
+    },
+    {
+      "phase": "after",
+      "run": 3,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "cpuThrottle": 4,
+      "readyMs": 1212.1000000238419,
+      "initial": {
+        "state": "idle",
+        "playing": false,
+        "unitPower": {
+          "tuner": true,
+          "amp": true,
+          "deck": true
+        },
+        "hint": "원하는 채널을 누르면 바로 연결을 시도합니다.",
+        "playVisible": true,
+        "startVisible": true,
+        "overflowPx": 0,
+        "domNodes": 4084,
+        "resourceBytes": 1615118,
+        "longTasks": [
+          185,
+          95,
+          106,
+          399,
+          147,
+          56
+        ],
+        "lcp": 1144,
+        "cls": 0.006933882109220714,
+        "shifts": [
+          {
+            "value": 0.006933882109220714,
+            "sources": [
+              {
+                "target": "mini-open",
+                "before": {
+                  "x": 156,
+                  "y": 69,
+                  "width": 110,
+                  "height": 44,
+                  "top": 69,
+                  "right": 266,
+                  "bottom": 113,
+                  "left": 156
+                },
+                "after": {
+                  "x": 152,
+                  "y": 68,
+                  "width": 106,
+                  "height": 44,
+                  "top": 68,
+                  "right": 258,
+                  "bottom": 112,
+                  "left": 152
+                }
+              },
+              {
+                "target": "mini-open",
+                "before": {
+                  "x": 274,
+                  "y": 69,
+                  "width": 99,
+                  "height": 44,
+                  "top": 69,
+                  "right": 373,
+                  "bottom": 113,
+                  "left": 274
+                },
+                "after": {
+                  "x": 266,
+                  "y": 68,
+                  "width": 94,
+                  "height": 44,
+                  "top": 68,
+                  "right": 360,
+                  "bottom": 112,
+                  "left": 266
+                }
+              },
+              {
+                "target": "listeningHint",
+                "before": {
+                  "x": 33,
+                  "y": 174,
+                  "width": 324,
+                  "height": 18,
+                  "top": 174,
+                  "right": 357,
+                  "bottom": 192,
+                  "left": 33
+                },
+                "after": {
+                  "x": 33,
+                  "y": 171,
+                  "width": 324,
+                  "height": 18,
+                  "top": 171,
+                  "right": 357,
+                  "bottom": 189,
+                  "left": 33
+                }
+              },
+              {
+                "target": "listeningStart",
+                "before": {
+                  "x": 33,
+                  "y": 204,
+                  "width": 324,
+                  "height": 46,
+                  "top": 204,
+                  "right": 357,
+                  "bottom": 250,
+                  "left": 33
+                },
+                "after": {
+                  "x": 33,
+                  "y": 201,
+                  "width": 324,
+                  "height": 44,
+                  "top": 201,
+                  "right": 357,
+                  "bottom": 245,
+                  "left": 33
+                }
+              },
+              {
+                "target": "rackColumn",
+                "before": {
+                  "x": 20,
+                  "y": 275,
+                  "width": 350,
+                  "height": 569,
+                  "top": 275,
+                  "right": 370,
+                  "bottom": 844,
+                  "left": 20
+                },
+                "after": {
+                  "x": 20,
+                  "y": 270,
+                  "width": 350,
+                  "height": 574,
+                  "top": 270,
+                  "right": 370,
+                  "bottom": 844,
+                  "left": 20
+                }
+              }
+            ]
+          }
+        ],
+        "frames": 119
+      },
+      "idle": {
+        "frames": 5,
+        "taskMs": 54.4340000000001,
+        "scriptMs": 19.530000000000047,
+        "heapBytes": 6164552
+      },
+      "accessibility": {
+        "passes": 26,
+        "violations": []
+      },
+      "playback": {
+        "playing": true,
+        "state": "playing",
+        "context": "running",
+        "speakerOpen": true,
+        "gain": 1,
+        "time": 0.030432
+      },
+      "errors": []
+    }
+  ]
+}

@@ -49,9 +49,9 @@
     </script>
     <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-    <link rel="stylesheet" href="styles.css?v=188">
+    <link rel="stylesheet" href="styles.css?v=189">
 </head>
-<body>
+<body class="app-loading mode-rack">
     <div class="page-shell">
         <header class="site-header">
             <div class="brand">
@@ -65,9 +65,9 @@
                 <!-- 트레이 앱(chrome=tray)에서만 표시 — 하단 스크립트가 hidden을 푼다 -->
                 <a class="mini-open" id="miniPlayerLink" href="widget.html?skin=tuner" title="튜너 미니 플레이어로 전환" hidden>미니 플레이어</a>
                 <a class="mini-open" href="manual.html" target="_blank" rel="noopener" title="기기별 리뷰와 조작 안내 (새 탭 — 재생 유지)">소개</a>
-                <button class="mini-open sched-open" id="headerSchedBtn" type="button" onclick="openSchedule()" title="채널 편성표 보기와 예약 녹음">▤ 편성표</button>
+                <button class="mini-open sched-open" id="headerSchedBtn" type="button" onclick="openSchedule()" title="채널 편성표 보기와 예약 녹음" hidden>▤ 편성표</button>
                 <button class="mini-open" id="headerCrateBtn" type="button" onclick="openCrate()" title="음반 검색과 무한 랜덤 재생">♫ 음반</button>
-                <button class="mini-open" id="headerTapeBtn" type="button" onclick="openTapeCase()" title="녹음 테이프 보관함 — 라벨·재생·삭제·가져오기">⏵ 테이프</button>
+                <button class="mini-open" id="headerTapeBtn" type="button" onclick="openTapeCase()" title="녹음 테이프 보관함 — 라벨·재생·삭제·가져오기" hidden>⏵ 테이프</button>
                 <button class="mini-open" type="button" onclick="toggleSettings(true)" title="컴포넌트 표시와 모델을 고릅니다">⚙ 오디오 구성</button>
                 <button class="mini-open" type="button" onclick="toggleFocusMode()" title="컴포넌트만 남기는 몰입 모드 (ESC로 복귀)">⛶ 전체 화면</button>
                 <div class="live-clock" id="liveClock" aria-label="현재 시각">--:--:--</div>
@@ -75,6 +75,13 @@
         </header>
 
         <section class="hero-visual" aria-label="튜너 이미지와 상태 창">
+            <div class="listening-panel" id="listeningPanel" aria-label="재생 안내">
+                <div class="listening-copy">
+                    <strong id="listeningTitle">오디오를 준비하고 있습니다</strong>
+                    <p id="listeningHint" aria-live="polite">잠시 후 듣기 버튼을 눌러 시작하세요.</p>
+                </div>
+                <button id="listeningStart" type="button" aria-describedby="listeningHint" disabled>준비 중…</button>
+            </div>
             <!-- 몰입 모드 리스닝 룸 — 사용자가 제공한 실제 스피커 사진을 좌우에 배치한다.
                  배경을 알파로 걷어낸 webp — 사진의 검은 상자가 바탕과 미묘하게 어긋나 보이던
                  경계(블렌드 레이어 톤 차이)를 원천 제거한다. 원본: side-speaker.jpg. -->
@@ -307,26 +314,27 @@
 
     <audio id="audioPlayer" crossorigin="anonymous"></audio>
 
-    <script src="stations.js?v=188"></script>
-    <script src="player-core.js?v=188"></script>
-    <script src="native-hls-capture.js?v=188"></script>
-    <script src="store.js?v=188"></script>
-    <script src="schedule.js?v=188"></script>
-    <script src="skins.js?v=188"></script>
-    <script src="component-skins.js?v=188"></script>
-    <script src="solo-skins.js?v=188"></script>
-    <script src="reference-layouts.js?v=188"></script>
-    <script src="model-registry.js?v=188"></script>
-    <script src="animation-scheduler.js?v=188"></script>
-    <script src="engine.js?v=188"></script>
-    <script src="deck.js?v=188"></script>
-    <script src="radio-archive-client.js?v=188"></script>
-    <script src="bootstrap.js?v=188"></script>
-    <script src="ui-controls.js?v=188"></script>
+    <script src="stations.js?v=189"></script>
+    <script src="player-core.js?v=189"></script>
+    <script src="native-hls-capture.js?v=189"></script>
+    <script src="store.js?v=189"></script>
+    <script src="schedule.js?v=189"></script>
+    <script src="skins.js?v=189"></script>
+    <script src="component-skins.js?v=189"></script>
+    <script src="solo-skins.js?v=189"></script>
+    <script src="reference-layouts.js?v=189"></script>
+    <script src="model-registry.js?v=189"></script>
+    <script src="animation-scheduler.js?v=189"></script>
+    <script src="listening-controls.js?v=189"></script>
+    <script src="engine.js?v=189"></script>
+    <script src="deck.js?v=189"></script>
+    <script src="radio-archive-client.js?v=189"></script>
+    <script src="bootstrap.js?v=189"></script>
+    <script src="ui-controls.js?v=189"></script>
     <script>
         // 실행 중 버전 — 자산 링크의 ?v=가 단일 진실 (bump-version.py가 올린다)
         const RUNNING_ASSET_VERSION = (() => {
-            const link = document.querySelector('link[rel="stylesheet"][href^="styles.css?v=188"]');
+            const link = document.querySelector('link[rel="stylesheet"][href^="styles.css?v=189"]');
             const m = link && /[?&]v=(\d+)/.exec(link.getAttribute("href"));
             return m ? Number(m[1]) : null;
         })();

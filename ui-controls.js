@@ -103,7 +103,9 @@
         document.body.classList.remove("dialog-open");
         if (restoreFocus && opener instanceof Element && opener.isConnected && !opener.hidden
             && typeof opener.focus === "function") {
-            requestAnimationFrame(() => opener.focus({ preventScroll: true }));
+            // 배경 inert는 이미 해제됐다. 다음 프레임으로 미루면 사용자가 방금 옮긴
+            // 슬라이더 포커스를 뒤늦게 빼앗거나 새 모달 뒤로 포커스를 보낼 수 있다.
+            opener.focus({ preventScroll: true });
         }
     }
 

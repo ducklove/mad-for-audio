@@ -6,6 +6,19 @@ on:
   pull_request:
 
 jobs:
+  dependency-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: 웹 테스트·트레이 빌드 의존성 점검
+        run: |
+          npm audit --prefix tests --audit-level=high
+          npm audit --prefix tray --audit-level=high
+          npm run check --prefix tray
+
   smoke:
     runs-on: ubuntu-latest
     steps:

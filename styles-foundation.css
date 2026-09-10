@@ -209,6 +209,46 @@ body.kbd-nav svg circle:focus {
     line-height: 0;
 }
 
+/* 첫 화면부터 재생·취소·오류 복구 동선을 제공한다. 기기 전원 조작과 구분한다. */
+.listening-panel {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    border: 1px solid #776549;
+    border-radius: 12px;
+    background: #282219;
+    color: #f4e8cf;
+}
+.listening-copy { min-width: 0; }
+.listening-copy strong { display: block; font-size: 15px; overflow-wrap: anywhere; }
+.listening-copy p { margin: 5px 0 0; font-size: 12px; line-height: 1.5; color: #d4c6ac; }
+#listeningStart {
+    flex-shrink: 0;
+    min-height: 44px;
+    padding: 10px 18px;
+    border: 1px solid #e9ca92;
+    border-radius: 8px;
+    background: #e9ca92;
+    color: #241d12;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+#listeningStart:disabled { cursor: wait; opacity: .65; }
+#listeningStart:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+body.mode-bar .listening-panel,
+body.mode-focus .listening-panel { display: none; }
+/* SVG 마운트 전 아래 콘텐츠가 올라왔다 내려가는 큰 레이아웃 이동을 막는다. */
+body.app-loading .rack-column { min-height: 100vh; }
+/* 컴포넌트의 display:flex가 HTML hidden 속성을 덮어쓰지 않도록 한다. */
+[hidden] { display: none !important; }
+@media (max-width: 480px) {
+    .listening-panel { align-items: stretch; flex-direction: column; padding: 12px; }
+    #listeningStart { width: 100%; }
+}
+
 .tuner-svg {
     display: block;
     width: 100%;
@@ -1216,55 +1256,6 @@ body.mode-simple #stationMain.collapsed {
     }
 }
 
-/* 첫 방문 안내 — 튜너 위 코치마크 */
-.coach-layer {
-    position: absolute;
-    inset: 0;
-    z-index: 5;
-    pointer-events: none;
-}
-
-.coach-chip {
-    position: absolute;
-    transform: translate(-50%, 0);
-    padding: 6px 12px;
-    border-radius: 999px;
-    background: rgba(24, 20, 17, 0.92);
-    border: 1px solid rgba(236, 130, 85, 0.55);
-    color: #ffd9a8;
-    font-size: 0.78rem;
-    font-weight: 600;
-    white-space: nowrap;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
-}
-
-.coach-chip::after {
-    content: "";
-    position: absolute;
-    top: -5px;
-    left: 50%;
-    transform: translateX(-50%) rotate(45deg);
-    width: 8px;
-    height: 8px;
-    background: inherit;
-    border-left: 1px solid rgba(236, 130, 85, 0.55);
-    border-top: 1px solid rgba(236, 130, 85, 0.55);
-}
-
-.coach-dismiss {
-    position: absolute;
-    right: 12px;
-    top: 12px;
-    pointer-events: auto;
-    padding: 8px 16px;
-    border-radius: 999px;
-    background: rgba(211, 106, 66, 0.9);
-    color: #fff6ee;
-    font-size: 0.82rem;
-    font-weight: 700;
-    cursor: pointer;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-}
 
 @media (prefers-reduced-motion: reduce) {
     *,

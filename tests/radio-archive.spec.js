@@ -39,6 +39,23 @@ test('방송 음반 연결 전에는 로컬 서버에 요청하지 않음',async
     const state=await setup(context,page);await ready(page,false);expect(state.seen).toEqual([]);expect(state.errors).toEqual([]);
 });
 
+test('방송 음반 새로고침의 늦은 응답은 연결 해제 뒤 목록과 캐시를 되살리지 않는다',async({context,page})=>{
+    await setup(context,page);await ready(page);
+    let release,requested=false;
+    const pending=new Promise(resolve=>{release=resolve;});
+    await page.route(BASE+'/player/albums',async route=>{
+        requested=true;await pending;
+        await route.fulfill({json:fixture,headers:{'Access-Control-Allow-Origin':'http://127.0.0.1:8123'}});
+    });
+    await page.evaluate(()=>{window.pendingRefresh=RadioArchiveClient.refresh();});
+    await expect.poll(()=>requested).toBe(true);
+    await page.evaluate(()=>RadioArchiveClient.disconnect());release();
+    await page.evaluate(()=>window.pendingRefresh);
+    expect(await page.evaluate(()=>({records:RECORDS.filter(r=>r.archive).length,cache:localStorage.getItem('fmRadio.archiveAlbums')})))
+        .toEqual({records:0,cache:null});
+    await expect(page.locator('#archiveStatus')).toContainText('연결을 지웠습니다');
+});
+
 test('방송 음반 연결·A/B면·검토 표시·재생·연결 해제',async({context,page})=>{
     const state=await setup(context,page);await ready(page);
     expect(new URL(page.url()).hash).toBe('');await expect(page.locator('#archivePanel')).toHaveAttribute('open','');

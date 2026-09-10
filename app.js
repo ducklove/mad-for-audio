@@ -91,7 +91,8 @@ const WARM_SCALE = IS_TV ? 0.35 : 1;
 // 이후 CSS transform만 쓴다. 값이 안 변한 프레임은 아예 건드리지 않는다.
 function fxSpin(el, deg, cx, cy) {
     if (!IS_TV) {
-        el.setAttribute("transform", "rotate(" + deg + " " + cx + " " + cy + ")");
+        const value = "rotate(" + deg + " " + cx + " " + cy + ")";
+        if (el.getAttribute("transform") !== value) el.setAttribute("transform", value);
         return;
     }
     const pin = cx + " " + cy;
@@ -111,7 +112,8 @@ function fxSpin(el, deg, cx, cy) {
 // 프레임 루프 전용 이동 (다이얼 포인터의 수평 주행 등)
 function fxSlide(el, x, y) {
     if (!IS_TV) {
-        el.setAttribute("transform", "translate(" + x + "," + y + ")");
+        const value = "translate(" + x + "," + y + ")";
+        if (el.getAttribute("transform") !== value) el.setAttribute("transform", value);
         return;
     }
     if (el.__fxPin !== "slide") {
@@ -142,7 +144,7 @@ function approach(cur, target, step) {
 // 속성 문자열과 CSS 문자열의 문법이 달라 콜사이트가 둘 다 만들어 준다.
 function fxXform(el, attrVal, cssVal) {
     if (!IS_TV) {
-        el.setAttribute("transform", attrVal);
+        if (el.getAttribute("transform") !== attrVal) el.setAttribute("transform", attrVal);
         return;
     }
     if (el.__fxPin !== "xform") {
@@ -2768,9 +2770,8 @@ function setTunerPower(on) {
         }
         if (!unitOn("amp")) fpNote("TUNER ON — 수신을 시작합니다. 앰프 전원을 켜면 소리가 납니다.");
     } else {
-        // isPlaying 플래그는 'playing' 이벤트 뒤에 서므로, 재생 직후엔 audio.paused로도 판정한다
-        // (media의 실제 재생이 playing 이벤트보다 먼저 관측되는 레이스 — togglePlay와 같은 처리)
-        if (currentStation && !phonoActive && deckMode !== "play" && (isPlaying || !audio.paused)) stopPlay();
+        // 주소 조회·버퍼링 중에도 세대를 폐기해야 늦은 응답이 전원 OFF를 되돌리지 않는다.
+        if (currentStation && !phonoActive && deckMode !== "play") stopPlay();
         fpNote("TUNER OFF");
     }
     paintUnitPower();
@@ -6447,6 +6448,8 @@ async function selectStation(id, viaDial) {
 
     const mySeq = ++selectSeq;
 
+    resumeListeningAudio();
+
     if (!recIsMic) stopRecording();   // MIC 녹음은 선국과 무관 — 계속 담는다
     stopPhono();
     stopDeck();
@@ -6505,7 +6508,19 @@ async function selectStation(id, viaDial) {
     }
 }
 
+function listeningConnectionPending() {
+    // 빈 테이프가 굴러가는 상태는 네트워크 연결 대기가 아니다.
+    return deckMode !== "play" && !isPlaying && (audioState === "resolving" || audioState === "buffering");
+}
+
 function togglePlay() {
+    // 연결 중 두 번째 조작은 취소다. 아직 playing이 오지 않았다고 새 요청을 만들지 않는다.
+    if (listeningConnectionPending()) {
+        stopPlay();
+        playerSubtext.textContent = "연결을 취소했습니다. 재생 버튼으로 다시 시작할 수 있습니다.";
+        return;
+    }
+    resumeListeningAudio();
     // 리모컨 문법 — 정지 상태에서 재생 명령(헤더·미디어세션·트레이·키보드)이 오면
     // 실물 리모컨의 파워온-플레이처럼 필요한 유닛을 자동 점화한다
     if (!isPlaying) powerOnForListening();
@@ -6606,6 +6621,9 @@ function stopPlay() {
 }
 
 function updatePlayButton() {
+    const button = document.getElementById("btnPlay");
+    const busy = listeningConnectionPending();
+    button.setAttribute("aria-label", isPlaying ? "일시정지" : busy ? "연결 취소" : "재생");
     if (isPlaying) {
         playIcon.setAttribute("d", "M6 19h4V5H6v14zm8-14v14h4V5h-4z");
     } else {
@@ -7574,50 +7592,6 @@ function openWidget() {
     });
 }
 
-// ----- 첫 방문 코치마크 -----
-// 랙 전용(데스크톱) 모드에서만 보여준다 — 모바일은 플레이어 바가 이미 보인다.
-function mountCoach() {
-    if (loadJson("fmRadio.coachDone", false)) return;
-    if (!window.matchMedia("(min-width: 721px) and (pointer: fine)").matches) return;
-    const stage = document.getElementById("tunerStage");
-    const svg = stage.querySelector("svg");
-    if (!svg || !tunerCfg) return;
-
-    const vb = (svg.getAttribute("viewBox") || "0 0 2000 269").split(/\s+/).map(Number);
-    const layer = document.createElement("div");
-    layer.className = "coach-layer";
-    [
-        { key: "power", label: "전원 — 기기별 ON/OFF (앰프는 스피커 관문)" },
-        { key: "dial", label: "다이얼을 드래그해 선국" },
-        { key: "rec", label: "편성표·예약 녹음" },
-        { key: "rf", label: "채널 목록 열기" }
-    ].forEach(({ key, label }) => {
-        const box = tunerCfg.hits[key];
-        if (!box) return;
-        const chip = document.createElement("div");
-        chip.className = "coach-chip";
-        chip.textContent = label;
-        chip.style.left = ((box[0] + box[2] / 2) / vb[2] * 100).toFixed(1) + "%";
-        chip.style.top = (((box[1] + box[3]) / vb[3] * 100) + 4).toFixed(1) + "%";
-        layer.appendChild(chip);
-    });
-    const done = document.createElement("button");
-    done.type = "button";
-    done.className = "coach-dismiss";
-    done.textContent = "알겠어요";
-    done.addEventListener("click", dismissCoach);
-    layer.appendChild(done);
-    stage.appendChild(layer);
-
-    // 기동은 전체 통전이라 별도의 전원 안내 단계는 없다 — 선국이 곧 첫 동선이다
-    svg.addEventListener("pointerdown", dismissCoach, { once: true });
-}
-
-function dismissCoach() {
-    document.querySelectorAll(".coach-layer").forEach((layer) => layer.remove());
-    saveJson("fmRadio.coachDone", true);
-}
-
 function restoreLastStation() {
     const lastId = loadJson("fmRadio.lastStation", null);
     const station = stations.find((item) => item.id === lastId);
@@ -7632,7 +7606,7 @@ function restoreLastStation() {
 
 renderStations();
 restoreLastStation();
-paintUnitPower();        // 저장된 유닛 전원 상태로 랙을 칠한다 (첫 설치 = 전부 꺼진 랙)
+paintUnitPower();        // 기동은 전체 통전, 실제 재생은 사용자가 시작한다.
 updateRecButton();
 openRecordingDb();
 initTunerSkin(loadJson("fmRadio.skin", "mr78"));
@@ -7653,7 +7627,6 @@ mountTurntable();
 mountSolo();
 applyUnitVisibility();
 startRackAnimationLoop();
-mountCoach();
 
 // ----- 트레이 앱 연동 (chrome=tray) -----
 // 프로토콜 검증과 이벤트 수명주기는 ESM이 맡고, 실제 재생 상태와 명령은 앱이 소유한다.
@@ -8953,6 +8926,31 @@ if (new URLSearchParams(location.search).get("boot") === "tv") {
         tvBootApply();
     }
 }
+
+// 첫 재생·취소 정책은 본체가, 안내 DOM과 구독 해제는 독립 모듈이 맡는다.
+window.MFA_ListeningControls = window.MFA.mountListeningControls({
+    read() {
+        const busy = listeningConnectionPending();
+        const ampOff = !soloActive() && !unitOn("amp");
+        const phonoOnly = soloIsPhono();
+        const name = currentStation ? currentStation.name : phonoActive || phonoOnly ? RECORD.title : deckMode === "play" ? "카세트 테이프" : "KBS 1FM · 93.1 MHz";
+        return {
+            state: audioState,
+            title: isPlaying ? name : busy ? "연결하고 있습니다" : phonoOnly ? name : currentStation ? name : "첫 곡을 시작해 볼까요",
+            hint: !currentStation && !phonoActive && playerSubtext.textContent === "원하는 채널을 누르면 바로 연결을 시도합니다."
+                ? "기기는 켜져 있습니다. 듣기 버튼을 누르면 재생을 시작합니다."
+                : playerSubtext.textContent,
+            action: busy ? "연결 취소" : ampOff ? "앰프 켜기" : isPlaying ? "일시정지" : phonoOnly && !phonoActive ? "음반 듣기" : audioState === "error" ? "다시 연결" : "▶ 듣기"
+        };
+    },
+    activate() {
+        resumeListeningAudio();
+        if (listeningConnectionPending()) { togglePlay(); return; }
+        if (!soloActive() && !unitOn("amp")) { ampPowerToggle(); return; }
+        if (soloIsPhono() && !phonoActive) { gvToggleBrake(); return; }
+        togglePlay();
+    }
+});
 
 // 관리·분석 기능은 독립 서버에 두고, 이 앱은 발급된 읽기 권한으로 음반만 가져온다.
 if (window.RadioArchiveClient && document.getElementById('archiveStatus')) {
