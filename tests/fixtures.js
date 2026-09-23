@@ -64,6 +64,16 @@ async function mockExternal(context) {
     await context.route(
         /^https?:\/\/(?!127\.0\.0\.1|mockstream\.test|cdn\.jsdelivr\.net|cfpwwwapi\.kbs\.co\.kr|www\.googletagmanager\.com).*/,
         (route) => route.abort("connectionrefused"));
+
+    // The player connects on startup. Keep unrelated UI tests independent of
+    // the live archive; archive-specific tests override this route afterwards.
+    await context.route("https://ducklove.duckdns.org/radio-archive/**", (route) => {
+        const headers = { "Access-Control-Allow-Origin": "http://127.0.0.1:8123" };
+        if (new URL(route.request().url()).pathname.endsWith("/player/albums")) {
+            return route.fulfill({ json: { version: 1, albums: [] }, headers });
+        }
+        return route.fulfill({ status: 404, headers });
+    });
 }
 
 // 테스트 실패 원인 추적용: 콘솔 오류·페이지 예외를 수집한다.
