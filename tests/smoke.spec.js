@@ -4,6 +4,10 @@
 const { test, expect } = require("@playwright/test");
 const { mockExternal, collectErrors, MOCK_AUDIO_URL } = require("./fixtures");
 
+// A controlling worker can bypass context.route on reload in WebKit.
+// These tests use mocked network responses; worker lifecycle has its own suite.
+test.use({ serviceWorkers: "block" });
+
 // 포노 트랙(위키미디어) 대역 — 재생이 지속되어야 하는 테스트용 합성 WAV (220Hz 사인)
 function makeWav(seconds) {
     const rate = 8000, n = rate * seconds;
