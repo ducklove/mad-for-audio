@@ -8955,7 +8955,10 @@ window.MFA_ListeningControls = window.MFA.mountListeningControls({
 // 관리·분석 기능은 독립 서버에 두고, 이 앱은 발급된 읽기 권한으로 음반만 가져온다.
 if (window.RadioArchiveClient && document.getElementById('archiveStatus')) {
     if (window.MFA_ARCHIVE_PAIR_TICKET) { openCrate();document.getElementById('archivePanel').open=true; }
-    RadioArchiveClient.init({onRecords:receiveArchiveRecords,onStatus:message=>{
+    RadioArchiveClient.init({onRecords:receiveArchiveRecords,onConnection:connection=>{
+        document.getElementById('archiveDisconnect').hidden=!!connection.public;
+        document.getElementById('archiveLocalLink').hidden=!!connection.public;
+    },onStatus:message=>{
         document.getElementById('archiveStatus').textContent=message;
     }});
     document.getElementById('archiveRefresh').onclick=async()=>{

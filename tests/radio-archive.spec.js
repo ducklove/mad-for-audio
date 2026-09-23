@@ -7,10 +7,10 @@ const fixture={version:1,albums:[{id:albumId,title:'내 사티 음반 <img src=x
     tracks:ids.map((id,i)=>({versionId:id,position:i,side:i===2?'B':'A',title:'개인 곡 '+i,composer:'사티',performer:'개인 연주자',durationSeconds:180,sizeBytes:4000000,review:i===0}))}]};
 const BASE='http://127.0.0.1:8766';
 function wav(){const rate=8000,n=rate*30,b=Buffer.alloc(44+n*2);b.write('RIFF');b.writeUInt32LE(36+n*2,4);b.write('WAVEfmt ',8);b.writeUInt32LE(16,16);b.writeUInt16LE(1,20);b.writeUInt16LE(1,22);b.writeUInt32LE(rate,24);b.writeUInt32LE(rate*2,28);b.writeUInt16LE(2,32);b.writeUInt16LE(16,34);b.write('data',36);b.writeUInt32LE(n*2,40);return b;}
-async function setup(context,page){
+async function setup(context,page,base=BASE){
     await mockExternal(context);const seen=[],pending=[];let hold=false;
-    await context.route(BASE+'/**',async route=>{
-        const req=route.request(),url=new URL(req.url());seen.push({path:url.pathname,auth:req.headers().authorization});
+    await context.route(base+'/**',async route=>{
+        const req=route.request(),url=new URL(req.url());url.pathname=url.pathname.replace(new URL(base).pathname.replace(/\/$/,''),'');seen.push({path:url.pathname,auth:req.headers().authorization});
         const headers={'Access-Control-Allow-Origin':'http://127.0.0.1:8123','Access-Control-Allow-Headers':'Authorization,Range','Access-Control-Allow-Methods':'GET,POST,OPTIONS'};
         if(req.method()==='OPTIONS')return route.fulfill({status:204,headers});
         if(url.pathname==='/player/pair')return route.fulfill({json:{clientId:albumId,token:'t'.repeat(54),expiresAt:Date.now()/1000+3600,scope:'albums:read audio:read'},headers});
@@ -90,4 +90,17 @@ test('방송 음반은 곡 간격을 지키고 정지하면 다음 곡 예약을
     await page.evaluate(()=>{playPhonoTrack(0);});await page.waitForFunction(()=>isPlaying && audio.currentTime>0);
     await page.evaluate(()=>{audio.dispatchEvent(new Event('ended'));stopPlay();});
     await page.waitForTimeout(400);expect(await page.evaluate(()=>phonoActive)).toBe(false);
+});
+
+
+test('공개 방송 보관함은 새 기기에서도 고정 HTTPS 주소로 자동 연결',async({context,page})=>{
+    const state=await setup(context,page,'https://ducklove.duckdns.org/radio-archive');
+    await ready(page,false);
+    await expect(page.locator('#archiveStatus')).toContainText('방송 보관함 1장 연결됨');
+    expect(state.seen.some(r=>r.path.endsWith('/pair'))).toBe(false);
+    expect(state.seen.every(r=>!r.auth)).toBe(true);
+    await expect(page.locator('#archiveDisconnect')).toBeHidden();
+    await expect(page.locator('#archiveLocalLink')).toBeHidden();
+    expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('fmRadio.archiveClient')).public)).toBe(true);
+    expect(state.errors).toEqual([]);
 });

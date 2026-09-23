@@ -43,12 +43,25 @@ test('remote pairing persists endpoint and media requests remain at that endpoin
     await assert.rejects(()=>next.api.audioUrl({host:'radio-archive',archiveAlbumId:id,archivePosition:0,id}));
 });
 
-test('bad server endpoints never receive a pairing credential; existing local connection remains compatible', async () => {
+test('bad server endpoints never receive a pairing credential; old local connection upgrades to the fixed public endpoint', async () => {
     for (const base of ['http://public.example','https://u:p@audio.example','https://audio.example/?token=x','https://audio.example/#token','javascript:alert(1)']) {
         const f=fixture({}, {MFA_ARCHIVE_PAIR_TICKET:'p'.repeat(43), MFA_ARCHIVE_SERVER_URL:base});
         f.api.init({onRecords:()=>{}, onStatus:()=>{}});await settle();assert.equal(f.requests.length,0);
     }
     const f=fixture({'fmRadio.archiveClient':JSON.stringify({token:'old-local-token'})});
     f.api.init({onRecords:()=>{}, onStatus:()=>{}});await settle();
-    assert.equal(f.requests[0].url,'http://127.0.0.1:8766/player/albums');
+    assert.equal(f.requests[0].url,remote+'/player/albums');
+    assert.equal(f.requests[0].options.headers.Authorization,undefined);
+});
+
+
+test('fresh install connects publicly without pairing or persisted credentials', async () => {
+    const f=fixture();const statuses=[];
+    f.api.init({onRecords:()=>{},onStatus:message=>statuses.push(message)});await settle();
+    assert.equal(f.requests.length,1);assert.equal(f.requests[0].url,remote+'/player/albums');
+    assert.equal(f.requests[0].options.headers.Authorization,undefined);
+    assert.equal(JSON.parse(f.saved.get('fmRadio.archiveClient')).token,undefined);
+    assert.ok(statuses.some(s=>s.includes('방송 보관함 0장 연결됨')));
+    await f.api.audioUrl({host:'radio-archive',archiveAlbumId:id,archivePosition:0,id});
+    assert.equal(f.requests[1].options.headers.Authorization,undefined);
 });
