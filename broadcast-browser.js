@@ -61,6 +61,7 @@
         renderTapes();renderSchedule();renderPending(!el('broadcastAlbumNote').hidden);
     }
     function appendSchedulePlayback(target,station,date,program){
+        date=String(date).replace(/^(\d{4})(\d{2})(\d{2})$/,'$1-$2-$3');
         for(const item of items){
             const minute=Number(item.startedAt.slice(11,13))*60+Number(item.startedAt.slice(14,16));
             if(item.stationId===station&&day(item)===date&&minute>=program.startMin&&minute<program.endMin){

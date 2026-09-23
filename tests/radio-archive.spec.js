@@ -134,7 +134,14 @@ test('방송 원본은 테이프·편성표, 방송별 곡은 별도 음반에�
     await expect.poll(()=>page.locator('audio[aria-label="방송 원본 재생"]').evaluate(a=>a.currentTime)).toBeGreaterThan(0);
     expect(await page.evaluate(()=>audio.paused)).toBe(true);
     await page.getByRole('button',{name:'재생 중지',exact:true}).click();
-    await page.evaluate(()=>{closeTapeCase();openSchedule();schedSetView('archive');});
+    await page.evaluate(()=>{
+        FMSchedule.getSchedule=async()=>({ymd:'20260924',items:[{startMin:540,endMin:660,title:'시험 방송'}]});
+        closeTapeCase();openSchedule();
+    });
+    await page.locator('#schedList').getByRole('button',{name:'시험 방송 방송 원본 듣기',exact:true}).click();
+    await expect(page.locator('#schedArchivePane')).toBeVisible();
+    await expect(page.locator('#archiveDate')).toHaveValue('2026-09-24');
+    await page.getByRole('button',{name:'재생 중지',exact:true}).click();
     await page.locator('#archiveDate').fill('2026-09-24');await page.locator('#archiveStation').selectOption('kbs1fm');
     await expect(page.locator('#archiveScheduleList [role="listitem"]')).toHaveCount(2);
     await page.locator('#archiveDate').fill('2026-09-25');await expect(page.locator('#archiveScheduleList [role="listitem"]')).toHaveCount(0);
