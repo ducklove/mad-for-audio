@@ -72,6 +72,9 @@ async function mockExternal(context) {
         if (new URL(route.request().url()).pathname.endsWith("/player/albums")) {
             return route.fulfill({ json: { version: 1, albums: [] }, headers });
         }
+        if (new URL(route.request().url()).pathname.endsWith("/player/broadcasts")) {
+            return route.fulfill({ json: { version: 1, broadcasts: [] }, headers });
+        }
         return route.fulfill({ status: 404, headers });
     });
 }

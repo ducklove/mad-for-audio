@@ -144,7 +144,7 @@
         const reservationPanel = document.getElementById("schedResPane");
         if (listPanel) {
             listPanel.setAttribute("role", "tabpanel");
-            if (selected.id !== "schedTabRes") listPanel.setAttribute("aria-labelledby", selected.id);
+            if (selected.id === "schedTabD0" || selected.id === "schedTabD1") listPanel.setAttribute("aria-labelledby", selected.id);
         }
         if (reservationPanel) {
             reservationPanel.setAttribute("role", "tabpanel");

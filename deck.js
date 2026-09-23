@@ -1286,6 +1286,7 @@ function tapeCaseMirrorMsg() {
 
 function openTapeCase() {
     renderTapeCase();
+    window.BroadcastBrowser?.openTapes();
     const msg = document.getElementById("tapeCaseMsg");
     if (msg) { msg.textContent = ""; msg.hidden = true; }
     document.getElementById("tapeCaseOverlay").hidden = false;

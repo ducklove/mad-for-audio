@@ -14,6 +14,7 @@ function fixture(initial = {}, globals = {}) {
             requests.push({url, options});
             const data = url.endsWith('/pair') ? {clientId:id,token:'t'.repeat(54),expiresAt:Date.now()/1000+3600,scope:'albums:read audio:read'}
                 : url.endsWith('/albums') ? {version:1,albums:[]}
+                : url.endsWith('/broadcasts') ? {version:1,broadcasts:[]}
                 : {path:'/player/audio/'+'a'.repeat(43),expiresIn:600};
             return {ok:true,json:async()=>data};
         }, ...globals });
@@ -58,10 +59,10 @@ test('bad server endpoints never receive a pairing credential; old local connect
 test('fresh install connects publicly without pairing or persisted credentials', async () => {
     const f=fixture();const statuses=[];
     f.api.init({onRecords:()=>{},onStatus:message=>statuses.push(message)});await settle();
-    assert.equal(f.requests.length,1);assert.equal(f.requests[0].url,remote+'/player/albums');
+    assert.equal(f.requests.length,2);assert.equal(f.requests[0].url,remote+'/player/albums');
     assert.equal(f.requests[0].options.headers.Authorization,undefined);
     assert.equal(JSON.parse(f.saved.get('fmRadio.archiveClient')).token,undefined);
-    assert.ok(statuses.some(s=>s.includes('방송 보관함 0장 연결됨')));
+    assert.ok(statuses.some(s=>s.includes('방송 원본 0건 · 방송 음반 0개')));
     await f.api.audioUrl({host:'radio-archive',archiveAlbumId:id,archivePosition:0,id});
     assert.equal(f.requests[1].options.headers.Authorization,undefined);
 });

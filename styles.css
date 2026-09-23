@@ -1,4 +1,18 @@
-@import url("./styles-foundation.css?v=191");
-@import url("./styles-library.css?v=191");
-@import url("./styles-schedule.css?v=191");
-@import url("./styles-tape.css?v=191");
+@import url("./styles-foundation.css?v=192");
+@import url("./styles-library.css?v=192");
+@import url("./styles-schedule.css?v=192");
+@import url("./styles-tape.css?v=192");
+
+/* Server broadcasts use their own shelves; existing tapes and records stay intact. */
+.archive-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.archive-tabs button,.archive-tools button,.archive-original-player button{font:inherit;padding:8px 12px;border:1px solid #a99d84;border-radius:6px;background:#eee6d5;color:#342e25;cursor:pointer}
+.archive-tabs button[aria-pressed="true"]{background:#403b31;color:#fff5dd;border-color:#403b31}
+.archive-note{font-size:13px;line-height:1.6;color:#706656;margin:10px 0}
+.archive-broadcast-row{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid #b9ae973d}
+.archive-broadcast-row>div{min-width:0}.archive-broadcast-row strong{font-size:14px;overflow-wrap:anywhere}
+.archive-broadcast-row p{font-size:12px;color:#81745f;margin:6px 0}.archive-broadcast-row button{flex-shrink:0}
+.archive-original-player{padding:14px;margin:12px 0;background:#d8cdb929;border:1px solid #ab9d7e66;border-radius:8px}
+.archive-original-player audio{display:block;width:100%;margin:12px 0}.archive-original-player p{font-size:12px;margin:8px 0}
+.archive-tools{flex-wrap:wrap}.archive-tools label{display:flex;align-items:center;gap:6px}
+#archiveTapeSearch{box-sizing:border-box;width:100%;padding:10px;font:inherit}#schedArchivePane{min-width:0}
+@media(max-width:520px){.archive-broadcast-row{align-items:flex-start;flex-direction:column}.sched-head,.sched-tabs{flex-wrap:wrap}.archive-tools input,.archive-tools select{max-width:100%}}

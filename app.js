@@ -3058,6 +3058,13 @@ function setRecord(i, opts) {
     }
     gtag('event', 'change_record', { record: RECORD.bwv });
 }
+
+function stepRecord(direction) {
+    for(let step=1;step<=RECORDS.length;step++){
+        const idx=(recordIdx+direction*step+RECORDS.length)%RECORDS.length,record=RECORDS[idx];
+        if(!!record.archiveBroadcast===!!RECORD.archiveBroadcast && (soloIsBoombox() || !recordIsTape(record))){setRecord(idx);return;}
+    }
+}
 let phonoActive = false;
 let radioStandby = null;   // 턴테이블 재생 중 튜닝해 둔 대기 방송국 (음반이 끝나면 연결)
 let phonoTrack = -1;
@@ -3600,8 +3607,8 @@ function mountTurntable() {
     });
     document.getElementById("tt33").addEventListener("click", () => { ttRpm45 = false; ttSyncCommonSpeed(33); applyRpmRate(); updatePhonoVisuals(); });
     document.getElementById("tt45").addEventListener("click", () => { ttRpm45 = true; ttSyncCommonSpeed(45); applyRpmRate(); updatePhonoVisuals(); });
-    document.getElementById("ttPrevRec").addEventListener("click", () => setRecord(recordIdx - 1));
-    document.getElementById("ttNextRec").addEventListener("click", () => setRecord(recordIdx + 1));
+    document.getElementById("ttPrevRec").addEventListener("click", () => stepRecord(-1));
+    document.getElementById("ttNextRec").addEventListener("click", () => stepRecord(1));
     document.getElementById("ttCrateBtn").addEventListener("click", openCrate);
     document.getElementById("ttCleanBtn").addEventListener("click", cleanRecord);
     // 바이닐 문지름 — 드래그 이동 속도가 스크래치 세기로 쌓인다 (회전 중일 때만 소리)
@@ -4136,8 +4143,8 @@ function mountVictorV() {
     soloOn("gvCrankHit", gvWindUp, "태엽 크랭크 — 스프링 모터 감기");
     soloOn("gvTinHit", gvChangeNeedle, "바늘통 — 새 강철 바늘로 교체");
     soloOn("gvCrateBtn", openCrate, "음반 수납장 열기");
-    soloOn("gvPrevRec", () => setRecord(recordIdx - 1), "이전 음반");
-    soloOn("gvNextRec", () => setRecord(recordIdx + 1), "다음 음반");
+    soloOn("gvPrevRec", () => stepRecord(-1), "이전 음반");
+    soloOn("gvNextRec", () => stepRecord(1), "다음 음반");
     (RECORD.tracks || []).forEach((tr, i) =>
         soloOn("gvTrackHit" + i, () => gvPlayTrack(i), tr.t + " 재생"));
     gvBindSpeed();
@@ -5621,7 +5628,7 @@ function jacketCard(rec, idx) {
     const badgeInk = rec.cover ? "#f0e8d0" : jc.sub;  // 배지가 이미지 위에 놓이므로 밝은 잉크 + CSS 배경띠
     const parts = [
         ["cj-num", badgeInk, String(idx + 1)],
-        ["cj-side", badgeInk, "SIDE " + (rec.side || "A")],
+        ["cj-side", badgeInk, rec.archiveBroadcast ? "방송 수록곡" : "SIDE " + (rec.side || "A")],
         ["cj-title", jc.title, rec.jTitle],
         ["cj-sub", jc.sub, rec.jSub1],
         ["cj-perf", jc.perf, rec.performer]
@@ -5683,6 +5690,13 @@ function fillCatalogSelect(select, allLabel, values, savedValue) {
     select.value = values.includes(savedValue) ? savedValue : "";
 }
 
+let crateSource = 'library';
+function setCrateSource(source) {
+    crateSource=source==='broadcast'?'broadcast':'library';
+    if(libraryMix.active)stopLibraryMix({stopAudio:false,silent:true});
+    document.getElementById('crateSearch').value='';document.getElementById('crateGenre').value='';
+    renderCrate();
+}
 function currentCrateFilters() {
     return {
         genre: document.getElementById("crateGenre").value,
@@ -5699,13 +5713,21 @@ function catalogFilterLabel(filters) {
 function filteredCatalogTracks(filters) {
     const candidates = filterCatalogTracks(RECORDS.map(record => record.archive ? {...record,tracks:record.archiveAllTracks} : record), filters || currentCrateFilters());
     // 붐박스 밖에서는 카세트 전용 레코드가 수납장·믹스 후보에 서지 않는다
-    return soloIsBoombox() ? candidates : candidates.filter((c) => !recordIsTape(c.record));
+    return candidates.filter(c=>(crateSource==='broadcast'?c.record.archiveBroadcast:!c.record.archiveBroadcast)
+        && (soloIsBoombox() || !recordIsTape(c.record)));
 }
 
 function renderCrate(q) {
     const grid = document.getElementById("crateGrid");
     const empty = document.getElementById("crateEmpty");
     renderArchiveSides();
+    const broadcast=crateSource==='broadcast';
+    document.getElementById('libraryAlbumsTab').setAttribute('aria-pressed',String(!broadcast));
+    document.getElementById('broadcastAlbumsTab').setAttribute('aria-pressed',String(broadcast));
+    document.getElementById('broadcastAlbumNote').hidden=!broadcast;
+    document.getElementById('crateMixBtn').hidden=broadcast;
+    document.getElementById('crateMixStatus').hidden=broadcast;
+    window.BroadcastBrowser?.renderPending(broadcast);
     grid.innerHTML = "";
     const filters = currentCrateFilters();
     if (typeof q === "string") filters.query = q.trim();
@@ -5719,7 +5741,7 @@ function renderCrate(q) {
     });
     empty.hidden = shown > 0;
     // 지금 선 기기에서 걸 수 있는 레코드만 센다 (붐박스 밖에서는 카세트 전용 제외)
-    const totalHere = soloIsBoombox() ? RECORDS.length : RECORDS.filter((rec) => !recordIsTape(rec)).length;
+    const totalHere = RECORDS.filter(rec=>(broadcast?rec.archiveBroadcast:!rec.archiveBroadcast) && (soloIsBoombox() || !recordIsTape(rec))).length;
     document.getElementById("crateCount").textContent =
         (filters.query || filters.genre)
             ? `${shown} / ${totalHere}장 · ${candidates.length}곡`
@@ -5752,7 +5774,7 @@ function renderArchiveSides() {
     const target = document.getElementById('archiveCurrentSide');
     if (!target) return;
     target.replaceChildren();
-    if (!RECORD.archive) return;
+    if (!RECORD.archive || RECORD.archiveBroadcast) return;
     const label = document.createElement('span');label.textContent = RECORD.title+' · ';
     target.append(label);
     for (const side of RECORD.archiveSides) {
@@ -6597,7 +6619,8 @@ function togglePlay() {
     updateActiveStation();
 }
 
-function stopPlay() {
+function stopPlay(options) {
+    if(!options?.fromArchive)window.BroadcastBrowser?.stop();
     if (!recIsMic) stopRecording();   // MIC 녹음은 본체 정지와 무관 — 계속 담는다
     resetRadioReconnect();
     PlaybackController.invalidate();
@@ -7739,8 +7762,10 @@ function schedSetView(view) {
     schedListEl.hidden = view !== "list";
     schedChipsEl.hidden = view !== "list";
     schedResPane.hidden = view !== "res";
+    document.getElementById('schedArchivePane').hidden=view!=='archive';
     if (view === "list") renderSched();
-    else renderResList();
+    else if(view==='res')renderResList();
+    else window.BroadcastBrowser?.renderSchedule();
     updateSchedTabs();
 }
 
@@ -7750,6 +7775,7 @@ function updateSchedTabs() {
     d0.classList.toggle("active", schedState.view === "list" && schedState.day === 0);
     document.getElementById("schedTabD1").classList.toggle("active", schedState.view === "list" && schedState.day === 1);
     document.getElementById("schedTabRes").classList.toggle("active", schedState.view === "res");
+    document.getElementById('schedTabArchive').classList.toggle('active',schedState.view==='archive');
     const n = reservations.filter((r) => r.enabled).length;
     const count = document.getElementById("schedResCount");
     count.hidden = !n;
@@ -7861,6 +7887,7 @@ async function renderSched() {
         main.appendChild(sub);
 
         row.append(time, main);
+        window.BroadcastBrowser?.appendSchedulePlayback(main,st.id,data.ymd,item);
 
         if (onair) {
             const badge = document.createElement("span");
@@ -8954,8 +8981,9 @@ window.MFA_ListeningControls = window.MFA.mountListeningControls({
 
 // 관리·분석 기능은 독립 서버에 두고, 이 앱은 발급된 읽기 권한으로 음반만 가져온다.
 if (window.RadioArchiveClient && document.getElementById('archiveStatus')) {
+    window.BroadcastBrowser?.init({stopRack:()=>stopPlay({fromArchive:true}),rackAudio:audio,rackGeneration:()=>PlaybackController.inspect().generation,canPlay:()=>!recorder && !activeResRec});
     if (window.MFA_ARCHIVE_PAIR_TICKET) { openCrate();document.getElementById('archivePanel').open=true; }
-    RadioArchiveClient.init({onRecords:receiveArchiveRecords,onConnection:connection=>{
+    RadioArchiveClient.init({onRecords:receiveArchiveRecords,onBroadcasts:items=>window.BroadcastBrowser?.receive(items),onConnection:connection=>{
         document.getElementById('archiveDisconnect').hidden=!!connection.public;
         document.getElementById('archiveLocalLink').hidden=!!connection.public;
     },onStatus:message=>{
