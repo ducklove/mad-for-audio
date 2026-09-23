@@ -59,11 +59,18 @@ test.describe("UI 접근성 제어 계층", () => {
         await expect(tomorrow).toHaveAttribute("aria-selected", "true");
         await expect(today).toHaveAttribute("tabindex", "-1");
 
-        await page.keyboard.press("End");
+        await page.keyboard.press("ArrowRight");
         await expect(reservations).toBeFocused();
         await expect(reservations).toHaveAttribute("aria-selected", "true");
         await expect(page.locator("#schedResPane")).toBeVisible();
         await expect(page.locator("#schedResPane")).toHaveAttribute("role", "tabpanel");
+        await page.keyboard.press("End");
+        const archive = page.getByRole("tab", { name: "방송 다시 듣기" });
+        await expect(archive).toBeFocused();
+        await expect(archive).toHaveAttribute("aria-selected", "true");
+        await expect(page.locator("#schedArchivePane")).toBeVisible();
+        await page.keyboard.press("Home");
+        await expect(today).toBeFocused();
     });
 
     test("동적 모델 피커·녹음·확대 버튼의 토글 의미를 정규화한다", async ({ page }) => {
