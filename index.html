@@ -29,6 +29,8 @@
         if (archiveFragment.has('radio-archive-pair')) {
             window.MFA_ARCHIVE_PAIR_TICKET = archiveFragment.get('radio-archive-pair');
             archiveFragment.delete('radio-archive-pair');
+            window.MFA_ARCHIVE_SERVER_URL = archiveFragment.get('radio-archive-server');
+            archiveFragment.delete('radio-archive-server');
             history.replaceState(null, '', location.pathname+location.search+(archiveFragment.size?'#'+archiveFragment.toString():''));
         }
         // 분석 스크립트는 켜자마자 받지 않는다 — TV에서 시작 직후 0.45초를 회선·CPU에서
@@ -49,7 +51,7 @@
     </script>
     <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-    <link rel="stylesheet" href="styles.css?v=189">
+    <link rel="stylesheet" href="styles.css?v=190">
 </head>
 <body class="app-loading mode-rack">
     <div class="page-shell">
@@ -314,27 +316,27 @@
 
     <audio id="audioPlayer" crossorigin="anonymous"></audio>
 
-    <script src="stations.js?v=189"></script>
-    <script src="player-core.js?v=189"></script>
-    <script src="native-hls-capture.js?v=189"></script>
-    <script src="store.js?v=189"></script>
-    <script src="schedule.js?v=189"></script>
-    <script src="skins.js?v=189"></script>
-    <script src="component-skins.js?v=189"></script>
-    <script src="solo-skins.js?v=189"></script>
-    <script src="reference-layouts.js?v=189"></script>
-    <script src="model-registry.js?v=189"></script>
-    <script src="animation-scheduler.js?v=189"></script>
-    <script src="listening-controls.js?v=189"></script>
-    <script src="engine.js?v=189"></script>
-    <script src="deck.js?v=189"></script>
-    <script src="radio-archive-client.js?v=189"></script>
-    <script src="bootstrap.js?v=189"></script>
-    <script src="ui-controls.js?v=189"></script>
+    <script src="stations.js?v=190"></script>
+    <script src="player-core.js?v=190"></script>
+    <script src="native-hls-capture.js?v=190"></script>
+    <script src="store.js?v=190"></script>
+    <script src="schedule.js?v=190"></script>
+    <script src="skins.js?v=190"></script>
+    <script src="component-skins.js?v=190"></script>
+    <script src="solo-skins.js?v=190"></script>
+    <script src="reference-layouts.js?v=190"></script>
+    <script src="model-registry.js?v=190"></script>
+    <script src="animation-scheduler.js?v=190"></script>
+    <script src="listening-controls.js?v=190"></script>
+    <script src="engine.js?v=190"></script>
+    <script src="deck.js?v=190"></script>
+    <script src="radio-archive-client.js?v=190"></script>
+    <script src="bootstrap.js?v=190"></script>
+    <script src="ui-controls.js?v=190"></script>
     <script>
         // 실행 중 버전 — 자산 링크의 ?v=가 단일 진실 (bump-version.py가 올린다)
         const RUNNING_ASSET_VERSION = (() => {
-            const link = document.querySelector('link[rel="stylesheet"][href^="styles.css?v=189"]');
+            const link = document.querySelector('link[rel="stylesheet"][href^="styles.css?v=190"]');
             const m = link && /[?&]v=(\d+)/.exec(link.getAttribute("href"));
             return m ? Number(m[1]) : null;
         })();
