@@ -43,15 +43,17 @@
                 labelBig: 'ARCHIVE', labelTitle: 'RADIO COLLECTION', labelArtist: 'PRIVATE LIBRARY' };
         });
     }
-    function broadcastsFromData(data) {
+    function broadcastsFromData(data, records = []) {
         if (!data || data.version !== 1 || !Array.isArray(data.broadcasts)) throw Error('방송 원본 목록 형식이 올바르지 않습니다.');
+        const musicAlbums = new Map(records.filter(record => record.archiveBroadcast).map(record => [record.archiveAlbumId, record]));
         return data.broadcasts.slice(0,1000).map(item => {
             if (!uuid.test(item.id) || !Number.isFinite(item.durationSeconds) || item.durationSeconds <= 0) throw Error('방송 정보가 올바르지 않습니다.');
             const original=recordsFromAlbums({version:1,albums:[item.original]})[0];
             if(original.archiveAllTracks.length!==1)throw Error('방송 원본 정보가 올바르지 않습니다.');
             return {id:item.id,title:text(item.title,'방송 녹음'),program:text(item.program),stationId:text(item.stationId),
                 startedAt:text(item.startedAt),durationSeconds:item.durationSeconds,original:original.archiveAllTracks[0],
-                musicAlbumId:uuid.test(item.musicAlbumId)?item.musicAlbumId:null,musicTrackCount:Number(item.musicTrackCount)||0};
+                musicAlbumId:uuid.test(item.musicAlbumId)?item.musicAlbumId:null,musicTrackCount:Number(item.musicTrackCount)||0,
+                musicTracks:(musicAlbums.get(item.musicAlbumId)?.archiveAllTracks || []).slice().sort((a,b)=>a.archivePosition-b.archivePosition)};
         });
     }
     let connection = null, notify = () => {}, receive = () => {}, receiveBroadcasts = () => {}, initialized = false, connectionEpoch = 0, onConnection = () => {};
@@ -81,7 +83,7 @@
         // 연결 해제·교체 뒤 늦게 도착한 목록이 개인 음반과 저장된 캐시를 되살리면 안 된다.
         if (connection !== requestedConnection) return [];
         const records = recordsFromAlbums(data);
-        const broadcasts=broadcastsFromData(broadcastData);
+        const broadcasts=broadcastsFromData(broadcastData, records);
         localStorage.setItem(CACHE, JSON.stringify(data));
         receive(records);receiveBroadcasts(broadcasts);status(`방송 원본 ${broadcasts.length}건 · 방송 음반 ${records.filter(r=>r.archiveBroadcast).length}개 · 서버 연결됨`);
         return records;

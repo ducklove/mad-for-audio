@@ -8,14 +8,37 @@
     const message=document.createElement('p');message.setAttribute('role','status');
     const audio=document.createElement('audio');audio.controls=true;audio.crossOrigin='anonymous';audio.preload='metadata';audio.setAttribute('aria-label','방송 원본 재생');
     const stopButton=document.createElement('button');stopButton.type='button';stopButton.textContent='재생 중지';
-    player.append(title,audio,stopButton,message);
+    const playerPlaylist=document.createElement('div');
+    player.append(title,audio,stopButton,message,playerPlaylist);
     function stop(){epoch++;pending?.abort();pending=null;audio.pause();audio.removeAttribute('src');audio.load();current=null;player.hidden=true;}
     stopButton.onclick=stop;
     function mount(where){el(where)?.append(player);}
     const day=item=>item.startedAt.slice(0,10);
     const duration=seconds=>`${Math.floor(seconds/60)}분 ${Math.floor(seconds%60)}초`;
+    function playlist(item,open=false){
+        const tracks=item.musicTracks || [];
+        const details=document.createElement('details');details.className='archive-playlist';details.open=open;
+        const summary=document.createElement('summary');summary.textContent='선곡표'+(tracks.length?' · '+tracks.length+'곡':'');
+        const note=document.createElement('p');note.className='archive-note';
+        note.textContent=tracks.length?'방송 음반에 수록된 곡 순서입니다.':item.musicAlbumId
+            ?'선곡표 정보를 아직 불러오지 못했습니다. 잠시 후 방송 음반을 새로고침해 주세요.'
+            :'곡 분리 준비 중입니다. 선곡표가 준비되면 여기에 표시됩니다.';
+        details.append(summary,note);
+        if(tracks.length){
+            const list=document.createElement('ol');
+            for(const track of tracks){
+                const row=document.createElement('li');
+                const name=document.createElement('strong');name.textContent=track.t || '곡명 미확인';
+                const credits=document.createElement('p');credits.textContent=[track.composer&&'작곡 '+track.composer,track.performer&&'연주 '+track.performer,duration(track.durationSeconds),track.review&&'검토 필요'].filter(Boolean).join(' · ');
+                row.append(name,credits);list.append(row);
+            }
+            details.append(list);
+        }
+        return details;
+    }
     async function play(item,where){
         mount(where);player.hidden=false;title.textContent=item.title;message.textContent='방송 원본을 준비합니다…';
+        playerPlaylist.replaceChildren(playlist(item,true));
         if(!options.canPlay()){message.textContent='진행 중인 녹음을 마친 뒤 재생해 주세요.';return;}
         options.stopRack();const generation=options.rackGeneration();
         const token=++epoch;pending?.abort();pending=new AbortController();audio.pause();current=item;
@@ -39,7 +62,8 @@
             const row=document.createElement('div');row.className='archive-broadcast-row';row.setAttribute('role','listitem');
             const info=document.createElement('div');const name=document.createElement('strong');name.textContent=item.title;
             const detail=document.createElement('p');detail.textContent=`${day(item)} ${item.startedAt.slice(11,16)} · ${duration(item.durationSeconds)} · ${item.musicAlbumId?'음악 '+item.musicTrackCount+'곡':'곡 분리 준비 중'}`;
-            info.append(name,detail);row.append(info,button(item,where));target.append(row);
+            const head=document.createElement('div');head.className='archive-broadcast-head';
+            info.append(name,detail);head.append(info,button(item,where));row.append(head,playlist(item));target.append(row);
         }
     }
     function renderTapes(){const q=el('archiveTapeSearch').value.trim().toLowerCase();list(el('archiveTapeList'),items.filter(i=>(i.title+' '+i.startedAt).toLowerCase().includes(q)),'archiveTapePlayer');}
@@ -56,6 +80,7 @@
     function receive(rows){
         items=rows.slice().sort((a,b)=>b.startedAt.localeCompare(a.startedAt));
         if(current&&!items.some(i=>i.id===current.id&&i.original.id===current.original.id))stop();
+        if(current){current=items.find(i=>i.id===current.id);playerPlaylist.replaceChildren(playlist(current,playerPlaylist.querySelector('details')?.open));}
         const select=el('archiveStation'),selected=select.value;select.replaceChildren(new Option('모든 채널',''));
         for(const station of [...new Set(items.map(i=>i.stationId))].filter(Boolean)){select.add(new Option(station==='kbs1fm'?'KBS 1FM':station==='kbs2fm'?'KBS 2FM':station,station));}select.value=selected;
         renderTapes();renderSchedule();renderPending(!el('broadcastAlbumNote').hidden);

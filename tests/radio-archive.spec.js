@@ -113,6 +113,61 @@ const broadcastFixture={id:'77777777-7777-4777-8777-777777777777',stationId:'kbs
     original:{...fixture.albums[0],id:rawId,title:'시험 방송 원본',tracks:[{...fixture.albums[0].tracks[0],title:'멘트 포함 방송 원본',durationSeconds:3600}]}};
 const musicFixture={...fixture.albums[0],id:musicId,title:'2026-09-24 시험 방송',category:'broadcast-music',tracks:fixture.albums[0].tracks.map(t=>({...t,side:'A'}))};
 
+test('방송 선곡표는 연결된 방송 음반의 모든 면을 순서대로 표시',()=>{
+    const album={...musicFixture,tracks:[...fixture.albums[0].tracks].reverse()};
+    const records=client.recordsFromAlbums({version:1,albums:[fixture.albums[0],album]});
+    const [broadcast]=client.broadcastsFromData({version:1,broadcasts:[broadcastFixture]},records);
+    expect(broadcast.musicTracks.map(t=>t.archivePosition)).toEqual([0,1,2]);
+    expect(broadcast.musicTracks[2].side).toBe('B');
+    expect(client.broadcastsFromData({version:1,broadcasts:[{...broadcastFixture,musicAlbumId:albumId}]},records)[0].musicTracks).toEqual([]);
+});
+
+test('테이프 보관함: 선곡표를 키보드로 열고 다시 듣기 중 확인하며 준비 상태를 표시',async({context,page,browserName})=>{
+    const album=structuredClone(musicFixture);
+    album.tracks[0].title='선곡 <img src=x onerror=alert(1)>';
+    const state=await setup(context,page,publicBase,{albums:{version:1,albums:[album]},broadcasts:[
+        broadcastFixture,
+        {...broadcastFixture,id:ids[0],title:'분리 대기 방송',musicAlbumId:null,musicTrackCount:0},
+        {...broadcastFixture,id:ids[1],title:'음반 누락 방송',musicAlbumId:ids[2]}
+    ]});
+    await ready(page,false);await expect(page.locator('#archiveStatus')).toContainText('방송 원본 3건');
+    // WebKit media bypasses request routing; use local audio for this UI test.
+    // Chromium exercises the mocked archive ticket and media requests above.
+    if(browserName==='webkit')await page.evaluate(()=>{
+        RadioArchiveClient.audioUrl=async()=>'/tests/.stream/sample.mp3';
+    });
+    await page.setViewportSize({width:390,height:844});
+    await page.evaluate(()=>openTapeCase());await page.click('#broadcastTapesTab');
+    const row=page.locator('#archiveTapeList > [role="listitem"]').filter({has:page.getByRole('button',{name:'시험 방송 방송 원본 듣기',exact:true})});
+    const summary=row.locator('summary');await summary.focus();await page.keyboard.press('Enter');
+    await expect(row.locator('details')).toHaveAttribute('open','');
+    await expect(row.locator('ol li')).toHaveCount(3);
+    await expect(row.locator('ol li').first()).toContainText('선곡 <img src=x onerror=alert(1)>');
+    await expect(row.locator('ol li').first()).toContainText('작곡 사티 · 연주 개인 연주자 · 3분 0초 · 검토 필요');
+    expect(state.seen.some(r=>r.path.includes('/tickets/'))).toBe(false);
+    await expect(row.locator('img')).toHaveCount(0);
+    expect(await page.locator('#broadcastTapePane').evaluate(e=>e.scrollWidth<=e.clientWidth)).toBe(true);
+    const pending=page.locator('#archiveTapeList > [role="listitem"]').filter({hasText:'분리 대기 방송'});
+    await pending.locator('summary').click();await expect(pending.locator('details')).toContainText('곡 분리 준비 중입니다');
+    const missing=page.locator('#archiveTapeList > [role="listitem"]').filter({hasText:'음반 누락 방송'});
+    await missing.locator('summary').click();await expect(missing.locator('details')).toContainText('선곡표 정보를 아직 불러오지 못했습니다');
+    await row.getByRole('button').click();
+    const player=page.locator('#archiveTapePlayer .archive-original-player');
+    await expect(player.locator('ol li')).toHaveCount(3);
+    await expect(player.locator('ol')).toBeVisible();
+    await expect.poll(()=>player.locator('audio').evaluate(a=>a.currentTime)).toBeGreaterThan(0);
+    await player.locator('summary').click();
+    expect(await player.locator('audio').evaluate(a=>a.paused)).toBe(false);
+    await page.evaluate(()=>{closeTapeCase();openSchedule();schedSetView('archive');});
+    await page.locator('#archiveDate').fill('2026-09-24');
+    const schedule=page.locator('#archiveScheduleList > [role="listitem"]').filter({has:page.getByRole('button',{name:'시험 방송 방송 원본 듣기',exact:true})});
+    await schedule.locator('summary').click();await expect(schedule.locator('ol li')).toHaveCount(3);
+    await page.evaluate(()=>RadioArchiveClient.disconnect());
+    await expect(page.locator('.archive-original-player')).toBeHidden();
+    await expect(page.locator('#archiveScheduleList')).not.toContainText('선곡 <img');
+    expect(state.errors).toEqual([]);
+});
+
 test('방송 원본은 테이프·편성표, 방송별 곡은 별도 음반에만 표시하고 기존 보관함을 유지',async({context,page})=>{
     await setup(context,page,publicBase,{albums:{version:1,albums:[fixture.albums[0],musicFixture]},broadcasts:[broadcastFixture,{...broadcastFixture,id:ids[0],title:'분리 대기 방송',musicAlbumId:null,musicTrackCount:0}]});
     await ready(page,false);await expect(page.locator('#archiveStatus')).toContainText('방송 원본 2건');
