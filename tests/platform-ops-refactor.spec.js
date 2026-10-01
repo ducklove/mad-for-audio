@@ -43,7 +43,7 @@ test.describe("플랫폼 운영 리팩토링", () => {
         expect(shell).toContain("data.nonce !== load.nonce");
         expect(shell).toContain('origin: isOpaqueFile ? "null" : url.origin');
         expect(shell).toContain('targetOrigin: target.opaque ? "*" : target.origin');
-        expect(pkg.devDependencies.electron).toBe("43.1.1");
+        expect(pkg.devDependencies.electron).toBe("43.7.7");
         expect(pkg.devDependencies["electron-builder"]).toBe("26.15.3");
         expect(pkg.engines.node).toBe(">=22.12.0");
     });
