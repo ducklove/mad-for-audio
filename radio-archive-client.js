@@ -119,6 +119,19 @@
     }
     function cachedAudioUrl(track) { const cached=audioCache.get(track?.id);return cached&&cached.expires>Date.now()+15000?cached.url:''; }
     function invalidateAudioUrl(track) { audioCache.delete(track?.id); }
+    async function downloadMp3(track) {
+        if (!connection || !track || track.host!=='radio-archive' || !uuid.test(track.archiveAlbumId) || track.archivePosition!==0)
+            throw Error('방송 원본의 다운로드 정보가 올바르지 않습니다.');
+        const currentConnection=connection;
+        const result=await request(`/player/albums/${track.archiveAlbumId}/downloads`,
+            {method:'POST',signal:AbortSignal.timeout(300000)});
+        if(connection!==currentConnection)throw Error('서버 연결이 바뀌었습니다. 방송을 다시 선택하세요.');
+        if(!/^\/player\/downloads\/[A-Za-z0-9_-]{40,100}$/.test(result.path) || typeof result.filename!=='string'
+            || !result.filename.endsWith('.mp3') || !Number.isFinite(result.bytes) || result.bytes<=0
+            || !Number.isFinite(result.expiresIn) || result.expiresIn<=0)throw Error('MP3 다운로드 정보를 확인하지 못했습니다.');
+        return {...result,url:serverBase(currentConnection.serverUrl || LOCAL_BASE)+result.path,
+            expires:Date.now()+result.expiresIn*1000};
+    }
     function init(options) {
         if (initialized) return;initialized = true;
         receive = options.onRecords;receiveBroadcasts=options.onBroadcasts || (()=>{});notify = options.onStatus;connection = read(KEY);onConnection = options.onConnection || (() => {});
@@ -135,7 +148,7 @@
             status('방송 음반 서버를 확인합니다.');void refresh().catch(error => status(error.message));
         }
     }
-    const api = { serverBase, recordsFromAlbums, broadcastsFromData, init, refresh, disconnect, audioUrl, cachedAudioUrl, invalidateAudioUrl };
+    const api = { serverBase, recordsFromAlbums, broadcastsFromData, init, refresh, disconnect, audioUrl, cachedAudioUrl, invalidateAudioUrl,downloadMp3 };
     root.RadioArchiveClient = api;
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window === 'undefined' ? globalThis : window);

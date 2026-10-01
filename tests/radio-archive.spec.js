@@ -113,6 +113,81 @@ const broadcastFixture={id:'77777777-7777-4777-8777-777777777777',stationId:'kbs
     original:{...fixture.albums[0],id:rawId,title:'시험 방송 원본',tracks:[{...fixture.albums[0].tracks[0],title:'멘트 포함 방송 원본',durationSeconds:3600}]}};
 const musicFixture={...fixture.albums[0],id:musicId,title:'2026-09-24 시험 방송',category:'broadcast-music',tracks:fixture.albums[0].tracks.map(t=>({...t,side:'A'}))};
 
+test('테이프 보관함 MP3 다운로드는 아이폰 폭에서 준비 후 일반 파일 저장으로 동작',async({context,page,browserName})=>{
+    const fs=require('fs'),path=require('path');
+    const body=fs.readFileSync(path.join(__dirname,'.stream/sample.mp3'));
+    const state=await setup(context,page,publicBase,{broadcasts:[broadcastFixture]});
+    let preparations=0,downloadRequest,release;
+    let server;
+    const held=new Promise(resolve=>{release=resolve;});
+    const filename='2026-09-24 시험 방송.mp3',downloadPath='/player/downloads/'+'d'.repeat(43);
+    // Native WebKit file downloads also bypass intercepted response bodies.
+    // Supply a real local attachment response for that browser.
+    if(browserName==='webkit'){
+        server=require('http').createServer((req,res)=>{
+            downloadRequest={headers:()=>req.headers};
+            res.writeHead(200,{'Content-Type':'audio/mpeg','Content-Length':body.length,
+                'Content-Disposition':"attachment; filename*=utf-8''"+encodeURIComponent(filename)});res.end(body);
+        });
+        await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));server.unref();
+    }
+    await context.route(publicBase+'/player/albums/'+rawId+'/downloads',async route=>{
+        if(route.request().method()==='OPTIONS')return route.fulfill({status:204,headers:{
+            'Access-Control-Allow-Origin':'http://127.0.0.1:8123','Access-Control-Allow-Methods':'POST',
+            'Access-Control-Allow-Headers':'Authorization,Range,Content-Type'}});
+        preparations++;await held;
+        await route.fulfill({json:{path:downloadPath,filename,bytes:body.length,expiresIn:3600,bitrateKbps:192},
+            headers:{'Access-Control-Allow-Origin':'http://127.0.0.1:8123'}});
+    });
+    await context.route(publicBase+downloadPath,async route=>{
+        downloadRequest=route.request();
+        await route.fulfill({body,contentType:'audio/mpeg',headers:{'Content-Disposition':"attachment; filename*=utf-8''"+encodeURIComponent(filename)}});
+    });
+    await page.setViewportSize({width:390,height:844});await ready(page,false);
+    // WebKit's native HTTPS preflights bypass Playwright routing. Keep this UI
+    // test offline; real CORS/preparation is covered by gateway and live tests.
+    if(browserName==='webkit')await page.evaluate(()=>{
+        window.downloadPreparations=0;
+        RadioArchiveClient.downloadMp3=()=>{window.downloadPreparations++;return new Promise(resolve=>{window.releaseMp3=resolve;});};
+    });
+    await page.evaluate(()=>openTapeCase());await page.click('#broadcastTapesTab');
+    const row=page.locator('#archiveTapeList [role=listitem]').first();
+    await row.getByRole('button',{name:'시험 방송 MP3 다운로드',exact:true}).click();
+    await expect(row.getByRole('button',{name:'시험 방송 MP3 다운로드',exact:true})).toBeDisabled();
+    await expect(row.locator('.archive-download [role=status]')).toContainText('준비합니다');
+    if(browserName==='webkit'){
+        expect(await page.evaluate(()=>window.downloadPreparations)).toBe(1);
+        await page.evaluate(file=>window.releaseMp3(file),{url:'http://127.0.0.1:'+server.address().port+'/broadcast.mp3',filename,bytes:body.length,expires:Date.now()+3600000});
+    }else{await expect.poll(()=>preparations).toBe(1);release();}
+    const link=row.getByRole('link',{name:'시험 방송 MP3 파일 저장',exact:true});
+    await expect(link).toBeVisible();await expect(link).toHaveAttribute('download',filename);
+    await expect(link).toHaveAttribute('referrerpolicy','no-referrer');
+    expect(await page.locator('#broadcastTapePane').evaluate(e=>e.scrollWidth<=e.clientWidth)).toBe(true);
+    const downloaded=page.waitForEvent('download');await link.click();const file=await downloaded;
+    expect(file.suggestedFilename().normalize('NFC')).toBe(filename);expect(await file.failure()).toBe(null);
+    expect(fs.readFileSync(await file.path())).toEqual(body);
+    expect(downloadRequest.headers().authorization).toBeUndefined();expect(downloadRequest.headers().origin).toBeUndefined();
+    expect(state.seen.some(r=>r.path.includes('/tickets/'))).toBe(false);
+    await expect(page.locator('.archive-original-player')).toBeHidden();expect(state.errors).toEqual([]);
+    if(server)server.close();
+});
+
+test('테이프 보관함 MP3 준비 실패는 오류와 다시 시도 버튼을 표시',async({context,page,browserName})=>{
+    await setup(context,page,publicBase,{broadcasts:[broadcastFixture]});
+    await context.route(publicBase+'/player/albums/'+rawId+'/downloads',route=>route.request().method()==='OPTIONS'
+        ?route.fulfill({status:204,headers:{'Access-Control-Allow-Origin':'http://127.0.0.1:8123',
+            'Access-Control-Allow-Methods':'POST','Access-Control-Allow-Headers':'Authorization,Range,Content-Type'}})
+        :route.fulfill({status:409,json:{detail:'방송 파일 확인 필요'},headers:{'Access-Control-Allow-Origin':'http://127.0.0.1:8123'}}));
+    await ready(page,false);
+    if(browserName==='webkit')await page.evaluate(()=>{RadioArchiveClient.downloadMp3=async()=>{throw Error('방송 파일 확인 필요');};});
+    await page.evaluate(()=>openTapeCase());await page.click('#broadcastTapesTab');
+    const row=page.locator('#archiveTapeList [role=listitem]').first();
+    await row.getByRole('button',{name:'시험 방송 MP3 다운로드',exact:true}).click();
+    await expect(row.locator('.archive-download [role=status]')).toContainText('방송 파일 확인 필요');
+    await expect(row.getByRole('button',{name:'시험 방송 MP3 다운로드',exact:true})).toBeEnabled();
+    await expect(row.locator('.archive-download a')).toBeHidden();
+});
+
 test('방송 선곡표는 연결된 방송 음반의 모든 면을 순서대로 표시',()=>{
     const album={...musicFixture,tracks:[...fixture.albums[0].tracks].reverse()};
     const records=client.recordsFromAlbums({version:1,albums:[fixture.albums[0],album]});
@@ -151,7 +226,7 @@ test('테이프 보관함: 선곡표를 키보드로 열고 다시 듣기 중 �
     await pending.locator('summary').click();await expect(pending.locator('details')).toContainText('곡 분리 준비 중입니다');
     const missing=page.locator('#archiveTapeList > [role="listitem"]').filter({hasText:'음반 누락 방송'});
     await missing.locator('summary').click();await expect(missing.locator('details')).toContainText('선곡표 정보를 아직 불러오지 못했습니다');
-    await row.getByRole('button').click();
+    await row.getByRole('button',{name:'시험 방송 방송 원본 듣기',exact:true}).click();
     const player=page.locator('#archiveTapePlayer .archive-original-player');
     await expect(player.locator('ol li')).toHaveCount(3);
     await expect(player.locator('ol')).toBeVisible();

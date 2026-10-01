@@ -1,7 +1,7 @@
-@import url("./styles-foundation.css?v=194");
-@import url("./styles-library.css?v=194");
-@import url("./styles-schedule.css?v=194");
-@import url("./styles-tape.css?v=194");
+@import url("./styles-foundation.css?v=195");
+@import url("./styles-library.css?v=195");
+@import url("./styles-schedule.css?v=195");
+@import url("./styles-tape.css?v=195");
 
 /* Server broadcasts use their own shelves; existing tapes and records stay intact. */
 .archive-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
@@ -11,6 +11,10 @@
 .archive-broadcast-row{padding:14px 0;border-bottom:1px solid #b9ae973d}
 .archive-broadcast-head{display:flex;gap:12px;align-items:center;justify-content:space-between}
 .archive-broadcast-head>div{min-width:0}
+.archive-broadcast-actions{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap;justify-content:flex-end}
+.archive-download{max-width:280px}.archive-download a{display:inline-block;text-decoration:none;box-sizing:border-box;font:inherit;padding:8px 12px;border:1px solid #a99d84;border-radius:6px;background:#eee6d5;color:#342e25}
+.archive-download a[hidden]{display:none}.archive-download p{max-width:280px;line-height:1.5}
+.archive-download button:disabled{cursor:wait;opacity:.7}
 .archive-broadcast-row>div{min-width:0}.archive-broadcast-row strong{font-size:14px;overflow-wrap:anywhere}
 .archive-broadcast-row p{font-size:12px;color:#81745f;margin:6px 0}.archive-broadcast-row button{flex-shrink:0}
 .archive-original-player{padding:14px;margin:12px 0;background:#d8cdb929;border:1px solid #ab9d7e66;border-radius:8px}

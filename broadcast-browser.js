@@ -2,6 +2,7 @@
 (function(root){
     'use strict';
     let items=[],options={},epoch=0,pending=null,current=null;
+    const downloads=new Map();
     const el=id=>document.getElementById(id);
     const player=document.createElement('section');player.className='archive-original-player';player.hidden=true;
     const title=document.createElement('strong');
@@ -55,6 +56,36 @@
     });
     audio.addEventListener('error',()=>{if(current){root.RadioArchiveClient.invalidateAudioUrl(current.original);message.textContent='방송을 불러오지 못했습니다. 원본 듣기를 다시 눌러 주세요.';}});
     function button(item,where){const b=document.createElement('button');b.type='button';b.className='rec-btn';b.textContent='▶ 방송 원본 듣기';b.setAttribute('aria-label',item.title+' 방송 원본 듣기');b.onclick=()=>void play(item,where);return b;}
+    function downloadButton(item){
+        const container=document.createElement('div');container.className='archive-download';
+        const b=document.createElement('button');b.type='button';b.className='rec-btn';
+        b.setAttribute('aria-label',item.title+' MP3 다운로드');
+        const link=document.createElement('a');link.className='rec-btn';link.textContent='MP3 파일 저장';link.hidden=true;link.rel='noopener';link.referrerPolicy='no-referrer';
+        link.setAttribute('aria-label',item.title+' MP3 파일 저장');
+        const note=document.createElement('p');note.setAttribute('role','status');note.hidden=true;
+        const key=item.original.id;
+        function render(){
+            const state=downloads.get(key);
+            if(state?.file && state.file.expires>Date.now()+15000){
+                link.href=state.file.url;link.download=state.file.filename;link.hidden=false;b.hidden=true;
+                note.hidden=false;note.textContent=`${(state.file.bytes/1000000).toFixed(1)} MB · 아이폰은 Safari에서 저장 후 파일 앱에서 확인하세요.`;
+            }else{
+                link.hidden=true;link.removeAttribute('href');b.hidden=false;b.disabled=!!state?.pending;
+                b.textContent=state?.pending?'MP3 준비 중…':'MP3 다운로드';
+                note.hidden=!state?.pending&&!state?.error;
+                note.textContent=state?.error || '방송 전체를 준비합니다. 첫 변환은 시간이 걸릴 수 있습니다.';
+            }
+        }
+        b.onclick=()=>{
+            if(downloads.get(key)?.pending)return;
+            const state={pending:true};downloads.set(key,state);render();
+            state.promise=root.RadioArchiveClient.downloadMp3(item.original).then(file=>{state.file=file;},error=>{state.error=error.message;})
+                .finally(()=>{state.pending=false;render();});
+        };
+        const state=downloads.get(key);if(state?.pending)void state.promise?.then(render);
+        link.onclick=event=>{if(downloads.get(key)?.file?.expires<=Date.now()){event.preventDefault();downloads.delete(key);render();}};
+        container.append(b,link,note);render();return container;
+    }
     function list(target,rows,where){
         target.replaceChildren();
         if(!rows.length){const p=document.createElement('p');p.className='archive-note';p.textContent='이 조건에 맞는 완료된 방송 녹음이 없습니다.';target.append(p);return;}
@@ -63,7 +94,8 @@
             const info=document.createElement('div');const name=document.createElement('strong');name.textContent=item.title;
             const detail=document.createElement('p');detail.textContent=`${day(item)} ${item.startedAt.slice(11,16)} · ${duration(item.durationSeconds)} · ${item.musicAlbumId?'음악 '+item.musicTrackCount+'곡':'곡 분리 준비 중'}`;
             const head=document.createElement('div');head.className='archive-broadcast-head';
-            info.append(name,detail);head.append(info,button(item,where));row.append(head,playlist(item));target.append(row);
+            const actions=document.createElement('div');actions.className='archive-broadcast-actions';actions.append(button(item,where),downloadButton(item));
+            info.append(name,detail);head.append(info,actions);row.append(head,playlist(item));target.append(row);
         }
     }
     function renderTapes(){const q=el('archiveTapeSearch').value.trim().toLowerCase();list(el('archiveTapeList'),items.filter(i=>(i.title+' '+i.startedAt).toLowerCase().includes(q)),'archiveTapePlayer');}
@@ -91,6 +123,7 @@
             const minute=Number(item.startedAt.slice(11,13))*60+Number(item.startedAt.slice(14,16));
             if(item.stationId===station&&day(item)===date&&minute>=program.startMin&&minute<program.endMin){
                 const b=button(item,'archiveSchedulePlayer');b.onclick=()=>{root.schedSetView('archive');el('archiveDate').value=date;el('archiveStation').value=station;renderSchedule();void play(item,'archiveSchedulePlayer');};target.append(b);
+                target.append(downloadButton(item));
             }
         }
     }
