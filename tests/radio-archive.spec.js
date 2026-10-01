@@ -125,7 +125,7 @@ test('테이프 보관함 MP3 다운로드는 아이폰 폭에서 준비 후 일
     // Supply a real local attachment response for that browser.
     if(browserName==='webkit'){
         server=require('http').createServer((req,res)=>{
-            downloadRequest={headers:()=>req.headers};
+            downloadRequest??={headers:()=>req.headers};
             res.writeHead(200,{'Content-Type':'audio/mpeg','Content-Length':body.length,
                 'Content-Disposition':"attachment; filename*=utf-8''"+encodeURIComponent(filename)});res.end(body);
         });
@@ -163,12 +163,26 @@ test('테이프 보관함 MP3 다운로드는 아이폰 폭에서 준비 후 일
     await expect(link).toBeVisible();await expect(link).toHaveAttribute('download',filename);
     await expect(link).toHaveAttribute('referrerpolicy','no-referrer');
     expect(await page.locator('#broadcastTapePane').evaluate(e=>e.scrollWidth<=e.clientWidth)).toBe(true);
-    const downloaded=page.waitForEvent('download');await link.click();const file=await downloaded;
-    expect(file.suggestedFilename().normalize('NFC')).toBe(filename);expect(await file.failure()).toBe(null);
-    expect(fs.readFileSync(await file.path())).toEqual(body);
-    expect(downloadRequest.headers().authorization).toBeUndefined();expect(downloadRequest.headers().origin).toBeUndefined();
     expect(state.seen.some(r=>r.path.includes('/tickets/'))).toBe(false);
     await expect(page.locator('.archive-original-player')).toBeHidden();expect(state.errors).toEqual([]);
+    if(browserName==='webkit'&&process.platform==='linux'){
+        // Playwright's Linux WebKit displays media attachments instead of
+        // emitting download events: https://github.com/microsoft/playwright/issues/34076
+        // Keep the real navigation/header/byte checks here; macOS CI below
+        // additionally verifies WebKit's native file save, as Safari does.
+        const url=await link.getAttribute('href');
+        const responsePromise=page.waitForResponse(r=>r.url()===url&&r.request().resourceType()==='document');
+        await link.click();const response=await responsePromise;
+        expect(response.status()).toBe(200);
+        expect(response.headers()['content-disposition']).toBe("attachment; filename*=utf-8''"+encodeURIComponent(filename));
+        const attachment=await context.request.get(url);
+        expect(attachment.status()).toBe(200);expect(await attachment.body()).toEqual(body);
+    }else{
+        const downloaded=page.waitForEvent('download');await link.click();const file=await downloaded;
+        expect(file.suggestedFilename().normalize('NFC')).toBe(filename);expect(await file.failure()).toBe(null);
+        expect(fs.readFileSync(await file.path())).toEqual(body);
+    }
+    expect(downloadRequest.headers().authorization).toBeUndefined();expect(downloadRequest.headers().origin).toBeUndefined();
     if(server)server.close();
 });
 

@@ -6,6 +6,34 @@ on:
   pull_request:
 
 jobs:
+  safari-download:
+    # Linux WebKit handles media attachments differently from Safari. Verify
+    # the native MP3 file-save path on Apple's platform as well.
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tests/package-lock.json
+      - name: 의존성 설치
+        working-directory: tests
+        run: npm ci
+      - name: WebKit 설치
+        working-directory: tests
+        run: npx playwright install webkit
+      - name: Safari MP3 준비·파일 저장·재시도 검증
+        working-directory: tests
+        run: npm test -- --project=webkit --grep '테이프 보관함 MP3'
+      - name: 실패 기록 업로드
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: safari-download-results
+          path: tests/test-results/
+          retention-days: 7
+
   dependency-audit:
     runs-on: ubuntu-latest
     steps:
