@@ -5617,6 +5617,18 @@ function jacketCard(rec, idx) {
     btn.style.background = rec.jacketBg;
     btn.setAttribute("role", "listitem");
     btn.setAttribute("aria-label", [rec.title, rec.artist || rec.performer].filter(Boolean).join(" · "));
+    if (rec.archiveBroadcast) {
+        btn.classList.add('archive-album-card');
+        for (const [className, text] of [
+            ['archive-album-title', rec.title],
+            ['archive-album-meta', `${rec.archiveAllTracks.length}곡 · ${rec.performer}`]
+        ]) {
+            const part = document.createElement('span');
+            part.className = className;part.textContent = text;btn.append(part);
+        }
+        btn.addEventListener('click', () => pickRecord(idx));
+        return btn;
+    }
     if (rec.cover) {
         // 턴테이블 큰 재킷과 같은 구성 — 위쪽은 커버 이미지, 글자는 아래 단색 밴드에만 얹는다
         btn.classList.add("has-cover");
@@ -5722,6 +5734,7 @@ function renderCrate(q) {
     const empty = document.getElementById("crateEmpty");
     renderArchiveSides();
     const broadcast=crateSource==='broadcast';
+    grid.classList.toggle('archive-album-list',broadcast);
     document.getElementById('libraryAlbumsTab').setAttribute('aria-pressed',String(!broadcast));
     document.getElementById('broadcastAlbumsTab').setAttribute('aria-pressed',String(broadcast));
     document.getElementById('broadcastAlbumNote').hidden=!broadcast;
@@ -7739,7 +7752,7 @@ function openSchedule(view) {
     schedOverlayEl.hidden = false;
     renderSchedChips();
     populateResForm();
-    schedSetView(view === "res" ? "res" : "list");
+    schedSetView(['res','archive'].includes(view) ? view : 'list');
     gtag('event', 'open_schedule', { station_id: schedState.stationId });
 }
 
@@ -7763,6 +7776,9 @@ function schedSetView(view) {
     schedChipsEl.hidden = view !== "list";
     schedResPane.hidden = view !== "res";
     document.getElementById('schedArchivePane').hidden=view!=='archive';
+    document.getElementById('schedTitle').textContent=view==='archive'?'방송 다시 듣기':'편성표';
+    schedOverlayEl.querySelector('[role="dialog"]').setAttribute('aria-label',view==='archive'?'방송 다시 듣기':'편성표와 예약 녹음');
+    document.getElementById('schedNote').hidden=view==='archive';
     if (view === "list") renderSched();
     else if(view==='res')renderResList();
     else window.BroadcastBrowser?.renderSchedule();
@@ -8981,17 +8997,23 @@ window.MFA_ListeningControls = window.MFA.mountListeningControls({
 
 // 관리·분석 기능은 독립 서버에 두고, 이 앱은 발급된 읽기 권한으로 음반만 가져온다.
 if (window.RadioArchiveClient && document.getElementById('archiveStatus')) {
-    window.BroadcastBrowser?.init({stopRack:()=>stopPlay({fromArchive:true}),rackAudio:audio,rackGeneration:()=>PlaybackController.inspect().generation,canPlay:()=>!recorder && !activeResRec});
+    window.BroadcastBrowser?.init({stopRack:()=>stopPlay({fromArchive:true}),rackAudio:audio,rackGeneration:()=>PlaybackController.inspect().generation,canPlay:()=>!recorder && !activeResRec,
+        openMusic:albumId=>{
+            const index=RECORDS.findIndex(record=>record.archiveAlbumId===albumId && record.archiveBroadcast);
+            if(index<0)return;
+            closeSchedule();closeTapeCase();pickRecord(index);playPhonoTrack(0);
+        }});
     if (window.MFA_ARCHIVE_PAIR_TICKET) { openCrate();document.getElementById('archivePanel').open=true; }
     RadioArchiveClient.init({onRecords:receiveArchiveRecords,onBroadcasts:items=>window.BroadcastBrowser?.receive(items),onConnection:connection=>{
         document.getElementById('archiveDisconnect').hidden=!!connection.public;
         document.getElementById('archiveLocalLink').hidden=!!connection.public;
-    },onStatus:message=>{
+    },onStatus:(message,state)=>{
         document.getElementById('archiveStatus').textContent=message;
+        window.BroadcastBrowser?.setConnectionState(message,state);
     }});
     document.getElementById('archiveRefresh').onclick=async()=>{
         const button=document.getElementById('archiveRefresh');button.disabled=true;
-        try{await RadioArchiveClient.refresh();}catch(error){document.getElementById('archiveStatus').textContent=error.message;}
+        try{await RadioArchiveClient.refresh();}catch(_){}
         finally{button.disabled=false;}
     };
     document.getElementById('archiveDisconnect').onclick=()=>RadioArchiveClient.disconnect();

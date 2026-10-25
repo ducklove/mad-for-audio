@@ -56,10 +56,10 @@
                 musicTracks:(musicAlbums.get(item.musicAlbumId)?.archiveAllTracks || []).slice().sort((a,b)=>a.archivePosition-b.archivePosition)};
         });
     }
-    let connection = null, notify = () => {}, receive = () => {}, receiveBroadcasts = () => {}, initialized = false, connectionEpoch = 0, onConnection = () => {};
+    let connection = null, notify = () => {}, receive = () => {}, receiveBroadcasts = () => {}, initialized = false, connectionEpoch = 0, onConnection = () => {}, lastRefreshAt = 0;
     const audioCache = new Map();
     function read(key) { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch (_) { return null; } }
-    function status(message) { notify(message); }
+    function status(message, state = {}) { notify(message, {...state,lastRefreshAt}); }
     async function request(path, options = {}, bearer, base = serverBase(connection?.serverUrl || LOCAL_BASE)) {
         let response;
         try {
@@ -77,16 +77,23 @@
     async function refresh() {
         if (!connection) { connection = {serverUrl: PUBLIC_BASE, public: true};onConnection(connection); }
         const requestedConnection = connection;
-        const [data,broadcastData] = await Promise.all([request('/player/albums'),request('/player/broadcasts').catch(error=>{
-            if(error.status===404)return {version:1,broadcasts:[]};throw error;
-        })]);
-        // 연결 해제·교체 뒤 늦게 도착한 목록이 개인 음반과 저장된 캐시를 되살리면 안 된다.
-        if (connection !== requestedConnection) return [];
-        const records = recordsFromAlbums(data);
-        const broadcasts=broadcastsFromData(broadcastData, records);
-        localStorage.setItem(CACHE, JSON.stringify(data));
-        receive(records);receiveBroadcasts(broadcasts);status(`방송 원본 ${broadcasts.length}건 · 방송 음반 ${records.filter(r=>r.archiveBroadcast).length}개 · 서버 연결됨`);
-        return records;
+        status('최신 방송 목록을 불러오는 중입니다.',{phase:'loading'});
+        try {
+            const [data,broadcastData] = await Promise.all([request('/player/albums'),request('/player/broadcasts').catch(error=>{
+                if(error.status===404)return {version:1,broadcasts:[]};throw error;
+            })]);
+            // 연결 해제·교체 뒤 늦게 도착한 목록이 개인 음반과 저장된 캐시를 되살리면 안 된다.
+            if (connection !== requestedConnection) return [];
+            const records = recordsFromAlbums(data);
+            const broadcasts=broadcastsFromData(broadcastData, records);
+            lastRefreshAt=Date.now();
+            try { localStorage.setItem(CACHE, JSON.stringify({...data,cachedAt:lastRefreshAt,broadcasts:broadcastData.broadcasts})); } catch (_) {}
+            receive(records);receiveBroadcasts(broadcasts);status(`방송 원본 ${broadcasts.length}건 · 방송 음반 ${records.filter(r=>r.archiveBroadcast).length}개 · 서버 연결됨`,{phase:'ready'});
+            return records;
+        } catch (error) {
+            if(connection===requestedConnection)status((lastRefreshAt?'최신 목록을 확인하지 못했습니다. 저장된 목록을 표시합니다. ':'목록을 불러오지 못했습니다. ')+error.message,{phase:'error'});
+            throw error;
+        }
     }
     async function connect(ticket, serverUrl) {
         const base = serverBase(serverUrl || LOCAL_BASE);
@@ -102,8 +109,8 @@
     }
     function disconnect() {
         connectionEpoch += 1;
-        connection = null;audioCache.clear();localStorage.removeItem(KEY);localStorage.removeItem(CACHE);
-        receive([]);receiveBroadcasts([]);status('이 앱의 방송 음반 연결을 지웠습니다. 서버에서 연결 해제하면 발급한 재생 주소도 만료됩니다.');
+        connection = null;lastRefreshAt=0;audioCache.clear();localStorage.removeItem(KEY);localStorage.removeItem(CACHE);
+        receive([]);receiveBroadcasts([]);status('이 앱의 방송 음반 연결을 지웠습니다. 서버에서 연결 해제하면 발급한 재생 주소도 만료됩니다.',{phase:'disconnected'});
     }
     async function audioUrl(track, signal) {
         if (!connection) throw Error('Radio Archive 관리 화면에서 다시 연결하세요.');
@@ -144,8 +151,15 @@
                 localStorage.setItem(KEY, JSON.stringify(connection));
             }
             onConnection(connection);
-            try { const cached = read(CACHE);if (cached) receive(recordsFromAlbums(cached)); } catch (_) {}
-            status('방송 음반 서버를 확인합니다.');void refresh().catch(error => status(error.message));
+            try {
+                const cached = read(CACHE);
+                if (cached) {
+                    const records=recordsFromAlbums(cached);receive(records);
+                    if(Array.isArray(cached.broadcasts))receiveBroadcasts(broadcastsFromData({version:1,broadcasts:cached.broadcasts},records));
+                    lastRefreshAt=Number.isFinite(cached.cachedAt)?cached.cachedAt:0;
+                }
+            } catch (_) {}
+            void refresh().catch(() => {});
         }
     }
     const api = { serverBase, recordsFromAlbums, broadcastsFromData, init, refresh, disconnect, audioUrl, cachedAudioUrl, invalidateAudioUrl,downloadMp3 };

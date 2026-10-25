@@ -301,3 +301,93 @@ test('방송 원본 준비 중 중지하면 늦은 응답이 재생을 시작하
     await expect(page.locator('.archive-original-player')).toBeHidden();
     expect(await page.locator('.archive-original-player audio').getAttribute('src')).toBe(null);
 });
+
+for (const width of [390,1280]) {
+    test(`다시 듣기: ${width}px에서 최신 날짜·프로그램·곡 검색과 음악 재생`,async({context,page,browserName})=>{
+        const broadcasts=[broadcastFixture,
+            {...broadcastFixture,id:ids[0],title:'저녁 음악',program:'저녁 음악',startedAt:'2026-09-26T18:00:00+09:00'},
+            {...broadcastFixture,id:ids[1],stationId:'kbs2fm',title:'다른 채널',program:'다른 채널',startedAt:'2026-09-25T10:00:00+09:00'}];
+        const state=await setup(context,page,publicBase,{albums:{version:1,albums:[musicFixture]},broadcasts});
+        await page.setViewportSize({width,height:844});await ready(page,false);
+        await expect(page.locator('#archiveStatus')).toContainText('서버 연결됨');
+        await page.getByRole('button',{name:'↶ 다시 듣기',exact:true}).click();
+        await expect(page.locator('#schedArchivePane')).toBeVisible();
+        await expect(page.locator('#schedNote')).toBeHidden();
+        await expect(page.locator('#archiveDate')).toHaveValue('2026-09-26');
+        await expect(page.locator('#archiveScheduleList [role=listitem]')).toHaveCount(1);
+        await expect(page.locator('#archiveCoverage')).toContainText('최신 2026-09-26 · 3개 방송');
+        await expect(page.locator('#archiveScheduleStatus')).toContainText('마지막 갱신');
+        await page.getByRole('button',{name:'이전 방송 날짜',exact:true}).click();
+        await expect(page.locator('#archiveDate')).toHaveValue('2026-09-25');
+        await page.getByRole('button',{name:'다음 방송 날짜',exact:true}).click();
+        await expect(page.locator('#archiveDate')).toHaveValue('2026-09-26');
+        await page.getByRole('button',{name:'전체 날짜',exact:true}).click();
+        await expect(page.locator('#archiveScheduleList [role=listitem]')).toHaveCount(3);
+        await page.getByLabel('프로그램', {exact:true}).selectOption('시험 방송');
+        await expect(page.locator('#archiveScheduleList [role=listitem]')).toHaveCount(1);
+        await page.getByLabel('프로그램·곡 검색',{exact:true}).fill('없는곡');
+        await expect(page.locator('#archiveScheduleList')).toContainText('검색 조건을 초기화');
+        await page.getByRole('button',{name:'조건 초기화',exact:true}).click();
+        await page.getByRole('button',{name:'전체 날짜',exact:true}).click();
+        await page.getByLabel('프로그램·곡 검색',{exact:true}).fill('개인 곡 2');
+        await expect(page.locator('#archiveScheduleList [role=listitem]')).toHaveCount(3);
+        expect(await page.locator('#schedArchivePane').evaluate(e=>e.scrollWidth<=e.clientWidth)).toBe(true);
+        const row=page.locator('#archiveScheduleList [role=listitem]').filter({hasText:'저녁 음악'});
+        expect(await row.locator('strong').first().evaluate(e=>{const r=e.getBoundingClientRect(),row=e.closest('.archive-broadcast-row').getBoundingClientRect();return r.height>0&&r.top>=row.top&&r.bottom<=row.bottom;})).toBe(true);
+        if(browserName==='webkit')await page.evaluate(()=>{RadioArchiveClient.audioUrl=async()=>'/tests/.stream/sample.mp3';});
+        await row.getByRole('button',{name:'저녁 음악 음악만 듣기',exact:true}).click();
+        await expect(page.locator('#schedOverlay')).toBeHidden();
+        await expect.poll(()=>page.evaluate(()=>audio.currentTime)).toBeGreaterThan(0);
+        expect(await page.evaluate(()=>RECORD.archiveAlbumId)).toBe(musicId);
+        expect(state.errors).toEqual([]);
+    });
+}
+
+test('다시 듣기: 갱신 실패와 복구를 표시하고 이전 목록·날짜 조건을 보존',async({context,page,browserName})=>{
+    await setup(context,page,publicBase,{broadcasts:[broadcastFixture]});await ready(page,false);
+    await expect(page.locator('#archiveStatus')).toContainText('서버 연결됨');
+    // WebKit repeated HTTPS requests bypass interception and hit the live gateway.
+    // Keep this browser's status test offline; Chromium covers HTTP route handling.
+    if(browserName==='webkit')await page.evaluate(({albums,broadcast})=>{
+        const original=window.fetch;window.archiveOffline=true;
+        window.fetch=(url,options)=>String(url).startsWith('https://ducklove.duckdns.org/radio-archive/player/')
+            ?Promise.resolve(new Response(JSON.stringify(window.archiveOffline?{detail:'방송 보관함에 연결하지 못했습니다.'}:String(url).endsWith('/albums')?albums:{version:1,broadcasts:[broadcast]}),{status:window.archiveOffline?502:200}))
+            :original(url,options);
+    },{albums:fixture,broadcast:broadcastFixture});
+    await page.click('#headerArchiveBtn');await page.click('#archiveDateClear');
+    let offline=true;
+    await page.route(publicBase+'/player/broadcasts',route=>route.fulfill({status:offline?502:200,
+        json:offline?{detail:'방송 보관함에 연결하지 못했습니다.'}:{version:1,broadcasts:[broadcastFixture]},
+        headers:{'Access-Control-Allow-Origin':'http://127.0.0.1:8123'}}));
+    await page.click('#archiveScheduleRefresh');
+    await expect(page.locator('#archiveScheduleStatus')).toContainText('최신 목록을 확인하지 못했습니다');
+    await expect(page.locator('#archiveScheduleStatus')).toHaveAttribute('data-state','error');
+    await expect(page.locator('#archiveScheduleRefresh')).toHaveText('다시 시도');
+    await expect(page.locator('#archiveDate')).toHaveValue('');
+    await expect(page.locator('#archiveScheduleList [role=listitem]')).toHaveCount(1);
+    offline=false;if(browserName==='webkit')await page.evaluate(()=>{window.archiveOffline=false;});
+    await page.click('#archiveScheduleRefresh');
+    await expect(page.locator('#archiveScheduleStatus')).toHaveAttribute('data-state','ready');
+    await expect(page.locator('#archiveDate')).toHaveValue('');
+});
+
+test('다시 듣기: 전체 날짜는 24개씩 더 보고 조건 변경 때 목록을 줄인다',async({context,page})=>{
+    const broadcasts=Array.from({length:30},(_,i)=>({...broadcastFixture,id:`${String(i).padStart(8,'0')}-7777-4777-8777-777777777777`,startedAt:`2026-09-${String(i+1).padStart(2,'0')}T09:00:00+09:00`}));
+    await setup(context,page,publicBase,{broadcasts});await ready(page,false);
+    await expect(page.locator('#archiveStatus')).toContainText('방송 원본 30건');
+    await page.click('#headerArchiveBtn');await page.click('#archiveDateClear');
+    await expect(page.locator('#archiveScheduleList [role=listitem]')).toHaveCount(24);
+    await page.click('#archiveMore');await expect(page.locator('#archiveScheduleList [role=listitem]')).toHaveCount(30);
+    await expect(page.locator('#archiveMore')).toBeHidden();
+    await page.click('#archiveLatestDate');await expect(page.locator('#archiveScheduleList [role=listitem]')).toHaveCount(1);
+    await page.click('#archiveDateClear');await expect(page.locator('#archiveScheduleList [role=listitem]')).toHaveCount(24);
+});
+
+test('방송 음반 목록: 제목과 날짜는 포인터를 올리지 않아도 온전히 보인다',async({context,page})=>{
+    await setup(context,page,publicBase,{albums:{version:1,albums:[musicFixture]},broadcasts:[broadcastFixture]});await ready(page,false);
+    await expect(page.locator('#archiveStatus')).toContainText('서버 연결됨');
+    await page.setViewportSize({width:390,height:844});await page.click('#headerCrateBtn');await page.click('#broadcastAlbumsTab');
+    const title=page.locator('.archive-album-title');await expect(title).toHaveText('2026-09-24 시험 방송');
+    expect(await title.evaluate(e=>{const title=e.getBoundingClientRect(),card=e.parentElement.getBoundingClientRect();return title.top>=card.top&&title.bottom<=card.bottom;})).toBe(true);
+    expect(await page.locator('#crateGrid').evaluate(e=>e.scrollWidth<=e.clientWidth)).toBe(true);
+});

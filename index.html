@@ -51,7 +51,7 @@
     </script>
     <script defer src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-    <link rel="stylesheet" href="styles.css?v=195">
+    <link rel="stylesheet" href="styles.css?v=196">
 </head>
 <body class="app-loading mode-rack">
     <div class="page-shell">
@@ -68,6 +68,7 @@
                 <a class="mini-open" id="miniPlayerLink" href="widget.html?skin=tuner" title="튜너 미니 플레이어로 전환" hidden>미니 플레이어</a>
                 <a class="mini-open" href="manual.html" target="_blank" rel="noopener" title="기기별 리뷰와 조작 안내 (새 탭 — 재생 유지)">소개</a>
                 <button class="mini-open sched-open" id="headerSchedBtn" type="button" onclick="openSchedule()" title="채널 편성표 보기와 예약 녹음" hidden>▤ 편성표</button>
+                <button class="mini-open" id="headerArchiveBtn" type="button" onclick="openSchedule('archive')" title="날짜와 프로그램으로 방송 찾기">↶ 다시 듣기</button>
                 <button class="mini-open" id="headerCrateBtn" type="button" onclick="openCrate()" title="음반 검색과 무한 랜덤 재생">♫ 음반</button>
                 <button class="mini-open" id="headerTapeBtn" type="button" onclick="openTapeCase()" title="녹음 테이프 보관함 — 라벨·재생·삭제·가져오기" hidden>⏵ 테이프</button>
                 <button class="mini-open" type="button" onclick="toggleSettings(true)" title="컴포넌트 표시와 모델을 고릅니다">⚙ 오디오 구성</button>
@@ -238,7 +239,7 @@
     <div class="crate-overlay" id="schedOverlay" hidden>
         <div class="crate-panel sched-panel" role="dialog" aria-modal="true" aria-label="편성표와 예약 녹음" tabindex="-1">
             <div class="crate-head">
-                <div class="crate-title">편성표</div>
+                <div class="crate-title" id="schedTitle">편성표</div>
                 <div class="sched-tabs" role="tablist" aria-label="날짜와 예약 전환">
                     <button class="sched-tab" id="schedTabD0" type="button" role="tab" aria-selected="true" aria-controls="schedList" tabindex="0" onclick="schedSetDay(0)">오늘</button>
                     <button class="sched-tab" id="schedTabD1" type="button" role="tab" aria-selected="false" aria-controls="schedList" tabindex="-1" onclick="schedSetDay(1)">내일</button>
@@ -251,9 +252,17 @@
             <div class="res-diag sched-diag" id="schedDiag" hidden></div>
             <div class="sched-list" id="schedList" role="tabpanel" aria-labelledby="schedTabD0"></div>
             <section id="schedArchivePane" role="tabpanel" aria-labelledby="schedTabArchive" hidden>
-                <p class="archive-note">방송 날짜와 채널을 골라 멘트를 포함한 원본을 듣습니다.</p>
-                <div class="archive-tools"><label>방송 날짜 <input id="archiveDate" type="date"></label><label>채널 <select id="archiveStation"><option value="">모든 채널</option></select></label><button id="archiveDateClear" type="button">전체 날짜</button></div>
-                <div id="archiveSchedulePlayer"></div><div id="archiveScheduleList" class="tapecase-list" role="list"></div>
+                <div class="archive-summary"><div><h2>방송 보관함</h2><p class="archive-note" id="archiveCoverage">방송 목록을 확인합니다.</p></div><button id="archiveScheduleRefresh" type="button" class="rec-btn">새로고침</button></div>
+                <p id="archiveScheduleStatus" class="archive-connection" role="status">방송 보관함에 연결합니다.</p>
+                <div class="archive-filters">
+                    <label class="archive-search-label">프로그램·곡 검색<input id="archiveSearch" type="search" placeholder="예: 명연주 명음반, 쇼팽" autocomplete="off"></label>
+                    <label>채널<select id="archiveStation" aria-label="채널"><option value="">모든 채널</option></select></label>
+                    <label>프로그램<select id="archiveProgram" aria-label="프로그램"><option value="">모든 프로그램</option></select></label>
+                </div>
+                <div class="archive-datebar"><button id="archivePreviousDate" type="button" aria-label="이전 방송 날짜">←</button><label class="archive-date-label">방송 날짜<input id="archiveDate" type="date"></label><button id="archiveNextDate" type="button" aria-label="다음 방송 날짜">→</button><button id="archiveLatestDate" type="button">최신 방송</button><button id="archiveDateClear" type="button">전체 날짜</button></div>
+                <div class="archive-results-head"><p id="archiveResultCount" role="status"></p><button id="archiveReset" type="button" hidden>조건 초기화</button></div>
+                <div id="archiveSchedulePlayer"></div><div id="archiveScheduleList" class="tapecase-list" role="list" aria-label="다시 듣기 방송"></div>
+                <button id="archiveMore" class="archive-more" type="button" hidden>방송 더 보기</button>
             </section>
             <div class="sched-res" id="schedResPane" role="tabpanel" aria-labelledby="schedTabRes" hidden>
                 <div class="res-diag" id="resDiag" title="예약 녹음 엔진 상태"></div>
@@ -309,7 +318,7 @@
                 <button class="crate-mix-btn" id="crateMixBtn" type="button" aria-pressed="false">♾ 무한 랜덤 재생</button>
             </div>
             <div class="archive-tabs" role="group" aria-label="음반 보관함 구분"><button type="button" id="libraryAlbumsTab" aria-pressed="true" onclick="setCrateSource('library')">기존 음반</button><button type="button" id="broadcastAlbumsTab" aria-pressed="false" onclick="setCrateSource('broadcast')">방송 음반</button></div>
-            <p id="broadcastAlbumNote" class="archive-note" hidden>한 방송에 나온 음악을 방송 순서대로 듣습니다. 멘트를 제외해 분리한 곡 파일을 재생합니다.</p>
+            <p id="broadcastAlbumNote" class="archive-note" hidden>한 방송에 나온 음악을 방송 순서대로 듣습니다. <button class="archive-inline-link" type="button" onclick="closeCrate();openSchedule('archive')">날짜·프로그램으로 찾기 →</button></p>
             <div class="crate-mix-status" id="crateMixStatus" role="status">장르를 고르면 조건에 맞는 곡을 중복 없이 섞어 계속 재생합니다.</div>
             <details class="crate-archive" id="archivePanel"><summary>방송 보관함 · Radio Archive</summary>
                 <p id="archiveStatus" role="status">방송 보관함에 자동으로 연결합니다.</p>
@@ -327,28 +336,28 @@
 
     <audio id="audioPlayer" crossorigin="anonymous"></audio>
 
-    <script src="stations.js?v=195"></script>
-    <script src="player-core.js?v=195"></script>
-    <script src="native-hls-capture.js?v=195"></script>
-    <script src="store.js?v=195"></script>
-    <script src="schedule.js?v=195"></script>
-    <script src="skins.js?v=195"></script>
-    <script src="component-skins.js?v=195"></script>
-    <script src="solo-skins.js?v=195"></script>
-    <script src="reference-layouts.js?v=195"></script>
-    <script src="model-registry.js?v=195"></script>
-    <script src="animation-scheduler.js?v=195"></script>
-    <script src="listening-controls.js?v=195"></script>
-    <script src="engine.js?v=195"></script>
-    <script src="deck.js?v=195"></script>
-    <script src="radio-archive-client.js?v=195"></script>
-    <script src="broadcast-browser.js?v=195"></script>
-    <script src="bootstrap.js?v=195"></script>
-    <script src="ui-controls.js?v=195"></script>
+    <script src="stations.js?v=196"></script>
+    <script src="player-core.js?v=196"></script>
+    <script src="native-hls-capture.js?v=196"></script>
+    <script src="store.js?v=196"></script>
+    <script src="schedule.js?v=196"></script>
+    <script src="skins.js?v=196"></script>
+    <script src="component-skins.js?v=196"></script>
+    <script src="solo-skins.js?v=196"></script>
+    <script src="reference-layouts.js?v=196"></script>
+    <script src="model-registry.js?v=196"></script>
+    <script src="animation-scheduler.js?v=196"></script>
+    <script src="listening-controls.js?v=196"></script>
+    <script src="engine.js?v=196"></script>
+    <script src="deck.js?v=196"></script>
+    <script src="radio-archive-client.js?v=196"></script>
+    <script src="broadcast-browser.js?v=196"></script>
+    <script src="bootstrap.js?v=196"></script>
+    <script src="ui-controls.js?v=196"></script>
     <script>
         // 실행 중 버전 — 자산 링크의 ?v=가 단일 진실 (bump-version.py가 올린다)
         const RUNNING_ASSET_VERSION = (() => {
-            const link = document.querySelector('link[rel="stylesheet"][href^="styles.css?v=195"]');
+            const link = document.querySelector('link[rel="stylesheet"][href^="styles.css?v=196"]');
             const m = link && /[?&]v=(\d+)/.exec(link.getAttribute("href"));
             return m ? Number(m[1]) : null;
         })();

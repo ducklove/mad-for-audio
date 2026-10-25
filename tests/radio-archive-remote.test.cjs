@@ -66,3 +66,26 @@ test('fresh install connects publicly without pairing or persisted credentials',
     await f.api.audioUrl({host:'radio-archive',archiveAlbumId:id,archivePosition:0,id});
     assert.equal(f.requests[1].options.headers.Authorization,undefined);
 });
+
+test('a failed refresh identifies saved broadcasts and keeps the last successful time', async () => {
+    const statuses=[];
+    const f=fixture();f.api.init({onRecords:()=>{},onStatus:(message,state)=>statuses.push({message,state})});await settle();
+    const checked=statuses.at(-1).state.lastRefreshAt;
+    assert.equal(statuses.at(-1).state.phase,'ready');assert.ok(checked>0);
+    const cached=JSON.parse(f.saved.get('fmRadio.archiveAlbums.v2'));
+    assert.equal(cached.cachedAt,checked);assert.ok(Array.isArray(cached.broadcasts));
+    f.context.fetch=async()=>{throw Error('offline');};
+    await assert.rejects(()=>f.api.refresh());
+    assert.equal(statuses.at(-1).state.phase,'error');assert.equal(statuses.at(-1).state.lastRefreshAt,checked);
+    assert.match(statuses.at(-1).message,/저장된 목록/);
+});
+
+test('a full browser cache does not prevent displaying freshly fetched broadcasts', async () => {
+    const statuses=[],received=[];
+    const saved=new Map();
+    const f=fixture({}, {localStorage:{getItem:k=>saved.get(k),setItem:()=>{throw Error('QuotaExceededError');},removeItem:k=>saved.delete(k)}});
+    // Keep the endpoint already configured so the test exercises the response cache write.
+    saved.set('fmRadio.archiveClient',JSON.stringify({serverUrl:'https://archive.example',token:'t'.repeat(54)}));
+    f.api.init({onRecords:rows=>received.push(rows),onStatus:(message,state)=>statuses.push({message,state})});await settle();
+    assert.equal(statuses.at(-1).state.phase,'ready');assert.equal(received.length,1);
+});

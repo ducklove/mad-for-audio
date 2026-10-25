@@ -2,6 +2,7 @@
 (function(root){
     'use strict';
     let items=[],options={},epoch=0,pending=null,current=null;
+    let followLatest=true,visibleCount=24,connectionState={phase:'loading'};
     const downloads=new Map();
     const el=id=>document.getElementById(id);
     const player=document.createElement('section');player.className='archive-original-player';player.hidden=true;
@@ -16,6 +17,24 @@
     function mount(where){el(where)?.append(player);}
     const day=item=>item.startedAt.slice(0,10);
     const duration=seconds=>`${Math.floor(seconds/60)}분 ${Math.floor(seconds%60)}초`;
+    const dateLabel=value=>new Intl.DateTimeFormat('ko-KR',{month:'long',day:'numeric',weekday:'short',timeZone:'Asia/Seoul'}).format(new Date(value+'T12:00:00+09:00'));
+    const programName=item=>item.program || item.title.replace(/^.*? · /,'');
+    function availableDays(){
+        return [...new Set(items.filter(i=>(!el('archiveStation').value||i.stationId===el('archiveStation').value)
+            &&(!el('archiveProgram').value||programName(i)===el('archiveProgram').value)).map(day))];
+    }
+    function setConnectionState(message,state={}){
+        connectionState=state;
+        const target=el('archiveScheduleStatus');
+        target.dataset.state=state.phase || 'error';
+        const checked=state.lastRefreshAt?new Intl.DateTimeFormat('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Seoul'}).format(state.lastRefreshAt):'';
+        target.textContent=message+(checked?' · 마지막 갱신 '+checked:'');
+        for(const id of ['archiveRefresh','archiveScheduleRefresh']){
+            el(id).disabled=state.phase==='loading';
+            if(id==='archiveScheduleRefresh')el(id).textContent=state.phase==='loading'?'불러오는 중…':state.phase==='error'?'다시 시도':'새로고침';
+        }
+        if(!items.length)renderSchedule();
+    }
     function playlist(item,open=false){
         const tracks=item.musicTracks || [];
         const details=document.createElement('details');details.className='archive-playlist';details.open=open;
@@ -95,13 +114,35 @@
             const detail=document.createElement('p');detail.textContent=`${day(item)} ${item.startedAt.slice(11,16)} · ${duration(item.durationSeconds)} · ${item.musicAlbumId?'음악 '+item.musicTrackCount+'곡':'곡 분리 준비 중'}`;
             const head=document.createElement('div');head.className='archive-broadcast-head';
             const actions=document.createElement('div');actions.className='archive-broadcast-actions';actions.append(button(item,where),downloadButton(item));
+            if(item.musicTracks.length){
+                const music=document.createElement('button');music.type='button';music.className='rec-btn archive-music-button';
+                music.textContent='♫ 음악만 듣기';music.setAttribute('aria-label',item.title+' 음악만 듣기');
+                music.onclick=()=>{if(!options.canPlay())return;stop();options.openMusic(item.musicAlbumId);};actions.insertBefore(music,actions.lastChild);
+            }
             info.append(name,detail);head.append(info,actions);row.append(head,playlist(item));target.append(row);
         }
     }
     function renderTapes(){const q=el('archiveTapeSearch').value.trim().toLowerCase();list(el('archiveTapeList'),items.filter(i=>(i.title+' '+i.startedAt).toLowerCase().includes(q)),'archiveTapePlayer');}
     function renderSchedule(){
         if(!el('schedArchivePane').hidden)mount('archiveSchedulePlayer');const date=el('archiveDate').value,station=el('archiveStation').value;
-        list(el('archiveScheduleList'),items.filter(i=>(!date||day(i)===date)&&(!station||i.stationId===station)),'archiveSchedulePlayer');
+        const program=el('archiveProgram').value,q=el('archiveSearch').value.trim().toLocaleLowerCase();
+        const rows=items.filter(i=>(!date||day(i)===date)&&(!station||i.stationId===station)&&(!program||programName(i)===program)
+            &&(!q||[i.title,i.startedAt,...i.musicTracks.flatMap(t=>[t.t,t.composer,t.performer])].join(' ').toLocaleLowerCase().includes(q)));
+        list(el('archiveScheduleList'),rows.slice(0,visibleCount),'archiveSchedulePlayer');
+        if(!rows.length){
+            const note=el('archiveScheduleList').querySelector('p');
+            note.textContent=connectionState.phase==='loading'?'방송 목록을 불러오는 중입니다.':connectionState.phase==='error'?'서버 연결을 확인한 뒤 다시 시도해 주세요.':'이 조건에 맞는 방송이 없습니다. 전체 날짜를 선택하거나 검색 조건을 초기화해 보세요.';
+        }
+        el('archiveResultCount').textContent=(date?dateLabel(date):'전체 날짜')+' · '+rows.length+'개 방송';
+        el('archiveReset').hidden=!q&&!station&&!program&&followLatest;
+        el('archiveMore').hidden=rows.length<=visibleCount;
+        el('archiveMore').textContent='방송 더 보기 · '+Math.min(visibleCount,rows.length)+' / '+rows.length;
+        const days=availableDays();
+        el('archivePreviousDate').disabled=!date||!days.some(d=>d<date);
+        el('archiveNextDate').disabled=!date||!days.some(d=>d>date);
+        el('archiveLatestDate').disabled=!days.length;
+        el('archiveLatestDate').setAttribute('aria-pressed',String(followLatest));
+        el('archiveDateClear').setAttribute('aria-pressed',String(!date));
     }
     function renderPending(show){
         const target=el('archiveMusicPending');if(!target)return;target.hidden=!show;target.replaceChildren();if(!show)return;
@@ -115,14 +156,25 @@
         if(current){current=items.find(i=>i.id===current.id);playerPlaylist.replaceChildren(playlist(current,playerPlaylist.querySelector('details')?.open));}
         const select=el('archiveStation'),selected=select.value;select.replaceChildren(new Option('모든 채널',''));
         for(const station of [...new Set(items.map(i=>i.stationId))].filter(Boolean)){select.add(new Option(station==='kbs1fm'?'KBS 1FM':station==='kbs2fm'?'KBS 2FM':station,station));}select.value=selected;
+        updatePrograms();
+        if(followLatest)el('archiveDate').value=availableDays()[0] || '';
+        const dates=items.map(day);
+        el('archiveDate').min=dates.at(-1)||'';el('archiveDate').max=dates[0]||'';
+        el('archiveCoverage').textContent=items.length?`최신 ${dates[0]} · ${items.length}개 방송 보관 중`:'완료된 방송이 도착하면 여기에 표시됩니다.';
         renderTapes();renderSchedule();renderPending(!el('broadcastAlbumNote').hidden);
+    }
+    function updatePrograms(){
+        const select=el('archiveProgram'),selected=select.value,station=el('archiveStation').value;
+        select.replaceChildren(new Option('모든 프로그램',''));
+        for(const name of [...new Set(items.filter(i=>!station||i.stationId===station).map(programName))].sort((a,b)=>a.localeCompare(b,'ko'))){select.add(new Option(name,name));}
+        select.value=[...select.options].some(o=>o.value===selected)?selected:'';
     }
     function appendSchedulePlayback(target,station,date,program){
         date=String(date).replace(/^(\d{4})(\d{2})(\d{2})$/,'$1-$2-$3');
         for(const item of items){
             const minute=Number(item.startedAt.slice(11,13))*60+Number(item.startedAt.slice(14,16));
             if(item.stationId===station&&day(item)===date&&minute>=program.startMin&&minute<program.endMin){
-                const b=button(item,'archiveSchedulePlayer');b.onclick=()=>{root.schedSetView('archive');el('archiveDate').value=date;el('archiveStation').value=station;renderSchedule();void play(item,'archiveSchedulePlayer');};target.append(b);
+                const b=button(item,'archiveSchedulePlayer');b.onclick=()=>{followLatest=false;root.schedSetView('archive');el('archiveSearch').value='';el('archiveStation').value=station;updatePrograms();el('archiveProgram').value='';el('archiveDate').value=date;visibleCount=24;renderSchedule();void play(item,'archiveSchedulePlayer');};target.append(b);
                 target.append(downloadButton(item));
             }
         }
@@ -135,9 +187,21 @@
             if(server){mount('archiveTapePlayer');renderTapes();}
         };
         el('localTapesTab').onclick=()=>choose(false);el('broadcastTapesTab').onclick=()=>choose(true);
-        el('archiveTapeSearch').oninput=renderTapes;el('archiveDate').onchange=renderSchedule;el('archiveStation').onchange=renderSchedule;
-        el('archiveDateClear').onclick=()=>{el('archiveDate').value='';renderSchedule();};
+        const renderFiltered=()=>{visibleCount=24;renderSchedule();};
+        el('archiveTapeSearch').oninput=renderTapes;
+        el('archiveDate').onchange=()=>{followLatest=false;renderFiltered();};
+        el('archiveSearch').oninput=renderFiltered;
+        el('archiveStation').onchange=()=>{updatePrograms();if(followLatest)el('archiveDate').value=availableDays()[0]||'';renderFiltered();};
+        el('archiveProgram').onchange=()=>{if(followLatest)el('archiveDate').value=availableDays()[0]||'';renderFiltered();};
+        el('archiveDateClear').onclick=()=>{followLatest=false;el('archiveDate').value='';renderFiltered();};
+        el('archiveLatestDate').onclick=()=>{followLatest=true;el('archiveDate').value=availableDays()[0]||'';renderFiltered();};
+        for(const [id,direction] of [['archivePreviousDate',-1],['archiveNextDate',1]]){
+            el(id).onclick=()=>{const date=el('archiveDate').value,days=availableDays();const next=direction<0?days.find(d=>d<date):days.slice().reverse().find(d=>d>date);if(next){followLatest=false;el('archiveDate').value=next;renderFiltered();}};
+        }
+        el('archiveReset').onclick=()=>{el('archiveSearch').value='';el('archiveStation').value='';updatePrograms();el('archiveProgram').value='';followLatest=true;el('archiveDate').value=availableDays()[0]||'';renderFiltered();};
+        el('archiveMore').onclick=()=>{visibleCount+=24;renderSchedule();};
+        el('archiveScheduleRefresh').onclick=()=>void root.RadioArchiveClient.refresh().catch(()=>{});
     }
     function openTapes(){if(!el('broadcastTapePane').hidden){mount('archiveTapePlayer');el('tapeCaseEmpty').hidden=true;renderTapes();}}
-    root.BroadcastBrowser={init,receive,stop,renderSchedule,renderPending,appendSchedulePlayback,openTapes};
+    root.BroadcastBrowser={init,receive,stop,renderSchedule,renderPending,appendSchedulePlayback,openTapes,setConnectionState};
 })(window);
