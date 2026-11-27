@@ -316,7 +316,7 @@ const MFA_SURFACE_RULES = [
     ["url(#m8Plaque)", "overlay", "brushFine", .36],
     ["url(#weBrush)", "replace", "brushFine", .15],
     ["url(#weFine)", "replace", "grainFine", .14],
-    ["url(#weKnob)", "overlay", "spun", .48],
+    ["url(#weKnob)", "overlay", "spun", .3],
     ["url(#e303Hair)", "replace", "brushFine", .2],
     ["url(#e303KnobFace)", "overlay", "spun", .55],
     ["url(#e303MeterFace)", "overlay", "grainFine", .16],

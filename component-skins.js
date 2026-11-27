@@ -262,6 +262,9 @@ function mfaMa2375Meter(x, needleId) {
         <text x="${cx}" y="321" font-family="Arial" font-size="14" fill="#234653" text-anchor="middle" letter-spacing="3">POWER OUTPUT</text>
         <line id="${needleId}" data-cx="${cx}" data-cy="${cy}" x1="${cx}" y1="${cy}" x2="${cx}" y2="202" stroke="#163644" stroke-width="2.5" transform="rotate(-42 ${cx} ${cy})"/>
         <path d="M${cx-38} 368v-9q38-15 76 0v9" fill="#294951"/>
+        <g pointer-events="none"><rect x="${x}" y="174" width="460" height="194" fill="url(#ma2375MeterBacklight)"/>
+        <rect x="${x}" y="174" width="460" height="40" fill="url(#lzInset)" opacity=".6"/><rect x="${x}" y="174" width="10" height="194" fill="url(#lzInL)" opacity=".7"/><rect x="${x+450}" y="174" width="10" height="194" fill="url(#lzInR)" opacity=".7"/>
+        <path d="M${x} 174H${x+190}L${x+104} 368H${x}Z" fill="url(#ma2375MeterGlass)"/></g>
         <rect class="meterDark" x="${x}" y="174" width="460" height="194" fill="#02070c" opacity=".56" pointer-events="none"/>
         <path d="M${x+2} 176h456" stroke="#fff" stroke-width="2" opacity=".28"/>
     </g>`;
@@ -402,6 +405,7 @@ function mfaMa2375Svg() {
         <linearGradient id="ma2375KnobBezel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".3" stop-color="#c8cbcc"/><stop offset=".62" stop-color="#5d6266"/><stop offset=".85" stop-color="#9ea3a6"/><stop offset="1" stop-color="#e8e9e7"/></linearGradient>
         <radialGradient id="ma2375KnobCap" cx="34%" cy="26%" r="82%"><stop offset="0" stop-color="#484d52"/><stop offset=".3" stop-color="#212529"/><stop offset=".62" stop-color="#0d0f12"/><stop offset="1" stop-color="#010203"/></radialGradient>
         <linearGradient id="ma2375MeterBlue" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#04131f"/><stop offset=".09" stop-color="#0b3450"/><stop offset=".3" stop-color="#279cc7"/><stop offset=".64" stop-color="#157daf"/><stop offset=".9" stop-color="#0a426b"/><stop offset="1" stop-color="#03121e"/></linearGradient>
+        <radialGradient id="ma2375MeterBacklight" cx=".5" cy=".64" r=".74"><stop offset=".36" stop-color="#e8fbff" stop-opacity=".16"/><stop offset=".7" stop-color="#0b2a33" stop-opacity="0"/><stop offset="1" stop-color="#03141a" stop-opacity=".42"/></radialGradient><linearGradient id="ma2375MeterGlass" x1="0" y1="0" x2="1" y2=".35"><stop stop-color="#fff" stop-opacity=".16"/><stop offset=".55" stop-color="#fff" stop-opacity=".05"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
         <radialGradient id="ma2375MeterLamp" cx="46%" cy="38%" r="78%"><stop offset="0" stop-color="#65c7df"/><stop offset=".48" stop-color="#2c99c1"/><stop offset=".82" stop-color="#0d547f"/><stop offset="1" stop-color="#04253d"/></radialGradient>
         <radialGradient id="ma2375MeterVignette" cx="50%" cy="48%" r="72%"><stop offset=".54" stop-color="#000" stop-opacity="0"/><stop offset=".84" stop-color="#00111f" stop-opacity=".34"/><stop offset="1" stop-color="#00070d" stop-opacity=".88"/></radialGradient>
         <linearGradient id="ma2375TubeGlass" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#101519"/><stop offset=".25" stop-color="#e8f1ef" stop-opacity=".34"/><stop offset=".48" stop-color="#252b2f" stop-opacity=".82"/><stop offset=".75" stop-color="#dfe8e7" stop-opacity=".28"/><stop offset="1" stop-color="#090d10"/></linearGradient>
