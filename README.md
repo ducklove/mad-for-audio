@@ -82,6 +82,21 @@ macos/                 macOS 경량 메뉴바 앱 (Swift · WKWebView — 네이
 추가 컴포넌트의 사진 출처와 SVG에 반영한 외형 포인트는
 [`docs/EQUIPMENT_REFERENCES.md`](docs/EQUIPMENT_REFERENCES.md)에 정리했다.
 
+### 재질(텍스처) 다루는 방법
+
+모든 기기 SVG는 `materials.js`의 공용 재질을 쓴다. 캔버스로 만든 이음매 없는 타일
+(헤어라인·스핀 가공 금속, 원목 결, 그레인, 레더렛, 해머톤)을 `lzTex*` 패턴으로 공유하며,
+바탕색을 바꾸지 않는 중성 오버레이라 기존 그라디언트 위에 얹기만 하면 된다.
+텍스처는 첫 화면을 막지 않도록 유휴 시간에 생성되고, 준비되는 대로 이미 그려진 SVG에도 채워진다.
+
+- **기존 면에 재질 입히기** — `MFA_SURFACE_RULES`에 `["url(#그라디언트id)", "overlay"|"replace", 재질, 불투명도]`
+  한 줄을 더한다. 마크업을 고치지 않고 마운트 시 같은 윤곽의 재질 층을 얹거나, 규칙적인 벡터 헤어라인
+  패턴을 래스터 재질로 바꾼다.
+- **새 마크업에서 직접 쓰기** — `mfaTexRect(재질, x, y, w, h, rx, 불투명도)`, `mfaTexCircle`, `mfaTexPath`,
+  `mfaTexFill(재질)`. 재질: `brush` `brushFine` `brushV` `grain` `grainFine` `wood` `woodV` `leather` `hammer` `spun`.
+- 밝은 샴페인·크림 아노다이즈는 `brushFine`을 낮은 불투명도(.15~.25)로, 은색 알루미늄은 `brush` .35~.45,
+  노브 캡은 `spun` .45~.55가 실물에 가깝다. 회전하는 그룹 안에 고정 광원 반사를 넣지 않는다.
+
 ### 채널 추가 방법
 
 `stations.js`의 `stations` 배열에 항목 1개를 추가하면 끝난다.
