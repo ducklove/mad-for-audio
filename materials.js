@@ -251,10 +251,11 @@ function mfaTexPath(kind, d, opacity, extra) {
 // 눌림 이동과 상태 색 변화를 따라가지 못하므로 대상에서 뺀다.
 // [fill 참조, 방식, 재질, 불투명도]
 const MFA_SURFACE_RULES = [
-    // 튜너 — YAMAHA T-2 샴페인 브러시드 / McIntosh MR78 블랙 아노다이즈 / Marantz 10B 샴페인 + 월넛
+    // 튜너 — YAMAHA T-2 샴페인 브러시드 / McIntosh MR78 블랙 글라스 / Marantz 10B 샴페인 + 월넛
     ["url(#tnBrush)", "replace", "brush", .42],
     ["url(#tnKnobFace)", "overlay", "spun", .55],
-    ["url(#mrFine)", "replace", "brushFine", .2],
+    // MR78 전면은 블랙 글라스다 — 결 대신 거의 보이지 않는 미세 입자만 남겨 유리의 매끈함을 살린다.
+    ["url(#mrFine)", "replace", "grainFine", .05],
     ["url(#mrKnob)", "overlay", "spun", .5],
     ["url(#mrChrome)", "overlay", "spun", .5],
     ["url(#mzWoodGrain)", "replace", "wood", .78],
