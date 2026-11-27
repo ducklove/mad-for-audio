@@ -278,6 +278,7 @@ const MFA_SURFACE_RULES = [
     ["url(#weKnob)", "overlay", "spun", .48],
     ["url(#e303Hair)", "replace", "brushFine", .2],
     ["url(#e303KnobFace)", "overlay", "spun", .55],
+    ["url(#e303MeterFace)", "overlay", "grainFine", .16],
     ["url(#ma2375Backdrop)", "overlay", "grain", .22],
     ["url(#ma2375Brush)", "replace", "brush", .5],
     ["url(#ma2375LowerFace)", "overlay", "brush", .32],
@@ -286,7 +287,9 @@ const MFA_SURFACE_RULES = [
     // 카세트 데크 — DRAGON 블랙, B215 실버, Tandberg 로즈우드·블랙, CT-F1250 실버·월넛, W-990RX
     ["url(#dkFine)", "replace", "brushFine", .26],
     ["url(#dkDoor)", "overlay", "grainFine", .22],
-    ["url(#refBbrush)", "replace", "brush", .46],
+    ["url(#dkKey)", "overlay", "brushFine", .22],
+    ["url(#refBbrush)", "replace", "brush", .34],
+    ["url(#refBsilver)", "overlay", "brushFine", .26],
     ["url(#refBblack)", "overlay", "grain", .26],
     ["url(#refTbrush)", "replace", "brushFine", .26],
     ["url(#refTknob)", "overlay", "spun", .5],
