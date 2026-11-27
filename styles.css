@@ -1,7 +1,7 @@
-@import url("./styles-foundation.css?v=199");
-@import url("./styles-library.css?v=199");
-@import url("./styles-schedule.css?v=199");
-@import url("./styles-tape.css?v=199");
+@import url("./styles-foundation.css?v=200");
+@import url("./styles-library.css?v=200");
+@import url("./styles-schedule.css?v=200");
+@import url("./styles-tape.css?v=200");
 
 /* Broadcasting archive: readable titles, date navigation and clear connection state. */
 .archive-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0;flex:none}
