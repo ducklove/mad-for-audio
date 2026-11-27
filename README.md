@@ -57,6 +57,7 @@ materials.js           재질 텍스처 라이브러리 — 브러시드·스핀
 skins.js               튜너·앰프 SVG 스킨
 component-skins.js     실물 레퍼런스 기반 추가 튜너·앰프·데크·턴테이블 SVG 카탈로그
 solo-skins.js          단독 기기 SVG — Victor V 축음기, 금성 A-501 라디오, Lasonic TRC-931 붐박스
+eq-skins.js            그래픽 이퀄라이저 SVG 마크업 — GE-5·SE-9 공용 렌더러와 SH-8065 전용 렌더러
 model-registry.js      기기 모델 탐색·렌더링 호환 레지스트리
 store.js               설정·녹음 저장소
 stations.js            채널 정의 + 스트림 URL 해석 (index/widget 공유)
