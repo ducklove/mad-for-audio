@@ -68,11 +68,16 @@ function refMC2105() {
         ${labels.map((v,i)=>{const [tx,ty]=pt(-47+i*10.4,r+17);return refText(tx,ty,v,18,'#244550','middle');}).join('')}
         ${refText(cx,296,'POWER LEVEL',17,'#284852','middle','letter-spacing="4"')}${refText(cx,324,'DECIBELS',12,'#284852','middle','letter-spacing="3"')}
         <defs><clipPath id="${id}Window"><rect x="${x}" y="136" width="396" height="232"/></clipPath></defs><g clip-path="url(#${id}Window)"><line id="${id}" x1="${cx}" y1="${cy}" x2="${cx}" y2="172" stroke="#183644" stroke-width="2.5" data-cx="${cx}" data-cy="${cy}"/></g>
+        <g pointer-events="none"><rect x="${x}" y="136" width="396" height="232" fill="url(#${p}meterVign)"/>
+        <rect x="${x}" y="136" width="396" height="46" fill="url(#lzInset)" opacity=".62"/><rect x="${x}" y="136" width="10" height="232" fill="url(#lzInL)" opacity=".7"/><rect x="${x+386}" y="136" width="10" height="232" fill="url(#lzInR)" opacity=".7"/>
+        <path d="M${x} 136H${x+170}L${x+92} 368H${x}Z" fill="url(#${p}meterGlass)"/></g>
         <rect class="meterDark" x="${x}" y="136" width="396" height="232" fill="#031012" opacity=".55" pointer-events="none"/>
         <path d="M${x+2} 138h392" stroke="#d8eff1" opacity=".5" pointer-events="none"/></g>`;
     };
     return `<svg class="amp-svg reference-mc2105" viewBox="0 0 2000 980" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="McIntosh MC 2105 솔리드스테이트 앰프">
-    ${refMetalDefs(p)}<rect data-panel-region="chassis" x="22" y="18" width="1956" height="828" rx="3" fill="#030807" stroke="#323f3a" stroke-width="3"/>
+    ${refMetalDefs(p)}<defs><radialGradient id="${p}meterVign" cx=".5" cy=".62" r=".72"><stop offset=".38" stop-color="#e8fbff" stop-opacity=".16"/><stop offset=".7" stop-color="#0b2a33" stop-opacity="0"/><stop offset="1" stop-color="#03141a" stop-opacity=".42"/></radialGradient>
+    <linearGradient id="${p}meterGlass" x1="0" y1="0" x2="1" y2=".35"><stop stop-color="#fff" stop-opacity=".16"/><stop offset=".55" stop-color="#fff" stop-opacity=".05"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>
+    <rect data-panel-region="chassis" x="22" y="18" width="1956" height="828" rx="3" fill="#030807" stroke="#323f3a" stroke-width="3"/>
     <path d="M46 28H1954M46 832H1954" stroke="url(#${p}rim)" stroke-width="7"/><path d="M40 32H1960" stroke="#b5c4b9" stroke-width="1"/>
     <rect x="13" y="13" width="30" height="838" fill="url(#${p}rim)"/><rect x="1957" y="13" width="30" height="838" fill="url(#${p}rim)"/>
     ${meter(176,'ampVuL')}${meter(696,'ampVuR')}
