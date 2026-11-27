@@ -4886,7 +4886,12 @@ function ttFrame(now) {
     }
     if (!ttArmDrag) ttArmAng += (armTarget - ttArmAng) * Math.min(1, dt * 3.5);
     const arm = document.getElementById("ttArmG");
-    if (arm) fxSpin(arm, ttArmAng.toFixed(2), 1065, 120);
+    if (arm) {
+        const angle = ttArmAng.toFixed(2);
+        fxSpin(arm, angle, 1065, 120);
+        const trace = document.getElementById("ttArmTrace");
+        if (trace) fxSpin(trace, angle, 1065, 120);
+    }
 
     // 와우·플러터 + 스핀업 피치 + 45회전
     // 주의(실측 webprobe): WebKit은 playbackRate를 대입하는 것만으로 스트림을 리셋하고,
