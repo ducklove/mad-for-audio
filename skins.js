@@ -182,6 +182,7 @@ function applyPanelLighting(svg) {
         '<rect class="lzPowerDim" x="' + X + '" y="' + Y + '" width="' + W + '" height="' + H + '" rx="8" fill="#000000" opacity="0.22"/>', prefix);
     svg.appendChild(g);
     if (typeof mfaApplySurfaces === "function") mfaApplySurfaces(svg);
+    if (typeof mfaHydrateTextures === "function") mfaHydrateTextures(svg);
     lzScopeMountedReferences(svg, prefix);
     applyHardwareDepth(svg);
 }

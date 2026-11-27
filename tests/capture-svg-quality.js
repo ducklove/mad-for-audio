@@ -80,6 +80,8 @@ async function forcePoweredAppearance(page, selector) {
     });
     await page.goto(BASE + "index.html", { waitUntil: "domcontentloaded", timeout: 30000 });
     await page.evaluate(() => window.MFA_READY);
+    // 재질 텍스처는 유휴 시간에 생성되므로 캡처 전에 준비를 기다린다.
+    await page.evaluate(() => typeof MFA_TEXTURES_READY !== "undefined" ? MFA_TEXTURES_READY.then(() => true) : true);
     await page.evaluate(() => document.fonts && document.fonts.ready);
     await page.waitForSelector("#tunerStage svg", { timeout: 30000 });
     await page.evaluate((widePreview) => {
