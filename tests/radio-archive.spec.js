@@ -1,6 +1,7 @@
 const {test,expect}=require('@playwright/test');
 const {mockExternal}=require('./fixtures');
 const client=require('../radio-archive-client');
+const TEST_ORIGIN='http://127.0.0.1:'+(process.env.MFA_TEST_PORT||'8123');
 const albumId='11111111-1111-4111-8111-111111111111';
 const ids=['22222222-2222-4222-8222-222222222222','33333333-3333-4333-8333-333333333333','44444444-4444-4444-8444-444444444444'];
 const fixture={version:1,albums:[{id:albumId,title:'내 사티 음반 <img src=x onerror=alert(1)>',medium:'lp',gapSeconds:0.3,
@@ -11,7 +12,7 @@ async function setup(context,page,base=BASE,content={}){
     await mockExternal(context);const seen=[],pending=[];let hold=false;
     await context.route(base+'/**',async route=>{
         const req=route.request(),url=new URL(req.url());url.pathname=url.pathname.replace(new URL(base).pathname.replace(/\/$/,''),'');seen.push({path:url.pathname,auth:req.headers().authorization});
-        const headers={'Access-Control-Allow-Origin':'http://127.0.0.1:8123','Access-Control-Allow-Headers':'Authorization,Range','Access-Control-Allow-Methods':'GET,POST,OPTIONS'};
+        const headers={'Access-Control-Allow-Origin':TEST_ORIGIN,'Access-Control-Allow-Headers':'Authorization,Range','Access-Control-Allow-Methods':'GET,POST,OPTIONS'};
         if(req.method()==='OPTIONS')return route.fulfill({status:204,headers});
         if(url.pathname==='/player/pair')return route.fulfill({json:{clientId:albumId,token:'t'.repeat(54),expiresAt:Date.now()/1000+3600,scope:'albums:read audio:read'},headers});
         if(url.pathname==='/player/broadcasts')return route.fulfill({json:{version:1,broadcasts:content.broadcasts||[]},headers});
@@ -46,7 +47,7 @@ test('방송 음반 새로고침의 늦은 응답은 연결 해제 뒤 목록과
     const pending=new Promise(resolve=>{release=resolve;});
     await page.route(BASE+'/player/albums',async route=>{
         requested=true;await pending;
-        await route.fulfill({json:fixture,headers:{'Access-Control-Allow-Origin':'http://127.0.0.1:8123'}});
+        await route.fulfill({json:fixture,headers:{'Access-Control-Allow-Origin':TEST_ORIGIN}});
     });
     await page.evaluate(()=>{window.pendingRefresh=RadioArchiveClient.refresh();});
     await expect.poll(()=>requested).toBe(true);
@@ -133,11 +134,11 @@ test('테이프 보관함 MP3 다운로드는 아이폰 폭에서 준비 후 일
     }
     await context.route(publicBase+'/player/albums/'+rawId+'/downloads',async route=>{
         if(route.request().method()==='OPTIONS')return route.fulfill({status:204,headers:{
-            'Access-Control-Allow-Origin':'http://127.0.0.1:8123','Access-Control-Allow-Methods':'POST',
+            'Access-Control-Allow-Origin':TEST_ORIGIN,'Access-Control-Allow-Methods':'POST',
             'Access-Control-Allow-Headers':'Authorization,Range,Content-Type'}});
         preparations++;await held;
         await route.fulfill({json:{path:downloadPath,filename,bytes:body.length,expiresIn:3600,bitrateKbps:192},
-            headers:{'Access-Control-Allow-Origin':'http://127.0.0.1:8123'}});
+            headers:{'Access-Control-Allow-Origin':TEST_ORIGIN}});
     });
     await context.route(publicBase+downloadPath,async route=>{
         downloadRequest=route.request();
@@ -189,9 +190,9 @@ test('테이프 보관함 MP3 다운로드는 아이폰 폭에서 준비 후 일
 test('테이프 보관함 MP3 준비 실패는 오류와 다시 시도 버튼을 표시',async({context,page,browserName})=>{
     await setup(context,page,publicBase,{broadcasts:[broadcastFixture]});
     await context.route(publicBase+'/player/albums/'+rawId+'/downloads',route=>route.request().method()==='OPTIONS'
-        ?route.fulfill({status:204,headers:{'Access-Control-Allow-Origin':'http://127.0.0.1:8123',
+        ?route.fulfill({status:204,headers:{'Access-Control-Allow-Origin':TEST_ORIGIN,
             'Access-Control-Allow-Methods':'POST','Access-Control-Allow-Headers':'Authorization,Range,Content-Type'}})
-        :route.fulfill({status:409,json:{detail:'방송 파일 확인 필요'},headers:{'Access-Control-Allow-Origin':'http://127.0.0.1:8123'}}));
+        :route.fulfill({status:409,json:{detail:'방송 파일 확인 필요'},headers:{'Access-Control-Allow-Origin':TEST_ORIGIN}}));
     await ready(page,false);
     if(browserName==='webkit')await page.evaluate(()=>{RadioArchiveClient.downloadMp3=async()=>{throw Error('방송 파일 확인 필요');};});
     await page.evaluate(()=>openTapeCase());await page.click('#broadcastTapesTab');
@@ -358,7 +359,7 @@ test('다시 듣기: 갱신 실패와 복구를 표시하고 이전 목록·날�
     let offline=true;
     await page.route(publicBase+'/player/broadcasts',route=>route.fulfill({status:offline?502:200,
         json:offline?{detail:'방송 보관함에 연결하지 못했습니다.'}:{version:1,broadcasts:[broadcastFixture]},
-        headers:{'Access-Control-Allow-Origin':'http://127.0.0.1:8123'}}));
+        headers:{'Access-Control-Allow-Origin':TEST_ORIGIN}}));
     await page.click('#archiveScheduleRefresh');
     await expect(page.locator('#archiveScheduleStatus')).toContainText('최신 목록을 확인하지 못했습니다');
     await expect(page.locator('#archiveScheduleStatus')).toHaveAttribute('data-state','error');

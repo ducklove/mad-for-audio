@@ -3,6 +3,9 @@
 // 크로미움에서만 통과하고 Safari에서 조용히 죽는 회귀(예: SAFARI_LIKE 그래프 가드)가 실제로 있었다.
 const { defineConfig } = require("@playwright/test");
 
+// 여러 작업 트리가 동시에 테스트할 때 서로의 정적 서버를 재사용하지 않도록 포트를 분리할 수 있다.
+const PORT = process.env.MFA_TEST_PORT || "8123";
+
 module.exports = defineConfig({
     testDir: __dirname,
     testMatch: "**/*.spec.js",
@@ -11,7 +14,7 @@ module.exports = defineConfig({
     retries: 1,
     reporter: [["list"]],
     use: {
-        baseURL: "http://127.0.0.1:8123/",
+        baseURL: `http://127.0.0.1:${PORT}/`,
         // CI에서만 재현되는 플레이키 추적용 — 재시도에서 트레이스를 남겨
         // 워크플로가 아티팩트로 올린다 (평상시 실행 비용은 없음).
         trace: "on-first-retry",
@@ -40,8 +43,8 @@ module.exports = defineConfig({
         },
     ],
     webServer: {
-        command: "npx http-server .. -p 8123 -s -c-1",
-        url: "http://127.0.0.1:8123/index.html",
+        command: `npx http-server .. -p ${PORT} -s -c-1`,
+        url: `http://127.0.0.1:${PORT}/index.html`,
         reuseExistingServer: true,
     },
 });

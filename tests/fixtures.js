@@ -68,7 +68,7 @@ async function mockExternal(context) {
     // The player connects on startup. Keep unrelated UI tests independent of
     // the live archive; archive-specific tests override this route afterwards.
     await context.route("https://ducklove.duckdns.org/radio-archive/**", (route) => {
-        const headers = { "Access-Control-Allow-Origin": "http://127.0.0.1:8123" };
+        const headers = { "Access-Control-Allow-Origin": "http://127.0.0.1:" + (process.env.MFA_TEST_PORT || "8123") };
         if (new URL(route.request().url()).pathname.endsWith("/player/albums")) {
             return route.fulfill({ json: { version: 1, albums: [] }, headers });
         }
