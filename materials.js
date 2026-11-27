@@ -242,3 +242,85 @@ function mfaTexCircle(kind, cx, cy, r, opacity, extra) {
 function mfaTexPath(kind, d, opacity, extra) {
     return '<path d="' + d + '" fill="' + mfaTexFill(kind) + '" opacity="' + (opacity == null ? .6 : opacity) + '" pointer-events="none"' + (extra ? ' ' + extra : '') + '/>';
 }
+
+// ----- 모델별 표면 재질 규칙 -----
+// 각 스킨의 면을 채우는 그라디언트·패턴 id를 키로, 마운트할 때 실제 재질을 입힌다.
+//   replace: 기존의 규칙적인 벡터 헤어라인 패턴(…Brush/…Fine/…Grain)을 래스터 재질로 바꾼다.
+//   overlay: 바탕 도형 바로 위에 같은 윤곽의 재질 층을 한 겹 더한다 (바탕색·그라디언트는 그대로).
+// 스킨 마크업을 건드리지 않고 재질만 한곳에서 조율하기 위한 표다. 상호작용 요소(버튼·스위치)는
+// 눌림 이동과 상태 색 변화를 따라가지 못하므로 대상에서 뺀다.
+// [fill 참조, 방식, 재질, 불투명도]
+const MFA_SURFACE_RULES = [
+    // 튜너 — YAMAHA T-2 샴페인 브러시드 / McIntosh MR78 블랙 아노다이즈 / Marantz 10B 샴페인 + 월넛
+    ["url(#tnBrush)", "replace", "brush", .42],
+    ["url(#tnKnobFace)", "overlay", "spun", .55],
+    ["url(#mrFine)", "replace", "brushFine", .2],
+    ["url(#mrKnob)", "overlay", "spun", .5],
+    ["url(#mrChrome)", "overlay", "spun", .5],
+    ["url(#mzWoodGrain)", "replace", "wood", .78],
+    ["url(#mzBrush)", "replace", "brushFine", .17],
+    ["url(#mzKnob)", "overlay", "spun", .5],
+    // 이퀄라이저 — 블랙 헤어라인 두 종과 Technics 실버
+    ["url(#eqBrush)", "replace", "brushFine", .3],
+    ["url(#eqField)", "overlay", "grainFine", .22],
+    ["url(#eq8Brush)", "replace", "brush", .44],
+    ["url(#eq8Field)", "overlay", "grainFine", .2],
+    // 앰프 — MC2105 노브, 8B 크림 패널·크링클 트랜스, 91E, E-303 샴페인, MA2375 스틸
+    ["url(#refMcknob)", "overlay", "spun", .45],
+    ["url(#refMcrim)", "overlay", "brushV", .28],
+    ["url(#m8Brush)", "replace", "brushFine", .18],
+    ["url(#m8Fine)", "replace", "grainFine", .14],
+    ["url(#m8Can)", "overlay", "hammer", .32],
+    ["url(#m8Plaque)", "overlay", "brushFine", .36],
+    ["url(#weBrush)", "replace", "brushFine", .15],
+    ["url(#weFine)", "replace", "grainFine", .14],
+    ["url(#weKnob)", "overlay", "spun", .48],
+    ["url(#e303Hair)", "replace", "brushFine", .2],
+    ["url(#e303KnobFace)", "overlay", "spun", .55],
+    ["url(#ma2375Backdrop)", "overlay", "grain", .22],
+    ["url(#ma2375Brush)", "replace", "brush", .5],
+    ["url(#ma2375LowerFace)", "overlay", "brush", .32],
+    ["url(#ma2375SteelBand)", "overlay", "brushV", .38],
+    ["url(#ma2375KnobCap)", "overlay", "spun", .5],
+    // 카세트 데크 — DRAGON 블랙, B215 실버, Tandberg 로즈우드·블랙, CT-F1250 실버·월넛, W-990RX
+    ["url(#dkFine)", "replace", "brushFine", .26],
+    ["url(#dkDoor)", "overlay", "grainFine", .22],
+    ["url(#refBbrush)", "replace", "brush", .46],
+    ["url(#refBblack)", "overlay", "grain", .26],
+    ["url(#refTbrush)", "replace", "brushFine", .26],
+    ["url(#refTknob)", "overlay", "spun", .5],
+    ["url(#ctfWood)", "overlay", "wood", .72],
+    ["url(#ctfFace)", "overlay", "brush", .4],
+    ["url(#ctfKnob)", "overlay", "spun", .5],
+    ["url(#w9Brush)", "replace", "brush", .4],
+    ["url(#w9Apron)", "overlay", "grainFine", .24],
+    // 오디오 타이머 DT-540 (블랙·실버 공용)
+    ["url(#dtBrush)", "replace", "brush", .4]
+];
+
+const MFA_SURFACE_STRIP = ["id", "class", "style", "filter", "stroke", "stroke-width", "stroke-opacity", "stroke-dasharray",
+    "tabindex", "role", "aria-label", "aria-hidden", "data-cx", "data-cy", "clip-path", "mask"];
+
+function mfaApplySurfaces(svg) {
+    if (!svg || svg.getAttribute("data-mfa-surfaces") === "1") return;
+    svg.setAttribute("data-mfa-surfaces", "1");
+    MFA_SURFACE_RULES.forEach(([fill, mode, kind, opacity]) => {
+        svg.querySelectorAll('[fill="' + fill + '"]').forEach((el) => {
+            if (el.closest("defs, pattern, clipPath, mask, symbol")) return;
+            const base = el.hasAttribute("opacity") ? Number(el.getAttribute("opacity")) : 1;
+            if (mode === "replace") {
+                el.setAttribute("fill", mfaTexFill(kind));
+                el.setAttribute("opacity", String(+(opacity * (base > 0 ? Math.min(1, base * 1.4) : 1)).toFixed(3)));
+                return;
+            }
+            const layer = el.cloneNode(false);
+            MFA_SURFACE_STRIP.forEach((name) => layer.removeAttribute(name));
+            Array.from(layer.attributes).forEach((attr) => { if (/^on|^aria-|^data-/.test(attr.name)) layer.removeAttribute(attr.name); });
+            layer.setAttribute("class", "mfaSurface");
+            layer.setAttribute("fill", mfaTexFill(kind));
+            layer.setAttribute("opacity", String(+(opacity * base).toFixed(3)));
+            layer.setAttribute("pointer-events", "none");
+            el.parentNode.insertBefore(layer, el.nextSibling);
+        });
+    });
+}

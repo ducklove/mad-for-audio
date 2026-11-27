@@ -181,6 +181,7 @@ function applyPanelLighting(svg) {
         '<path d="M ' + (X + 10) + ' ' + (Y + H - 3) + ' H ' + (X + W - 10) + '" stroke="#000000" stroke-width="2" opacity="0.36"/>' +
         '<rect class="lzPowerDim" x="' + X + '" y="' + Y + '" width="' + W + '" height="' + H + '" rx="8" fill="#000000" opacity="0.22"/>', prefix);
     svg.appendChild(g);
+    if (typeof mfaApplySurfaces === "function") mfaApplySurfaces(svg);
     lzScopeMountedReferences(svg, prefix);
     applyHardwareDepth(svg);
 }
