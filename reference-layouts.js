@@ -161,30 +161,9 @@ function refSyncMCControls() {
     hit?.setAttribute('aria-description', range === 'off' ? '미터 꺼짐' : `${range} dB`);
 }
 
-function refSL1200Details(spec) {
-    spec.brand = '<circle cx="128" cy="90" r="35" fill="url(#ttChrome)" stroke="#565c60" stroke-width="2"/><circle cx="128" cy="90" r="6" fill="#30373a"/>' + refText(872,588,'Technics Quartz',19,'#3b4243') + refText(872,608,'SL-1200MK2',10,'#59605f');
-    spec.detail = `<g pointer-events="none"><circle cx="161" cy="467" r="37" fill="#242a2d" stroke="#565d5f" stroke-width="3"/><circle cx="161" cy="462" r="28" fill="#151b1d" stroke="#a5a9a6" stroke-width="2"/><path d="M189 446l29-9 9 21-29 8" fill="#b82118"/><path d="M159 440v13" stroke="#eee" stroke-width="3"/>
-    ${refText(128,519,'POWER',13,'#414949')}
-    <rect x="930" y="281" width="78" height="247" fill="#adb3b1" stroke="#777f7d" stroke-width="2"/><rect x="961" y="308" width="8" height="181" fill="#171e1d"/>
-    ${[-8,-4,0,4,8].map((n,i)=>`<path d="M940 ${334.5+i*30.75}h13" stroke="#495350"/>`+refText(935,338+i*30.75,n>0?'+'+n:String(n),10,'#414b47','end')).join('')}
-    <rect id="ttPitchKnob" x="946" y="363.5" width="39" height="65" rx="2" fill="url(#ttChrome)" stroke="#424a48"/><path d="M948 395h35" stroke="#414b48" stroke-width="3"/>
-    <circle id="ttQuartzLamp" cx="938" cy="396" r="4" fill="#e94e35"/>
-    ${refText(969,555,'PITCH ADJ.',12,'#424d48','middle')}
-    <circle cx="810" cy="581" r="18" fill="url(#ttChrome)" stroke="#707874"/><circle cx="846" cy="581" r="11" fill="url(#ttChrome)" stroke="#707874"/>
-    </g>
-    <g id="ttHardwareStart" style="cursor:pointer"><rect x="91" y="551" width="145" height="59" rx="1" fill="#1d2423"/><rect x="97" y="555" width="133" height="49" fill="url(#ttCastSilver)" stroke="#edf0e9" stroke-width="2"/>${refText(163,585,'START · STOP',12,'#3f4945','middle','pointer-events="none"')}</g>
-    <circle id="ttHardwarePower" cx="161" cy="467" r="43" fill="transparent" style="cursor:pointer"/>
-    <rect id="ttPitchHit" x="913" y="274" width="100" height="260" fill="transparent" style="cursor:ns-resize;touch-action:none" tabindex="0" role="slider" aria-label="피치 조정 ±8%"><title>PITCH ADJ. — 위아래로 끌어 ±8%</title></rect>`;
-    return spec;
-}
-
 // 음반 정보는 기기의 일부가 아니다. 본체 SVG와 정보·조작 영역을 서로 독립된 열로 구성한다.
 function refTurntableLayout(stage, record, index, count) {
     const svg = stage.querySelector('svg');
-    const front = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    front.setAttribute('class','tt-front-depth');
-    front.innerHTML = `<path d="M24 640H1196V700L1176 722H45L24 700Z" fill="${record.__plinth || '#302a22'}" stroke="#111714" stroke-width="3"/><path d="M25 644H1194" stroke="#c8bca5" stroke-opacity=".35" stroke-width="2"/><path d="M60 701H1158" stroke="#070b09" stroke-opacity=".5" stroke-width="8"/><path d="M122 721v23h140v-23m676 0v23h140v-23" fill="#101511"/>`;
-    svg.append(front);
     const workspace = document.createElement('div'); workspace.className='tt-workstation';
     const machine = document.createElement('div'); machine.className='tt-machine';
     machine.append(svg);

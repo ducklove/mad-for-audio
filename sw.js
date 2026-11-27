@@ -35,6 +35,7 @@ const CORE = [
     "solo-skins.js?v=198",
     "reference-layouts.js?v=198",
     "eq-skins.js?v=198",
+    "turntable-skins.js?v=198",
     "engine.js?v=198",
     "animation-scheduler.js?v=198",
     "listening-controls.js?v=198",

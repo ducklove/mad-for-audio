@@ -1321,10 +1321,6 @@ body.mode-simple #stationMain.collapsed {
     filter: drop-shadow(3px 6px 5px rgba(0, 0, 0, 0.45));
 }
 
-#ttArmG {
-    filter: drop-shadow(5px 8px 4px rgba(0, 0, 0, 0.38));
-}
-
 #ampVolMark {
     filter: drop-shadow(1.5px 2px 1px rgba(0, 0, 0, 0.5));
 }
@@ -1367,7 +1363,7 @@ a.mini-open {
 /* 기기와 음반 정보는 별도 물체로 배치한다. 작은 화면에서는 정보 영역을 아래로 보낸다. */
 .tt-workstation { display:grid; grid-template-columns:minmax(0,1.55fr) minmax(0,1fr); gap:26px; align-items:start; line-height:1.45; padding:22px 6px 8px; }
 .tt-machine { min-width:0; }
-#ttStage .tt-machine svg { border-radius:0; box-shadow:none; filter:drop-shadow(0 14px 12px #0007); }
+#ttStage .tt-machine svg { border-radius:0; box-shadow:none; }
 .tt-operating-strip { display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:12px 4px; }
 .tt-workstation button { font:inherit; cursor:pointer; color:#d8ddd7; border:1px solid #49514a; background:#242a25; border-radius:5px; min-height:40px; padding:8px 12px; }
 .tt-workstation button:hover { background:#343e35; }
@@ -1401,5 +1397,4 @@ body.mode-focus.focus-room:not(.focus-unit-zoomed) .tt-workstation { display:blo
 body.mode-focus.focus-room:not(.focus-unit-zoomed) .tt-record-panel,
 body.mode-focus.focus-room:not(.focus-unit-zoomed) .tt-operating-strip,
 body.mode-focus.focus-room:not(.focus-unit-zoomed) .tt-credit { display:none; }
-body.mode-focus.focus-room #ttStage .tt-machine svg { filter:none; }
 body.mode-focus.focus-room #ttStage.unit-zoomed { max-height:calc(var(--focus-viewport-height, 100vh) - var(--focus-optical-top, 3vh) - var(--focus-optical-bottom, 7vh) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); overflow:auto; }
