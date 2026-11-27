@@ -4,7 +4,7 @@
  * 네트워크로 그대로 통과시킨다 — 오디오 range 요청과 실시간성을 깨지 않기 위함.
  */
 const CACHE_PREFIX = "fm-radio-";
-const CACHE = "fm-radio-v196";
+const CACHE = "fm-radio-v197";
 // 일반 URL과 분리한 합성 키를 사용한다. manual.html 같은 다른 내비게이션 응답이
 // 오프라인 앱 셸을 덮어쓰지 못하게 하기 위함이다.
 const NAVIGATION_CACHE_KEY = new URL("__mfa_navigation_shell__", self.registration.scope).href;
@@ -17,32 +17,33 @@ const CORE = [
     "widget.html",
     "turntable.html",
     "embed.html",
-    "styles.css?v=196",
-    "styles-foundation.css?v=196",
-    "styles-library.css?v=196",
-    "styles-schedule.css?v=196",
-    "styles-tape.css?v=196",
-    "stations.js?v=196",
-    "player-core.js?v=196",
-    "app-runtime-core.js?v=196",
-    "native-hls-capture.js?v=196",
-    "store.js?v=196",
-    "schedule.js?v=196",
-    "model-registry.js?v=196",
-    "skins.js?v=196",
-    "component-skins.js?v=196",
-    "solo-skins.js?v=196",
-    "reference-layouts.js?v=196",
-    "engine.js?v=196",
-    "animation-scheduler.js?v=196",
-    "listening-controls.js?v=196",
-    "deck.js?v=196",
-    "radio-archive-client.js?v=196",
-    "broadcast-browser.js?v=196",
-    "ui-controls.js?v=196",
-    "records.json?v=196",
-    "bootstrap.js?v=196",
-    "app.js?v=196",
+    "styles.css?v=197",
+    "styles-foundation.css?v=197",
+    "styles-library.css?v=197",
+    "styles-schedule.css?v=197",
+    "styles-tape.css?v=197",
+    "stations.js?v=197",
+    "player-core.js?v=197",
+    "app-runtime-core.js?v=197",
+    "native-hls-capture.js?v=197",
+    "store.js?v=197",
+    "schedule.js?v=197",
+    "model-registry.js?v=197",
+    "materials.js?v=197",
+    "skins.js?v=197",
+    "component-skins.js?v=197",
+    "solo-skins.js?v=197",
+    "reference-layouts.js?v=197",
+    "engine.js?v=197",
+    "animation-scheduler.js?v=197",
+    "listening-controls.js?v=197",
+    "deck.js?v=197",
+    "radio-archive-client.js?v=197",
+    "broadcast-browser.js?v=197",
+    "ui-controls.js?v=197",
+    "records.json?v=197",
+    "bootstrap.js?v=197",
+    "app.js?v=197",
     "manifest.webmanifest",
     "icons/icon.svg",
     "icons/icon-192.png",
@@ -61,7 +62,7 @@ const CDN = [
 // 특정 셸에서만 쓰는 자산은 설치 실패를 유발하지 않게 best-effort로 캐싱한다.
 // 트레이 iframe이 오프라인으로 열릴 때는 캐시가 있으면 그대로 사용할 수 있다.
 const OPTIONAL = [
-    "tray-bridge.js?v=196"
+    "tray-bridge.js?v=197"
 ];
 
 const CORE_PATHS = new Set(CORE.map((asset) => new URL(asset, self.registration.scope).pathname));

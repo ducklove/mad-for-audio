@@ -1,5 +1,6 @@
 // SVG 스킨 모듈 — 조명 패스(LZ_DEFS), 공개 튜너 3종, 진공관 렌더러(tubeSvg), 공개 앰프 기반 스킨.
-// 클래식 스크립트 — 전역 렉시컬 스코프를 공유한다. 로드 순서: store→skins→engine→deck→app.
+// 클래식 스크립트 — 전역 렉시컬 스코프를 공유한다. 로드 순서: store→materials→skins→engine→deck→app.
+// LZ_DEFS는 materials.js의 lzTex* 재질 패턴을 함께 싣는다 (mfaTexRect/mfaTexCircle로 참조).
 
 // ----- 튜너 스킨 시스템 -----
 // 각 스킨은 { label, cfg, svg }로 정의된다. 기능 요소는 모든 스킨에서 같은 id를 쓰고
@@ -65,6 +66,7 @@ const LZ_DEFS = '<defs>' +
     '<filter id="lzKnobDepth" x="-35%" y="-35%" width="180%" height="190%"><feGaussianBlur in="SourceAlpha" stdDeviation="4" result="lzKnobBlur"/><feOffset in="lzKnobBlur" dx="3" dy="7" result="lzKnobOffset"/><feFlood flood-color="#000000" flood-opacity="0.62" result="lzKnobColor"/><feComposite in="lzKnobColor" in2="lzKnobOffset" operator="in" result="lzKnobShadow"/><feMerge><feMergeNode in="lzKnobShadow"/><feMergeNode in="SourceGraphic"/></feMerge></filter>' +
     '<filter id="lzSwitchDepth" x="-50%" y="-45%" width="200%" height="210%"><feGaussianBlur in="SourceAlpha" stdDeviation="1.8" result="lzSwBlur"/><feOffset in="lzSwBlur" dx="1" dy="3" result="lzSwOffset"/><feFlood flood-color="#000000" flood-opacity="0.68" result="lzSwColor"/><feComposite in="lzSwColor" in2="lzSwOffset" operator="in" result="lzSwShadow"/><feMerge><feMergeNode in="lzSwShadow"/><feMergeNode in="SourceGraphic"/></feMerge></filter>' +
     '<filter id="lzSoft" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="4.5"/></filter>' +
+    (typeof mfaTextureDefs === "function" ? mfaTextureDefs() : "") +
     '</defs>';
 
 // Shared lighting/filter names used to be duplicated in every mounted SVG.

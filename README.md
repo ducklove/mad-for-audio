@@ -53,6 +53,7 @@ engine.js              Web Audio 그래프·녹음·오디오 상태 머신
 animation-scheduler.js 랙 컴포넌트가 공유하는 상태 기반 rAF 스케줄러
 listening-controls.js  첫 재생·연결 취소·재시도 안내의 DOM과 이벤트 수명주기
 deck.js                카세트 데크·테이프 전송 로직
+materials.js           재질 텍스처 라이브러리 — 브러시드·스핀 가공 금속, 원목 결, 그레인, 레더렛, 해머톤 (캔버스로 한 번 생성해 SVG 패턴으로 공유)
 skins.js               튜너·앰프 SVG 스킨
 component-skins.js     실물 레퍼런스 기반 추가 튜너·앰프·데크·턴테이블 SVG 카탈로그
 solo-skins.js          단독 기기 SVG — Victor V 축음기, 금성 A-501 라디오, Lasonic TRC-931 붐박스
